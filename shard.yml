@@ -1,0 +1,17 @@
+name: grafito
+version: 0.1.0
+
+authors:
+  - Roberto Alsina <roberto.alsina@gmail.com>
+
+targets:
+  grafito:
+    main: src/grafito.cr
+
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+
+crystal: '>= 1.16.0'
+
+license: MIT
