@@ -71,7 +71,9 @@
           display: flex;
           align-items: center; /* Vertically align items */
           gap: var(--spacing, 1rem); /* Add space between items */
-          margin-bottom: var(--form-element-spacing-vertical); /* Space between filter rows */
+          margin-bottom: var(
+            --form-element-spacing-vertical
+          ); /* Space between filter rows */
         "
       >
         <div>
@@ -102,28 +104,6 @@
             hx-indicator="#loading-spinner"
             hx-include="#search-box, #unit-filter, #priority-filter, #time-range-filter, #live-view"
           />
-        </div>
-        <div
-          style="display: flex; align-items: center; justify-content: center"
-        >
-          <label
-            for="live-view"
-            role="switch"
-            style="display: flex; align-items: center"
-            title="Toggle live log updates every 10 seconds"
-          >
-            <input
-              type="checkbox"
-              id="live-view"
-              name="live-view"
-              role="switch"
-              hx-get="logs"
-              hx-target="#results"
-              hx-indicator="#loading-spinner"
-              hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter"
-            />
-            Live
-          </label>
         </div>
       </div>
 
@@ -235,6 +215,28 @@
           >
             🔗
           </button>
+        </div>
+        <div
+          style="display: flex; align-items: center; justify-content: center"
+        >
+          <label
+            for="live-view"
+            role="switch"
+            style="display: flex; align-items: center"
+            title="Toggle live log updates every 10 seconds"
+          >
+            <input
+              type="checkbox"
+              id="live-view"
+              name="live-view"
+              role="switch"
+              hx-get="logs"
+              hx-target="#results"
+              hx-indicator="#loading-spinner"
+              hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter"
+            />
+            Live
+          </label>
         </div>
       </div>
       <!-- End of grid -->

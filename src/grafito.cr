@@ -76,11 +76,11 @@ module Grafito
       if current_sort_by == column_key_name
         if current_sort_order == "asc"
           sort_indicator = " <span aria-hidden=\"true\">▲</span>" # Up arrow for ascending
-          next_sort_order_for_click = "desc"       # Next click will be descending
+          next_sort_order_for_click = "desc"                      # Next click will be descending
         elsif current_sort_order == "desc"
           sort_indicator = " <span aria-hidden=\"true\">▼</span>" # Down arrow for descending
-          next_sort_order_for_click = "asc"        # Next click will be ascending
-        else # current_sort_order is nil or something else, treat as unsorted for this column
+          next_sort_order_for_click = "asc"                       # Next click will be ascending
+        else                                                      # current_sort_order is nil or something else, treat as unsorted for this column
           next_sort_order_for_click = "asc"
         end
       end
@@ -113,8 +113,26 @@ module Grafito
         if logs.empty?
           str << "<tr><td colspan=\"3\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>"
         else
+          # Helper to get a background color style based on priority
+          get_priority_style = ->(priority_value : String) do
+            case priority_value
+            when "0" then "background-color: #5c0000; color: #f8f8f8;" # Emergency (Darkest Red, Light Text)
+            when "1" then "background-color: #7c0a0a; color: #f8f8f8;" # Alert (Dark Red, Light Text)
+            when "2" then "background-color: #a04000; color: #f8f8f8;" # Critical (Dark Orange/Brown, Light Text)
+            when "3" then "background-color: #905000; color: #f8f8f8;" # Error (Dark Orange, Light Text)
+            when "4" then "background-color: #847500; color: #f8f8f8;" # Warning (Dark Yellow/Olive, Light Text)
+            when "5" then "background-color: #003366; color: #f8f8f8;" # Notice (Dark Blue, Light Text)
+            when "6" then "background-color: #2a3b4d; color: #f8f8f8;" # Informational (Dark Slate Blue/Grey, Light Text)
+            when "7" then "background-color: #333333; color: #f0f0f0;" # Debug (Dark Grey, Light Text)
+            else            ""                                         # Default: no specific style (will use table striping)
+            end
+          end
+
           logs.each do |entry|
-            str << "<tr>"
+            priority_style = get_priority_style.call(entry.priority)
+            str << "<tr"
+            str << " style=\"" << priority_style << "\"" if !priority_style.empty?
+            str << ">"
             str << "<td>" << entry.formatted_timestamp << "</td>"
             str << "<td>" << HTML.escape(entry.formatted_priority) << "</td>"
             str << "<td style=\"white-space: normal; overflow-wrap: break-word; word-wrap: break-word; max-width: 60vw;\">" << HTML.escape(entry.message) << "</td>" # Adjusted max-width slightly
