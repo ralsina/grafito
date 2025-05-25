@@ -54,6 +54,7 @@
           type="search"
           id="search-box"
           placeholder="Search logs..."
+          title="Enter text to search in log messages (uses journalctl -g)"
           hx-get="logs"
           hx-trigger="keyup changed delay:500ms"
           hx-target="#results"
@@ -78,6 +79,7 @@
             name="unit"
             list="unit-suggestions"
             placeholder="Filter by unit (e.g., docker)"
+            title="Filter logs by systemd unit name (e.g., nginx.service)"
             hx-get="logs"
             hx-trigger="keyup changed delay:500ms"
             hx-target="#results"
@@ -91,6 +93,7 @@
             id="tag-filter"
             name="tag"
             placeholder="Filter by tag (e.g., myapp)"
+            title="Filter logs by syslog identifier (tag)"
             hx-get="logs"
             hx-trigger="keyup changed delay:500ms"
             hx-target="#results"
@@ -103,6 +106,7 @@
             id="time-range-filter"
             name="since"
             hx-get="logs"
+            title="Filter logs by time range"
             hx-trigger="change"
             hx-target="#results"
             hx-indicator="#loading-spinner"
@@ -120,7 +124,7 @@
         <div
           style="display: flex; align-items: center; justify-content: center;"
         >
-          <label for="live-view" role="switch" style="display: flex; align-items: center;">
+          <label for="live-view" role="switch" style="display: flex; align-items: center;" title="Toggle live log updates every 10 seconds">
             <input
               type="checkbox"
               id="live-view"
@@ -230,14 +234,16 @@
       "
     >
       <small>
-        ©️ 2025 Roberto Alsina |
-        <a href="https://grafito.ralsina.me" style="text-decoration: none"
-          >🏠 grafito.ralsina.me</a
+        <a href="https://links.ralsina.me" style="text-decoration: none;"
+          >© 2025 Roberto Alsina</a
+        > |
+        <a href="https://grafito.ralsina.me" style="text-decoration: none;"
+          >🏚 grafito.ralsina.me</a
         >
         |
         <a
           href="https://github.com/ralsina/grafito"
-          style="text-decoration: none"
+          style="text-decoration: none;"
         >
           ⌨ ralsina/grafito
         </a>
