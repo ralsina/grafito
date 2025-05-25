@@ -1,6 +1,7 @@
 require "kemal"
 require "json"
 require "./journalctl"
+require "baked_file_system"
 
 module Grafito
   extend self
@@ -9,10 +10,25 @@ module Grafito
 
   VERSION = "0.1.0"
 
+  # Any assets we want baked into the binary.
+  class Assets
+    extend BakedFileSystem
+    bake_file "index.html", {{ read_file "#{__DIR__}/index.html" }}
+    bake_file "favicon.svg", {{ read_file "#{__DIR__}/favicon.svg" }}
+  end
+
+
+
   # Matches GET "http://host:port/" and serves the index.html file.
   get "/" do |env|
     env.response.content_type = "text/html"
-    send_file env, "./src/index.html"
+    env.response.print Assets.get("index.html").gets_to_end
+  end
+
+  # Matches GET "http://host:port/" and serves the index.html file.
+  get "/favicon.svg" do |env|
+    env.response.content_type = "text/html"
+    env.response.print Assets.get("favicon.svg").gets_to_end
   end
 
   # Creates a WebSocket handler.

@@ -14,6 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <style>
       body {
         font-family: "WDXL Lubrifont TC", sans-serif;
@@ -22,10 +23,10 @@
   </head>
   <body hx-get="/services" hx-target="#unit-suggestions" hx-trigger="load" hx-swap="innerHTML">
     <header class="container" style="padding: 20px;">
-      <hgroup>
-        <h1 style="font-size: 2em;">
-          Grafito
-        </h1>
+      <hgroup style="display: flex; justify-content: space-between; align-items: baseline;">
+        <h1 style="font-size: 2em; font-family: 'WDXL Lubrifont TC', sans-serif;">
+          Grafito 
+        </h1><span style="font-size: 1em;">A simple log viewer</span>
       </hgroup>
         <input type="search" id="search-box" placeholder="Search logs..."
                hx-get="/logs" 

@@ -11,7 +11,10 @@ targets:
 dependencies:
   kemal:
     github: kemalcr/kemal
-
+  baked_file_system:
+    github: ralsina/baked_file_system
+    branch: master
+    
 crystal: '>= 1.16.0'
 
 license: MIT
