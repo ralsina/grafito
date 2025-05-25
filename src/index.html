@@ -25,6 +25,16 @@
       main {
         flex-grow: 1; /* Allow main content to grow and push footer down */
       }
+      #filters-sidebar.collapsed {
+        width: 0px !important; /* Override inline style */
+        padding-left: 0px !important;
+        padding-right: 0px !important;
+        border-right: none !important;
+        overflow: hidden;
+        /* Add a small transition for a smoother collapse/expand */
+        transition: width 0.3s ease, padding 0.3s ease;
+      }
+      /* Ensure the toggle button looks consistent in height with the search input */
     </style>
   </head>
   <body
@@ -48,8 +58,8 @@
         </h1>
         <span style="font-size: 1em">A simple log viewer</span>
       </hgroup>
-      <!-- Row 1: Search Input and Help Button -->
-      <div style="margin-bottom: var(--form-element-spacing-vertical)">
+      <!-- Row 1: Search Input and Sidebar Toggle Button -->
+      <div style="display: flex; gap: var(--spacing, 0.5rem); align-items: center; margin-bottom: var(--form-element-spacing-vertical)">
         <input
           type="search"
           id="search-box"
@@ -61,191 +71,177 @@
           name="q"
           hx-indicator="#loading-spinner"
           hx-include="#unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view"
-          style="width: 100%; height: 2.5rem"
+          style="flex-grow: 1; height: 2.5rem;"
         />
       </div>
-
-      <!-- Row 2: Filters Flex Layout -->
-      <div
-        style="
-          display: flex;
-          align-items: center; /* Vertically align items */
-          gap: var(--spacing, 1rem); /* Add space between items */
-          margin-bottom: var(
-            --form-element-spacing-vertical
-          ); /* Space between filter rows */
-        "
-      >
-        <div>
-          <input
-            type="text"
-            id="unit-filter"
-            name="unit"
-            list="unit-suggestions"
-            placeholder="Filter by unit (e.g., docker)"
-            title="Filter logs by systemd unit name (e.g., nginx.service)"
-            hx-get="logs"
-            hx-trigger="keyup changed delay:500ms"
-            hx-target="#results"
-            hx-indicator="#loading-spinner"
-            hx-include="#search-box, #tag-filter, #priority-filter, #time-range-filter, #live-view"
-          />
-        </div>
-        <div>
-          <input
-            type="text"
-            id="tag-filter"
-            name="tag"
-            placeholder="Filter by tag (e.g., myapp)"
-            title="Filter logs by syslog identifier (tag)"
-            hx-get="logs"
-            hx-trigger="keyup changed delay:500ms"
-            hx-target="#results"
-            hx-indicator="#loading-spinner"
-            hx-include="#search-box, #unit-filter, #priority-filter, #time-range-filter, #live-view"
-          />
-        </div>
-      </div>
-
-      <!-- Row 3: Time and Priority Filters -->
-      <div
-        style="
-          display: flex;
-          align-items: center; /* Vertically align items */
-          gap: var(--spacing, 1rem); /* Add space between items */
-        "
-      >
-        <div>
-          <select
-            id="time-range-filter"
-            name="since"
-            hx-get="logs"
-            title="Filter logs by time range"
-            hx-trigger="change"
-            hx-target="#results"
-            hx-indicator="#loading-spinner"
-            hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #live-view"
-          >
-            <option value="">Any time</option>
-            <!-- Default/no filter -->
-            <option value="-15m">Last 15 minutes</option>
-            <option value="-1h">Last 1 hour</option>
-            <option value="-1d">Last 24 hours</option>
-            <option value="-7d">Last week</option>
-            <!-- You could add more specific date/time inputs here if needed -->
-          </select>
-        </div>
-        <div>
-          <select
-            id="priority-filter"
-            name="priority"
-            hx-get="logs"
-            title="Filter logs by priority level"
-            hx-trigger="change"
-            hx-target="#results"
-            hx-indicator="#loading-spinner"
-            hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
-          >
-            <option value="0">Emergency</option>
-            <option value="1">Alert</option>
-            <option value="2">Critical</option>
-            <option value="3">Error</option>
-            <option value="4">Warning</option>
-            <option value="5" selected>Notice</option>
-            <option value="6">Informational</option>
-            <option value="7">Debug</option>
-          </select>
-        </div>
-        <!-- Help button for command -->
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: fit-content;
-          "
-        >
-          <button
-            id="show-command-button"
-            class="secondary"
-            hx-get="command"
-            hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter, #live-view"
-            hx-trigger="click"
-            hx-swap="none"
-            hx-on:htmx:after-request="if(event.detail.successful) alert('These filters are the equivalent of: ' + event.detail.xhr.responseText); else alert('Error fetching command: ' + event.detail.xhr.statusText + '\\nCheck console for more details.');"
-            aria-label="Show equivalent command"
-            title="Show equivalent journalctl command"
-            style="
-              width: 2.5rem;
-              height: 2.5rem;
-              border-radius: 50%;
-              padding: 0;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-            "
-          >
-            ❔
-          </button>
-        </div>
-        <!-- Copy Link button -->
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: fit-content;
-          "
-        >
-          <button
-            id="copy-link-button"
-            class="secondary"
-            onclick="copyShareableLink()"
-            aria-label="Copy shareable link"
-            title="Copy link with current filters"
-            style="
-              width: 2.5rem;
-              height: 2.5rem;
-              border-radius: 50%;
-              padding: 0;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-            "
-          >
-            🔗
-          </button>
-        </div>
-        <div
-          style="display: flex; align-items: center; justify-content: center"
-        >
-          <label
-            for="live-view"
-            role="switch"
-            style="display: flex; align-items: center"
-            title="Toggle live log updates every 10 seconds"
-          >
-            <input
-              type="checkbox"
-              id="live-view"
-              name="live-view"
-              role="switch"
-              hx-get="logs"
-              hx-target="#results"
-              hx-indicator="#loading-spinner"
-              hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter"
-            />
-            Live
-          </label>
-        </div>
-      </div>
-      <!-- End of grid -->
-      <datalist id="unit-suggestions"></datalist>
-      <!-- Datalist can be here -->
     </header>
     <hr class="container" />
     <!-- Added horizontal line -->
-    <main class="container" style="padding: 20px">
+    <div class="container" style="display: flex; gap: var(--spacing, 1rem); padding: 20px;">
+      <button
+        id="toggle-sidebar-btn"
+        class="secondary outline"
+        aria-expanded="true"
+        aria-controls="filters-sidebar"
+        title="Hide Filters Sidebar"
+        style="height: 2.5rem; width: 2.5rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; align-self: flex-start; margin-top: 0; /* Adjust if needed */"
+      >«</button>
+      <aside id="filters-sidebar" style="width: 300px; flex-shrink: 0; border-right: 1px solid var(--muted-border-color, #ccc); padding-right: var(--spacing, 1rem); padding-left: var(--spacing, 1rem);">
+        <!-- Removed button from here -->
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: var(--spacing, 1rem); /* Add space between items */
+            margin-bottom: var(
+              --form-element-spacing-vertical
+            ); /* Space between filter rows */
+            flex-direction: column; /* Stack filters vertically in sidebar */
+          "
+        >
+          <div style="width:100%;">
+            <input
+              type="text"
+              id="unit-filter"
+              name="unit"
+              list="unit-suggestions"
+              placeholder="Unit/Service (e.g., docker)"
+              title="Filter logs by systemd unit name (e.g., nginx.service)"
+              hx-get="logs"
+              hx-trigger="keyup changed delay:500ms"
+              hx-target="#results"
+              hx-indicator="#loading-spinner"
+              hx-include="#search-box, #tag-filter, #priority-filter, #time-range-filter, #live-view"
+              style="width:100%;"
+            />
+          </div>
+          <div style="width:100%;">
+            <input
+              type="text"
+              id="tag-filter"
+              name="tag"
+              placeholder="Syslog Tag (e.g., myapp)"
+              title="Filter logs by syslog identifier (tag)"
+              hx-get="logs"
+              hx-trigger="keyup changed delay:500ms"
+              hx-target="#results"
+              hx-indicator="#loading-spinner"
+              hx-include="#search-box, #unit-filter, #priority-filter, #time-range-filter, #live-view"
+              style="width:100%;"
+            />
+          </div>
+        </div>
+
+        <!-- Row 3: Time and Priority Filters -->
+        <div
+          style="
+            display: flex;
+            align-items: center; /* Vertically align items */
+            gap: var(--spacing, 1rem); /* Add space between items */
+            flex-direction: column; /* Stack filters vertically in sidebar */
+            margin-bottom: var(--form-element-spacing-vertical);
+          "
+        >
+          <div style="width:100%;">
+            <select
+              id="time-range-filter"
+              name="since"
+              hx-get="logs"
+              title="Filter logs by time range"
+              hx-trigger="change"
+              hx-target="#results"
+              hx-indicator="#loading-spinner"
+              hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #live-view"
+              style="width:100%;"
+            >
+              <option value="">Any time</option>
+              <!-- Default/no filter -->
+              <option value="-15m">Last 15 minutes</option>
+              <option value="-1h">Last 1 hour</option>
+              <option value="-1d">Last 24 hours</option>
+              <option value="-7d">Last week</option>
+              <!-- You could add more specific date/time inputs here if needed -->
+            </select>
+          </div>
+          <div style="width:100%;">
+            <select
+              id="priority-filter"
+              name="priority"
+              hx-get="logs"
+              title="Filter logs by priority level"
+              hx-trigger="change"
+              hx-target="#results"
+              hx-indicator="#loading-spinner"
+              hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
+              style="width:100%;"
+            >
+              <option value="0">Emergency</option>
+              <option value="1">Alert</option>
+              <option value="2">Critical</option>
+              <option value="3">Error</option>
+              <option value="4">Warning</option>
+              <option value="5" selected>Notice</option>
+              <option value="6">Informational</option>
+              <option value="7">Debug</option>
+            </select>
+          </div>
+        </div>
+        <div style="border-top: 1px solid var(--muted-border-color, #ccc); padding-top: var(--spacing, 1rem);">
+          <!-- Help button for command -->
+          <div
+            style="display: flex; align-items: center; gap: var(--spacing, 0.5rem);"
+          >
+            <button
+              id="show-command-button"
+              class="secondary"
+              aria-label="Show equivalent command"
+              title="Show equivalent journalctl command"
+              hx-get="command"
+              hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter, #live-view"
+              hx-trigger="click"
+              hx-swap="none"
+              hx-on:htmx:after-request="if(event.detail.successful) alert('These filters are the equivalent of: ' + event.detail.xhr.responseText); else alert('Error fetching command: ' + event.detail.xhr.statusText + '\\nCheck console for more details.');"
+              style="width: 2.5rem; height: 2.5rem; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
+            >
+              ❔
+            </button>
+            <button
+              id="copy-link-button"
+              class="secondary"
+              aria-label="Copy shareable link"
+              title="Copy link with current filters"
+              onclick="copyShareableLink()"
+              style="width: 2.5rem; height: 2.5rem; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
+            >
+              🔗
+            </button>
+            <div
+              style="margin-left: auto; display: flex; align-items: center;"
+            >
+              <label
+                for="live-view"
+                role="switch"
+                style="display: flex; align-items: center;"
+                title="Toggle live log updates every 10 seconds"
+              >
+                <input
+                  type="checkbox"
+                  id="live-view"
+                  name="live-view"
+                  role="switch"
+                  hx-get="logs"
+                  hx-target="#results"
+                  hx-indicator="#loading-spinner"
+                  hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter"
+                />
+                Live
+              </label>
+            </div>
+          </div>
+        </div>
+        <datalist id="unit-suggestions"></datalist>
+      </aside>
+      <main style="flex-grow: 1; min-width: 0; overflow-x: hidden;">
       <!-- Spinner Element -->
       <div
         id="loading-spinner"
@@ -272,11 +268,12 @@
         hx-trigger="load"
         hx-indicator="#loading-spinner"
         hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter, #live-view"
-        style="white-space: pre-wrap; font-family: monospace"
+        style="white-space: pre-wrap; font-family: monospace; overflow-x: auto;"
       >
         <!-- Results will be displayed here -->
       </div>
     </main>
+    </div>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <footer
       class="container"
@@ -348,6 +345,42 @@
             )
           ) {
             priorityFilter.value = params.get("priority");
+          }
+        }
+
+        // Sidebar Toggle Functionality
+        const toggleButton = document.getElementById('toggle-sidebar-btn');
+        const sidebar = document.getElementById('filters-sidebar');
+
+        function setSidebarState(isCollapsed) {
+          if (sidebar && toggleButton) {
+            if (isCollapsed) {
+              sidebar.classList.add('collapsed');
+              toggleButton.textContent = '»';
+              toggleButton.setAttribute('aria-expanded', 'false');
+              toggleButton.setAttribute('title', 'Show Filters Sidebar');
+            } else {
+              sidebar.classList.remove('collapsed');
+              toggleButton.textContent = '«';
+              toggleButton.setAttribute('aria-expanded', 'true');
+              toggleButton.setAttribute('title', 'Hide Filters Sidebar');
+            }
+          }
+        }
+
+        if (toggleButton && sidebar) {
+          toggleButton.addEventListener('click', () => {
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            setSidebarState(!isCollapsed); // Toggle the state
+            localStorage.setItem('sidebarCollapsed', !isCollapsed);
+          });
+
+          // Apply initial state from localStorage
+          const savedState = localStorage.getItem('sidebarCollapsed');
+          if (savedState !== null) {
+            setSidebarState(savedState === 'true');
+          } else {
+            setSidebarState(false); // Default to expanded if no saved state
           }
         }
       });
