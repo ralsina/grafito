@@ -28,7 +28,7 @@
     </style>
   </head>
   <body
-    hx-get="/services"
+    hx-get="services"
     hx-target="#unit-suggestions"
     hx-trigger="load"
     hx-swap="innerHTML"
@@ -54,7 +54,7 @@
           type="search"
           id="search-box"
           placeholder="Search logs..."
-          hx-get="/logs"
+          hx-get="logs"
           hx-trigger="keyup changed delay:500ms"
           hx-target="#results"
           name="q"
@@ -79,7 +79,7 @@
             name="unit"
             list="unit-suggestions"
             placeholder="Filter by unit (e.g., docker)"
-            hx-get="/logs"
+            hx-get="logs"
             hx-trigger="keyup changed delay:500ms"
             hx-target="#results"
             hx-indicator="#loading-spinner"
@@ -92,7 +92,7 @@
             id="tag-filter"
             name="tag"
             placeholder="Filter by tag (e.g., myapp)"
-            hx-get="/logs"
+            hx-get="logs"
             hx-trigger="keyup changed delay:500ms"
             hx-target="#results"
             hx-indicator="#loading-spinner"
@@ -103,7 +103,7 @@
           <select
             id="time-range-filter"
             name="since"
-            hx-get="/logs"
+            hx-get="logs"
             hx-trigger="change"
             hx-target="#results"
             hx-indicator="#loading-spinner"
@@ -125,7 +125,7 @@
             type="checkbox"
             id="live-view"
             name="live-view"
-            hx-get="/logs"
+            hx-get="logs"
             hx-target="#results"
             hx-indicator="#loading-spinner"
             hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter"
@@ -139,7 +139,7 @@
           <button
             id="show-command-button"
             class="secondary outline"
-            hx-get="/command"
+            hx-get="command"
             hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
             hx-trigger="click"
             hx-swap="none"
@@ -178,7 +178,7 @@
       <div
         id="live-view-poller"
         style="display: none"
-        hx-get="/logs"
+        hx-get="logs"
         hx-trigger="every 10s[document.getElementById('live-view').checked]"
         hx-target="#results"
         hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
@@ -186,7 +186,7 @@
 
       <div
         id="results"
-        hx-get="/logs"
+        hx-get="logs"
         hx-trigger="load"
         hx-indicator="#loading-spinner"
         hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
