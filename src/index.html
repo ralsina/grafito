@@ -18,6 +18,12 @@
     <style>
       body {
         font-family: "WDXL Lubrifont TC", sans-serif;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh; /* Ensure body takes at least full viewport height */
+      }
+      main {
+        flex-grow: 1; /* Allow main content to grow and push footer down */
       }
     </style>
   </head>
@@ -121,5 +127,14 @@
       </div>
     </main>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <footer class="container" style="text-align: center; padding-top: 20px; padding-bottom: 20px; margin-top: 20px; border-top: 1px solid var(--muted-border-color);">
+      <small>
+        ©️ 2025 Roberto Alsina |
+        <a href="https://grafito.ralsina.me" style="text-decoration: none;">🏠 grafito.ralsina.me</a> |
+        <a href="https://github.com/ralsina/grafito" style="text-decoration: none;">
+          ⌨️ ralsina/grafito
+        </a>
+      </small>
+    </footer>
   </body>
 </html>
