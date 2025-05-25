@@ -31,10 +31,25 @@
         padding-right: 0px !important;
         border-right: none !important;
         overflow: hidden;
-        /* Add a small transition for a smoother collapse/expand */
         transition: width 0.3s ease, padding 0.3s ease;
       }
-      /* Ensure the toggle button looks consistent in height with the search input */
+      #loading-spinner { /* Default state: hidden */
+        display: none;
+      }
+      #loading-spinner.htmx-request {
+        /* Overlay styles */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex; /* Use flex to center content */
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+        z-index: 1000; /* High z-index to be on top */
+        color: white; /* Make text white for contrast */
+      }
     </style>
   </head>
   <body
@@ -244,12 +259,11 @@
       <main style="flex-grow: 1; min-width: 0; overflow-x: hidden;">
       <!-- Spinner Element -->
       <div
-        id="loading-spinner"
-        class="htmx-indicator"
-        style="text-align: center; margin-bottom: 1em"
+        id="loading-spinner" class="htmx-indicator"
       >
-        <div aria-busy="true"></div>
-        <!-- PicoCSS spinner -->
+        <div style="padding: 20px; background-color: rgba(0,0,0,0.3); border-radius: var(--border-radius);">
+          Loading... <span aria-busy="true" style="--primary: white; --primary-inverse: #333;"></span>
+        </div>
       </div>
 
       <!-- Hidden poller for live view updates (no spinner) -->
