@@ -120,16 +120,19 @@
         <div
           style="display: flex; align-items: center; justify-content: center;"
         >
-          <input
-            type="checkbox"
-            id="live-view"
-            name="live-view"
-            hx-get="logs"
-            hx-target="#results"
-            hx-indicator="#loading-spinner"
-            hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter"
-          />
-          <label for="live-view">Live</label>
+          <label for="live-view" role="switch" style="display: flex; align-items: center;">
+            <input
+              type="checkbox"
+              id="live-view"
+              name="live-view"
+              role="switch"
+              hx-get="logs"
+              hx-target="#results"
+              hx-indicator="#loading-spinner"
+              hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter"
+            />
+            Live
+          </label>
         </div>
         <!-- Help button for command -->
         <div
@@ -137,7 +140,7 @@
         >
           <button
             id="show-command-button"
-            class="secondary outline"
+            class="secondary"
             hx-get="command"
             hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
             hx-trigger="click"
@@ -162,7 +165,7 @@
         >
           <button
             id="copy-link-button"
-            class="secondary outline"
+            class="secondary"
             onclick="copyShareableLink()"
             aria-label="Copy shareable link"
             title="Copy link with current filters"
