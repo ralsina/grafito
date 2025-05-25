@@ -32,7 +32,8 @@
                hx-trigger="keyup changed delay:500ms" 
                hx-target="#results" 
                name="q"
-               hx-include="#unit-filter, #tag-filter, #live-view"
+               hx-indicator="#loading-spinner"
+               hx-include="#unit-filter, #tag-filter, #time-range-filter, #live-view"
                />
         <!-- New row for filters -->
         <div class="grid">
@@ -43,7 +44,8 @@
                    hx-get="/logs"
                    hx-trigger="keyup changed delay:500ms"
                    hx-target="#results"
-                   hx-include="#search-box, #tag-filter, #live-view"
+                   hx-indicator="#loading-spinner"
+                   hx-include="#search-box, #tag-filter, #time-range-filter, #live-view"
             >
           </div>
           <datalist id="unit-suggestions"></datalist>
@@ -55,8 +57,27 @@
                    hx-get="/logs"
                    hx-trigger="keyup changed delay:500ms"
                    hx-target="#results"
-                   hx-include="#search-box, #unit-filter, #live-view"
+                   hx-indicator="#loading-spinner"
+                   hx-include="#search-box, #unit-filter, #time-range-filter, #live-view"
             >
+          </div>
+
+          <!-- Time Range filter group -->
+          <div>
+            <label for="time-range-filter">Time Range</label>
+            <select id="time-range-filter" name="since"
+                    hx-get="/logs"
+                    hx-trigger="change"
+                    hx-target="#results"
+                    hx-indicator="#loading-spinner"
+                    hx-include="#search-box, #unit-filter, #tag-filter, #live-view">
+              <option value="">Any time</option> <!-- Default/no filter -->
+              <option value="-15m">Last 15 minutes</option>
+              <option value="-1h">Last 1 hour</option>
+              <option value="-1d">Last 24 hours</option>
+              <option value="-7d">Last week</option>
+              <!-- You could add more specific date/time inputs here if needed -->
+            </select>
           </div>
 
         <!-- Live view checkbox group - Uncommented and styled to align better -->
@@ -70,9 +91,16 @@
     </header>
     <hr class="container"> <!-- Added horizontal line -->
     <main class="container" style="padding: 20px;">
-      <!-- The hx-indicator could be placed here or near the #results div -->
-      <!-- <div class="htmx-indicator">Loading...</div> -->
-      <div id="results" 
+      <!-- Spinner Element -->
+      <div id="loading-spinner" class="htmx-indicator" style="text-align: center; margin-bottom: 1em;">
+        <div aria-busy="true"></div> <!-- PicoCSS spinner -->
+      </div>
+
+      <div id="results"
+           hx-get="/logs"
+           hx-trigger="load"
+           hx-indicator="#loading-spinner"
+           hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
            style="white-space: pre-wrap; font-family: monospace;">
         <!-- Results will be displayed here -->
       </div>

@@ -39,21 +39,23 @@ class Journalctl
   # Queries the logs based on the provided criteria.
   #
   # Args:
-  #   date: The date to filter logs by (YYYY-MM-DD).  Can be a Time object or a String.
+  #   since: A time offset, like -15m or nil for no filter
   #   unit: The systemd unit to filter by (e.g., "nginx.service").
   #   tag:  The syslog identifier (tag) to filter by.
+  #   live: A boolean indicating if the logs should be streamed live (not implemented yet).
+  #   query: A string to filter logs by a specific search term.
   #
   # Returns:
-  #   A String containing the journalctl output, or nil if an error occurs.
+  #   An array of LogEntry
   def self.query(
-    date : Time | String | Nil = nil,
+    since : String | Nil = nil,
     unit : String | Nil = nil,
     tag : String | Nil = nil,
     live : Bool | Nil = nil,
     query : String | Nil = nil,
   ) : Array(LogEntry) | Nil
     Log.debug { "Executing Journalctl.query with arguments:" }
-    Log.debug { "  Date: #{date.inspect}" }
+    Log.debug { "  Since: #{since.inspect}" }
     Log.debug { "  Unit: #{unit.inspect}" }
     Log.debug { "  Tag: #{tag.inspect}" }
     Log.debug { "  Live: #{live.inspect}" }
@@ -64,11 +66,10 @@ class Journalctl
     tag = nil if tag.is_a?(String) && tag.strip.empty?
     query = nil if query.is_a?(String) && query.strip.empty?
 
-    command = ["journalctl", "-o", "json", "-n", "100", "-r"]
+    command = ["journalctl", "-o", "json", "-n", "5000", "-r"]
 
-    if date
-      date_str = date.is_a?(Time) ? date.strftime("%Y-%m-%d") : date
-      command << "--since" << date_str
+    if since
+      command << "-S" << since
     end
 
     if unit

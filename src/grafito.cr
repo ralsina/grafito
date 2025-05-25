@@ -28,13 +28,16 @@ module Grafito
   get "/logs" do |env|
     Log.debug { "Received /logs request with query params: #{env.params.query.inspect}" }
 
-    date = env.params.query["date"]?
+    # since_param is a negative number of seconds ago.
+    # If since_param is nil or >=0, it means "Any time" was selected.
+    since = env.params.query["since"]?
+    since = (since && !since.strip.empty?) ? since : nil
+
     unit = env.params.query["unit"]?
     tag = env.params.query["tag"]?
     search_query = env.params.query["q"]?         # General search term from main input
     live = env.params.query["live-view"]? == "on" # From the "live-view" checkbox
-
-    logs = Journalctl.query(date: date, unit: unit, tag: tag, live: live, query: search_query)
+    logs = Journalctl.query(since: since, unit: unit, tag: tag, live: live, query: search_query)
 
     env.response.content_type = "text/html" # Set content type for all responses
 
