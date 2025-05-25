@@ -19,17 +19,21 @@ class Journalctl
     property timestamp : String
     @[JSON::Field(key: "MESSAGE")]
     property message : String
+    @[JSON::Field(key: "PRIORITY")]
+    property priority : String
 
     def initialize(
       timestamp : String | JSON::Any | Nil = nil,
       message : String | JSON::Any | Nil = nil,
+      priority : String | JSON::Any | Nil = nil,
     )
       @timestamp = (timestamp || "0").to_s.strip
       @message = (message || "").to_s.strip
+      @priority = (priority || "7").to_s.strip # Default to "7" (debug) if not present
     end
 
     def to_s
-      "#{@timestamp} - #{@message}"
+      "#{@timestamp} [Prio: #{@priority}] - #{@message}"
     end
 
     # Converts the raw timestamp string to a formatted date/time string.
@@ -42,6 +46,24 @@ class Journalctl
       Journalctl::Log.warn(exception: ex) { "Failed to parse timestamp: '#{@timestamp}'" }
       "Invalid Timestamp"
     end
+
+    # Converts the numeric priority string to its textual representation.
+    def formatted_priority : String
+      case @priority
+      when "0" then "Emergency"
+      when "1" then "Alert"
+      when "2" then "Critical"
+      when "3" then "Error"
+      when "4" then "Warning"
+      when "5" then "Notice"
+      when "6" then "Informational"
+      when "7" then "Debug"
+      else
+        # If priority is unknown or not a standard number, return the original value
+        Journalctl::Log.debug { "Unknown priority value: '#{@priority}'" }
+        @priority
+      end
+    end
   end
 
   # Builds the journalctl command array based on the provided filters.
@@ -51,6 +73,7 @@ class Journalctl
     unit : String | Nil,
     tag : String | Nil,
     query : String | Nil,
+    priority : String | Nil,
   ) : Array(String)
     command = ["journalctl", "-o", "json", "-n", "5000", "-r"]
 
@@ -68,6 +91,10 @@ class Journalctl
 
     if query
       command << "-g" << query
+    end
+
+    if priority
+      command << "-p" << priority
     end
     command
   end
@@ -88,19 +115,25 @@ class Journalctl
     unit : String | Nil = nil,
     tag : String | Nil = nil,
     query : String | Nil = nil,
+    priority : String | Nil = nil,
+    sort_by : String | Nil = nil,
+    sort_order : String | Nil = nil,
   ) : Array(LogEntry) | Nil
     Log.debug { "Executing Journalctl.query with arguments:" }
     Log.debug { "  Since: #{since.inspect}" }
     Log.debug { "  Unit: #{unit.inspect}" }
     Log.debug { "  Tag: #{tag.inspect}" }
     Log.debug { "  Query: #{query.inspect}" }
+    Log.debug { "  Priority: #{priority.inspect}" }
+    Log.debug { "  SortBy: #{sort_by.inspect}" }
+    Log.debug { "  SortOrder: #{sort_order.inspect}" }
 
     # Treat empty string parameters for unit and tag as nil
     unit = nil if unit.is_a?(String) && unit.strip.empty?
     tag = nil if tag.is_a?(String) && tag.strip.empty?
     query = nil if query.is_a?(String) && query.strip.empty?
-
-    command = build_query_command(since, unit, tag, query)
+    priority = nil if priority.is_a?(String) && priority.strip.empty?
+    command = build_query_command(since, unit, tag, query, priority)
     Log.debug { "Generated journalctl command: #{command.inspect}" }
     # Execute the command and capture the output.
     stdout = IO::Memory.new
@@ -117,6 +150,7 @@ class Journalctl
           LogEntry.new(
             timestamp: parsed_json["__REALTIME_TIMESTAMP"]?.to_s,
             message: parsed_json["MESSAGE"]?,
+            priority: parsed_json["PRIORITY"]?,
           )
         rescue ex : JSON::ParseException
           Log.warn(exception: ex) { "Failed to parse log line: #{line.inspect[..100]}" }
@@ -124,7 +158,34 @@ class Journalctl
         end
       end
 
-      Log.debug { "Returning #{log_entries.size} log entries." }
+      # Sort the entries if sort_by is provided
+      if sort_by && log_entries
+        is_ascending = sort_order.nil? || sort_order.downcase == "asc"
+        Log.debug { "Sorting by '#{sort_by}', order: #{is_ascending ? "ASC" : "DESC"}" }
+
+        log_entries.sort! do |a, b|
+          cmp = 0
+          case sort_by
+          when "timestamp"
+            # __REALTIME_TIMESTAMP is microseconds since epoch
+            cmp = a.timestamp.to_i64 <=> b.timestamp.to_i64
+          when "priority"
+            # PRIORITY is a string "0".."7"
+            cmp = a.priority.to_i <=> b.priority.to_i
+          when "message"
+            cmp = a.message.downcase <=> b.message.downcase
+          else
+            Log.warn { "Unknown sort_by key: #{sort_by}" }
+            0 # Default to no change in order for unknown keys
+          end
+          is_ascending ? cmp : -cmp
+        end
+      else
+        # If not sorting, journalctl -r already provides reverse chronological order (newest first)
+        Log.debug { "No specific sorting requested, relying on journalctl default order (or no entries)." }
+      end
+
+      Log.debug { "Returning #{log_entries.try &.size.to_s || "0"} log entries." }
       log_entries # journalctl has already filtered if query was provided
     else
       # Log an error if journalctl command failed

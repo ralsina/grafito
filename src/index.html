@@ -60,7 +60,7 @@
           hx-target="#results"
           name="q"
           hx-indicator="#loading-spinner"
-          hx-include="#unit-filter, #tag-filter, #time-range-filter, #live-view"
+          hx-include="#unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view"
           style="width: 100%; height: 2.5rem"
         />
       </div>
@@ -71,7 +71,9 @@
           display: flex;
           align-items: center; /* Vertically align items */
           gap: var(--spacing, 1rem); /* Add space between items */
-        ">
+          margin-bottom: var(--form-element-spacing-vertical); /* Space between filter rows */
+        "
+      >
         <div>
           <input
             type="text"
@@ -84,7 +86,7 @@
             hx-trigger="keyup changed delay:500ms"
             hx-target="#results"
             hx-indicator="#loading-spinner"
-            hx-include="#search-box, #tag-filter, #time-range-filter, #live-view"
+            hx-include="#search-box, #tag-filter, #priority-filter, #time-range-filter, #live-view"
           />
         </div>
         <div>
@@ -98,9 +100,41 @@
             hx-trigger="keyup changed delay:500ms"
             hx-target="#results"
             hx-indicator="#loading-spinner"
-            hx-include="#search-box, #unit-filter, #time-range-filter, #live-view"
+            hx-include="#search-box, #unit-filter, #priority-filter, #time-range-filter, #live-view"
           />
         </div>
+        <div
+          style="display: flex; align-items: center; justify-content: center"
+        >
+          <label
+            for="live-view"
+            role="switch"
+            style="display: flex; align-items: center"
+            title="Toggle live log updates every 10 seconds"
+          >
+            <input
+              type="checkbox"
+              id="live-view"
+              name="live-view"
+              role="switch"
+              hx-get="logs"
+              hx-target="#results"
+              hx-indicator="#loading-spinner"
+              hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter"
+            />
+            Live
+          </label>
+        </div>
+      </div>
+
+      <!-- Row 3: Time and Priority Filters -->
+      <div
+        style="
+          display: flex;
+          align-items: center; /* Vertically align items */
+          gap: var(--spacing, 1rem); /* Add space between items */
+        "
+      >
         <div>
           <select
             id="time-range-filter"
@@ -110,7 +144,7 @@
             hx-trigger="change"
             hx-target="#results"
             hx-indicator="#loading-spinner"
-            hx-include="#search-box, #unit-filter, #tag-filter, #live-view"
+            hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #live-view"
           >
             <option value="">Any time</option>
             <!-- Default/no filter -->
@@ -121,32 +155,41 @@
             <!-- You could add more specific date/time inputs here if needed -->
           </select>
         </div>
-        <div
-          style="display: flex; align-items: center; justify-content: center;"
-        >
-          <label for="live-view" role="switch" style="display: flex; align-items: center;" title="Toggle live log updates every 10 seconds">
-            <input
-              type="checkbox"
-              id="live-view"
-              name="live-view"
-              role="switch"
-              hx-get="logs"
-              hx-target="#results"
-              hx-indicator="#loading-spinner"
-              hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter"
-            />
-            Live
-          </label>
+        <div>
+          <select
+            id="priority-filter"
+            name="priority"
+            hx-get="logs"
+            title="Filter logs by priority level"
+            hx-trigger="change"
+            hx-target="#results"
+            hx-indicator="#loading-spinner"
+            hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
+          >
+            <option value="0">Emergency</option>
+            <option value="1">Alert</option>
+            <option value="2">Critical</option>
+            <option value="3">Error</option>
+            <option value="4">Warning</option>
+            <option value="5" selected>Notice</option>
+            <option value="6">Informational</option>
+            <option value="7">Debug</option>
+          </select>
         </div>
         <!-- Help button for command -->
         <div
-          style="display: flex; align-items: center; justify-content: center; width: fit-content;"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: fit-content;
+          "
         >
           <button
             id="show-command-button"
             class="secondary"
             hx-get="command"
-            hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
+            hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter, #live-view"
             hx-trigger="click"
             hx-swap="none"
             hx-on:htmx:after-request="if(event.detail.successful) alert('These filters are the equivalent of: ' + event.detail.xhr.responseText); else alert('Error fetching command: ' + event.detail.xhr.statusText + '\\nCheck console for more details.');"
@@ -161,11 +204,18 @@
               align-items: center;
               justify-content: center;
             "
-          >❔</button>
+          >
+            ❔
+          </button>
         </div>
         <!-- Copy Link button -->
         <div
-          style="display: flex; align-items: center; justify-content: center; width: fit-content;"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: fit-content;
+          "
         >
           <button
             id="copy-link-button"
@@ -174,19 +224,22 @@
             aria-label="Copy shareable link"
             title="Copy link with current filters"
             style="
-              width: 2.5rem; 
-              height: 2.5rem; 
+              width: 2.5rem;
+              height: 2.5rem;
               border-radius: 50%;
-              padding: 0; 
-              display: inline-flex; 
-              align-items: center; 
+              padding: 0;
+              display: inline-flex;
+              align-items: center;
               justify-content: center;
             "
-          >🔗</button>
+          >
+            🔗
+          </button>
         </div>
       </div>
       <!-- End of grid -->
-      <datalist id="unit-suggestions"></datalist> <!-- Datalist can be here -->
+      <datalist id="unit-suggestions"></datalist>
+      <!-- Datalist can be here -->
     </header>
     <hr class="container" />
     <!-- Added horizontal line -->
@@ -208,7 +261,7 @@
         hx-get="logs"
         hx-trigger="every 10s[document.getElementById('live-view').checked]"
         hx-target="#results"
-        hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
+        hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter, #live-view"
       ></div>
 
       <div
@@ -216,7 +269,7 @@
         hx-get="logs"
         hx-trigger="load"
         hx-indicator="#loading-spinner"
-        hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
+        hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter, #live-view"
         style="white-space: pre-wrap; font-family: monospace"
       >
         <!-- Results will be displayed here -->
@@ -234,86 +287,111 @@
       "
     >
       <small>
-        <a href="https://links.ralsina.me" style="text-decoration: none;"
+        <a href="https://links.ralsina.me" style="text-decoration: none"
           >© 2025 Roberto Alsina</a
-        > |
-        <a href="https://grafito.ralsina.me" style="text-decoration: none;"
+        >
+        |
+        <a href="https://grafito.ralsina.me" style="text-decoration: none"
           >🏚 grafito.ralsina.me</a
         >
         |
         <a
           href="https://github.com/ralsina/grafito"
-          style="text-decoration: none;"
+          style="text-decoration: none"
         >
           ⌨ ralsina/grafito
         </a>
       </small>
     </footer>
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener("DOMContentLoaded", function () {
         const params = new URLSearchParams(window.location.search);
 
-        const searchBox = document.getElementById('search-box');
-        if (params.has('q') && searchBox) {
-          searchBox.value = params.get('q');
+        const searchBox = document.getElementById("search-box");
+        if (params.has("q") && searchBox) {
+          searchBox.value = params.get("q");
         }
 
-        const unitFilter = document.getElementById('unit-filter');
-        if (params.has('unit') && unitFilter) {
-          unitFilter.value = params.get('unit');
+        const unitFilter = document.getElementById("unit-filter");
+        if (params.has("unit") && unitFilter) {
+          unitFilter.value = params.get("unit");
         }
 
-        const tagFilter = document.getElementById('tag-filter');
-        if (params.has('tag') && tagFilter) {
-          tagFilter.value = params.get('tag');
+        const tagFilter = document.getElementById("tag-filter");
+        if (params.has("tag") && tagFilter) {
+          tagFilter.value = params.get("tag");
         }
 
-        const timeRangeFilter = document.getElementById('time-range-filter');
-        if (params.has('since') && timeRangeFilter) {
+        const timeRangeFilter = document.getElementById("time-range-filter");
+        if (params.has("since") && timeRangeFilter) {
           // Ensure the value exists as an option before setting it
-          if (Array.from(timeRangeFilter.options).some(opt => opt.value === params.get('since'))) {
-            timeRangeFilter.value = params.get('since');
+          if (
+            Array.from(timeRangeFilter.options).some(
+              (opt) => opt.value === params.get("since")
+            )
+          ) {
+            timeRangeFilter.value = params.get("since");
           }
         }
 
-        const liveViewCheckbox = document.getElementById('live-view');
-        if (params.has('live-view') && liveViewCheckbox) {
-          liveViewCheckbox.checked = params.get('live-view') === 'on';
+        const liveViewCheckbox = document.getElementById("live-view");
+        if (params.has("live-view") && liveViewCheckbox) {
+          liveViewCheckbox.checked = params.get("live-view") === "on";
+        }
+        const priorityFilter = document.getElementById("priority-filter");
+        if (params.has("priority") && priorityFilter) {
+          if (
+            Array.from(priorityFilter.options).some(
+              (opt) => opt.value === params.get("priority")
+            )
+          ) {
+            priorityFilter.value = params.get("priority");
+          }
         }
       });
 
       function copyShareableLink() {
         const params = new URLSearchParams();
 
-        const searchBox = document.getElementById('search-box');
+        const searchBox = document.getElementById("search-box");
         if (searchBox && searchBox.value) {
-          params.set('q', searchBox.value);
+          params.set("q", searchBox.value);
         }
 
-        const unitFilter = document.getElementById('unit-filter');
+        const unitFilter = document.getElementById("unit-filter");
         if (unitFilter && unitFilter.value) {
-          params.set('unit', unitFilter.value);
+          params.set("unit", unitFilter.value);
         }
 
-        const tagFilter = document.getElementById('tag-filter');
+        const tagFilter = document.getElementById("tag-filter");
         if (tagFilter && tagFilter.value) {
-          params.set('tag', tagFilter.value);
+          params.set("tag", tagFilter.value);
         }
 
-        const timeRangeFilter = document.getElementById('time-range-filter');
+        const timeRangeFilter = document.getElementById("time-range-filter");
         if (timeRangeFilter && timeRangeFilter.value) {
-          params.set('since', timeRangeFilter.value);
+          params.set("since", timeRangeFilter.value);
         }
 
-        const liveViewCheckbox = document.getElementById('live-view');
+        const liveViewCheckbox = document.getElementById("live-view");
         if (liveViewCheckbox && liveViewCheckbox.checked) {
-          params.set('live-view', 'on');
+          params.set("live-view", "on");
         }
 
-        const shareUrl = window.location.origin + window.location.pathname + '?' + params.toString();
-        navigator.clipboard.writeText(shareUrl)
-          .then(() => alert('Link copied to clipboard!'))
-          .catch(err => alert('Failed to copy link: ' + err));
+        const priorityFilter = document.getElementById("priority-filter");
+        if (priorityFilter && priorityFilter.value) {
+          params.set("priority", priorityFilter.value);
+        }
+
+        const shareUrl =
+          window.location.origin +
+          window.location.pathname +
+          "?" +
+          params.toString();
+        navigator.clipboard
+          .writeText(shareUrl)
+          .then(() => alert("Link copied to clipboard!"))
+          .catch((err) => alert("Failed to copy link: " + err));
       }
     </script>
   </body>

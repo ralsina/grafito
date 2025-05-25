@@ -25,7 +25,7 @@ module Grafito
 
   # Matches GET "http://host:port/" and serves the index.html file.
   get "/favicon.svg" do |env|
-    env.response.content_type = "text/html"
+    env.response.content_type = "image/svg+xml"
     env.response.print Assets.get("favicon.svg").gets_to_end
   end
 
@@ -37,36 +37,87 @@ module Grafito
 
   # Exposes the Journalctl wrapper via a REST API.
   # Example usage:
-  #   GET /logs?date=2024-01-15&unit=sshd.service&tag=sshd
-  #   GET /logs?unit=nginx.service
+  #   GET /logs?unit=sshd.service&tag=sshd
+  #   GET /logs?unit=nginx.service&since=-1h
   get "/logs" do |env|
     Log.debug { "Received /logs request with query params: #{env.params.query.inspect}" }
 
-    # since_param is a negative number of seconds ago.
-    # If since_param is nil or >=0, it means "Any time" was selected.
+    # If since_param is nil, it means "Any time" was selected.
     since = env.params.query["since"]?
     since = (since && !since.strip.empty?) ? since : nil
 
     unit = env.params.query["unit"]?
     tag = env.params.query["tag"]?
     search_query = env.params.query["q"]? # General search term from main input
-    logs = Journalctl.query(since: since, unit: unit, tag: tag, query: search_query)
+    priority = env.params.query["priority"]?
+    priority = (priority && !priority.strip.empty?) ? priority : nil
+    current_sort_by = env.params.query["sort_by"]?
+    current_sort_order = env.params.query["sort_order"]?
+
+    Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}" }
+
+    logs = Journalctl.query(
+      since: since,
+      unit: unit,
+      tag: tag,
+      query: search_query,
+      priority: priority,
+      sort_by: current_sort_by,
+      sort_order: current_sort_order
+    )
 
     env.response.content_type = "text/html" # Set content type for all responses
+
+    # Helper to generate attributes for sortable table headers
+    header_attrs_generator = ->(column_key_name : String, display_text : String) do
+      sort_indicator = ""
+      next_sort_order_for_click = "asc" # Default next sort is ascending
+
+      if current_sort_by == column_key_name
+        if current_sort_order == "asc"
+          sort_indicator = " <span aria-hidden=\"true\">▲</span>" # Up arrow for ascending
+          next_sort_order_for_click = "desc"       # Next click will be descending
+        elsif current_sort_order == "desc"
+          sort_indicator = " <span aria-hidden=\"true\">▼</span>" # Down arrow for descending
+          next_sort_order_for_click = "asc"        # Next click will be ascending
+        else # current_sort_order is nil or something else, treat as unsorted for this column
+          next_sort_order_for_click = "asc"
+        end
+      end
+
+      vals_json = String.build do |s|
+        s << %({"sort_by": ") << column_key_name << %(", "sort_order": ") << next_sort_order_for_click << %("})
+      end
+
+      {
+        text:     display_text + sort_indicator,
+        hx_vals:  vals_json,
+        key_name: column_key_name,
+      }
+    end
 
     if logs
       html_output = String.build do |str|
         # Added "striped" class for PicoCSS styling, and some inline style for the empty message
         str << "<table class=\"striped\">"
-        str << "<thead><tr><th>Timestamp</th><th>Message</th></tr></thead>"
+        str << "<thead><tr>"
+        [
+          header_attrs_generator.call("timestamp", "Timestamp"),
+          header_attrs_generator.call("priority", "Priority"),
+          header_attrs_generator.call("message", "Message"),
+        ].each do |header|
+          str << "<th style=\"cursor: pointer;\" hx-get=\"/logs\" hx-vals='" << header[:hx_vals] << "' hx-include=\"#search-box, #unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view\" hx-target=\"#results\" hx-indicator=\"#loading-spinner\">" << header[:text] << "</th>"
+        end
+        str << "</tr></thead>"
         str << "<tbody>"
         if logs.empty?
-          str << "<tr><td colspan=\"2\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>"
+          str << "<tr><td colspan=\"3\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>"
         else
           logs.each do |entry|
             str << "<tr>"
             str << "<td>" << entry.formatted_timestamp << "</td>"
-            str << "<td>" << HTML.escape(entry.message) << "</td>"
+            str << "<td>" << HTML.escape(entry.formatted_priority) << "</td>"
+            str << "<td style=\"white-space: normal; overflow-wrap: break-word; word-wrap: break-word; max-width: 60vw;\">" << HTML.escape(entry.message) << "</td>" # Adjusted max-width slightly
             str << "</tr>"
           end
         end
@@ -121,7 +172,11 @@ module Grafito
     search_query = env.params.query["q"]?
     search_query = (search_query && !search_query.strip.empty?) ? search_query : nil
 
-    command_array = Journalctl.build_query_command(since: since, unit: unit, tag: tag, query: search_query)
+    priority = env.params.query["priority"]?
+    priority = (priority && !priority.strip.empty?) ? priority : nil
+
+    Log.debug { "Building command with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}" }
+    command_array = Journalctl.build_query_command(since: since, unit: unit, tag: tag, query: search_query, priority: priority)
     env.response.content_type = "text/plain"
     env.response.print "\"#{command_array.join(" ")}\""
   end
