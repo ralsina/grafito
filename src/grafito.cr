@@ -103,6 +103,7 @@ module Grafito
         str << "<thead><tr>"
         [
           header_attrs_generator.call("timestamp", "Timestamp"),
+          header_attrs_generator.call("service", "Service"), # Added Service header
           header_attrs_generator.call("priority", "Priority"),
           header_attrs_generator.call("message", "Message"),
         ].each do |header|
@@ -111,7 +112,7 @@ module Grafito
         str << "</tr></thead>"
         str << "<tbody>"
         if logs.empty?
-          str << "<tr><td colspan=\"3\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>"
+          str << "<tr><td colspan=\"4\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>" # Updated colspan
         else
           # Helper to get a background color style based on priority
           get_priority_style = ->(priority_value : String) do
@@ -134,6 +135,7 @@ module Grafito
             str << " style=\"" << priority_style << "\"" if !priority_style.empty?
             str << ">"
             str << "<td>" << entry.formatted_timestamp << "</td>"
+            str << "<td>" << HTML.escape(entry.service.nil? ? "N/A" : entry.service.as(String)) << "</td>" # Display service, handle nil
             str << "<td>" << HTML.escape(entry.formatted_priority) << "</td>"
             str << "<td style=\"white-space: normal; overflow-wrap: break-word; word-wrap: break-word; max-width: 60vw;\">" << HTML.escape(entry.message) << "</td>" # Adjusted max-width slightly
             str << "</tr>"

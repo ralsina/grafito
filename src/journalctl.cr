@@ -21,19 +21,23 @@ class Journalctl
     property message : String
     @[JSON::Field(key: "PRIORITY")]
     property priority : String
+    @[JSON::Field(key: "_SYSTEMD_UNIT")]
+    property service : String? # Can be nil if not present for a log entry
 
     def initialize(
       timestamp : String | JSON::Any | Nil = nil,
       message : String | JSON::Any | Nil = nil,
       priority : String | JSON::Any | Nil = nil,
+      service : String | JSON::Any | Nil = nil,
     )
       @timestamp = (timestamp || "0").to_s.strip
       @message = (message || "").to_s.strip
       @priority = (priority || "7").to_s.strip # Default to "7" (debug) if not present
+      @service = (service || "N/A").to_s.strip.gsub(/\.service$/, "") # Remove ".service" suffix if present
     end
 
     def to_s
-      "#{@timestamp} [Prio: #{@priority}] - #{@message}"
+      "#{@timestamp} [#{@service || "N/A"}] [Prio: #{@priority}] - #{@message}"
     end
 
     # Converts the raw timestamp string to a formatted date/time string.
@@ -151,6 +155,7 @@ class Journalctl
             timestamp: parsed_json["__REALTIME_TIMESTAMP"]?.to_s,
             message: parsed_json["MESSAGE"]?,
             priority: parsed_json["PRIORITY"]?,
+            service: parsed_json["_SYSTEMD_UNIT"]?,
           )
         rescue ex : JSON::ParseException
           Log.warn(exception: ex) { "Failed to parse log line: #{line.inspect[..100]}" }
