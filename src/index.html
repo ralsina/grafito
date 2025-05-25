@@ -70,8 +70,7 @@
           display: flex;
           align-items: center; /* Vertically align items */
           gap: var(--spacing, 1rem); /* Add space between items */
-        "
-      <div class="grid">
+        ">
         <div>
           <input
             type="text"
@@ -130,7 +129,7 @@
             hx-indicator="#loading-spinner"
             hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter"
           />
-          <label for="live-view">Live&nbsp;view</label>
+          <label for="live-view">Live</label>
         </div>
         <!-- Help button for command -->
         <div
@@ -156,6 +155,27 @@
               justify-content: center;
             "
           >❔</button>
+        </div>
+        <!-- Copy Link button -->
+        <div
+          style="display: flex; align-items: center; justify-content: center; width: fit-content;"
+        >
+          <button
+            id="copy-link-button"
+            class="secondary outline"
+            onclick="copyShareableLink()"
+            aria-label="Copy shareable link"
+            title="Copy link with current filters"
+            style="
+              width: 2.5rem; 
+              height: 2.5rem; 
+              border-radius: 50%;
+              padding: 0; 
+              display: inline-flex; 
+              align-items: center; 
+              justify-content: center;
+            "
+          >🔗</button>
         </div>
       </div>
       <!-- End of grid -->
@@ -216,9 +236,76 @@
           href="https://github.com/ralsina/grafito"
           style="text-decoration: none"
         >
-          ⌨️ ralsina/grafito
+          ⌨ ralsina/grafito
         </a>
       </small>
     </footer>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+
+        const searchBox = document.getElementById('search-box');
+        if (params.has('q') && searchBox) {
+          searchBox.value = params.get('q');
+        }
+
+        const unitFilter = document.getElementById('unit-filter');
+        if (params.has('unit') && unitFilter) {
+          unitFilter.value = params.get('unit');
+        }
+
+        const tagFilter = document.getElementById('tag-filter');
+        if (params.has('tag') && tagFilter) {
+          tagFilter.value = params.get('tag');
+        }
+
+        const timeRangeFilter = document.getElementById('time-range-filter');
+        if (params.has('since') && timeRangeFilter) {
+          // Ensure the value exists as an option before setting it
+          if (Array.from(timeRangeFilter.options).some(opt => opt.value === params.get('since'))) {
+            timeRangeFilter.value = params.get('since');
+          }
+        }
+
+        const liveViewCheckbox = document.getElementById('live-view');
+        if (params.has('live-view') && liveViewCheckbox) {
+          liveViewCheckbox.checked = params.get('live-view') === 'on';
+        }
+      });
+
+      function copyShareableLink() {
+        const params = new URLSearchParams();
+
+        const searchBox = document.getElementById('search-box');
+        if (searchBox && searchBox.value) {
+          params.set('q', searchBox.value);
+        }
+
+        const unitFilter = document.getElementById('unit-filter');
+        if (unitFilter && unitFilter.value) {
+          params.set('unit', unitFilter.value);
+        }
+
+        const tagFilter = document.getElementById('tag-filter');
+        if (tagFilter && tagFilter.value) {
+          params.set('tag', tagFilter.value);
+        }
+
+        const timeRangeFilter = document.getElementById('time-range-filter');
+        if (timeRangeFilter && timeRangeFilter.value) {
+          params.set('since', timeRangeFilter.value);
+        }
+
+        const liveViewCheckbox = document.getElementById('live-view');
+        if (liveViewCheckbox && liveViewCheckbox.checked) {
+          params.set('live-view', 'on');
+        }
+
+        const shareUrl = window.location.origin + window.location.pathname + '?' + params.toString();
+        navigator.clipboard.writeText(shareUrl)
+          .then(() => alert('Link copied to clipboard!'))
+          .catch(err => alert('Failed to copy link: ' + err));
+      }
+    </script>
   </body>
 </html>
