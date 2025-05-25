@@ -1,6 +1,7 @@
 require "kemal"
 require "json"
 require "./journalctl"
+require "./timeline"
 require "baked_file_system"
 
 module Grafito
@@ -99,6 +100,15 @@ module Grafito
 
     if logs
       html_output = String.build do |str|
+        # Generate and add the timeline SVG
+        # Pass an empty array to generate_frequency_timeline if logs is nil,
+        # though in this block, logs is guaranteed to be non-nil.
+        # The generate_svg_timeline function handles empty timeline_data gracefully.
+        timeline_data = Timeline.generate_frequency_timeline(logs)
+        # You can customize SVG dimensions and other parameters here if needed
+        svg_timeline_html = Timeline.generate_svg_timeline(timeline_data, width: 700, height: 150, padding_top: 20, padding_bottom: 30, padding_left: 40, padding_right: 20, title_text: "Log Entry Frequency (Last 5000 or Filtered)")
+        str << "<div style=\"margin-bottom: 1em;\">" << svg_timeline_html << "</div>"
+
         # Added "striped" class for PicoCSS styling, and some inline style for the empty message
         str << "<table class=\"striped\">"
 

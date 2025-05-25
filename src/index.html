@@ -210,6 +210,9 @@
               <option value="-1h">Last 1 hour</option>
               <option value="-1d">Last 24 hours</option>
               <option value="-7d">Last week</option>
+              <option value="-1M">Last month</option>
+              <option value="-3M">Last 3 months</option>
+              <option value="-1y">Last year</option>
               <!-- You could add more specific date/time inputs here if needed -->
             </select>
           </div>
@@ -345,7 +348,7 @@
         <div
           id="results"
           hx-get="logs"
-          hx-trigger="load"
+          hx-trigger="initial-load-event from:body"
           hx-indicator="#loading-spinner"
           hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter, #live-view"
           style="
@@ -467,6 +470,9 @@
           } else {
             setSidebarState(false); // Default to expanded if no saved state
           }
+
+          // Trigger the initial load for #results after filters are set from URL
+          htmx.trigger(document.body, "initial-load-event", {});
         }
       });
 
