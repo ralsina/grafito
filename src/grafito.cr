@@ -31,16 +31,35 @@ module Grafito
     date = env.params.query["date"]?
     unit = env.params.query["unit"]?
     tag = env.params.query["tag"]?
-    search_query = env.params.query["q"]?      # General search term from main input
+    search_query = env.params.query["q"]?         # General search term from main input
     live = env.params.query["live-view"]? == "on" # From the "live-view" checkbox
 
     logs = Journalctl.query(date: date, unit: unit, tag: tag, live: live, query: search_query)
+
+    env.response.content_type = "text/html" # Set content type for all responses
+
     if logs
-      env.response.content_type = "application/json"
-      env.response.print logs.to_json
+      html_output = String.build do |str|
+        # Added "striped" class for PicoCSS styling, and some inline style for the empty message
+        str << "<table class=\"striped\">"
+        str << "<thead><tr><th>Timestamp</th><th>Message</th></tr></thead>"
+        str << "<tbody>"
+        if logs.empty?
+          str << "<tr><td colspan=\"2\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>"
+        else
+          logs.each do |entry|
+            str << "<tr>"
+            str << "<td>" << entry.formatted_timestamp << "</td>"
+            str << "<td>" << HTML.escape(entry.message) << "</td>"
+            str << "</tr>"
+          end
+        end
+        str << "</tbody></table>"
+      end
+      env.response.print html_output
     else
       env.response.status_code = 500
-      env.response.print "Failed to retrieve logs"
+      env.response.print "<p style=\"color: red; text-align: center; padding: 1em;\">Failed to retrieve logs. Please check server logs for more details.</p>"
     end
   end
 end

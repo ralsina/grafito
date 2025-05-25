@@ -39,25 +39,37 @@
           <!-- Unit filter group -->
           <div>
             <label for="unit-filter">Unit</label>
-            <input type="text" id="unit-filter" name="unit" placeholder="Filter by unit (e.g., docker)">
+            <input type="text" id="unit-filter" name="unit" placeholder="Filter by unit (e.g., docker)"
+                   hx-get="/logs"
+                   hx-trigger="keyup changed delay:500ms"
+                   hx-target="#results"
+                   hx-include="#search-box, #tag-filter, #live-view"
+            >
           </div>
 
           <!-- Tag filter group -->
           <div>
             <label for="tag-filter">Tag</label>
-            <input type="text" id="tag-filter" name="tag" placeholder="Filter by tag (e.g., myapp)">
+            <input type="text" id="tag-filter" name="tag" placeholder="Filter by tag (e.g., myapp)"
+                   hx-get="/logs"
+                   hx-trigger="keyup changed delay:500ms"
+                   hx-target="#results"
+                   hx-include="#search-box, #unit-filter, #live-view"
+            >
           </div>
 
-        <!-- 
-          <div>
+        <!-- Live view checkbox group - Uncommented and styled to align better -->
+          <div style="display: flex; flex-direction: column; justify-content: center;">
             <label for="live-view">
-              <input type="checkbox" id="live-view" name="live-view" />
+              <input type="checkbox" id="live-view" name="live-view" disabled />
               Live view
             </label>
-          </div>-->
+          </div>
         </div> <!-- End of grid -->
     </header>
     <main class="container">
+      <!-- The hx-indicator could be placed here or near the #results div -->
+      <!-- <div class="htmx-indicator">Loading...</div> -->
       <div id="results" 
            style="white-space: pre-wrap; font-family: monospace;">
         <!-- Results will be displayed here -->

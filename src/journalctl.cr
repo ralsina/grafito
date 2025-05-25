@@ -23,6 +23,17 @@ class Journalctl
     def to_s
       "#{@timestamp} - #{@message}"
     end
+
+    # Converts the raw timestamp string to a formatted date/time string.
+    # Example format: "2023-10-27 15:04:05.123"
+    def formatted_timestamp(format = "%Y-%m-%d %H:%M:%S.%L") : String
+      # __REALTIME_TIMESTAMP is in microseconds since epoch
+      time_obj = Time.unix_ms(@timestamp.to_i64 // 1000)
+      time_obj.to_s(format)
+    rescue ex : ArgumentError # Catch potential errors from to_i64 if timestamp is not a valid number
+      Journalctl::Log.warn(exception: ex) { "Failed to parse timestamp: '#{@timestamp}'" }
+      "Invalid Timestamp"
+    end
   end
 
   # Queries the logs based on the provided criteria.
@@ -73,6 +84,10 @@ class Journalctl
       #   command << "-f" # Add follow flag for live view
     end
 
+    if query
+      command << "-g" << query
+    end
+
     Log.debug { "Generated journalctl command: #{command.inspect}" }
 
     # Execute the command and capture the output.
@@ -83,33 +98,23 @@ class Journalctl
       output: stdout,
     )
     if result.normal_exit?
-      all_entries = stdout.to_s.split("\n").compact_map do |line|
+      log_entries = stdout.to_s.split("\n").compact_map do |line|
+        next if line.strip.empty? # Skip empty or whitespace-only lines
         begin
           LogEntry.from_json(line)
         rescue ex : JSON::ParseException
-          # Optional: Log this error, e.g., STDERR.puts "Failed to parse log line: #{line}, error: #{ex.message}"
+          Log.warn(exception: ex) { "Failed to parse log line: #{line.inspect}" }
           nil # Skip entries that fail to parse
         end
       end
-
-      # Determine the final set of entries to return
-      final_entries = if query
-                        # Perform case-insensitive filtering on the message content
-                        normalized_query = query.downcase
-                        all_entries.select do |entry|
-                          entry.message.downcase.includes?(normalized_query)
-                        end
-                      else
-                        all_entries
-                      end
-
-      Log.debug { "Returning #{final_entries.size} log entries." }
-      return final_entries
+      
+      Log.debug { "Returning #{log_entries.size} log entries." }
+      log_entries # journalctl has already filtered if query was provided
     else
       # Log an error if journalctl command failed
       Log.error { "journalctl command failed with exit code: #{result}. Stdout: #{stdout.to_s[0..100]}" }
       Log.debug { "Returning 0 log entries due to command failure." }
-      return nil # Explicitly return nil on failure
+      nil # Explicitly return nil on failure
     end
   rescue ex
     Log.error(exception: ex) { "Error executing journalctl. Result code: #{result rescue "unknown"}" }
