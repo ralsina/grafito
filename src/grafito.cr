@@ -47,6 +47,7 @@ module Grafito
     since = (since && !since.strip.empty?) ? since : nil
 
     unit = env.params.query["unit"]?
+    unit_filter_active = unit.is_a?(String) && !unit.strip.empty?
     tag = env.params.query["tag"]?
     search_query = env.params.query["q"]? # General search term from main input
     priority = env.params.query["priority"]?
@@ -54,7 +55,7 @@ module Grafito
     current_sort_by = env.params.query["sort_by"]?
     current_sort_order = env.params.query["sort_order"]?
 
-    Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}" }
+    Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect} (filter active: #{unit_filter_active}), tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}" }
 
     logs = Journalctl.query(
       since: since,
@@ -100,19 +101,25 @@ module Grafito
       html_output = String.build do |str|
         # Added "striped" class for PicoCSS styling, and some inline style for the empty message
         str << "<table class=\"striped\">"
+        
+        headers_to_display = [header_attrs_generator.call("timestamp", "Timestamp")]
+        unless unit_filter_active # Only add Service header if unit filter is NOT active
+          headers_to_display << header_attrs_generator.call("service", "Service")
+        end
+        headers_to_display << header_attrs_generator.call("priority", "Priority")
+        headers_to_display << header_attrs_generator.call("message", "Message")
+
         str << "<thead><tr>"
-        [
-          header_attrs_generator.call("timestamp", "Timestamp"),
-          header_attrs_generator.call("service", "Service"), # Added Service header
-          header_attrs_generator.call("priority", "Priority"),
-          header_attrs_generator.call("message", "Message"),
-        ].each do |header|
+        headers_to_display.each do |header|
           str << "<th style=\"cursor: pointer;\" hx-get=\"/logs\" hx-vals='" << header[:hx_vals] << "' hx-include=\"#search-box, #unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view\" hx-target=\"#results\" hx-indicator=\"#loading-spinner\">" << header[:text] << "</th>"
         end
         str << "</tr></thead>"
         str << "<tbody>"
+
+        colspan_value = unit_filter_active ? 3 : 4
+
         if logs.empty?
-          str << "<tr><td colspan=\"4\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>" # Updated colspan
+          str << "<tr><td colspan=\"#{colspan_value}\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>"
         else
           # Helper to get a background color style based on priority
           get_priority_style = ->(priority_value : String) do
@@ -135,7 +142,9 @@ module Grafito
             str << " style=\"" << priority_style << "\"" if !priority_style.empty?
             str << ">"
             str << "<td>" << entry.formatted_timestamp << "</td>"
-            str << "<td>" << HTML.escape(entry.service.nil? ? "N/A" : entry.service.as(String)) << "</td>" # Display service, handle nil
+            unless unit_filter_active # Only add Service data cell if unit filter is NOT active
+              str << "<td>" << HTML.escape(entry.service.nil? ? "N/A" : entry.service.as(String)) << "</td>"
+            end
             str << "<td>" << HTML.escape(entry.formatted_priority) << "</td>"
             str << "<td style=\"white-space: normal; overflow-wrap: break-word; word-wrap: break-word; max-width: 60vw;\">" << HTML.escape(entry.message) << "</td>" # Adjusted max-width slightly
             str << "</tr>"
