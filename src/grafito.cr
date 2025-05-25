@@ -124,14 +124,14 @@ module Grafito
           # Helper to get a background color style based on priority
           get_priority_style = ->(priority_value : String) do
             case priority_value
-            when "0" then "background-color: #5c0000; color: #f8f8f8;" # Emergency (Darkest Red, Light Text)
-            when "1" then "background-color: #7c0a0a; color: #f8f8f8;" # Alert (Dark Red, Light Text)
-            when "2" then "background-color: #a04000; color: #f8f8f8;" # Critical (Dark Orange/Brown, Light Text)
-            when "3" then "background-color: #905000; color: #f8f8f8;" # Error (Dark Orange, Light Text)
-            when "4" then "background-color: #847500; color: #f8f8f8;" # Warning (Dark Yellow/Olive, Light Text)
-            when "5" then "background-color: #003366; color: #f8f8f8;" # Notice (Dark Blue, Light Text)
-            when "6" then "background-color: #2a3b4d; color: #f8f8f8;" # Informational (Dark Slate Blue/Grey, Light Text)
-            when "7" then "background-color: #333333; color: #f0f0f0;" # Debug (Dark Grey, Light Text)
+            when "0" then "background-color: #4D2626; color: #f8f8f8;" # Emergency (Dark Muted Red, Light Text)
+            when "1" then "background-color: #5C2C2C; color: #f8f8f8;" # Alert (Dark Muted Red, Light Text)
+            when "2" then "background-color: #733C17; color: #f8f8f8;" # Critical (Dark Muted Orange/Brown, Light Text)
+            when "3" then "background-color: #6E4515; color: #f8f8f8;" # Error (Dark Muted Orange, Light Text)
+            when "4" then "background-color: #665B1A; color: #f8f8f8;" # Warning (Dark Muted Yellow/Olive, Light Text)
+            when "5" then "background-color: #203D59; color: #f8f8f8;" # Notice (Dark Muted Blue, Light Text)
+            when "6" then "background-color: #333D47; color: #f8f8f8;" # Informational (Dark Muted Slate/Grey, Light Text)
+            when "7" then "background-color: #333333; color: #f0f0f0;" # Debug (Dark Grey, Light Text - unchanged)
             else          ""                                           # Default: no specific style (will use table striping)
             end
           end

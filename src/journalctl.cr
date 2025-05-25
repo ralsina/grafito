@@ -7,54 +7,87 @@ class Journalctl
   # Setup a logger for this class
   Log = ::Log.for(self)
 
+  # Custom JSON converter for __REALTIME_TIMESTAMP (microseconds string) to Time
+  class MicrosecondsEpochConverter
+    def self.from_json(parser : JSON::PullParser) : Time
+      s = parser.read_string # Read as nullable string
+      if s.nil? || s.empty?
+        # Log.warn { "Nil or empty timestamp string received, defaulting to epoch." } # Optional: for debugging
+        return Time.unix(0) # Default to epoch for nil/empty string
+      end
+      Time.unix_ms(s.to_i64 // 1000)
+    rescue ex : ArgumentError
+      Journalctl::Log.warn(exception: ex) { "Failed to parse timestamp string '#{s}' for Time conversion, defaulting to epoch." }
+      Time.unix(0) # Default to epoch on parsing error
+    end
+
+    def self.to_json(value : Time, builder : JSON::Builder)
+      builder.string((value.to_unix_us).to_s)
+    end
+  end
+
   # Represents a single log entry retrieved from journalctl.
   #
   # This class is used to parse and serialize log data.
   # It includes `JSON::Serializable` to allow easy conversion to and from JSON.
   class LogEntry
     include JSON::Serializable
+    # The __REALTIME_TIMESTAMP from journalctl is microseconds since epoch, as a string.
+    @[JSON::Field(key: "__REALTIME_TIMESTAMP", converter: Journalctl::MicrosecondsEpochConverter)]
+    property timestamp : Time
 
-    # Define the fields that will be serialized to JSON
-    @[JSON::Field(key: "__REALTIME_TIMESTAMP")]
-    property timestamp : String
     @[JSON::Field(key: "MESSAGE")]
-    property message : String
-    @[JSON::Field(key: "PRIORITY")]
-    property priority : String
-    @[JSON::Field(key: "_SYSTEMD_UNIT", nilable: true)] # Allow nil from JSON
-    property unit : String
+    property message_raw : String # Raw message from JSON
 
+    @[JSON::Field(key: "PRIORITY")]
+    property raw_priority_val : String # Raw priority string from JSON (e.g., "3")
+
+    @[JSON::Field(key: "_SYSTEMD_UNIT", nilable: true)] # Allow nil from JSON
+    property internal_unit_name : String?               # Raw unit name from JSON, might be nil
+
+    # Constructor used by JSON::Serializable.
+    # It's called with named arguments matching property names, after converters are applied.
     def initialize(
-      timestamp : String | JSON::Any | Nil = nil,
-      message : String | JSON::Any | Nil = nil,
-      priority : String | JSON::Any | Nil = nil,
-      unit : String | JSON::Any | Nil = nil,
+      @timestamp : Time,
+      @message_raw : String,
+      @raw_priority_val : String,
+      @internal_unit_name : String? = nil, # Default to nil if _SYSTEMD_UNIT is missing
     )
-      @timestamp = (timestamp || "0").to_s.strip
-      @message = (message || "").to_s.strip
-      @priority = (priority || "7").to_s.strip # Default to "7" (debug) if not present
-      # Ensure unit is a string, default to "N/A", and clean it up
-      @unit = (unit || "N/A").to_s.strip.gsub(/\.service$/, "")
+      # Properties are assigned directly by JSON::Serializable
+      # Stripping and defaulting are handled by getters below.
+    end
+
+    # Getter for the cleaned message
+    def message : String
+      @message_raw.strip
+    end
+
+    # Getter for the priority string (e.g., "0" to "7")
+    # This maintains compatibility with previous direct `priority` field access.
+    def priority : String
+      val = @raw_priority_val.strip
+      val.empty? ? "7" : val # Default to "7" (debug) if empty or not a standard number
+    end
+
+    # Getter for the cleaned unit name
+    def unit : String
+      (@internal_unit_name || "N/A").strip.gsub(/\.service$/, "")
     end
 
     def to_s
-      "#{@timestamp} [#{@unit}] [Prio: #{@priority}] - #{@message}"
+      # Use a standard timestamp format for to_s, and getters for other fields
+      "#{timestamp.to_s("%Y-%m-%d %H:%M:%S.%L")} [#{unit}] [Prio: #{priority}] - #{message}"
     end
 
     # Converts the raw timestamp string to a formatted date/time string.
     # Example format: "2023-10-27 15:04:05.123"
     def formatted_timestamp(format = "%b %d %H:%M:%S") : String
-      # __REALTIME_TIMESTAMP is in microseconds since epoch
-      time_obj = Time.unix_ms(@timestamp.to_i64 // 1000)
-      time_obj.to_s(format)
-    rescue ex : ArgumentError # Catch potential errors from to_i64 if timestamp is not a valid number
-      Journalctl::Log.warn(exception: ex) { "Failed to parse timestamp: '#{@timestamp}'" }
-      "Invalid Timestamp"
+      @timestamp.to_s(format) # @timestamp is now a Time object
     end
 
     # Converts the numeric priority string to its textual representation.
     def formatted_priority : String
-      case @priority
+      case self.priority # Use the getter to ensure defaulting/cleaning
       when "0" then "Emergency"
       when "1" then "Alert"
       when "2" then "Critical"
@@ -65,8 +98,8 @@ class Journalctl
       when "7" then "Debug"
       else
         # If priority is unknown or not a standard number, return the original value
-        Journalctl::Log.debug { "Unknown priority value: '#{@priority}'" }
-        @priority
+        Journalctl::Log.debug { "Unknown priority value: '#{self.priority}'" }
+        self.priority
       end
     end
   end
@@ -151,20 +184,16 @@ class Journalctl
       log_entries = stdout.to_s.split("\n").compact_map do |line|
         next if line.strip.empty? # Skip empty or whitespace-only lines
         begin
-          parsed_json = JSON.parse(line)
-          LogEntry.new(
-            timestamp: parsed_json["__REALTIME_TIMESTAMP"]?.to_s,
-            message: parsed_json["MESSAGE"]?,
-            priority: parsed_json["PRIORITY"]?,
-            unit: parsed_json["_SYSTEMD_UNIT"]?,
-          )
+          LogEntry.from_json(line) # Use from_json to leverage JSON::Serializable and converters
         rescue ex : JSON::ParseException
           Log.warn(exception: ex) { "Failed to parse log line: #{line.inspect[..100]}" }
           next
+        rescue ex : ArgumentError # Can be raised by MicrosecondsEpochConverter if to_i64 fails
+          Log.warn(exception: ex) { "Failed to convert data in log line (e.g., timestamp): #{line.inspect[..100]}" }
+          next
         end
       end
-
-      # Sort the entries if sort_by is provided
+      # Sort the entries if sort_by is provided and log_entries is not nil
       if sort_by && log_entries
         is_ascending = sort_order.nil? || sort_order.downcase == "asc"
         Log.debug { "Sorting by '#{sort_by}', order: #{is_ascending ? "ASC" : "DESC"}" }
@@ -173,12 +202,12 @@ class Journalctl
           # Primary comparison
           primary_cmp = case sort_by
                         when "timestamp"
-                          a.timestamp.to_i64 <=> b.timestamp.to_i64
+                          a.timestamp <=> b.timestamp # Time objects are directly comparable
                         when "priority"
-                          a.priority.to_i <=> b.priority.to_i
+                          a.priority.to_i <=> b.priority.to_i # Uses getter, .to_i for numeric sort
                         when "message"
-                          a.message.downcase <=> b.message.downcase
-                        when "unit" # Renamed from service
+                          a.message.downcase <=> b.message.downcase # Uses getter
+                        when "unit"                                 # Renamed from service
                           a.unit.downcase <=> b.unit.downcase
                         else
                           Log.warn { "Unknown sort_by key: #{sort_by}" }
@@ -192,7 +221,7 @@ class Journalctl
                         primary_cmp
                       else
                         # Primary keys are equal, and not sorting by timestamp, so use timestamp as secondary.
-                        a.timestamp.to_i64 <=> b.timestamp.to_i64
+                        a.timestamp <=> b.timestamp
                       end
 
           # Apply sort order
