@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap"
       rel="stylesheet"
     />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <style>
       body {
         font-family: "WDXL Lubrifont TC", sans-serif;
@@ -27,111 +27,195 @@
       }
     </style>
   </head>
-  <body hx-get="/services" hx-target="#unit-suggestions" hx-trigger="load" hx-swap="innerHTML">
-    <header class="container" style="padding: 20px;">
-      <hgroup style="display: flex; justify-content: space-between; align-items: baseline;">
-        <h1 style="font-size: 2em; font-family: 'WDXL Lubrifont TC', sans-serif;">
-          Grafito 
-        </h1><span style="font-size: 1em;">A simple log viewer</span>
+  <body
+    hx-get="/services"
+    hx-target="#unit-suggestions"
+    hx-trigger="load"
+    hx-swap="innerHTML"
+  >
+    <header class="container" style="padding: 20px">
+      <hgroup
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+        "
+      >
+        <h1
+          style="font-size: 2em; font-family: 'WDXL Lubrifont TC', sans-serif"
+        >
+          Grafito
+        </h1>
+        <span style="font-size: 1em">A simple log viewer</span>
       </hgroup>
-        <input type="search" id="search-box" placeholder="Search logs..."
-               hx-get="/logs" 
-               hx-trigger="keyup changed delay:500ms" 
-               hx-target="#results" 
-               name="q"
-               hx-indicator="#loading-spinner"
-               hx-include="#unit-filter, #tag-filter, #time-range-filter, #live-view"
-               />
-        <!-- New row for filters -->
-        <div class="grid">
-          <!-- Unit filter group -->
-          <div>
-            <label for="unit-filter">Unit</label>
-            <input type="text" id="unit-filter" name="unit" list="unit-suggestions" placeholder="Filter by unit (e.g., docker)"
-                   hx-get="/logs"
-                   hx-trigger="keyup changed delay:500ms"
-                   hx-target="#results"
-                   hx-indicator="#loading-spinner"
-                   hx-include="#search-box, #tag-filter, #time-range-filter, #live-view"
-            >
-          </div>
-          <datalist id="unit-suggestions"></datalist>
+      <!-- Row 1: Search Input and Help Button -->
+      <div style="margin-bottom: var(--form-element-spacing-vertical)">
+        <input
+          type="search"
+          id="search-box"
+          placeholder="Search logs..."
+          hx-get="/logs"
+          hx-trigger="keyup changed delay:500ms"
+          hx-target="#results"
+          name="q"
+          hx-indicator="#loading-spinner"
+          hx-include="#unit-filter, #tag-filter, #time-range-filter, #live-view"
+          style="width: 100%; height: 2.5rem"
+        />
+      </div>
 
-          <!-- Tag filter group -->
-          <div>
-            <label for="tag-filter">Tag</label>
-            <input type="text" id="tag-filter" name="tag" placeholder="Filter by tag (e.g., myapp)"
-                   hx-get="/logs"
-                   hx-trigger="keyup changed delay:500ms"
-                   hx-target="#results"
-                   hx-indicator="#loading-spinner"
-                   hx-include="#search-box, #unit-filter, #time-range-filter, #live-view"
-            >
-          </div>
-
-          <!-- Time Range filter group -->
-          <div>
-            <label for="time-range-filter">Time Range</label>
-            <select id="time-range-filter" name="since"
-                    hx-get="/logs"
-                    hx-trigger="change"
-                    hx-target="#results"
-                    hx-indicator="#loading-spinner"
-                    hx-include="#search-box, #unit-filter, #tag-filter, #live-view">
-              <option value="">Any time</option> <!-- Default/no filter -->
-              <option value="-15m">Last 15 minutes</option>
-              <option value="-1h">Last 1 hour</option>
-              <option value="-1d">Last 24 hours</option>
-              <option value="-7d">Last week</option>
-              <!-- You could add more specific date/time inputs here if needed -->
-            </select>
-          </div>
-
-        <!-- Live view checkbox group -->
-          <div style="display: flex; flex-direction: column; justify-content: center;">
-            <label for="live-view">
-              <input type="checkbox" id="live-view" name="live-view"
-                     hx-get="/logs"
-                     hx-target="#results"
-                     hx-indicator="#loading-spinner"
-                     hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter"
-              />
-              Live view
-            </label>
-          </div>
-        </div> <!-- End of grid -->
+      <!-- Row 2: Filters Flex Layout -->
+      <div
+        style="
+          display: flex;
+          align-items: center; /* Vertically align items */
+          gap: var(--spacing, 1rem); /* Add space between items */
+        "
+      <div class="grid">
+        <div>
+          <input
+            type="text"
+            id="unit-filter"
+            name="unit"
+            list="unit-suggestions"
+            placeholder="Filter by unit (e.g., docker)"
+            hx-get="/logs"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#results"
+            hx-indicator="#loading-spinner"
+            hx-include="#search-box, #tag-filter, #time-range-filter, #live-view"
+          />
+        </div>
+        <div>
+          <input
+            type="text"
+            id="tag-filter"
+            name="tag"
+            placeholder="Filter by tag (e.g., myapp)"
+            hx-get="/logs"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#results"
+            hx-indicator="#loading-spinner"
+            hx-include="#search-box, #unit-filter, #time-range-filter, #live-view"
+          />
+        </div>
+        <div>
+          <select
+            id="time-range-filter"
+            name="since"
+            hx-get="/logs"
+            hx-trigger="change"
+            hx-target="#results"
+            hx-indicator="#loading-spinner"
+            hx-include="#search-box, #unit-filter, #tag-filter, #live-view"
+          >
+            <option value="">Any time</option>
+            <!-- Default/no filter -->
+            <option value="-15m">Last 15 minutes</option>
+            <option value="-1h">Last 1 hour</option>
+            <option value="-1d">Last 24 hours</option>
+            <option value="-7d">Last week</option>
+            <!-- You could add more specific date/time inputs here if needed -->
+          </select>
+        </div>
+        <div
+          style="display: flex; align-items: center; justify-content: center;"
+        >
+          <input
+            type="checkbox"
+            id="live-view"
+            name="live-view"
+            hx-get="/logs"
+            hx-target="#results"
+            hx-indicator="#loading-spinner"
+            hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter"
+          />
+          <label for="live-view">Live&nbsp;view</label>
+        </div>
+        <!-- Help button for command -->
+        <div
+          style="display: flex; align-items: center; justify-content: center; width: fit-content;"
+        >
+          <button
+            id="show-command-button"
+            class="secondary outline"
+            hx-get="/command"
+            hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
+            hx-trigger="click"
+            hx-swap="none"
+            hx-on:htmx:after-request="if(event.detail.successful) alert('These filters are the equivalent of: ' + event.detail.xhr.responseText); else alert('Error fetching command: ' + event.detail.xhr.statusText + '\\nCheck console for more details.');"
+            aria-label="Show equivalent command"
+            title="Show equivalent journalctl command"
+            style="
+              width: 2.5rem;
+              height: 2.5rem;
+              border-radius: 50%;
+              padding: 0;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >❔</button>
+        </div>
+      </div>
+      <!-- End of grid -->
+      <datalist id="unit-suggestions"></datalist> <!-- Datalist can be here -->
     </header>
-    <hr class="container"> <!-- Added horizontal line -->
-    <main class="container" style="padding: 20px;">
+    <hr class="container" />
+    <!-- Added horizontal line -->
+    <main class="container" style="padding: 20px">
       <!-- Spinner Element -->
-      <div id="loading-spinner" class="htmx-indicator" style="text-align: center; margin-bottom: 1em;">
-        <div aria-busy="true"></div> <!-- PicoCSS spinner -->
+      <div
+        id="loading-spinner"
+        class="htmx-indicator"
+        style="text-align: center; margin-bottom: 1em"
+      >
+        <div aria-busy="true"></div>
+        <!-- PicoCSS spinner -->
       </div>
 
       <!-- Hidden poller for live view updates (no spinner) -->
-      <div id="live-view-poller" style="display:none;"
-           hx-get="/logs"
-           hx-trigger="every 10s[document.getElementById('live-view').checked]"
-           hx-target="#results"
-           hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
-      >
-      </div>
+      <div
+        id="live-view-poller"
+        style="display: none"
+        hx-get="/logs"
+        hx-trigger="every 10s[document.getElementById('live-view').checked]"
+        hx-target="#results"
+        hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
+      ></div>
 
-      <div id="results"
-           hx-get="/logs"
-           hx-trigger="load"
-           hx-indicator="#loading-spinner"
-           hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
-           style="white-space: pre-wrap; font-family: monospace;">
+      <div
+        id="results"
+        hx-get="/logs"
+        hx-trigger="load"
+        hx-indicator="#loading-spinner"
+        hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
+        style="white-space: pre-wrap; font-family: monospace"
+      >
         <!-- Results will be displayed here -->
       </div>
     </main>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <footer class="container" style="text-align: center; padding-top: 20px; padding-bottom: 20px; margin-top: 20px; border-top: 1px solid var(--muted-border-color);">
+    <footer
+      class="container"
+      style="
+        text-align: center;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        margin-top: 20px;
+        border-top: 1px solid var(--muted-border-color);
+      "
+    >
       <small>
         ©️ 2025 Roberto Alsina |
-        <a href="https://grafito.ralsina.me" style="text-decoration: none;">🏠 grafito.ralsina.me</a> |
-        <a href="https://github.com/ralsina/grafito" style="text-decoration: none;">
+        <a href="https://grafito.ralsina.me" style="text-decoration: none"
+          >🏠 grafito.ralsina.me</a
+        >
+        |
+        <a
+          href="https://github.com/ralsina/grafito"
+          style="text-decoration: none"
+        >
           ⌨️ ralsina/grafito
         </a>
       </small>

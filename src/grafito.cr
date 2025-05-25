@@ -17,8 +17,6 @@ module Grafito
     bake_file "favicon.svg", {{ read_file "#{__DIR__}/favicon.svg" }}
   end
 
-
-
   # Matches GET "http://host:port/" and serves the index.html file.
   get "/" do |env|
     env.response.content_type = "text/html"
@@ -103,6 +101,29 @@ module Grafito
       # This prevents HTMX from erroring if it expects HTML.
       env.response.print "<!-- Failed to retrieve service units -->"
     end
+  end
+
+  # Exposes the command that would be run by /logs with the given parameters.
+  # Example usage:
+  #   GET /command?since=-1h&unit=nginx.service&q=error
+  get "/command" do |env|
+    Log.debug { "Received /command request with query params: #{env.params.query.inspect}" }
+
+    since = env.params.query["since"]?
+    since = (since && !since.strip.empty?) ? since : nil
+
+    unit = env.params.query["unit"]?
+    unit = (unit && !unit.strip.empty?) ? unit : nil
+
+    tag = env.params.query["tag"]?
+    tag = (tag && !tag.strip.empty?) ? tag : nil
+
+    search_query = env.params.query["q"]?
+    search_query = (search_query && !search_query.strip.empty?) ? search_query : nil
+
+    command_array = Journalctl.build_query_command(since: since, unit: unit, tag: tag, query: search_query)
+    env.response.content_type = "text/plain"
+    env.response.print "\"#{command_array.join(" ")}\""
   end
 end
 

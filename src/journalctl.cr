@@ -36,6 +36,34 @@ class Journalctl
     end
   end
 
+  # Builds the journalctl command array based on the provided filters.
+  # This is a private helper method.
+  def self.build_query_command(
+    since : String | Nil,
+    unit : String | Nil,
+    tag : String | Nil,
+    query : String | Nil
+  ) : Array(String)
+    command = ["journalctl", "-o", "json", "-n", "5000", "-r"]
+
+    if since
+      command << "-S" << since
+    end
+
+    if unit
+      command << "-u" << unit
+    end
+
+    if tag
+      command << "-t" << tag
+    end
+
+    if query
+      command << "-g" << query
+    end
+    command
+  end
+
   # Queries the logs based on the provided criteria.
   #
   # Args:
@@ -64,26 +92,8 @@ class Journalctl
     tag = nil if tag.is_a?(String) && tag.strip.empty?
     query = nil if query.is_a?(String) && query.strip.empty?
 
-    command = ["journalctl", "-o", "json", "-n", "5000", "-r"]
-
-    if since
-      command << "-S" << since
-    end
-
-    if unit
-      command << "-u" << unit
-    end
-
-    if tag
-      command << "-t" << tag
-    end
-
-    if query
-      command << "-g" << query
-    end
-
+    command = build_query_command(since, unit, tag, query)
     Log.debug { "Generated journalctl command: #{command.inspect}" }
-
     # Execute the command and capture the output.
     stdout = IO::Memory.new
     result = Process.run(
