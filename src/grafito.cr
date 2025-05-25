@@ -9,7 +9,7 @@ module Grafito
   # Setup a logger for this module
   Log = ::Log.for(self)
 
-  VERSION = "0.1.0"
+  VERSION = {{ `shards version #{__DIR__}`.chomp.stringify }}
 
   # Any assets we want baked into the binary.
   class Assets
