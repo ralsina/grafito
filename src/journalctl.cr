@@ -105,7 +105,7 @@ class Journalctl
       log_entries = stdout.to_s.split("\n").compact_map do |line|
         next if line.strip.empty? # Skip empty or whitespace-only lines
         begin
-          LogEntry.from_json(line)
+          LogEntry.from_json(line) if line && !line.empty?
         rescue ex : JSON::ParseException
           Log.warn(exception: ex) { "Failed to parse log line: #{line.inspect}" }
           nil # Skip entries that fail to parse
