@@ -34,7 +34,7 @@ class Journalctl
       @message = (message || "").to_s.strip
       @priority = (priority || "7").to_s.strip # Default to "7" (debug) if not present
       # Ensure unit is a string, default to "N/A", and clean it up
-      @unit = (unit || "N/A").to_s.strip.gsub(/\.service$|\.scope$/, "")
+      @unit = (unit || "N/A").to_s.strip.gsub(/\.service$/, "")
     end
 
     def to_s
@@ -43,7 +43,7 @@ class Journalctl
 
     # Converts the raw timestamp string to a formatted date/time string.
     # Example format: "2023-10-27 15:04:05.123"
-    def formatted_timestamp(format = "%Y-%m-%d %H:%M:%S.%L") : String
+    def formatted_timestamp(format = "%b %d %H:%M:%S") : String
       # __REALTIME_TIMESTAMP is in microseconds since epoch
       time_obj = Time.unix_ms(@timestamp.to_i64 // 1000)
       time_obj.to_s(format)
