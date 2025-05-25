@@ -74,29 +74,6 @@
         </h1>
         <span style="font-size: 1em">A simple log viewer</span>
       </hgroup>
-      <!-- Row 1: Search Input and Sidebar Toggle Button -->
-      <div
-        style="
-          display: flex;
-          gap: var(--spacing, 0.5rem);
-          align-items: center;
-          margin-bottom: var(--form-element-spacing-vertical);
-        "
-      >
-        <input
-          type="search"
-          id="search-box"
-          placeholder="Search logs..."
-          title="Enter text to search in log messages (uses journalctl -g)"
-          hx-get="logs"
-          hx-trigger="keyup changed delay:500ms"
-          hx-target="#results"
-          name="q"
-          hx-indicator="#loading-spinner"
-          hx-include="#unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view"
-          style="flex-grow: 1; height: 2.5rem"
-        />
-      </div>
     </header>
     <hr class="container" />
     <!-- Added horizontal line -->
@@ -143,6 +120,24 @@
         "
       >
         <!-- Removed button from here -->
+        <!-- Search Box Moved Here -->
+        <div style="width: 100%; margin-bottom: var(--form-element-spacing-vertical);">
+          <input
+            type="search"
+            id="search-box"
+            placeholder="Search logs..."
+            title="Enter text to search in log messages (uses journalctl -g)"
+            hx-get="logs"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#results"
+            name="q"
+            hx-indicator="#loading-spinner"
+            hx-include="#unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view"
+            style="width: 100%; height: 2.5rem"
+          />
+        </div>
+
+        <!-- Unit and Tag Filters -->
         <div
           style="
             display: flex;
