@@ -20,6 +20,14 @@ class Journalctl
     @[JSON::Field(key: "MESSAGE")]
     property message : String
 
+    def initialize(
+      timestamp : String | JSON::Any | Nil = nil,
+      message : String | JSON::Any | Nil = nil,
+    )
+      @timestamp = (timestamp || "0").to_s.strip
+      @message = (message || "").to_s.strip
+    end
+
     def to_s
       "#{@timestamp} - #{@message}"
     end
@@ -42,7 +50,7 @@ class Journalctl
     since : String | Nil,
     unit : String | Nil,
     tag : String | Nil,
-    query : String | Nil
+    query : String | Nil,
   ) : Array(String)
     command = ["journalctl", "-o", "json", "-n", "5000", "-r"]
 
@@ -105,10 +113,14 @@ class Journalctl
       log_entries = stdout.to_s.split("\n").compact_map do |line|
         next if line.strip.empty? # Skip empty or whitespace-only lines
         begin
-          LogEntry.from_json(line) if line && !line.empty?
+          parsed_json = JSON.parse(line)
+          LogEntry.new(
+            timestamp: parsed_json["__REALTIME_TIMESTAMP"]?.to_s,
+            message: parsed_json["MESSAGE"]?,
+          )
         rescue ex : JSON::ParseException
-          Log.warn(exception: ex) { "Failed to parse log line: #{line.inspect}" }
-          nil # Skip entries that fail to parse
+          Log.warn(exception: ex) { "Failed to parse log line: #{line.inspect[..100]}" }
+          next
         end
       end
 
