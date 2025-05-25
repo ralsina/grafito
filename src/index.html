@@ -84,9 +84,9 @@
         aria-expanded="true"
         aria-controls="filters-sidebar"
         title="Hide Filters Sidebar"
-        style="height: 2.5rem; width: 2.5rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; align-self: flex-start; margin-top: 0; /* Adjust if needed */"
+        style="height: 2.5rem; width: 2.5rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; align-self: flex-start; position: sticky; top: var(--spacing, 1rem); z-index: 10;"
       >«</button>
-      <aside id="filters-sidebar" style="width: 300px; flex-shrink: 0; border-right: 1px solid var(--muted-border-color, #ccc); padding-right: var(--spacing, 1rem); padding-left: var(--spacing, 1rem);">
+      <aside id="filters-sidebar" style="width: 300px; flex-shrink: 0; border-right: 1px solid var(--muted-border-color, #ccc); padding-right: var(--spacing, 1rem); padding-left: var(--spacing, 1rem); position: sticky; top: var(--spacing, 1rem); align-self: flex-start; max-height: calc(100vh - 2 * var(--spacing, 1rem)); overflow-y: auto; z-index: 5;">
         <!-- Removed button from here -->
         <div
           style="
@@ -105,8 +105,8 @@
               id="unit-filter"
               name="unit"
               list="unit-suggestions"
-              placeholder="Unit/Service (e.g., docker)"
-              title="Filter logs by systemd unit name (e.g., nginx.service)"
+              placeholder="Unit (e.g., docker.service)"
+              title="Filter logs by systemd unit (e.g., nginx.service)"
               hx-get="logs"
               hx-trigger="keyup changed delay:500ms"
               hx-target="#results"

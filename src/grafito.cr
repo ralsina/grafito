@@ -104,7 +104,7 @@ module Grafito
         
         headers_to_display = [header_attrs_generator.call("timestamp", "Timestamp")]
         unless unit_filter_active # Only add Service header if unit filter is NOT active
-          headers_to_display << header_attrs_generator.call("service", "Service")
+          headers_to_display << header_attrs_generator.call("service", "Unit")
         end
         headers_to_display << header_attrs_generator.call("priority", "Priority")
         headers_to_display << header_attrs_generator.call("message", "Message")
@@ -143,7 +143,7 @@ module Grafito
             str << ">"
             str << "<td>" << entry.formatted_timestamp << "</td>"
             unless unit_filter_active # Only add Service data cell if unit filter is NOT active
-              str << "<td>" << HTML.escape(entry.service) << "</td>"
+              str << "<td>" << HTML.escape(entry.unit) << "</td>"
             end
             str << "<td>" << HTML.escape(entry.formatted_priority) << "</td>"
             str << "<td style=\"white-space: normal; overflow-wrap: break-word; word-wrap: break-word; max-width: 60vw;\">" << HTML.escape(entry.message) << "</td>" # Adjusted max-width slightly

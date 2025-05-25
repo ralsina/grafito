@@ -22,23 +22,23 @@ class Journalctl
     @[JSON::Field(key: "PRIORITY")]
     property priority : String
     @[JSON::Field(key: "_SYSTEMD_UNIT", nilable: true)] # Allow nil from JSON
-    property service : String
+    property unit : String
 
     def initialize(
       timestamp : String | JSON::Any | Nil = nil,
       message : String | JSON::Any | Nil = nil,
       priority : String | JSON::Any | Nil = nil,
-      service : String | JSON::Any | Nil = nil,
+      unit : String | JSON::Any | Nil = nil,
     )
       @timestamp = (timestamp || "0").to_s.strip
       @message = (message || "").to_s.strip
       @priority = (priority || "7").to_s.strip # Default to "7" (debug) if not present
-      # Ensure service is a string, default to "N/A", and clean it up
-      @service = (service || "N/A").to_s.strip.gsub(/\.service$|\.scope$/, "")
+      # Ensure unit is a string, default to "N/A", and clean it up
+      @unit = (unit || "N/A").to_s.strip.gsub(/\.service$|\.scope$/, "")
     end
 
     def to_s
-      "#{@timestamp} [#{@service}] [Prio: #{@priority}] - #{@message}"
+      "#{@timestamp} [#{@unit}] [Prio: #{@priority}] - #{@message}"
     end
 
     # Converts the raw timestamp string to a formatted date/time string.
@@ -156,7 +156,7 @@ class Journalctl
             timestamp: parsed_json["__REALTIME_TIMESTAMP"]?.to_s,
             message: parsed_json["MESSAGE"]?,
             priority: parsed_json["PRIORITY"]?,
-            service: parsed_json["_SYSTEMD_UNIT"]?,
+            unit: parsed_json["_SYSTEMD_UNIT"]?,
           )
         rescue ex : JSON::ParseException
           Log.warn(exception: ex) { "Failed to parse log line: #{line.inspect[..100]}" }
@@ -178,8 +178,8 @@ class Journalctl
                           a.priority.to_i <=> b.priority.to_i
                         when "message"
                           a.message.downcase <=> b.message.downcase
-                        when "service"
-                          a.service.downcase <=> b.service.downcase
+                        when "unit" # Renamed from service
+                          a.unit.downcase <=> b.unit.downcase
                         else
                           Log.warn { "Unknown sort_by key: #{sort_by}" }
                           0 # No change for unknown key
