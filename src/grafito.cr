@@ -101,7 +101,7 @@ module Grafito
       html_output = String.build do |str|
         # Added "striped" class for PicoCSS styling, and some inline style for the empty message
         str << "<table class=\"striped\">"
-        
+
         headers_to_display = [header_attrs_generator.call("timestamp", "Timestamp")]
         unless unit_filter_active # Only add Service header if unit filter is NOT active
           headers_to_display << header_attrs_generator.call("service", "Unit")
@@ -132,7 +132,7 @@ module Grafito
             when "5" then "background-color: #003366; color: #f8f8f8;" # Notice (Dark Blue, Light Text)
             when "6" then "background-color: #2a3b4d; color: #f8f8f8;" # Informational (Dark Slate Blue/Grey, Light Text)
             when "7" then "background-color: #333333; color: #f0f0f0;" # Debug (Dark Grey, Light Text)
-            else            ""                                         # Default: no specific style (will use table striping)
+            else          ""                                           # Default: no specific style (will use table striping)
             end
           end
 
