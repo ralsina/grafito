@@ -126,8 +126,3 @@ module Grafito
     env.response.print "\"#{command_array.join(" ")}\""
   end
 end
-
-# Configure logging level. :debug will show all debug messages.
-# You can also use Log.setup_from_env to control it via CRYSTAL_LOG_LEVEL.
-Log.setup(:debug)
-Kemal.run(port: 3000)

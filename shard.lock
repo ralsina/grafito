@@ -8,6 +8,10 @@ shards:
     git: https://github.com/ralsina/baked_file_system.git
     version: 0.10.0+git.commit.beb373124c7a235cfb9cd94e36849d8168eaa04b
 
+  docopt:
+    git: https://github.com/ralsina/docopt.cr.git
+    version: 0.2.1
+
   exception_page:
     git: https://github.com/crystal-loot/exception_page.git
     version: 0.5.0

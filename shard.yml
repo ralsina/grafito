@@ -6,7 +6,7 @@ authors:
 
 targets:
   grafito:
-    main: src/grafito.cr
+    main: src/main.cr
 
 dependencies:
   kemal:
@@ -14,7 +14,9 @@ dependencies:
   baked_file_system:
     github: ralsina/baked_file_system
     branch: master
-    
+  docopt:
+    github: ralsina/docopt.cr
+
 crystal: '>= 1.16.0'
 
 license: MIT
