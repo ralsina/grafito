@@ -27,11 +27,35 @@
           Grafito
         </h1>
       </hgroup>
-      <input type="search" id="search-box" placeholder="Search logs..." 
-             hx-get="/logs" 
-             hx-trigger="keyup changed delay:500ms" 
-             hx-target="#results" 
-             name="unit" />
+        <input type="search" id="search-box" placeholder="Search logs..."
+               hx-get="/logs" 
+               hx-trigger="keyup changed delay:500ms" 
+               hx-target="#results" 
+               name="q"
+               hx-include="#unit-filter, #tag-filter, #live-view"
+               />
+        <!-- New row for filters -->
+        <div class="grid">
+          <!-- Unit filter group -->
+          <div>
+            <label for="unit-filter">Unit</label>
+            <input type="text" id="unit-filter" name="unit" placeholder="Filter by unit (e.g., docker)">
+          </div>
+
+          <!-- Tag filter group -->
+          <div>
+            <label for="tag-filter">Tag</label>
+            <input type="text" id="tag-filter" name="tag" placeholder="Filter by tag (e.g., myapp)">
+          </div>
+
+        <!-- 
+          <div>
+            <label for="live-view">
+              <input type="checkbox" id="live-view" name="live-view" />
+              Live view
+            </label>
+          </div>-->
+        </div> <!-- End of grid -->
     </header>
     <main class="container">
       <div id="results" 

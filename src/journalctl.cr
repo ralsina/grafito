@@ -1,14 +1,16 @@
 require "json"
 require "time"
+require "log"
 
 # A wrapper for journalctl
 class Journalctl
+  # Setup a logger for this class
+  Log = ::Log.for(self)
+
   # Represents a single log entry retrieved from journalctl.
   #
   # This class is used to parse and serialize log data.
   # It includes `JSON::Serializable` to allow easy conversion to and from JSON.
-  #
-
   class LogEntry
     include JSON::Serializable
 
@@ -32,8 +34,26 @@ class Journalctl
   #
   # Returns:
   #   A String containing the journalctl output, or nil if an error occurs.
-  def self.query(date : Time | String | Nil = nil, unit : String | Nil = nil, tag : String | Nil = nil) : Array(LogEntry) | Nil
-    command = ["journalctl", "-o", "json"]
+  def self.query(
+    date : Time | String | Nil = nil,
+    unit : String | Nil = nil,
+    tag : String | Nil = nil,
+    live : Bool | Nil = nil,
+    query : String | Nil = nil,
+  ) : Array(LogEntry) | Nil
+    Log.debug { "Executing Journalctl.query with arguments:" }
+    Log.debug { "  Date: #{date.inspect}" }
+    Log.debug { "  Unit: #{unit.inspect}" }
+    Log.debug { "  Tag: #{tag.inspect}" }
+    Log.debug { "  Live: #{live.inspect}" }
+    Log.debug { "  Query: #{query.inspect}" }
+
+    # Treat empty string parameters for unit and tag as nil
+    unit = nil if unit.is_a?(String) && unit.strip.empty?
+    tag = nil if tag.is_a?(String) && tag.strip.empty?
+    query = nil if query.is_a?(String) && query.strip.empty?
+
+    command = ["journalctl", "-o", "json", "-n", "100"]
 
     if date
       date_str = date.is_a?(Time) ? date.strftime("%Y-%m-%d") : date
@@ -48,7 +68,12 @@ class Journalctl
       command << "-t" << tag
     end
 
-    pp! command
+    if live == true
+      # FIXME implement live view
+      #   command << "-f" # Add follow flag for live view
+    end
+
+    Log.debug { "Generated journalctl command: #{command.inspect}" }
 
     # Execute the command and capture the output.
     stdout = IO::Memory.new
@@ -57,13 +82,38 @@ class Journalctl
       args: command[1..],
       output: stdout,
     )
-    if result == 0
-      return stdout.to_s.split("\n").map do |line|
-        LogEntry.from_json(line)
+    if result.normal_exit?
+      all_entries = stdout.to_s.split("\n").compact_map do |line|
+        begin
+          LogEntry.from_json(line)
+        rescue ex : JSON::ParseException
+          # Optional: Log this error, e.g., STDERR.puts "Failed to parse log line: #{line}, error: #{ex.message}"
+          nil # Skip entries that fail to parse
+        end
       end
+
+      # Determine the final set of entries to return
+      final_entries = if query
+                        # Perform case-insensitive filtering on the message content
+                        normalized_query = query.downcase
+                        all_entries.select do |entry|
+                          entry.message.downcase.includes?(normalized_query)
+                        end
+                      else
+                        all_entries
+                      end
+
+      Log.debug { "Returning #{final_entries.size} log entries." }
+      return final_entries
+    else
+      # Log an error if journalctl command failed
+      Log.error { "journalctl command failed with exit code: #{result}. Stdout: #{stdout.to_s[0..100]}" }
+      Log.debug { "Returning 0 log entries due to command failure." }
+      return nil # Explicitly return nil on failure
     end
-  rescue
-    puts "Error executing journalctl: #{result}"
+  rescue ex
+    Log.error(exception: ex) { "Error executing journalctl. Result code: #{result rescue "unknown"}" }
+    Log.debug { "Returning 0 log entries due to an exception." }
     nil
   end
 end
