@@ -6,3 +6,4 @@
 * Docs
 * Tests
 * Site
+* Select a nice color scheme using the nicolino base16-picocss theme generator
