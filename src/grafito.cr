@@ -35,9 +35,8 @@ module Grafito
 
     unit = env.params.query["unit"]?
     tag = env.params.query["tag"]?
-    search_query = env.params.query["q"]?         # General search term from main input
-    live = env.params.query["live-view"]? == "on" # From the "live-view" checkbox
-    logs = Journalctl.query(since: since, unit: unit, tag: tag, live: live, query: search_query)
+    search_query = env.params.query["q"]? # General search term from main input
+    logs = Journalctl.query(since: since, unit: unit, tag: tag, query: search_query)
 
     env.response.content_type = "text/html" # Set content type for all responses
 

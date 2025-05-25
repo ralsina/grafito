@@ -80,10 +80,15 @@
             </select>
           </div>
 
-        <!-- Live view checkbox group - Uncommented and styled to align better -->
+        <!-- Live view checkbox group -->
           <div style="display: flex; flex-direction: column; justify-content: center;">
             <label for="live-view">
-              <input type="checkbox" id="live-view" name="live-view" disabled />
+              <input type="checkbox" id="live-view" name="live-view"
+                     hx-get="/logs"
+                     hx-target="#results"
+                     hx-indicator="#loading-spinner"
+                     hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter"
+              />
               Live view
             </label>
           </div>
@@ -94,6 +99,15 @@
       <!-- Spinner Element -->
       <div id="loading-spinner" class="htmx-indicator" style="text-align: center; margin-bottom: 1em;">
         <div aria-busy="true"></div> <!-- PicoCSS spinner -->
+      </div>
+
+      <!-- Hidden poller for live view updates (no spinner) -->
+      <div id="live-view-poller" style="display:none;"
+           hx-get="/logs"
+           hx-trigger="every 10s[document.getElementById('live-view').checked]"
+           hx-target="#results"
+           hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
+      >
       </div>
 
       <div id="results"

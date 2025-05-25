@@ -51,14 +51,12 @@ class Journalctl
     since : String | Nil = nil,
     unit : String | Nil = nil,
     tag : String | Nil = nil,
-    live : Bool | Nil = nil,
     query : String | Nil = nil,
   ) : Array(LogEntry) | Nil
     Log.debug { "Executing Journalctl.query with arguments:" }
     Log.debug { "  Since: #{since.inspect}" }
     Log.debug { "  Unit: #{unit.inspect}" }
     Log.debug { "  Tag: #{tag.inspect}" }
-    Log.debug { "  Live: #{live.inspect}" }
     Log.debug { "  Query: #{query.inspect}" }
 
     # Treat empty string parameters for unit and tag as nil
@@ -78,11 +76,6 @@ class Journalctl
 
     if tag
       command << "-t" << tag
-    end
-
-    if live == true
-      # FIXME implement live view
-      #   command << "-f" # Add follow flag for live view
     end
 
     if query
