@@ -21,8 +21,8 @@ class Journalctl
     property message : String
     @[JSON::Field(key: "PRIORITY")]
     property priority : String
-    @[JSON::Field(key: "_SYSTEMD_UNIT")]
-    property service : String? # Can be nil if not present for a log entry
+    @[JSON::Field(key: "_SYSTEMD_UNIT", nilable: true)] # Allow nil from JSON
+    property service : String
 
     def initialize(
       timestamp : String | JSON::Any | Nil = nil,
@@ -33,11 +33,12 @@ class Journalctl
       @timestamp = (timestamp || "0").to_s.strip
       @message = (message || "").to_s.strip
       @priority = (priority || "7").to_s.strip # Default to "7" (debug) if not present
-      @service = (service || "N/A").to_s.strip.gsub(/\.service$/, "") # Remove ".service" suffix if present
+      # Ensure service is a string, default to "N/A", and clean it up
+      @service = (service || "N/A").to_s.strip.gsub(/\.service$|\.scope$/, "")
     end
 
     def to_s
-      "#{@timestamp} [#{@service || "N/A"}] [Prio: #{@priority}] - #{@message}"
+      "#{@timestamp} [#{@service}] [Prio: #{@priority}] - #{@message}"
     end
 
     # Converts the raw timestamp string to a formatted date/time string.
@@ -169,21 +170,33 @@ class Journalctl
         Log.debug { "Sorting by '#{sort_by}', order: #{is_ascending ? "ASC" : "DESC"}" }
 
         log_entries.sort! do |a, b|
-          cmp = 0
-          case sort_by
-          when "timestamp"
-            # __REALTIME_TIMESTAMP is microseconds since epoch
-            cmp = a.timestamp.to_i64 <=> b.timestamp.to_i64
-          when "priority"
-            # PRIORITY is a string "0".."7"
-            cmp = a.priority.to_i <=> b.priority.to_i
-          when "message"
-            cmp = a.message.downcase <=> b.message.downcase
-          else
-            Log.warn { "Unknown sort_by key: #{sort_by}" }
-            0 # Default to no change in order for unknown keys
-          end
-          is_ascending ? cmp : -cmp
+          # Primary comparison
+          primary_cmp = case sort_by
+                        when "timestamp"
+                          a.timestamp.to_i64 <=> b.timestamp.to_i64
+                        when "priority"
+                          a.priority.to_i <=> b.priority.to_i
+                        when "message"
+                          a.message.downcase <=> b.message.downcase
+                        when "service"
+                          a.service.downcase <=> b.service.downcase
+                        else
+                          Log.warn { "Unknown sort_by key: #{sort_by}" }
+                          0 # No change for unknown key
+                        end
+
+          # If primary keys are different, use that comparison.
+          # Otherwise (if primary_cmp is 0), use timestamp as a secondary sort key,
+          # unless we are already sorting by timestamp.
+          final_cmp = if primary_cmp != 0 || sort_by == "timestamp"
+                        primary_cmp
+                      else
+                        # Primary keys are equal, and not sorting by timestamp, so use timestamp as secondary.
+                        a.timestamp.to_i64 <=> b.timestamp.to_i64
+                      end
+
+          # Apply sort order
+          is_ascending ? final_cmp : -final_cmp
         end
       else
         # If not sorting, journalctl -r already provides reverse chronological order (newest first)

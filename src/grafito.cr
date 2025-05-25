@@ -143,7 +143,7 @@ module Grafito
             str << ">"
             str << "<td>" << entry.formatted_timestamp << "</td>"
             unless unit_filter_active # Only add Service data cell if unit filter is NOT active
-              str << "<td>" << HTML.escape(entry.service.nil? ? "N/A" : entry.service.as(String)) << "</td>"
+              str << "<td>" << HTML.escape(entry.service) << "</td>"
             end
             str << "<td>" << HTML.escape(entry.formatted_priority) << "</td>"
             str << "<td style=\"white-space: normal; overflow-wrap: break-word; word-wrap: break-word; max-width: 60vw;\">" << HTML.escape(entry.message) << "</td>" # Adjusted max-width slightly
