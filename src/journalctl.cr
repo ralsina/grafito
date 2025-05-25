@@ -64,7 +64,7 @@ class Journalctl
     tag = nil if tag.is_a?(String) && tag.strip.empty?
     query = nil if query.is_a?(String) && query.strip.empty?
 
-    command = ["journalctl", "-o", "json", "-n", "100"]
+    command = ["journalctl", "-o", "json", "-n", "100", "-r"]
 
     if date
       date_str = date.is_a?(Time) ? date.strftime("%Y-%m-%d") : date
@@ -107,7 +107,7 @@ class Journalctl
           nil # Skip entries that fail to parse
         end
       end
-      
+
       Log.debug { "Returning #{log_entries.size} log entries." }
       log_entries # journalctl has already filtered if query was provided
     else
@@ -119,6 +119,47 @@ class Journalctl
   rescue ex
     Log.error(exception: ex) { "Error executing journalctl. Result code: #{result rescue "unknown"}" }
     Log.debug { "Returning 0 log entries due to an exception." }
+    nil
+  end
+
+  # Retrieves a list of all known systemd service units using systemctl.
+  #
+  # Returns:
+  #   An Array(String) containing unique service unit names, sorted, or nil if an error occurs.
+  def self.known_service_units : Array(String) | Nil
+    Log.debug { "Executing Journalctl.known_service_units" }
+    # Using systemctl to list service units.
+    # --type=service: Only list service units.
+    # --all: Show all loaded units, including inactive ones.
+    # --no-legend: Suppress the legend header and footer.
+    # --plain: Output a plain list without ANSI escape codes or truncation.
+    command = ["systemctl", "list-units", "--type=service", "--all", "--no-legend", "--plain"]
+
+    Log.debug { "Generated systemctl command: #{command.inspect}" }
+
+    stdout = IO::Memory.new
+    result = Process.run(
+      command[0],
+      args: command[1..],
+      output: stdout,
+    )
+
+    if result.normal_exit?
+      known_units = Set(String).new
+      stdout.to_s.split("\n").each do |line|
+        next if line.strip.empty? # Skip empty or whitespace-only lines
+        # The first word on each line should be the unit name.
+        unit_name = line.split(" ").first?
+        known_units.add(unit_name) if unit_name
+      end
+      Log.debug { "Found #{known_units.size} unique service units." }
+      known_units.to_a.sort
+    else
+      Log.error { "systemctl command failed with exit code: #{result}. Stdout: #{stdout.to_s[0..100]}" }
+      nil
+    end
+  rescue ex
+    Log.error(exception: ex) { "Error executing systemctl for known_service_units." }
     nil
   end
 end

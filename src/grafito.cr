@@ -62,6 +62,30 @@ module Grafito
       env.response.print "<p style=\"color: red; text-align: center; padding: 1em;\">Failed to retrieve logs. Please check server logs for more details.</p>"
     end
   end
+
+  # Exposes the list of known service units.
+  # Example usage:
+  #   GET /services
+  get "/services" do |env|
+    Log.debug { "Received /services request" }
+    service_units = Journalctl.known_service_units
+    env.response.content_type = "text/html" # Changed to text/html
+
+    if service_units
+      # Build HTML options
+      options_html = String.build do |sb|
+        service_units.each do |unit_name|
+          sb << "<option value=\"" << HTML.escape(unit_name) << "\"></option>"
+        end
+      end
+      env.response.print options_html
+    else
+      env.response.status_code = 500
+      # Return an HTML comment or an empty string if units can't be fetched.
+      # This prevents HTMX from erroring if it expects HTML.
+      env.response.print "<!-- Failed to retrieve service units -->"
+    end
+  end
 end
 
 # Configure logging level. :debug will show all debug messages.

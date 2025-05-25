@@ -20,8 +20,8 @@
       }
     </style>
   </head>
-  <body> 
-    <header class="container">
+  <body hx-get="/services" hx-target="#unit-suggestions" hx-trigger="load" hx-swap="innerHTML">
+    <header class="container" style="padding: 20px;">
       <hgroup>
         <h1 style="font-size: 2em;">
           Grafito
@@ -39,13 +39,14 @@
           <!-- Unit filter group -->
           <div>
             <label for="unit-filter">Unit</label>
-            <input type="text" id="unit-filter" name="unit" placeholder="Filter by unit (e.g., docker)"
+            <input type="text" id="unit-filter" name="unit" list="unit-suggestions" placeholder="Filter by unit (e.g., docker)"
                    hx-get="/logs"
                    hx-trigger="keyup changed delay:500ms"
                    hx-target="#results"
                    hx-include="#search-box, #tag-filter, #live-view"
             >
           </div>
+          <datalist id="unit-suggestions"></datalist>
 
           <!-- Tag filter group -->
           <div>
@@ -67,7 +68,8 @@
           </div>
         </div> <!-- End of grid -->
     </header>
-    <main class="container">
+    <hr class="container"> <!-- Added horizontal line -->
+    <main class="container" style="padding: 20px;">
       <!-- The hx-indicator could be placed here or near the #results div -->
       <!-- <div class="htmx-indicator">Loading...</div> -->
       <div id="results" 
