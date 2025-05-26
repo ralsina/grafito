@@ -2,7 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.0] - 2025-05-25
+## [0.1.0] - 2025-05-26
+
+### 🚀 Features
+
+- Multiple units, positive and negative tags
+
+### ⚙️ Miscellaneous Tasks
+
+- Gitignore
+- Housekeeping
+- Remove dead code
 
 ### Build
 
