@@ -37,10 +37,10 @@ class Journalctl
     property timestamp : Time
 
     @[JSON::Field(key: "MESSAGE")]
-    property message_raw : String # Raw message from JSON
+    property message_raw : String? # Raw message from JSON
 
     @[JSON::Field(key: "PRIORITY")]
-    property raw_priority_val : String # Raw priority string from JSON (e.g., "3")
+    property raw_priority_val : String? # Raw priority string from JSON (e.g., "3")
 
     @[JSON::Field(key: "_SYSTEMD_UNIT", nilable: true)] # Allow nil from JSON
     property internal_unit_name : String?               # Raw unit name from JSON, might be nil
@@ -59,13 +59,13 @@ class Journalctl
 
     # Getter for the cleaned message
     def message : String
-      @message_raw.strip
+      @message_raw.to_s.strip
     end
 
     # Getter for the priority string (e.g., "0" to "7")
     # This maintains compatibility with previous direct `priority` field access.
     def priority : String
-      val = @raw_priority_val.strip
+      val = @raw_priority_val.to_s.strip
       val.empty? ? "7" : val # Default to "7" (debug) if empty or not a standard number
     end
 
@@ -120,11 +120,22 @@ class Journalctl
     end
 
     if unit
-      command << "-u" << unit
+      # Split the unit string into words and add -u for each word
+      unit.split.each do |u_word|
+        command << "-u" << u_word unless u_word.strip.empty? # Avoid adding empty strings
+      end
     end
 
     if tag
-      command << "-t" << tag
+      tag.split.each do |word|
+        if word.starts_with?('-') && word.size > 1
+          # Tags to exclude
+          command << "-T" << word[1..] # Add -T flag and the word without the leading '-'
+        elsif !word.starts_with? '-'
+          # Tags to include
+          command << "-t" << word # Add -t flag and the word
+        end
+      end
     end
 
     if query
@@ -186,10 +197,10 @@ class Journalctl
         begin
           LogEntry.from_json(line) # Use from_json to leverage JSON::Serializable and converters
         rescue ex : JSON::ParseException
-          Log.warn(exception: ex) { "Failed to parse log line: #{line.inspect[..100]}" }
+          Log.warn { "Failed to parse log line: #{line.inspect[..100]}: #{ex.message}" }
           next
         rescue ex : ArgumentError # Can be raised by MicrosecondsEpochConverter if to_i64 fails
-          Log.warn(exception: ex) { "Failed to convert data in log line (e.g., timestamp): #{line.inspect[..100]}" }
+          Log.warn { "Failed to convert data in log line (e.g., timestamp): #{line.inspect[..100]}: #{ex.message}" }
           next
         end
       end
