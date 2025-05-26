@@ -35,7 +35,7 @@ module Timeline
       counts[truncated_ts] += 1
     end
 
-    timeline = counts.map { |start_time, count| {start_time: start_time, count: count}}
+    timeline = counts.map { |start_time, count| {start_time: start_time, count: count} }
     timeline.sort_by!(&.[:start_time])
   end
 
@@ -90,7 +90,7 @@ module Timeline
     chart_height = height - padding_top - padding_bottom
 
     # Determine max count for Y-axis scaling
-    max_val = timeline_data.map(&.[:count]).max
+    max_val = timeline_data.max_of(&.[:count])
     max_count = (max_val || 0).to_f
     max_count = 1.0 if max_count == 0.0 # Avoid division by zero if all counts are 0
 
@@ -129,16 +129,6 @@ module Timeline
     # X-Axis (line)
     svg << %(  <line x1="#{padding_left}" y1="#{height - padding_bottom}" x2="#{width - padding_right}" y2="#{height - padding_bottom}" class="axis-line" />)
 
-    # Determine X-axis label interval to prevent overlap
-    min_pixels_per_label = 40 # Approximate width for "HH:MM" + spacing
-    label_interval = 1
-    if num_points > 0 && chart_width > 0
-      estimated_labels_can_fit = (chart_width / min_pixels_per_label).to_i.clamp(1, num_points)
-      if num_points > estimated_labels_can_fit
-        label_interval = (num_points.to_f / estimated_labels_can_fit).ceil.to_i
-      end
-    end
-
     # Bars and X-Axis Labels
     timeline_data.each_with_index do |point, index|
       bar_h = (point[:count].to_f / max_count) * chart_height
@@ -155,6 +145,6 @@ module Timeline
     end
 
     svg << %(</svg>)
-    return svg.to_s
+    svg.to_s
   end
 end
