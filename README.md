@@ -11,6 +11,10 @@ Key features include:
 * Embedded assets (HTML, favicon) for easy deployment as a single binary.
 * Built with the Crystal programming language and the Kemal web framework.
 
+![image](https://github.com/user-attachments/assets/e21fd2a4-bb61-4592-ae92-1d9d29652630)
+
+
+
 ## Installation
 
 To install from prebuilt binaries, download the latest release from the [releases page](github.com/ralsina/grafito/releases). The binaries are available for linux, both x86_64 and arm64 architectures.
