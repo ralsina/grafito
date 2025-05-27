@@ -23,13 +23,6 @@ header.container-fluid {
     padding: 20px;
 }
 
-header hgroup {
-    display: flex;
-    flex-direction: column;
-    /* Stack h1 and span vertically */
-    margin-bottom: 0;
-}
-
 /* Main Page Layout (wrapper for sidebar and main content) */
 #page-content-layout {
     /* ID added to the div in index.html */
@@ -63,7 +56,8 @@ header hgroup {
     position: sticky;
     top: var(--spacing, 1rem);
     align-self: flex-start;
-    max-height: calc(100vh - 2 * var(--spacing, 1rem));
+    height: 100vh;
+    /* Set height to 100% of viewport height */
     overflow-y: auto;
     z-index: 5;
 }

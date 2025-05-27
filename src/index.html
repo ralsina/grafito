@@ -30,14 +30,6 @@
     hx-trigger="load"
     hx-swap="innerHTML"
   >
-    <header class="container-fluid">
-      <hgroup>
-        <h1>Grafito</h1>
-        <span>A simple log viewer</span>
-      </hgroup>
-    </header>
-    <hr class="container-fluid" />
-    <!-- Added horizontal line -->
     <div id="page-content-layout" class="container-fluid">
       <button
         id="toggle-sidebar-btn"
@@ -46,11 +38,14 @@
         aria-controls="filters-sidebar"
         title="Hide Filters Sidebar"
       >
-        «
+        ➡️
       </button>
       <aside id="filters-sidebar">
-        <!-- Removed button from here -->
-        <!-- Search Box Moved Here -->
+        <hgroup class="sidebar-header-info">
+          <h1>Grafito</h1>
+          <span>A simple log viewer</span>
+        </hgroup>
+        <hr />
         <div>
           <input
             type="search"
@@ -288,12 +283,12 @@
           if (sidebar && toggleButton) {
             if (isCollapsed) {
               sidebar.classList.add("collapsed");
-              toggleButton.textContent = "»";
+              toggleButton.textContent = "➡️";
               toggleButton.setAttribute("aria-expanded", "false");
               toggleButton.setAttribute("title", "Show Filters Sidebar");
             } else {
               sidebar.classList.remove("collapsed");
-              toggleButton.textContent = "«";
+              toggleButton.textContent = "⬅️";
               toggleButton.setAttribute("aria-expanded", "true");
               toggleButton.setAttribute("title", "Hide Filters Sidebar");
             }
