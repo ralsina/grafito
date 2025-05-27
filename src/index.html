@@ -474,6 +474,15 @@
           // Trigger the initial load for #results after filters are set from URL
           htmx.trigger(document.body, "initial-load-event", {});
         }
+
+        // Disable copy link button if not in a secure context
+        const copyLinkButton = document.getElementById("copy-link-button");
+        if (copyLinkButton && !window.isSecureContext) {
+          copyLinkButton.disabled = true;
+          copyLinkButton.title =
+            "Cannot copy link: Page is not loaded in a secure context (HTTPS).";
+        }
+
       });
 
       function copyShareableLink() {
