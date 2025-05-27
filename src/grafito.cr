@@ -20,6 +20,13 @@ module Grafito
     bake_file "style.css", {{ read_file "#{__DIR__}/style.css" }}
   end
 
+  # Helper to get an optional query parameter, treating empty strings as nil.
+  private def optional_query_param(env : HTTP::Server::Context, key : String) : String?
+    param = env.params.query[key]?
+    return nil if param.nil? || param.strip.empty?
+    param
+  end
+
   get "/" do |env|
     env.redirect "/index.html"
   end
@@ -38,18 +45,14 @@ module Grafito
   get "/logs" do |env|
     Log.debug { "Received /logs request with query params: #{env.params.query.inspect}" }
 
-    # If since_param is nil, it means "Any time" was selected.
-    since = env.params.query["since"]?
-    since = (since && !since.strip.empty?) ? since : nil
-
-    unit = env.params.query["unit"]?
+    since = optional_query_param(env, "since")
+    unit = optional_query_param(env, "unit")
     unit_filter_active = unit.is_a?(String) && !unit.strip.empty?
-    tag = env.params.query["tag"]?
-    search_query = env.params.query["q"]? # General search term from main input
-    priority = env.params.query["priority"]?
-    priority = (priority && !priority.strip.empty?) ? priority : nil
-    current_sort_by = env.params.query["sort_by"]?
-    current_sort_order = env.params.query["sort_order"]?
+    tag = optional_query_param(env, "tag")
+    search_query = optional_query_param(env, "q") # General search term from main input
+    priority = optional_query_param(env, "priority")
+    current_sort_by = optional_query_param(env, "sort_by")
+    current_sort_order = optional_query_param(env, "sort_order")
 
     Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect} (filter active: #{unit_filter_active}), tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}" }
 
@@ -187,20 +190,11 @@ module Grafito
   get "/command" do |env|
     Log.debug { "Received /command request with query params: #{env.params.query.inspect}" }
 
-    since = env.params.query["since"]?
-    since = (since && !since.strip.empty?) ? since : nil
-
-    unit = env.params.query["unit"]?
-    unit = (unit && !unit.strip.empty?) ? unit : nil
-
-    tag = env.params.query["tag"]?
-    tag = (tag && !tag.strip.empty?) ? tag : nil
-
-    search_query = env.params.query["q"]?
-    search_query = (search_query && !search_query.strip.empty?) ? search_query : nil
-
-    priority = env.params.query["priority"]?
-    priority = (priority && !priority.strip.empty?) ? priority : nil
+    since = optional_query_param(env, "since")
+    unit = optional_query_param(env, "unit")
+    tag = optional_query_param(env, "tag")
+    search_query = optional_query_param(env, "q")
+    priority = optional_query_param(env, "priority")
 
     Log.debug { "Building command with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}" }
     command_array = Journalctl.build_query_command(since: since, unit: unit, tag: tag, query: search_query, priority: priority)
