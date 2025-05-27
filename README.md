@@ -1,7 +1,8 @@
 # grafito
 
 Grafito is a simple, self-contained web-based log viewer for `journalctl`.
-It provides an intuitive interface to browse and filter system logs directly from your web browser.
+It provides an intuitive interface to browse and filter system logs
+directly from your web browser.
 
 Key features include:
 
@@ -13,11 +14,11 @@ Key features include:
 
 ![image](https://github.com/user-attachments/assets/be14d4c7-89f8-43f5-bbf1-4fd271275ff0)
 
-
-
 ## Installation
 
-To install from prebuilt binaries, download the latest release from the [releases page](github.com/ralsina/grafito/releases). The binaries are available for linux, both x86_64 and arm64 architectures.
+To install from prebuilt binaries, download the latest release from the
+[releases page](github.com/ralsina/grafito/releases). The binaries are
+available for linux, both x86_64 and arm64 architectures.
 
 To install from source:
 
@@ -50,34 +51,38 @@ Simply run the compiled binary:
 ./bin/grafito
 ```
 
-Then open your web browser and navigate to `http://localhost:3000` (or the port specified if configured differently).
+Then open your web browser and navigate to `http://localhost:3000`
+(or the port specified if configured differently).
 
-The application requires `journalctl` and `systemctl` to be available on the system where it's run.
+The application requires `journalctl` and `systemctl` to be
+available on the system where it's run.
 
 ## Development
 
 1. **Prerequisites:**
-    * Ensure you have Crystal installed.
-    * Ensure `journalctl` and `systemctl` are available on your development machine.
+   * Ensure you have Crystal installed.
+   * Ensure `journalctl` and `systemctl` are available on your development machine.
 
 2. **Clone and Setup:**
-    Follow the "Install from source" instructions above to clone the repository and install dependencies using `shards install`.
+   Follow the "Install from source" instructions above to clone the repository and
+   install dependencies using `shards install`.
 
 3. **Run for Development:**
-    To run the application locally with automatic recompilation on changes, you can use a tool like Sentry.cr or simply recompile and run manually:
+   To run the application locally with automatic recompilation on changes, you can
+   use a tool like Sentry.cr or simply recompile and run manually:
 
-    ```bash
-    crystal run src/grafito.cr
-    ```
+   ```bash
+   shards run grafito
+   ```
 
-    The application will typically be available at `http://localhost:3000`.
+   The application will typically be available at `http://localhost:3000`.
 
 4. **Linting:**
-    This project uses Ameba for static code analysis. To run the linter:
+   This project uses Ameba for static code analysis. To run the linter:
 
-    ```bash
-    ./bin/ameba
-    ```
+   ```bash
+   ./bin/ameba
+   ```
 
 ## Contributing
 
@@ -89,4 +94,4 @@ The application requires `journalctl` and `systemctl` to be available on the sys
 
 ## Contributors
 
-- [Roberto Alsina](https://github.com/ralsina) - creator and maintainer
+* [Roberto Alsina](https://github.com/ralsina) - creator and maintainer
