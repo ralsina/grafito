@@ -37,7 +37,7 @@ main {
     line-height: 1;
     border: none;
     cursor: pointer;
-    transition: left 0.3s ease-in-out, background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 #filters-sidebar {
@@ -72,7 +72,7 @@ main {
 
 /* Sidebar Content Styling */
 /* Search box container (div wrapping #search-box) */
-#.search-container-wrapper {
+.search-container-wrapper {
     width: 100%;
     margin-bottom: var(--form-element-spacing-vertical);
 }

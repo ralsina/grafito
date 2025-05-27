@@ -177,7 +177,6 @@
             <div class="live-view-controls">
               <label
                 for="live-view"
-                role="switch"
                 title="Toggle live log updates every 10 seconds"
               >
                 <input
@@ -234,23 +233,20 @@
     </div>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        const params = new URLSearchParams(window.location.search);
-
-        const filterConfigs = [
+        // --- Shared Configuration for Filters ---
+        // Defined outside the DOMContentLoaded listener so it can be accessed by copyShareableLink
+        const SHARED_FILTER_CONFIGS = [
           { id: "search-box", param: "q", type: "value" },
           { id: "unit-filter", param: "unit", type: "value" },
           { id: "tag-filter", param: "tag", type: "value" },
           { id: "time-range-filter", param: "since", type: "select" },
           { id: "priority-filter", param: "priority", type: "select" },
-          {
-            id: "live-view",
-            param: "live-view",
-            type: "checkbox",
-            trueValue: "on",
-          },
+          { id: "live-view", param: "live-view", type: "checkbox", trueValue: "on" },
         ];
 
-        filterConfigs.forEach((config) => {
+        // --- Populate Filters from URL Parameters ---
+        const params = new URLSearchParams(window.location.search);
+        SHARED_FILTER_CONFIGS.forEach((config) => {
           const element = document.getElementById(config.id);
           if (params.has(config.param) && element) {
             const paramValue = params.get(config.param);
@@ -278,8 +274,7 @@
         // Constants for button and sidebar interaction
         const BUTTON_TITLE_EXPAND = "Show Filters Sidebar";
         const BUTTON_TITLE_COLLAPSE = "Hide Filters Sidebar";
-        const BUTTON_FIXED_LEFT_OFFSET = "1rem"; // Button's fixed distance from the left edge of the viewport
-
+        const BUTTON_FIXED_LEFT_OFFSET = "1rem"; // Button's fixed distance from the left edge of the viewport (matches CSS)
         function setSidebarState(isCollapsed) {
           // Ensure all necessary elements exist
           if (!sidebar || !toggleButton || !mainContent) {
@@ -289,9 +284,6 @@
 
           const sidebarWidth = sidebar.offsetWidth;
 
-          // Always position the button at the fixed left offset
-          toggleButton.style.left = BUTTON_FIXED_LEFT_OFFSET;
-
           if (isCollapsed) {
             sidebar.classList.add("collapsed");
             toggleButton.setAttribute("aria-expanded", "false");
@@ -300,6 +292,9 @@
             sidebar.classList.remove("collapsed");
             toggleButton.setAttribute("aria-expanded", "true");
             toggleButton.setAttribute("title", BUTTON_TITLE_COLLAPSE);
+            // Note: The button's left position is now handled by CSS position: fixed
+            // and the BUTTON_FIXED_LEFT_OFFSET constant is for documentation/potential JS override
+            // toggleButton.style.left = BUTTON_FIXED_LEFT_OFFSET; // This line is no longer needed here
           }
         }
 
@@ -333,22 +328,9 @@
 
       function copyShareableLink() {
         const params = new URLSearchParams();
-        const filterConfigs = [
-          // Re-use or define a similar config array
-          { id: "search-box", param: "q", type: "value" },
-          { id: "unit-filter", param: "unit", type: "value" },
-          { id: "tag-filter", param: "tag", type: "value" },
-          { id: "time-range-filter", param: "since", type: "value" }, // Selects also have .value
-          { id: "priority-filter", param: "priority", type: "value" }, // Selects also have .value
-          {
-            id: "live-view",
-            param: "live-view",
-            type: "checkbox",
-            trueValue: "on",
-          },
-        ];
-
-        filterConfigs.forEach((config) => {
+        // Use the SHARED_FILTER_CONFIGS defined in the DOMContentLoaded scope
+        // For this to work, SHARED_FILTER_CONFIGS must be defined outside the listener
+        SHARED_FILTER_CONFIGS.forEach((config) => {
           const element = document.getElementById(config.id);
           if (element) {
             if (config.type === "checkbox") {
