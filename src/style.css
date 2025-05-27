@@ -31,7 +31,8 @@ main {
     position: fixed;
     opacity: 0.7;
     top: var(--spacing, 2.5rem);
-    left: 1rem; /* Adjust this value to increase/decrease left margin */
+    left: 1rem;
+    /* Adjust this value to increase/decrease left margin */
     z-index: 1050;
     font-size: 1em;
     padding: 0.5rem 0.75rem;
@@ -204,30 +205,61 @@ h1 {
 /* Log Entry Priority Styles - Applied to TR elements, styling their left border color */
 .priority-0 {
     /* Emergency */
-    border-left-color: #B30000 !important; /* Dark Red */
+    border-left-color: #B30000 !important;
+    /* Dark Red */
 }
 
 .priority-1 {
     /* Alert */
-    border-left-color: #FF0000 !important; /* Bright Red */
+    border-left-color: #FF0000 !important;
+    /* Bright Red */
 }
 
 .priority-2 {
     /* Critical */
-    border-left-color: #FF8C00 !important; /* Dark Orange */
+    border-left-color: #FF8C00 !important;
+    /* Dark Orange */
 }
 
 .priority-3 {
     /* Error */
-    border-left-color: #FFA500 !important; /* Orange */
+    border-left-color: #FFA500 !important;
+    /* Orange */
 }
 
 .priority-4 {
     /* Warning */
-    border-left-color: #FFD700 !important; /* Gold / Strong Yellow */
+    border-left-color: #FFD700 !important;
+    /* Gold / Strong Yellow */
 }
 
 .sidebar-header-info h1 a.grafito-title-link {
     text-decoration: none;
     color: inherit;
+}
+
+/* Style for highlighted search terms in log results */
+#results table mark {
+    background-color: var(--pico-mark-background-color, yellow);
+    /* Use PicoCSS variable or a default */
+    color: var(--pico-mark-color, black);
+    /* Use PicoCSS variable or a default */
+    padding: 0.1em 0;
+    /* Optional: adds a little vertical breathing room */
+}
+
+.results-count {
+    text-align: right;
+    margin-bottom: 0.5em;
+    font-style: italic;
+    font-size: 0.9em;
+    color: var(--pico-muted-color, #777777);
+    /* Using PicoCSS variable for muted text color */
+}
+
+.log-message-cell {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    max-width: 60vw;
 }

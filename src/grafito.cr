@@ -119,7 +119,7 @@ module Grafito
                         else
                           "Showing #{logs.size} entries." # Handles 0 and other counts
                         end
-        str << "<p style=\"text-align: right; margin-bottom: 0.5em; font-style: italic; font-size: 0.9em; color: #777777;\">#{count_message}</p>"
+        str << "<p class=\"results-count\">#{count_message}</p>"
         str << "<table class=\"striped\">"
 
         headers_to_display = [header_attrs_generator.call("timestamp", "Timestamp")]
@@ -151,7 +151,14 @@ module Grafito
               str << "<td>" << HTML.escape(entry.unit) << "</td>"
             end
             str << "<td>" << HTML.escape(entry.formatted_priority) << "</td>"
-            str << "<td style=\"white-space: normal; overflow-wrap: break-word; word-wrap: break-word; max-width: 60vw;\">" << HTML.escape(entry.message) << "</td>" # Adjusted max-width slightly
+            escaped_message = HTML.escape(entry.message)
+            highlighted_message = if search_query && !search_query.strip.empty?
+                                    pattern = Regex.escape(search_query)
+                                    escaped_message.gsub(/#{pattern}/i, "<mark>\\0</mark>")
+                                  else
+                                    escaped_message # No search query, so use the escaped message as is
+                                  end
+            str << "<td class=\"log-message-cell\">" << highlighted_message << "</td>"
             str << "</tr>"
           end
         end
