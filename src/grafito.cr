@@ -26,12 +26,12 @@ module Grafito
   get "/:file" do |env|
     filename = env.params.url["file"]
     content_type = case File.extname(filename)
-                   when ".css"   then "text/css"
-                   when ".js"    then "application/javascript"
-                   when ".svg"   then "image/svg+xml"
-                   when ".html"  then "text/html"
-                   # Add other common types as needed, e.g., .png, .jpg, .woff2
-                   else               "application/octet-stream" # A generic default
+                   when ".css"  then "text/css"
+                   when ".js"   then "application/javascript"
+                   when ".svg"  then "image/svg+xml"
+                   when ".html" then "text/html"
+                     # Add other common types as needed, e.g., .png, .jpg, .woff2
+                   else "application/octet-stream" # A generic default
                    end
     env.response.content_type = content_type
     env.response.print Assets.get(filename).gets_to_end
@@ -119,8 +119,6 @@ module Grafito
                           "Showing #{logs.size} entries." # Handles 0 and other counts
                         end
         str << "<p style=\"text-align: right; margin-bottom: 0.5em; font-style: italic; font-size: 0.9em; color: #777777;\">#{count_message}</p>"
-
-        # Added "striped" class for PicoCSS styling, and some inline style for the empty message
         str << "<table class=\"striped\">"
 
         headers_to_display = [header_attrs_generator.call("timestamp", "Timestamp")]
@@ -142,27 +140,29 @@ module Grafito
         if logs.empty?
           str << "<tr><td colspan=\"#{colspan_value}\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>"
         else
-          # Helper to get a background color style based on priority
-          get_priority_style = ->(priority_value : String) do
-            case priority_value
-            when "0" then "background-color: #4D2626; color: #f8f8f8;" # Emergency (Dark Muted Red, Light Text)
-            when "1" then "background-color: #5C2C2C; color: #f8f8f8;" # Alert (Dark Muted Red, Light Text)
-            when "2" then "background-color: #733C17; color: #f8f8f8;" # Critical (Dark Muted Orange/Brown, Light Text)
-            when "3" then "background-color: #6E4515; color: #f8f8f8;" # Error (Dark Muted Orange, Light Text)
-            when "4" then "background-color: #665B1A; color: #f8f8f8;" # Warning (Dark Muted Yellow/Olive, Light Text)
-            when "5" then "background-color: #203D59; color: #f8f8f8;" # Notice (Dark Muted Blue, Light Text)
-            when "6" then "background-color: #333D47; color: #f8f8f8;" # Informational (Dark Muted Slate/Grey, Light Text)
-            when "7" then "background-color: #333333; color: #f0f0f0;" # Debug (Dark Grey, Light Text - unchanged)
-            else          ""                                           # Default: no specific style (will use table striping)
+          # Returns a class name string like "priority-0" or an empty string
+          get_priority_class_name = ->(p : Int32) do
+            case p
+            when 0 then "priority-0" # Emergency
+            when 1 then "priority-1" # Alert
+            when 2 then "priority-2" # Critical
+            when 3 then "priority-3" # Error
+            when 4 then "priority-4" # Warning
+            # Priorities 5, 6, 7 will not get a special class and use default styles
+            else ""
             end
           end
 
           logs.each do |entry|
-            priority_style = get_priority_style.call(entry.priority)
+            priority_class = get_priority_class_name.call(entry.priority.to_i32)
+
             str << "<tr"
-            str << " style=\"" << priority_style << "\"" if !priority_style.empty?
+            str << " class=\"" << priority_class << "\"" if !priority_class.empty?
             str << ">"
+
+            # Timestamp
             str << "<td>" << entry.formatted_timestamp << "</td>"
+
             unless unit_filter_active # Only add Service data cell if unit filter is NOT active
               str << "<td>" << HTML.escape(entry.unit) << "</td>"
             end

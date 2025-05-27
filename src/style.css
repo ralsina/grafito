@@ -25,8 +25,9 @@ header.container-fluid {
 
 header hgroup {
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
+    flex-direction: column;
+    /* Stack h1 and span vertically */
+    margin-bottom: 0;
 }
 
 /* Main Page Layout (wrapper for sidebar and main content) */
@@ -193,6 +194,12 @@ header hgroup {
     overflow-x: auto;
 }
 
+/* Add a left border to each table row in the results table */
+#results table tr {
+    border-left: 5px solid;
+    /* Adjust color if needed, PicoCSS might provide a default border color */
+}
+
 /* Footer */
 footer.container-fluid {
     text-align: center;
@@ -208,5 +215,33 @@ footer a {
 
 h1 {
     font-family: "WDXL Lubrifont TC", sans-serif;
-    font-size: 2em;
+    font-size: 4em;
+    margin-bottom: 0;
+    /* Remove bottom margin from h1 */
+}
+
+/* Log Entry Priority Styles - Applied to TR elements, styling their left border color */
+.priority-0 {
+    /* Emergency */
+    border-left-color: #4D2626 !important;
+}
+
+.priority-1 {
+    /* Alert */
+    border-left-color: #663333 !important;
+}
+
+.priority-2 {
+    /* Critical */
+    border-left-color: #804040 !important;
+}
+
+.priority-3 {
+    /* Error */
+    border-left-color: #B35959 !important;
+}
+
+.priority-4 {
+    /* Warning */
+    border-left-color: #FFB84D !important;
 }
