@@ -204,27 +204,27 @@ h1 {
 /* Log Entry Priority Styles - Applied to TR elements, styling their left border color */
 .priority-0 {
     /* Emergency */
-    border-left-color: #B30000 !important;
+    border-left-color: #B30000 !important; /* Dark Red */
 }
 
 .priority-1 {
     /* Alert */
-    border-left-color: #D92626 !important;
+    border-left-color: #FF0000 !important; /* Bright Red */
 }
 
 .priority-2 {
     /* Critical */
-    border-left-color: #E63939 !important;
+    border-left-color: #FF8C00 !important; /* Dark Orange */
 }
 
 .priority-3 {
     /* Error */
-    border-left-color: #FF4D4D !important;
+    border-left-color: #FFA500 !important; /* Orange */
 }
 
 .priority-4 {
     /* Warning */
-    border-left-color: #FFA500 !important;
+    border-left-color: #FFD700 !important; /* Gold / Strong Yellow */
 }
 
 .sidebar-header-info h1 a.grafito-title-link {
