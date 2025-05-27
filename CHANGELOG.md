@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2025-05-27
+
+### 🚀 Features
+
+- Highlight search term
+- Clear filters button
+- Light/dark theme switcher
+
+### 🐛 Bug Fixes
+
+- Command to run from source was wrong
+- More robust static files
+
+### 🚜 Refactor
+
+- Optional param helper
+- Simpler HTML/CSS/JS
+- Simpler SVG chart generation
+- Inline CSS into a class
+
+### 🎨 Styling
+
+- Handle collapsing better
+- Alignment and borders
+- Collapse button margin
+- Tweak priority colors
+
 ## [0.2.0] - 2025-05-27
 
 ### 🚀 Features
