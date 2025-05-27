@@ -30,7 +30,7 @@ main {
 #toggle-sidebar-btn {
     position: fixed;
     opacity: 0.7;
-    top: var(--spacing, 1rem);
+    top: var(--spacing, 2.5rem);
     z-index: 1050;
     font-size: 1em;
     padding: 0.5rem 0.75rem;
@@ -44,7 +44,6 @@ main {
     /* Base styles (some are overridden by .collapsed state) */
     width: 18.75rem;
     flex-shrink: 0;
-    border-right: 1px solid var(--muted-border-color, #ccc);
     padding-right: var(--spacing, 1rem);
     padding-left: var(--spacing-small, 0.5rem);
     position: sticky;
