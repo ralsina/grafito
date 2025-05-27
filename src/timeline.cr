@@ -45,12 +45,9 @@ module Timeline
   #   timeline_data: An array of `TimelinePoint` data to plot.
   #   width: Total width of the SVG.
   #   height: Total height of the SVG.
-  #   padding_*: Padding around the chart area for labels and title.
+  #   padding: Uniform padding around the chart area.
   #   bar_color: Color of the bars.
-  #   axis_color: Color of the axis lines.
-  #   label_color: Color of the text labels.
-  #   grid_color: Color of the horizontal grid lines.
-  #   y_axis_ticks: Number of ticks/labels on the Y-axis.
+  #   font_family: Font family for text elements in the SVG. (No longer used as text elements are removed)
   #
   # Returns:
   #   A string containing the SVG markup.
@@ -58,32 +55,23 @@ module Timeline
     timeline_data : Array(TimelinePoint),
     width : Int32 = 800,
     height : Int32 = 100,
-    padding_top : Int32 = 10,
-    padding_right : Int32 = 10,
-    padding_bottom : Int32 = 10,
-    padding_left : Int32 = 10,
+    padding : Int32 = 10,
     bar_color : String = "steelblue",
-    axis_color : String = "#555555",
-    label_color : String = "#333333",
-    grid_color : String = "#e0e0e0",
-    y_axis_ticks : Int32 = 5,
+    font_family : String = "Arial, sans-serif", # Parameter kept for potential future use, but not currently applied
   ) : String
     svg = IO::Memory.new
 
     # Handle empty data case
     if timeline_data.empty?
       svg << %(<svg width="#{width}" height="#{height}" xmlns="http://www.w3.org/2000/svg">)
-      svg << %(  <style>)
-      svg << %(    .no-data-text { fill: #{label_color}; font-family: Arial, sans-serif; font-size: 16px; text-anchor: middle; dominant-baseline: middle; }")
-      svg << %(  </style>)
       svg << %(  <text x="#{width / 2}" y="#{height / 2}" class="no-data-text">No data available</text>)
       svg << %(</svg>)
       return svg.to_s
     end
 
     # Calculate actual chart dimensions
-    chart_width = width - padding_left - padding_right
-    chart_height = height - padding_top - padding_bottom
+    chart_width = width - (2 * padding)
+    chart_height = height - (2 * padding)
 
     # Determine max count for Y-axis scaling
     max_val = timeline_data.max_of(&.[:count])
@@ -98,45 +86,22 @@ module Timeline
     # SVG header and styles
     svg << %(<svg width="100%" height="#{height}" viewBox="0 0 #{width} #{height}" xmlns="http://www.w3.org/2000/svg">)
     svg << %(  <style>)
-    svg << %(    .axis-line { stroke: #{axis_color}; stroke-width: 1; }")
-    svg << %(    .grid-line { stroke: #{grid_color}; stroke-width: 0.5; }")
     svg << %(    .bar { fill: #{bar_color}; }")
-    svg << %(    .bar:hover { opacity: 0.8; }") # Simple hover effect for bars
-    svg << %(    .text-label { fill: #{label_color}; font-family: Arial, sans-serif; font-size: 10px; }")
-    svg << %(    .y-axis-label { text-anchor: end; dominant-baseline: middle; }")
-    svg << %(    .x-axis-label { text-anchor: middle; dominant-baseline: hanging; }")
-    svg << %(    .title-label { fill: #{label_color}; font-family: Arial, sans-serif; font-size: 16px; text-anchor: middle; dominant-baseline: middle; }")
+    svg << %(    .bar:hover { opacity: 0.8; }")
+    # .text-label, .y-axis-label, .x-axis-label, .title-label classes and their font-family styles removed
     svg << %(  </style>)
 
-    # Chart Title
-    # Title removed
-
-    # Y-Axis (line, grid lines, and labels)
-    # Y-axis line removed
-    (0..y_axis_ticks).each do |i|
-      tick_value = (max_count / y_axis_ticks) * i
-      tick_y = height - padding_bottom - (tick_value / max_count) * chart_height
-      if i > 0 && i < y_axis_ticks # Draw grid lines between main axes
-        svg << %(  <line x1="#{padding_left + 1}" y1="#{tick_y.round(2)}" x2="#{width - padding_right}" y2="#{tick_y.round(2)}" class="grid-line" />)
-      end
-      # Y-axis labels removed
-    end
-    # X-Axis (line)
-    # X-axis line removed
-
-    # Bars and X-Axis Labels
+    # Bars
     timeline_data.each_with_index do |point, index|
       bar_h = (point[:count].to_f / max_count) * chart_height
       bar_h = 0.0 if bar_h < 0 # Ensure non-negative height, though counts should be >= 0
 
-      bar_x = padding_left + index * slot_width + bar_margin
-      bar_y = height - padding_bottom - bar_h
+      bar_x = padding + index * slot_width + bar_margin
+      bar_y = height - padding - bar_h
 
       svg << %(  <rect x="#{bar_x.round(2)}" y="#{bar_y.round(2)}" width="#{actual_bar_width.round(2)}" height="#{bar_h.round(2)}" class="bar">)
       svg << %(    <title>#{HTML.escape(point[:start_time].to_s("%Y-%m-%d %H:%M") + ": " + point[:count].to_s)}</title>) # Tooltip
       svg << %(  </rect>)
-
-      # X-axis labels removed
     end
 
     svg << %(</svg>)
