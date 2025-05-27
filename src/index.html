@@ -181,6 +181,15 @@
             >
               🔗
             </button>
+            <button
+              id="export-logs-button"
+              class="secondary"
+              aria-label="Export logs"
+              title="Export current logs as text"
+              onclick="exportLogsAsText()"
+            >
+              💾
+            </button>
             <div class="live-view-controls">
               <label
                 for="live-view"
@@ -246,9 +255,25 @@
       </main>
     </div>
     <script>
+      // --- Shared Configuration for Filters ---
+      // Moved outside DOMContentLoaded to be accessible by global functions
+      const SHARED_FILTER_CONFIGS = [
+        { id: "search-box", param: "q", type: "value" },
+        { id: "unit-filter", param: "unit", type: "value" },
+        { id: "tag-filter", param: "tag", type: "value" },
+        { id: "time-range-filter", param: "since", type: "select" },
+        { id: "priority-filter", param: "priority", type: "select" },
+        {
+          id: "live-view",
+          param: "live-view",
+          type: "checkbox",
+          trueValue: "on",
+        },
+      ];
+
       document.addEventListener("DOMContentLoaded", function () {
         // --- THEME SWITCHER LOGIC ---
-        const themeSwitch = document.getElementById('theme-switch');
+        const themeSwitch = document.getElementById("theme-switch");
         const htmlElement = document.documentElement;
 
         function applyTheme(theme) {
@@ -278,22 +303,6 @@
           });
         }
         // --- END THEME SWITCHER LOGIC ---
-
-        // --- Shared Configuration for Filters ---
-        // Defined outside the DOMContentLoaded listener so it can be accessed by copyShareableLink
-        const SHARED_FILTER_CONFIGS = [
-          { id: "search-box", param: "q", type: "value" },
-          { id: "unit-filter", param: "unit", type: "value" },
-          { id: "tag-filter", param: "tag", type: "value" },
-          { id: "time-range-filter", param: "since", type: "select" },
-          { id: "priority-filter", param: "priority", type: "select" },
-          {
-            id: "live-view",
-            param: "live-view",
-            type: "checkbox",
-            trueValue: "on",
-          },
-        ];
 
         // --- Populate Filters from URL Parameters ---
         const params = new URLSearchParams(window.location.search);
@@ -403,8 +412,6 @@
 
       function copyShareableLink() {
         const params = new URLSearchParams();
-        // Use the SHARED_FILTER_CONFIGS defined in the DOMContentLoaded scope
-        // For this to work, SHARED_FILTER_CONFIGS must be defined outside the listener
         SHARED_FILTER_CONFIGS.forEach((config) => {
           const element = document.getElementById(config.id);
           if (element) {
@@ -428,6 +435,40 @@
           .writeText(shareUrl)
           .then(() => alert("Link copied to clipboard!"))
           .catch((err) => alert("Failed to copy link: " + err));
+      }
+
+      function exportLogsAsText() {
+        const params = new URLSearchParams();
+        SHARED_FILTER_CONFIGS.forEach((config) => {
+          // The 'live-view' parameter is not relevant for a static export
+          if (config.param === "live-view") {
+            return; // Skip this parameter
+          }
+
+          const element = document.getElementById(config.id);
+          if (element) {
+            if (config.type === "checkbox") { // For any other potential checkboxes
+              if (element.checked) {
+                params.set(config.param, config.trueValue);
+              }
+            } else if (element.value) { // For text inputs and selects
+              // Sending empty values (e.g., "" for "Any time") is fine,
+              // the backend's optional_query_param handles them as nil.
+              params.set(config.param, element.value);
+            }
+          }
+        });
+
+        params.set("format", "text"); // Specify text format for the export
+
+        const exportUrl = "/logs?" + params.toString(); // Endpoint for logs
+
+        const tempLink = document.createElement('a');
+        tempLink.href = exportUrl;
+        tempLink.setAttribute('download', 'grafito-logs.txt'); // Suggested filename
+        document.body.appendChild(tempLink); // Append to body (needed for Firefox)
+        tempLink.click(); // Programmatically click the link to trigger download
+        document.body.removeChild(tempLink); // Clean up the temporary link
       }
     </script>
   </body>
