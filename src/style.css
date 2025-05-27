@@ -263,3 +263,10 @@ h1 {
     word-wrap: break-word;
     max-width: 60vw;
 }
+
+.error {
+    color: var(--pico-del-color, red); /* Using PicoCSS variable for destructive/error color */
+    text-align: center;
+    padding: 1em;
+    border: 1px solid var(--pico-del-border, red); /* Optional: add a border for more emphasis */
+}

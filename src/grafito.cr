@@ -167,7 +167,7 @@ module Grafito
       env.response.print html_output
     else
       env.response.status_code = 500
-      env.response.print "<p style=\"color: red; text-align: center; padding: 1em;\">Failed to retrieve logs. Please check server logs for more details.</p>"
+      env.response.print "<p class=\"error\">Failed to retrieve logs. Please check server logs for more details.</p>"
     end
   end
 
