@@ -140,25 +140,9 @@ module Grafito
         if logs.empty?
           str << "<tr><td colspan=\"#{colspan_value}\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>"
         else
-          # Returns a class name string like "priority-0" or an empty string
-          get_priority_class_name = ->(p : Int32) do
-            case p
-            when 0 then "priority-0" # Emergency
-            when 1 then "priority-1" # Alert
-            when 2 then "priority-2" # Critical
-            when 3 then "priority-3" # Error
-            when 4 then "priority-4" # Warning
-            # Priorities 5, 6, 7 will not get a special class and use default styles
-            else ""
-            end
-          end
-
           logs.each do |entry|
-            priority_class = get_priority_class_name.call(entry.priority.to_i32)
 
-            str << "<tr"
-            str << " class=\"" << priority_class << "\"" if !priority_class.empty?
-            str << ">"
+            str << "<tr class=\"priority-#{entry.priority.to_i}\" >"
 
             # Timestamp
             str << "<td>" << entry.formatted_timestamp << "</td>"
