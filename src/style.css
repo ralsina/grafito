@@ -115,6 +115,7 @@ main {
 }
 
 .sidebar-buttons-row {
+
     display: flex;
     align-items: center;
     gap: var(--spacing, 0.5rem);
@@ -266,8 +267,10 @@ h1 {
 }
 
 .error {
-    color: var(--pico-del-color, red); /* Using PicoCSS variable for destructive/error color */
+    color: var(--pico-del-color, red);
+    /* Using PicoCSS variable for destructive/error color */
     text-align: center;
     padding: 1em;
-    border: 1px solid var(--pico-del-border, red); /* Optional: add a border for more emphasis */
+    border: 1px solid var(--pico-del-border, red);
+    /* Optional: add a border for more emphasis */
 }
