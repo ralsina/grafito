@@ -42,8 +42,7 @@
       <aside id="filters-sidebar">
         <hgroup class="sidebar-header-info">
           <h1>
-            <a
-              href="https://grafito.ralsina.me" class="grafito-title-link"
+            <a href="https://grafito.ralsina.me" class="grafito-title-link"
               >Grafito</a
             >
           </h1>
@@ -198,9 +197,9 @@
         </div>
         <datalist id="unit-suggestions"></datalist>
         <footer class="container-fluid">
-            <a href="https://links.ralsina.me">©️ 2025 Roberto Alsina</a> //
-            <a href="https://grafito.ralsina.me">🏠</a> //
-            <a href="https://github.com/ralsina/grafito">🖥️</a>
+          <a href="https://links.ralsina.me">©️ 2025 Roberto Alsina</a> //
+          <a href="https://grafito.ralsina.me">🏠</a> //
+          <a href="https://github.com/ralsina/grafito">🖥️</a>
         </footer>
       </aside>
       <main>
@@ -243,17 +242,26 @@
           { id: "tag-filter", param: "tag", type: "value" },
           { id: "time-range-filter", param: "since", type: "select" },
           { id: "priority-filter", param: "priority", type: "select" },
-          { id: "live-view", param: "live-view", type: "checkbox", trueValue: "on" }
+          {
+            id: "live-view",
+            param: "live-view",
+            type: "checkbox",
+            trueValue: "on",
+          },
         ];
 
-        filterConfigs.forEach(config => {
+        filterConfigs.forEach((config) => {
           const element = document.getElementById(config.id);
           if (params.has(config.param) && element) {
             const paramValue = params.get(config.param);
             if (config.type === "value") {
               element.value = paramValue;
             } else if (config.type === "select") {
-              if (Array.from(element.options).some(opt => opt.value === paramValue)) {
+              if (
+                Array.from(element.options).some(
+                  (opt) => opt.value === paramValue
+                )
+              ) {
                 element.value = paramValue;
               }
             } else if (config.type === "checkbox") {
@@ -315,23 +323,30 @@
 
       function copyShareableLink() {
         const params = new URLSearchParams();
-        const filterConfigs = [ // Re-use or define a similar config array
+        const filterConfigs = [
+          // Re-use or define a similar config array
           { id: "search-box", param: "q", type: "value" },
           { id: "unit-filter", param: "unit", type: "value" },
           { id: "tag-filter", param: "tag", type: "value" },
           { id: "time-range-filter", param: "since", type: "value" }, // Selects also have .value
           { id: "priority-filter", param: "priority", type: "value" }, // Selects also have .value
-          { id: "live-view", param: "live-view", type: "checkbox", trueValue: "on" }
+          {
+            id: "live-view",
+            param: "live-view",
+            type: "checkbox",
+            trueValue: "on",
+          },
         ];
 
-        filterConfigs.forEach(config => {
+        filterConfigs.forEach((config) => {
           const element = document.getElementById(config.id);
           if (element) {
             if (config.type === "checkbox") {
               if (element.checked) {
                 params.set(config.param, config.trueValue);
               }
-            } else if (element.value) { // For text inputs and selects with a value
+            } else if (element.value) {
+              // For text inputs and selects with a value
               params.set(config.param, element.value);
             }
           }
