@@ -181,7 +181,7 @@ main {
 
 
 footer.container-fluid {
-    text-align: center;
+    text-align: center; /* Footer items will be centered */
     padding-top: 20px;
     padding-bottom: 20px;
     margin-top: 20px;
@@ -190,6 +190,13 @@ footer.container-fluid {
 
 footer a {
     text-decoration: none;
+}
+
+/* Styles for the theme switcher when it's in the footer */
+footer.container-fluid .theme-switch-wrapper {
+    display: inline-block; /* Allows centering with text-align */
+    vertical-align: middle; /* Aligns switch with text/links */
+    margin-left: var(--spacing-horizontal, 0.5rem); /* Space from the last link */
 }
 
 h1 {

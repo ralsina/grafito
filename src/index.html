@@ -203,9 +203,16 @@
         </div>
         <datalist id="unit-suggestions"></datalist>
         <footer class="container-fluid">
-          <a href="https://links.ralsina.me">©️ 2025 Roberto Alsina</a> //
-          <a href="https://grafito.ralsina.me">🏠</a> //
+          <a href="https://links.ralsina.me">©️ 2025 Roberto Alsina</a>
+          <span>//</span>
+          <a href="https://grafito.ralsina.me">🏠</a>
+          <span>//</span>
           <a href="https://github.com/ralsina/grafito">🖥️</a>
+          <div class="theme-switch-wrapper">
+            <label for="theme-switch" title="Toggle light/dark mode">
+              🌞<input type="checkbox" id="theme-switch" name="theme" role="switch" />🌒
+            </label>
+          </div>
         </footer>
       </aside>
       <main>
@@ -240,6 +247,38 @@
     </div>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
+        // --- THEME SWITCHER LOGIC ---
+        const themeSwitch = document.getElementById('theme-switch');
+        const htmlElement = document.documentElement;
+
+        function applyTheme(theme) {
+          if (theme === 'dark') {
+            htmlElement.setAttribute('data-theme', 'dark');
+            if (themeSwitch) themeSwitch.checked = true;
+          } else {
+            htmlElement.setAttribute('data-theme', 'light');
+            if (themeSwitch) themeSwitch.checked = false;
+          }
+          localStorage.setItem('theme', theme);
+        }
+
+        // Apply initial theme: 1. localStorage, 2. OS preference, 3. Default to light
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+          applyTheme(savedTheme);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          applyTheme('dark');
+        } else {
+          applyTheme('light'); // Default
+        }
+
+        if (themeSwitch) {
+          themeSwitch.addEventListener('change', function() {
+            applyTheme(this.checked ? 'dark' : 'light');
+          });
+        }
+        // --- END THEME SWITCHER LOGIC ---
+
         // --- Shared Configuration for Filters ---
         // Defined outside the DOMContentLoaded listener so it can be accessed by copyShareableLink
         const SHARED_FILTER_CONFIGS = [
