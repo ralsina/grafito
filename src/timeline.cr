@@ -50,8 +50,6 @@ module Timeline
   #   axis_color: Color of the axis lines.
   #   label_color: Color of the text labels.
   #   grid_color: Color of the horizontal grid lines.
-  #   time_label_format: Format string for time labels on the X-axis.
-  #   title_text: Title of the chart.
   #   y_axis_ticks: Number of ticks/labels on the Y-axis.
   #
   # Returns:
@@ -59,17 +57,15 @@ module Timeline
   def generate_svg_timeline(
     timeline_data : Array(TimelinePoint),
     width : Int32 = 800,
-    height : Int32 = 300,
-    padding_top : Int32 = 40,
-    padding_right : Int32 = 30,
-    padding_bottom : Int32 = 50,
-    padding_left : Int32 = 50,
+    height : Int32 = 100,
+    padding_top : Int32 = 10,
+    padding_right : Int32 = 10,
+    padding_bottom : Int32 = 10,
+    padding_left : Int32 = 10,
     bar_color : String = "steelblue",
     axis_color : String = "#555555",
     label_color : String = "#333333",
     grid_color : String = "#e0e0e0",
-    time_label_format : String = "%H:%M",
-    title_text : String = "Log Frequency Timeline",
     y_axis_ticks : Int32 = 5,
   ) : String
     svg = IO::Memory.new
@@ -116,7 +112,7 @@ module Timeline
     # Title removed
 
     # Y-Axis (line, grid lines, and labels)
-    svg << %(  <line x1="#{padding_left}" y1="#{padding_top}" x2="#{padding_left}" y2="#{height - padding_bottom}" class="axis-line" />)
+    # Y-axis line removed
     (0..y_axis_ticks).each do |i|
       tick_value = (max_count / y_axis_ticks) * i
       tick_y = height - padding_bottom - (tick_value / max_count) * chart_height
@@ -125,9 +121,8 @@ module Timeline
       end
       # Y-axis labels removed
     end
-
     # X-Axis (line)
-    svg << %(  <line x1="#{padding_left}" y1="#{height - padding_bottom}" x2="#{width - padding_right}" y2="#{height - padding_bottom}" class="axis-line" />)
+    # X-axis line removed
 
     # Bars and X-Axis Labels
     timeline_data.each_with_index do |point, index|
