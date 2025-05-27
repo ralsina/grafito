@@ -1,4 +1,5 @@
 require "kemal"
+require "mime"
 require "json"
 require "./journalctl"
 require "./timeline"
@@ -25,14 +26,7 @@ module Grafito
 
   get "/:file" do |env|
     filename = env.params.url["file"]
-    content_type = case File.extname(filename)
-                   when ".css"  then "text/css"
-                   when ".js"   then "application/javascript"
-                   when ".svg"  then "image/svg+xml"
-                   when ".html" then "text/html"
-                     # Add other common types as needed, e.g., .png, .jpg, .woff2
-                   else "application/octet-stream" # A generic default
-                   end
+    content_type = MIME.from_extension("." + filename.split(".").last)
     env.response.content_type = content_type
     env.response.print Assets.get(filename).gets_to_end
   end
@@ -141,7 +135,6 @@ module Grafito
           str << "<tr><td colspan=\"#{colspan_value}\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>"
         else
           logs.each do |entry|
-
             str << "<tr class=\"priority-#{entry.priority.to_i}\" >"
 
             # Timestamp
