@@ -166,6 +166,13 @@
               ❔
             </button>
             <button
+              id="clear-filters-btn"
+              class="secondary"
+              title="Clear all filters"
+            >
+              ❌
+            </button>
+            <button
               id="copy-link-button"
               class="secondary"
               aria-label="Copy shareable link"
@@ -241,7 +248,12 @@
           { id: "tag-filter", param: "tag", type: "value" },
           { id: "time-range-filter", param: "since", type: "select" },
           { id: "priority-filter", param: "priority", type: "select" },
-          { id: "live-view", param: "live-view", type: "checkbox", trueValue: "on" },
+          {
+            id: "live-view",
+            param: "live-view",
+            type: "checkbox",
+            trueValue: "on",
+          },
         ];
 
         // --- Populate Filters from URL Parameters ---
@@ -305,6 +317,30 @@
             localStorage.setItem("sidebarCollapsed", !isCollapsed);
           });
 
+          // Clear All Filters Button Functionality
+          const clearFiltersButton =
+            document.getElementById("clear-filters-btn");
+          if (clearFiltersButton) {
+            clearFiltersButton.addEventListener("click", function () {
+              // Reset text inputs
+              document.getElementById("search-box").value = "";
+              document.getElementById("unit-filter").value = "";
+              document.getElementById("tag-filter").value = "";
+
+              // Reset select elements to their default values
+              document.getElementById("time-range-filter").value = ""; // "Any time"
+              document.getElementById("priority-filter").value = "5"; // "Notice" (or your preferred default)
+
+              // Reset checkbox
+              const liveViewCheckbox = document.getElementById("live-view");
+              if (liveViewCheckbox.checked) {
+                liveViewCheckbox.checked = false;
+                // Manually trigger change for HTMX if live view was active
+                htmx.trigger(liveViewCheckbox, "change");
+              }
+              htmx.trigger(document.body, "initial-load-event", {}); // Reload logs
+            });
+          }
           // Apply initial state from localStorage
           const savedState = localStorage.getItem("sidebarCollapsed");
           if (savedState !== null) {
