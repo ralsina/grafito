@@ -33,9 +33,13 @@ module Grafito
 
   get "/:file" do |env|
     filename = env.params.url["file"]
+    file_content = Assets.get(filename)
     content_type = MIME.from_extension("." + filename.split(".").last)
     env.response.content_type = content_type
-    env.response.print Assets.get(filename).gets_to_end
+    env.response.print file_content.gets_to_end
+  rescue KeyError # Or a more specific error if BakedFileSystem provides one
+    env.response.status_code = 404
+    env.response.print "File not found"
   end
 
   # Exposes the Journalctl wrapper via a REST API.
