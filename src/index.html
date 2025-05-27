@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Grafito</title>
+    <meta name="color-scheme" content="light dark" />
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,44 +14,15 @@
       href="https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap"
       rel="stylesheet"
     />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <style>
-      body {
-        font-family: "WDXL Lubrifont TC", sans-serif;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh; /* Ensure body takes at least full viewport height */
-      }
-      main {
-        flex-grow: 1; /* Allow main content to grow and push footer down */
-      }
-      #filters-sidebar.collapsed {
-        width: 0px !important; /* Override inline style */
-        padding-left: 0px !important;
-        padding-right: 0px !important;
-        border-right: none !important;
-        overflow: hidden;
-        transition: width 0.3s ease, padding 0.3s ease;
-      }
-      #loading-spinner {
-        /* Default state: hidden */
-        display: none;
-      }
-      #loading-spinner.htmx-request {
-        /* Overlay styles */
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex; /* Use flex to center content */
-        align-items: center;
-        justify-content: center;
-        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-        z-index: 1000; /* High z-index to be on top */
-        color: white; /* Make text white for contrast */
-      }
-    </style>
+
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Grafito Log Viewer</title>
+    <script
+      src="https://unpkg.com/htmx.org@1.9.10"
+      integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+      crossorigin="anonymous"
+    ></script>
   </head>
   <body
     hx-get="services"
@@ -59,69 +30,28 @@
     hx-trigger="load"
     hx-swap="innerHTML"
   >
-    <header class="container-fluid" style="padding: 20px">
-      <hgroup
-        style="
-          display: flex;
-          justify-content: space-between;
-          align-items: baseline;
-        "
-      >
-        <h1
-          style="font-size: 2em; font-family: 'WDXL Lubrifont TC', sans-serif"
-        >
-          Grafito
-        </h1>
-        <span style="font-size: 1em">A simple log viewer</span>
+    <header class="container-fluid">
+      <hgroup>
+        <h1>Grafito</h1>
+        <span>A simple log viewer</span>
       </hgroup>
     </header>
     <hr class="container-fluid" />
     <!-- Added horizontal line -->
-    <div
-      class="container-fluid"
-      style="display: flex; gap: var(--spacing, 1rem); padding: 20px"
-    >
+    <div id="page-content-layout" class="container-fluid">
       <button
         id="toggle-sidebar-btn"
         class="secondary outline"
         aria-expanded="true"
         aria-controls="filters-sidebar"
         title="Hide Filters Sidebar"
-        style="
-          height: 2.5rem;
-          width: 2.5rem;
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0;
-          align-self: flex-start;
-          position: sticky;
-          top: var(--spacing, 1rem);
-          z-index: 10;
-        "
       >
         «
       </button>
-      <aside
-        id="filters-sidebar"
-        style="
-          width: 300px;
-          flex-shrink: 0;
-          border-right: 1px solid var(--muted-border-color, #ccc);
-          padding-right: var(--spacing, 1rem);
-          padding-left: var(--spacing, 1rem);
-          position: sticky;
-          top: var(--spacing, 1rem);
-          align-self: flex-start;
-          max-height: calc(100vh - 2 * var(--spacing, 1rem));
-          overflow-y: auto;
-          z-index: 5;
-        "
-      >
+      <aside id="filters-sidebar">
         <!-- Removed button from here -->
         <!-- Search Box Moved Here -->
-        <div style="width: 100%; margin-bottom: var(--form-element-spacing-vertical);">
+        <div>
           <input
             type="search"
             id="search-box"
@@ -133,23 +63,12 @@
             name="q"
             hx-indicator="#loading-spinner"
             hx-include="#unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view"
-            style="width: 100%; height: 2.5rem"
           />
         </div>
 
         <!-- Unit and Tag Filters -->
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            gap: var(--spacing, 1rem); /* Add space between items */
-            margin-bottom: var(
-              --form-element-spacing-vertical
-            ); /* Space between filter rows */
-            flex-direction: column; /* Stack filters vertically in sidebar */
-          "
-        >
-          <div style="width: 100%">
+        <div class="filter-group">
+          <div>
             <input
               type="text"
               id="unit-filter"
@@ -162,10 +81,9 @@
               hx-target="#results"
               hx-indicator="#loading-spinner"
               hx-include="#search-box, #tag-filter, #priority-filter, #time-range-filter, #live-view"
-              style="width: 100%"
             />
           </div>
-          <div style="width: 100%">
+          <div>
             <input
               type="text"
               id="tag-filter"
@@ -177,22 +95,13 @@
               hx-target="#results"
               hx-indicator="#loading-spinner"
               hx-include="#search-box, #unit-filter, #priority-filter, #time-range-filter, #live-view"
-              style="width: 100%"
             />
           </div>
         </div>
 
         <!-- Row 3: Time and Priority Filters -->
-        <div
-          style="
-            display: flex;
-            align-items: center; /* Vertically align items */
-            gap: var(--spacing, 1rem); /* Add space between items */
-            flex-direction: column; /* Stack filters vertically in sidebar */
-            margin-bottom: var(--form-element-spacing-vertical);
-          "
-        >
-          <div style="width: 100%">
+        <div class="filter-group">
+          <div>
             <select
               id="time-range-filter"
               name="since"
@@ -202,7 +111,6 @@
               hx-target="#results"
               hx-indicator="#loading-spinner"
               hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #live-view"
-              style="width: 100%"
             >
               <option value="">Any time</option>
               <!-- Default/no filter -->
@@ -216,7 +124,7 @@
               <!-- You could add more specific date/time inputs here if needed -->
             </select>
           </div>
-          <div style="width: 100%">
+          <div>
             <select
               id="priority-filter"
               name="priority"
@@ -226,7 +134,6 @@
               hx-target="#results"
               hx-indicator="#loading-spinner"
               hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
-              style="width: 100%"
             >
               <option value="0">Emergency</option>
               <option value="1">Alert</option>
@@ -239,20 +146,9 @@
             </select>
           </div>
         </div>
-        <div
-          style="
-            border-top: 1px solid var(--muted-border-color, #ccc);
-            padding-top: var(--spacing, 1rem);
-          "
-        >
+        <div class="sidebar-actions-area">
           <!-- Help button for command -->
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              gap: var(--spacing, 0.5rem);
-            "
-          >
+          <div class="sidebar-buttons-row">
             <button
               id="show-command-button"
               class="secondary"
@@ -263,15 +159,6 @@
               hx-trigger="click"
               hx-swap="none"
               hx-on:htmx:after-request="if(event.detail.successful) alert('These filters are the equivalent of: ' + event.detail.xhr.responseText); else alert('Error fetching command: ' + event.detail.xhr.statusText + '\\nCheck console for more details.');"
-              style="
-                width: 2.5rem;
-                height: 2.5rem;
-                border-radius: 50%;
-                padding: 0;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-              "
             >
               ❔
             </button>
@@ -281,25 +168,11 @@
               aria-label="Copy shareable link"
               title="Copy link with current filters"
               onclick="copyShareableLink()"
-              style="
-                width: 2.5rem;
-                height: 2.5rem;
-                border-radius: 50%;
-                padding: 0;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-              "
             >
               🔗
             </button>
-            <div style="margin-left: auto; display: flex; align-items: center">
-              <label
-                for="live-view"
-                role="switch"
-                style="display: flex; align-items: center"
-                title="Toggle live log updates every 10 seconds"
-              >
+            <div class="live-view-controls">
+              <label for="live-view" role="switch" title="Toggle live log updates every 10 seconds">
                 <input
                   type="checkbox"
                   id="live-view"
@@ -317,28 +190,18 @@
         </div>
         <datalist id="unit-suggestions"></datalist>
       </aside>
-      <main style="flex-grow: 1; min-width: 0; overflow-x: hidden">
+      <main>
         <!-- Spinner Element -->
         <div id="loading-spinner" class="htmx-indicator">
-          <div
-            style="
-              padding: 20px;
-              background-color: rgba(0, 0, 0, 0.3);
-              border-radius: var(--border-radius);
-            "
-          >
+          <div>
             Loading...
-            <span
-              aria-busy="true"
-              style="--primary: white; --primary-inverse: #333"
-            ></span>
+            <span aria-busy="true"></span>
           </div>
         </div>
 
         <!-- Hidden poller for live view updates (no spinner) -->
         <div
           id="live-view-poller"
-          style="display: none"
           hx-get="logs"
           hx-trigger="every 10s[document.getElementById('live-view').checked]"
           hx-target="#results"
@@ -351,11 +214,6 @@
           hx-trigger="initial-load-event from:body"
           hx-indicator="#loading-spinner"
           hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter, #live-view"
-          style="
-            white-space: pre-wrap;
-            font-family: monospace;
-            overflow-x: auto;
-          "
           hx-target="this"
         >
           <!-- Results will be displayed here -->
@@ -363,29 +221,13 @@
       </main>
     </div>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <footer
-      class="container-fluid"
-      style="
-        text-align: center;
-        padding-top: 20px;
-        padding-bottom: 20px;
-        margin-top: 20px;
-        border-top: 1px solid var(--muted-border-color);
-      "
-    >
+    <footer class="container-fluid">
       <small>
-        <a href="https://links.ralsina.me" style="text-decoration: none"
-          >© 2025 Roberto Alsina</a
-        >
+        <a href="https://links.ralsina.me">© 2025 Roberto Alsina</a>
         |
-        <a href="https://grafito.ralsina.me" style="text-decoration: none"
-          >🏚 grafito.ralsina.me</a
-        >
+        <a href="https://grafito.ralsina.me">🏚 grafito.ralsina.me</a>
         |
-        <a
-          href="https://github.com/ralsina/grafito"
-          style="text-decoration: none"
-        >
+        <a href="https://github.com/ralsina/grafito">
           ⌨ ralsina/grafito
         </a>
       </small>
@@ -482,7 +324,6 @@
           copyLinkButton.title =
             "Cannot copy link: Page is not loaded in a secure context (HTTPS).";
         }
-
       });
 
       function copyShareableLink() {

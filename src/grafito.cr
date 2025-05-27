@@ -16,7 +16,7 @@ module Grafito
     extend BakedFileSystem
     bake_file "index.html", {{ read_file "#{__DIR__}/index.html" }}
     bake_file "favicon.svg", {{ read_file "#{__DIR__}/favicon.svg" }}
-    bake_file "style.css", {{ read_file "#{__DIR__}/favicon.svg" }}
+    bake_file "style.css", {{ read_file "#{__DIR__}/style.css" }}
   end
 
   get "/" do |env|
@@ -24,8 +24,17 @@ module Grafito
   end
 
   get "/:file" do |env|
-    env.response.content_type = "text/html"
-    env.response.print Assets.get(env.params.url["file"]).gets_to_end
+    filename = env.params.url["file"]
+    content_type = case File.extname(filename)
+                   when ".css"   then "text/css"
+                   when ".js"    then "application/javascript"
+                   when ".svg"   then "image/svg+xml"
+                   when ".html"  then "text/html"
+                   # Add other common types as needed, e.g., .png, .jpg, .woff2
+                   else               "application/octet-stream" # A generic default
+                   end
+    env.response.content_type = content_type
+    env.response.print Assets.get(filename).gets_to_end
   end
 
   # Exposes the Journalctl wrapper via a REST API.

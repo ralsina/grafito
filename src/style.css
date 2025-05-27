@@ -1,0 +1,212 @@
+html {
+    font-size: 85%;
+}
+
+body {
+    font-family: "WDXL Lubrifont TC", sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    /* Ensure body takes at least full viewport height */
+}
+
+main {
+    flex-grow: 1;
+    /* Allow main content to grow and push footer down */
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+
+/* Header */
+header.container-fluid {
+    padding: 20px;
+}
+
+header hgroup {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+/* Main Page Layout (wrapper for sidebar and main content) */
+#page-content-layout {
+    /* ID added to the div in index.html */
+    display: flex;
+    gap: var(--spacing, 1rem);
+    padding: 20px;
+}
+
+/* Sidebar */
+#toggle-sidebar-btn {
+    height: 2.5rem;
+    width: 2.5rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    align-self: flex-start;
+    position: sticky;
+    top: var(--spacing, 1rem);
+    z-index: 10;
+}
+
+#filters-sidebar {
+    /* Base styles (some are overridden by .collapsed state) */
+    width: 300px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--muted-border-color, #ccc);
+    padding-right: var(--spacing, 1rem);
+    padding-left: var(--spacing, 1rem);
+    position: sticky;
+    top: var(--spacing, 1rem);
+    align-self: flex-start;
+    max-height: calc(100vh - 2 * var(--spacing, 1rem));
+    overflow-y: auto;
+    z-index: 5;
+}
+
+#filters-sidebar.collapsed {
+    width: 0px !important;
+    /* Override inline style */
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    border-right: none !important;
+    overflow: hidden;
+    transition: width 0.3s ease, padding 0.3s ease;
+}
+
+#loading-spinner {
+    /* Default state: hidden */
+    display: none;
+}
+
+/* Sidebar Content Styling */
+/* Search box container (div wrapping #search-box) */
+#filters-sidebar>div:nth-of-type(1) {
+    /* First div child of sidebar */
+    width: 100%;
+    margin-bottom: var(--form-element-spacing-vertical);
+}
+
+#search-box {
+    width: 100%;
+    height: 2.5rem;
+}
+
+/* Filter groups (for unit/tag and time/priority) */
+.filter-group {
+    /* Class added to these divs in index.html */
+    display: flex;
+    align-items: center;
+    gap: var(--spacing, 1rem);
+    margin-bottom: var(--form-element-spacing-vertical);
+    flex-direction: column;
+}
+
+/* Wrappers for inputs/selects within filter groups */
+.filter-group>div {
+    width: 100%;
+}
+
+/* Individual filter inputs/selects */
+#unit-filter,
+#tag-filter,
+#time-range-filter,
+#priority-filter {
+    width: 100%;
+}
+
+
+
+/* Sidebar Actions Area (bottom section with buttons) */
+.sidebar-actions-area {
+    /* Class added in index.html */
+    border-top: 1px solid var(--muted-border-color, #ccc);
+    padding-top: var(--spacing, 1rem);
+}
+
+.sidebar-buttons-row {
+    /* Class added in index.html */
+    display: flex;
+    align-items: center;
+    gap: var(--spacing, 0.5rem);
+}
+
+#show-command-button,
+#copy-link-button {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.live-view-controls {
+    /* Class added in index.html */
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
+#loading-spinner.htmx-request {
+    /* Overlay styles */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    /* Use flex to center content */
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Semi-transparent background */
+    z-index: 1000;
+    /* High z-index to be on top */
+    color: white;
+    /* Make text white for contrast */
+}
+
+#loading-spinner>div {
+    /* Inner div of spinner */
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: var(--border-radius);
+}
+
+#loading-spinner span[aria-busy="true"] {
+    --primary: white;
+    --primary-inverse: #333;
+}
+
+#live-view-poller {
+    display: none;
+}
+
+#results {
+    white-space: pre-wrap;
+    font-family: monospace;
+    overflow-x: auto;
+}
+
+/* Footer */
+footer.container-fluid {
+    text-align: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-top: 20px;
+    border-top: 1px solid var(--muted-border-color);
+}
+
+footer a {
+    text-decoration: none;
+}
+
+h1 {
+    font-family: "WDXL Lubrifont TC", sans-serif;
+    font-size: 2em;
+}
