@@ -26,42 +26,41 @@ main {
 }
 
 /* Sidebar */
+/* In /home/ralsina/code/grafito/src/style.css */
 #toggle-sidebar-btn {
-    height: 2.5rem;
-    width: 2.5rem;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 10px;
-    align-self: flex-start;
-    position: sticky;
+    position: fixed;
+    opacity: 0.7;
     top: var(--spacing, 1rem);
-    z-index: 10;
-    font-size: 3em;
+    z-index: 1050;
+    font-size: 1em;
+    padding: 0.5rem 0.75rem;
+    line-height: 1;
+    border: none;
+    cursor: pointer;
+    transition: left 0.3s ease-in-out, background-color 0.2s ease, color 0.2s ease;
 }
 
 #filters-sidebar {
     /* Base styles (some are overridden by .collapsed state) */
-    width: 300px;
+    width: 18.75rem;
     flex-shrink: 0;
     border-right: 1px solid var(--muted-border-color, #ccc);
     padding-right: var(--spacing, 1rem);
-    padding-left: 10px;
+    padding-left: var(--spacing-small, 0.5rem);
     position: sticky;
     top: var(--spacing, 1rem);
     align-self: flex-start;
-    height: 100vh;
+    height: calc(100vh - var(--spacing, 1rem));
     /* Set height to 100% of viewport height */
     overflow-y: auto;
     z-index: 5;
 }
 
 #filters-sidebar.collapsed {
-    width: 0px !important;
+    width: 0 !important;
     /* Override inline style */
-    padding-left: 0px !important;
-    padding-right: 0px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
     border-right: none !important;
     overflow: hidden;
     transition: width 0.3s ease, padding 0.3s ease;
@@ -74,7 +73,7 @@ main {
 
 /* Sidebar Content Styling */
 /* Search box container (div wrapping #search-box) */
-#filters-sidebar>div:nth-of-type(1) {
+#.search-container-wrapper {
     width: 100%;
     margin-bottom: var(--form-element-spacing-vertical);
 }

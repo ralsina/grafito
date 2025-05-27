@@ -32,15 +32,15 @@
     <div id="page-content-layout" class="container-fluid">
       <button
         id="toggle-sidebar-btn"
-        class="secondary outline"
+        class="secondary"
         aria-expanded="true"
         aria-controls="filters-sidebar"
         title="Hide Filters Sidebar"
       >
-        ➡️
+        ☰
       </button>
       <aside id="filters-sidebar">
-        <hgroup class="sidebar-header-info">
+        <hgroup class="sidebar-header-info" style="text-align: right">
           <h1>
             <a href="https://grafito.ralsina.me" class="grafito-title-link"
               >Grafito</a
@@ -49,7 +49,7 @@
           <span>A simple log viewer</span>
         </hgroup>
         <hr />
-        <div>
+        <div class="search-container-wrapper">
           <input
             type="search"
             id="search-box"
@@ -275,21 +275,31 @@
         const sidebar = document.getElementById("filters-sidebar");
         const mainContent = document.querySelector("main"); // Assuming main content area
 
+        // Constants for button and sidebar interaction
+        const BUTTON_TITLE_EXPAND = "Show Filters Sidebar";
+        const BUTTON_TITLE_COLLAPSE = "Hide Filters Sidebar";
+        const BUTTON_FIXED_LEFT_OFFSET = "1rem"; // Button's fixed distance from the left edge of the viewport
+
         function setSidebarState(isCollapsed) {
-          if (sidebar && toggleButton) {
-            if (isCollapsed) {
-              sidebar.classList.add("collapsed");
-              toggleButton.innerHTML = "&#10145;&#65039;"; // Right arrow emoji ➡️
-              toggleButton.setAttribute("aria-expanded", "false");
-              toggleButton.setAttribute("title", "Show Filters Sidebar");
-              if (mainContent) mainContent.style.marginLeft = "0";
-            } else {
-              sidebar.classList.remove("collapsed");
-              toggleButton.innerHTML = "&#11013;&#65039;"; // Left arrow emoji ⬅️
-              toggleButton.setAttribute("aria-expanded", "true");
-              toggleButton.setAttribute("title", "Hide Filters Sidebar");
-              if (mainContent) mainContent.style.marginLeft = ""; // Reset margin or set to sidebar width
-            }
+          // Ensure all necessary elements exist
+          if (!sidebar || !toggleButton || !mainContent) {
+            console.error("Required elements for sidebar toggle not found.");
+            return;
+          }
+
+          const sidebarWidth = sidebar.offsetWidth;
+
+          // Always position the button at the fixed left offset
+          toggleButton.style.left = BUTTON_FIXED_LEFT_OFFSET;
+
+          if (isCollapsed) {
+            sidebar.classList.add("collapsed");
+            toggleButton.setAttribute("aria-expanded", "false");
+            toggleButton.setAttribute("title", BUTTON_TITLE_EXPAND);
+          } else {
+            sidebar.classList.remove("collapsed");
+            toggleButton.setAttribute("aria-expanded", "true");
+            toggleButton.setAttribute("title", BUTTON_TITLE_COLLAPSE);
           }
         }
 
