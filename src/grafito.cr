@@ -16,24 +16,16 @@ module Grafito
     extend BakedFileSystem
     bake_file "index.html", {{ read_file "#{__DIR__}/index.html" }}
     bake_file "favicon.svg", {{ read_file "#{__DIR__}/favicon.svg" }}
+    bake_file "style.css", {{ read_file "#{__DIR__}/favicon.svg" }}
   end
 
-  # Matches GET "http://host:port/" and serves the index.html file.
   get "/" do |env|
+    env.redirect "/index.html"
+  end
+
+  get "/:file" do |env|
     env.response.content_type = "text/html"
-    env.response.print Assets.get("index.html").gets_to_end
-  end
-
-  # Matches GET "http://host:port/" and serves the index.html file.
-  get "/favicon.svg" do |env|
-    env.response.content_type = "image/svg+xml"
-    env.response.print Assets.get("favicon.svg").gets_to_end
-  end
-
-  # Creates a WebSocket handler.
-  # Matches "ws://host:port/socket"
-  ws "/socket" do |socket|
-    socket.send "Hello from Kemal!"
+    env.response.print Assets.get(env.params.url["file"]).gets_to_end
   end
 
   # Exposes the Journalctl wrapper via a REST API.
