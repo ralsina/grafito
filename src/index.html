@@ -43,8 +43,7 @@
         <hgroup class="sidebar-header-info">
           <h1>
             <a
-              href="https://grafito.ralsina.me"
-              style="text-decoration: none; color: inherit"
+              href="https://grafito.ralsina.me" class="grafito-title-link"
               >Grafito</a
             >
           </h1>
@@ -61,8 +60,9 @@
             hx-trigger="keyup changed delay:500ms"
             hx-target="#results"
             name="q"
+            class="log-filter"
             hx-indicator="#loading-spinner"
-            hx-include="#unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view"
+            hx-include=".log-filter"
           />
         </div>
 
@@ -79,8 +79,9 @@
               hx-get="logs"
               hx-trigger="keyup changed delay:500ms"
               hx-target="#results"
+              class="log-filter"
               hx-indicator="#loading-spinner"
-              hx-include="#search-box, #tag-filter, #priority-filter, #time-range-filter, #live-view"
+              hx-include=".log-filter"
             />
           </div>
           <div>
@@ -93,8 +94,9 @@
               hx-get="logs"
               hx-trigger="keyup changed delay:500ms"
               hx-target="#results"
+              class="log-filter"
               hx-indicator="#loading-spinner"
-              hx-include="#search-box, #unit-filter, #priority-filter, #time-range-filter, #live-view"
+              hx-include=".log-filter"
             />
           </div>
         </div>
@@ -109,8 +111,9 @@
               title="Filter logs by time range"
               hx-trigger="change"
               hx-target="#results"
+              class="log-filter"
               hx-indicator="#loading-spinner"
-              hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #live-view"
+              hx-include=".log-filter"
             >
               <option value="">Any time</option>
               <!-- Default/no filter -->
@@ -132,8 +135,9 @@
               title="Filter logs by priority level"
               hx-trigger="change"
               hx-target="#results"
+              class="log-filter"
               hx-indicator="#loading-spinner"
-              hx-include="#search-box, #unit-filter, #tag-filter, #time-range-filter, #live-view"
+              hx-include=".log-filter"
             >
               <option value="0">Emergency</option>
               <option value="1">Alert</option>
@@ -155,7 +159,7 @@
               aria-label="Show equivalent command"
               title="Show equivalent journalctl command"
               hx-get="command"
-              hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter, #live-view"
+              hx-include=".log-filter"
               hx-trigger="click"
               hx-swap="none"
               hx-on:htmx:after-request="if(event.detail.successful) alert('These filters are the equivalent of: ' + event.detail.xhr.responseText); else alert('Error fetching command: ' + event.detail.xhr.statusText + '\\nCheck console for more details.');"
@@ -182,10 +186,10 @@
                   id="live-view"
                   name="live-view"
                   role="switch"
+                  class="log-filter"
                   hx-get="logs"
                   hx-target="#results"
                   hx-indicator="#loading-spinner"
-                  hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter"
                 />
                 Live
               </label>
@@ -214,7 +218,7 @@
           hx-get="logs"
           hx-trigger="every 10s[document.getElementById('live-view').checked]"
           hx-target="#results"
-          hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter, #live-view"
+          hx-include=".log-filter"
         ></div>
 
         <div
@@ -222,76 +226,61 @@
           hx-get="logs"
           hx-trigger="initial-load-event from:body"
           hx-indicator="#loading-spinner"
-          hx-include="#search-box, #unit-filter, #priority-filter, #tag-filter, #time-range-filter, #live-view"
+          hx-include=".log-filter"
           hx-target="this"
         >
           <!-- Results will be displayed here -->
         </div>
       </main>
     </div>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const params = new URLSearchParams(window.location.search);
 
-        const searchBox = document.getElementById("search-box");
-        if (params.has("q") && searchBox) {
-          searchBox.value = params.get("q");
-        }
+        const filterConfigs = [
+          { id: "search-box", param: "q", type: "value" },
+          { id: "unit-filter", param: "unit", type: "value" },
+          { id: "tag-filter", param: "tag", type: "value" },
+          { id: "time-range-filter", param: "since", type: "select" },
+          { id: "priority-filter", param: "priority", type: "select" },
+          { id: "live-view", param: "live-view", type: "checkbox", trueValue: "on" }
+        ];
 
-        const unitFilter = document.getElementById("unit-filter");
-        if (params.has("unit") && unitFilter) {
-          unitFilter.value = params.get("unit");
-        }
-
-        const tagFilter = document.getElementById("tag-filter");
-        if (params.has("tag") && tagFilter) {
-          tagFilter.value = params.get("tag");
-        }
-
-        const timeRangeFilter = document.getElementById("time-range-filter");
-        if (params.has("since") && timeRangeFilter) {
-          // Ensure the value exists as an option before setting it
-          if (
-            Array.from(timeRangeFilter.options).some(
-              (opt) => opt.value === params.get("since")
-            )
-          ) {
-            timeRangeFilter.value = params.get("since");
+        filterConfigs.forEach(config => {
+          const element = document.getElementById(config.id);
+          if (params.has(config.param) && element) {
+            const paramValue = params.get(config.param);
+            if (config.type === "value") {
+              element.value = paramValue;
+            } else if (config.type === "select") {
+              if (Array.from(element.options).some(opt => opt.value === paramValue)) {
+                element.value = paramValue;
+              }
+            } else if (config.type === "checkbox") {
+              element.checked = paramValue === config.trueValue;
+            }
           }
-        }
-
-        const liveViewCheckbox = document.getElementById("live-view");
-        if (params.has("live-view") && liveViewCheckbox) {
-          liveViewCheckbox.checked = params.get("live-view") === "on";
-        }
-        const priorityFilter = document.getElementById("priority-filter");
-        if (params.has("priority") && priorityFilter) {
-          if (
-            Array.from(priorityFilter.options).some(
-              (opt) => opt.value === params.get("priority")
-            )
-          ) {
-            priorityFilter.value = params.get("priority");
-          }
-        }
+        });
 
         // Sidebar Toggle Functionality
         const toggleButton = document.getElementById("toggle-sidebar-btn");
         const sidebar = document.getElementById("filters-sidebar");
+        const mainContent = document.querySelector("main"); // Assuming main content area
 
         function setSidebarState(isCollapsed) {
           if (sidebar && toggleButton) {
             if (isCollapsed) {
               sidebar.classList.add("collapsed");
-              toggleButton.textContent = "➡️";
+              toggleButton.innerHTML = "&#10145;&#65039;"; // Right arrow emoji ➡️
               toggleButton.setAttribute("aria-expanded", "false");
               toggleButton.setAttribute("title", "Show Filters Sidebar");
+              if (mainContent) mainContent.style.marginLeft = "0";
             } else {
               sidebar.classList.remove("collapsed");
-              toggleButton.textContent = "⬅️";
+              toggleButton.innerHTML = "&#11013;&#65039;"; // Left arrow emoji ⬅️
               toggleButton.setAttribute("aria-expanded", "true");
               toggleButton.setAttribute("title", "Hide Filters Sidebar");
+              if (mainContent) mainContent.style.marginLeft = ""; // Reset margin or set to sidebar width
             }
           }
         }
@@ -299,7 +288,7 @@
         if (toggleButton && sidebar) {
           toggleButton.addEventListener("click", () => {
             const isCollapsed = sidebar.classList.contains("collapsed");
-            setSidebarState(!isCollapsed); // Toggle the state
+            setSidebarState(!isCollapsed);
             localStorage.setItem("sidebarCollapsed", !isCollapsed);
           });
 
@@ -326,36 +315,27 @@
 
       function copyShareableLink() {
         const params = new URLSearchParams();
+        const filterConfigs = [ // Re-use or define a similar config array
+          { id: "search-box", param: "q", type: "value" },
+          { id: "unit-filter", param: "unit", type: "value" },
+          { id: "tag-filter", param: "tag", type: "value" },
+          { id: "time-range-filter", param: "since", type: "value" }, // Selects also have .value
+          { id: "priority-filter", param: "priority", type: "value" }, // Selects also have .value
+          { id: "live-view", param: "live-view", type: "checkbox", trueValue: "on" }
+        ];
 
-        const searchBox = document.getElementById("search-box");
-        if (searchBox && searchBox.value) {
-          params.set("q", searchBox.value);
-        }
-
-        const unitFilter = document.getElementById("unit-filter");
-        if (unitFilter && unitFilter.value) {
-          params.set("unit", unitFilter.value);
-        }
-
-        const tagFilter = document.getElementById("tag-filter");
-        if (tagFilter && tagFilter.value) {
-          params.set("tag", tagFilter.value);
-        }
-
-        const timeRangeFilter = document.getElementById("time-range-filter");
-        if (timeRangeFilter && timeRangeFilter.value) {
-          params.set("since", timeRangeFilter.value);
-        }
-
-        const liveViewCheckbox = document.getElementById("live-view");
-        if (liveViewCheckbox && liveViewCheckbox.checked) {
-          params.set("live-view", "on");
-        }
-
-        const priorityFilter = document.getElementById("priority-filter");
-        if (priorityFilter && priorityFilter.value) {
-          params.set("priority", priorityFilter.value);
-        }
+        filterConfigs.forEach(config => {
+          const element = document.getElementById(config.id);
+          if (element) {
+            if (config.type === "checkbox") {
+              if (element.checked) {
+                params.set(config.param, config.trueValue);
+              }
+            } else if (element.value) { // For text inputs and selects with a value
+              params.set(config.param, element.value);
+            }
+          }
+        });
 
         const shareUrl =
           window.location.origin +

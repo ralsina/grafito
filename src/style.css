@@ -21,7 +21,7 @@ main {
 #page-content-layout {
     display: flex;
     gap: var(--spacing, 1rem);
-    padding: 20px;
+    padding: var(--spacing); /* Use consistent spacing unit */
 }
 
 /* Sidebar */
@@ -32,7 +32,7 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
+    margin-left: 10px;
     align-self: flex-start;
     position: sticky;
     top: var(--spacing, 1rem);
@@ -46,7 +46,7 @@ main {
     flex-shrink: 0;
     border-right: 1px solid var(--muted-border-color, #ccc);
     padding-right: var(--spacing, 1rem);
-    padding-left: var(--spacing, 1rem);
+    padding-left: 10px;
     position: sticky;
     top: var(--spacing, 1rem);
     align-self: flex-start;
@@ -225,4 +225,9 @@ h1 {
 .priority-4 {
     /* Warning */
     border-left-color: #FFA500 !important;
+}
+
+.sidebar-header-info h1 a.grafito-title-link {
+  text-decoration: none;
+  color: inherit;
 }
