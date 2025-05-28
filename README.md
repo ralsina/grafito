@@ -70,19 +70,18 @@ To run Grafito as a systemd service, you can create a service file.
     [Unit]
     Description=Grafito Log Viewer
     After=network.target
-
+    
     [Service]
     Type=simple
-    # Replace with the user you want to run Grafito as
-    User=your_user
+    DynamicUser=yes
     # Replace with the group for the user or maybe systemd-journal
-    Group=your_group
+    Group=systemd-journal
     # Replace with the actual path to your Grafito directory
-    WorkingDirectory=/path/to/grafito
-     # Replace with the actual path to the Grafito binary
-    ExecStart=/path/to/grafito/bin/grafito
+    WorkingDirectory=/usr/local/bin/
+    # Replace with the actual path and options to the Grafito binary
+    ExecStart=/usr/local/bin/grafito -b 0.0.0.0 -p 1111
     Restart=on-failure
-
+    
     [Install]
     WantedBy=multi-user.target
     ```
