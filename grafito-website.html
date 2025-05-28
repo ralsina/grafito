@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Grafito: Your friendly, self-hosted Systemd Journal Log Viewer. Effortlessly navigate, filter, and understand your system logs." />
+    <meta
+      name="description"
+      content="Grafito: Your friendly, self-hosted Systemd Journal Log Viewer. Effortlessly navigate, filter, and understand your system logs."
+    />
     <meta name="color-scheme" content="light dark" />
     <link
       rel="stylesheet"
@@ -18,198 +21,267 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <title>Grafito - Friendly Systemd Journal Log Viewer</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-        }
-        .grafito-title {
-            font-family: 'WDXL Lubrifont TC', 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive;
-            font-weight: normal; /* Lubrifont is already quite bold */
-            font-size: 3rem; /* Adjust as needed */
-            text-align: center;
-            margin-bottom: 0.5rem;
-        }
-        .grafito-title a {
-            text-decoration: none;
-            color: inherit;
-        }
-        .subtitle {
-            text-align: center;
-            font-size: 1.2rem;
-            color: var(--pico-muted-color);
-            margin-bottom: 2rem;
-        }
-        .hero {
-            text-align: center;
-            padding: 3rem 1rem;
-        }
-        .hero img {
-            max-width: 150px; /* Adjust as needed */
-            margin-bottom: 1rem;
-        }
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-            margin-bottom: 3rem;
-        }
-        .feature-card {
-            border: 1px solid var(--pico-card-border-color);
-            border-radius: var(--pico-border-radius);
-            padding: 1.5rem;
-            background-color: var(--pico-card-background-color);
-        }
-        .feature-card hgroup {
-            margin-bottom: 1rem;
-        }
-        .feature-card h3 {
-            margin-bottom: 0.5rem;
-        }
-        .feature-card p {
-            color: var(--pico-secondary);
-            font-size: 0.95rem;
-        }
-        .feature-icon {
-            font-size: 1.5rem; /* Make icons a bit larger */
-            margin-right: 0.5rem;
-        }
-        .cta-section {
-            text-align: center;
-            padding: 2rem 0;
-        }
-        .theme-switch-wrapper-footer {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            padding-top: 1rem;
-        }
-        .theme-switch-wrapper-footer label {
-            margin-bottom: 0; /* Override Pico's default label margin */
-        }
-        /* Style for the custom font in headings if desired */
-        /* h1, h2, h3, h4, h5, h6 { */
-             /* font-family: 'WDXL Lubrifont TC', 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive; */
-             /* Uncomment if you want the custom font for all headers, might be too much */
-        /* } */
-        nav ul:last-child { /* Target the right-side UL in the nav */
-            display: flex;
-            align-items: center; /* Vertically align items */
-        }
-        footer.container {
-            text-align: center;
-        }
-
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      }
+      .grafito-title {
+        font-family: "WDXL Lubrifont TC", "Comic Sans MS", "Chalkboard SE",
+          "Comic Neue", cursive;
+        font-weight: normal; /* Lubrifont is already quite bold */
+        font-size: 3rem; /* Adjust as needed */
+        text-align: center;
+        margin-bottom: 0.5rem;
+      }
+      .grafito-title a {
+        text-decoration: none;
+        color: inherit;
+      }
+      .subtitle {
+        text-align: center;
+        font-size: 1.2rem;
+        color: var(--pico-muted-color);
+        margin-bottom: 2rem;
+      }
+      .hero {
+        text-align: center;
+        padding: 0 1rem 3rem 1rem; /* Top padding removed, others kept */
+        margin-top: 0; /* Ensure no top margin */
+      }
+      .hero img {
+        max-width: 150px; /* Adjust as needed */
+        margin-bottom: 1rem;
+      }
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+        margin-bottom: 3rem;
+      }
+      .feature-card {
+        border: 1px solid var(--pico-card-border-color);
+        border-radius: var(--pico-border-radius);
+        padding: 1.5rem;
+        background-color: var(--pico-card-background-color);
+      }
+      .feature-card hgroup {
+        margin-bottom: 1rem;
+      }
+      .feature-card h3 {
+        margin-bottom: 0.5rem;
+      }
+      .feature-card p {
+        color: var(--pico-secondary);
+        font-size: 0.95rem;
+      }
+      .feature-icon {
+        font-size: 1.5rem; /* Make icons a bit larger */
+        margin-right: 0.5rem;
+      }
+      .cta-section {
+        text-align: center;
+        padding: 2rem 0;
+      }
+      .theme-switch-wrapper-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding-top: 1rem;
+      }
+      .theme-switch-wrapper-footer label {
+        margin-bottom: 0; /* Override Pico's default label margin */
+      }
+      /* Style for the custom font in headings if desired */
+      /* h1, h2, h3, h4, h5, h6 { */
+      /* font-family: 'WDXL Lubrifont TC', 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive; */
+      /* Uncomment if you want the custom font for all headers, might be too much */
+      /* } */
+      nav ul:last-child {
+        /* Target the right-side UL in the nav */
+        display: flex;
+        align-items: center; /* Vertically align items */
+      }
+      footer.container {
+        text-align: center;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <nav class="container-fluid">
-        <ul>
-            <li><strong class="grafito-title" style="font-size: 1.5rem; margin-bottom:0;"><a href="#">Grafito</a></strong></li>
-        </ul>
-        <ul>
-            <li><a href="https://github.com/ralsina/grafito" target="_blank" role="button" class="secondary outline">GitHub 🖥️</a></li>
-            <li>
-                <div class="theme-switch-wrapper-footer" style="padding-top: 0;"> <!-- Removed padding-top for nav consistency -->
-                    <label for="theme-switch" title="Toggle light/dark mode">
-                        🌞<input type="checkbox" id="theme-switch" name="theme" role="switch" />🌒
-                    </label>
-                </div>
-            </li>
-        </ul>
+      <ul>
+      </ul>
+      <ul>
+        <li>
+          <div class="theme-switch-wrapper-footer" style="padding-top: 0">
+            <!-- Removed padding-top for nav consistency -->
+            <label for="theme-switch" title="Toggle light/dark mode">
+              🌞<input
+                type="checkbox"
+                id="theme-switch"
+                name="theme"
+                role="switch"
+              />🌒
+            </label>
+          </div>
+        </li>
+      </ul>
     </nav>
 
     <main class="container">
-        <section class="hero">
-            <!-- You can replace this with an actual SVG logo if you have one -->
-            <!-- <img src="favicon.svg" alt="Grafito Logo"> -->
-            <h1 class="grafito-title"><a href="https://github.com/ralsina/grafito" target="_blank">Grafito</a></h1>
-            <p class="subtitle">Your friendly, self-hosted Systemd Journal Log Viewer.</p>
-            <p>Effortlessly navigate, filter, and understand your system logs with a clean, web-based interface. <br>No more complex terminal commands for everyday log viewing!</p>
-            <a href="https://github.com/ralsina/grafito" target="_blank" role="button" class="contrast">Get Grafito on GitHub</a>
-            <!-- If you had a live demo: <a href="YOUR_DEMO_URL" target="_blank" role="button" class="secondary">View Demo</a> -->
-        </section>
+      <section class="hero">
+        <!-- You can replace this with an actual SVG logo if you have one -->
+        <!-- <img src="favicon.svg" alt="Grafito Logo"> -->
+        <h1 class="grafito-title">
+          <a href="https://github.com/ralsina/grafito" target="_blank"
+            >Grafito</a
+          >
+        </h1>
+        <p class="subtitle">
+          Your friendly, self-hosted Systemd Journal Log Viewer.
+        </p>
+        <p>
+          Effortlessly navigate, filter, and understand your system logs with a
+          clean, web-based interface. <br />No more complex terminal commands
+          for everyday log viewing!
+        </p>
+        <a
+          href="https://github.com/ralsina/grafito"
+          target="_blank"
+          role="button"
+          class="contrast"
+          >Get Grafito on GitHub</a
+        >
+        <!-- If you had a live demo: <a href="YOUR_DEMO_URL" target="_blank" role="button" class="secondary">View Demo</a> -->
+      </section>
 
-        <section id="features">
+      <section id="features">
+        <div class="features-grid">
+          <article class="feature-card">
             <hgroup>
-                <h2>Why Grafito?</h2>
-                <h3>Key Features at a Glance</h3>
+              <h3><span class="feature-icon">🔍</span>Powerful Filtering</h3>
             </hgroup>
+            <p>
+              Quickly find what you need. Search by text, systemd unit, syslog
+              tag, time range (e.g., "last 15 min", "last week"), and log
+              priority. Filters update dynamically as you type!
+            </p>
+          </article>
 
-            <div class="features-grid">
-                <article class="feature-card">
-                    <hgroup>
-                        <h3><span class="feature-icon">🔍</span>Powerful Filtering</h3>
-                    </hgroup>
-                    <p>Quickly find what you need. Search by text, systemd unit, syslog tag, time range (e.g., "last 15 min", "last week"), and log priority. Filters update dynamically as you type!</p>
-                </article>
+          <article class="feature-card">
+            <hgroup>
+              <h3><span class="feature-icon">📺</span>Live Log Streaming</h3>
+            </hgroup>
+            <p>
+              Monitor logs in real-time with the "Live View" feature. See new
+              entries appear automatically without manual refreshes, perfect for
+              active troubleshooting.
+            </p>
+          </article>
 
-                <article class="feature-card">
-                    <hgroup>
-                        <h3><span class="feature-icon">📺</span>Live Log Streaming</h3>
-                    </hgroup>
-                    <p>Monitor logs in real-time with the "Live View" feature. See new entries appear automatically without manual refreshes, perfect for active troubleshooting.</p>
-                </article>
+          <article class="feature-card">
+            <hgroup>
+              <h3>
+                <span class="feature-icon">❔</span>Understand Your Commands
+              </h3>
+            </hgroup>
+            <p>
+              Curious about the underlying `journalctl` magic? Grafito shows you
+              the equivalent terminal command for your currently active filters.
+            </p>
+          </article>
 
-                <article class="feature-card">
-                    <hgroup>
-                        <h3><span class="feature-icon">❔</span>Understand Your Commands</h3>
-                    </hgroup>
-                    <p>Curious about the underlying `journalctl` magic? Grafito shows you the equivalent terminal command for your currently active filters.</p>
-                </article>
+          <article class="feature-card">
+            <hgroup>
+              <h3>
+                <span class="feature-icon">🔗</span>Shareable & Bookmarkable
+                Views
+              </h3>
+            </hgroup>
+            <p>
+              Easily copy a URL that includes all your current filter settings.
+              Share it with colleagues or bookmark it for quick access to common
+              log views.
+            </p>
+          </article>
 
-                <article class="feature-card">
-                    <hgroup>
-                        <h3><span class="feature-icon">🔗</span>Shareable & Bookmarkable Views</h3>
-                    </hgroup>
-                    <p>Easily copy a URL that includes all your current filter settings. Share it with colleagues or bookmark it for quick access to common log views.</p>
-                </article>
+          <article class="feature-card">
+            <hgroup>
+              <h3><span class="feature-icon">💾</span>Export Logs</h3>
+            </hgroup>
+            <p>
+              Need logs offline? Download your filtered log entries as a plain
+              text file for archiving, sharing, or further analysis in other
+              tools.
+            </p>
+          </article>
 
-                <article class="feature-card">
-                    <hgroup>
-                        <h3><span class="feature-icon">💾</span>Export Logs</h3>
-                    </hgroup>
-                    <p>Need logs offline? Download your filtered log entries as a plain text file for archiving, sharing, or further analysis in other tools.</p>
-                </article>
+          <article class="feature-card">
+            <hgroup>
+              <h3><span class="feature-icon">🏠</span>Self-Hosted & Secure</h3>
+            </hgroup>
+            <p>
+              Grafito runs on your own server. Your log data stays private and
+              under your control. Ideal for individuals and teams who prioritize
+              data security.
+            </p>
+          </article>
 
-                <article class="feature-card">
-                    <hgroup>
-                        <h3><span class="feature-icon">🏠</span>Self-Hosted & Secure</h3>
-                    </hgroup>
-                    <p>Grafito runs on your own server. Your log data stays private and under your control. Ideal for individuals and teams who prioritize data security.</p>
-                </article>
+          <article class="feature-card">
+            <hgroup>
+              <h3>
+                <span class="feature-icon">⚡</span>Lightweight & Responsive
+              </h3>
+            </hgroup>
+            <p>
+              Built with Crystal and HTMX, Grafito is designed to be fast and
+              efficient, providing a smooth user experience even with many log
+              entries.
+            </p>
+          </article>
 
-                <article class="feature-card">
-                    <hgroup>
-                        <h3><span class="feature-icon">⚡</span>Lightweight & Responsive</h3>
-                    </hgroup>
-                    <p>Built with Crystal and HTMX, Grafito is designed to be fast and efficient, providing a smooth user experience even with many log entries.</p>
-                </article>
+          <article class="feature-card">
+            <hgroup>
+              <h3><span class="feature-icon">🎨</span>Clean & Intuitive UI</h3>
+            </hgroup>
+            <p>
+              A modern, clutter-free interface styled with PicoCSS. Supports
+              both light and dark modes to match your preference and reduce eye
+              strain.
+            </p>
+          </article>
+        </div>
+      </section>
 
-                <article class="feature-card">
-                    <hgroup>
-                        <h3><span class="feature-icon">🎨</span>Clean & Intuitive UI</h3>
-                    </hgroup>
-                    <p>A modern, clutter-free interface styled with PicoCSS. Supports both light and dark modes to match your preference and reduce eye strain.</p>
-                </article>
-            </div>
-        </section>
-
-        <section class="cta-section">
-            <h2>Ready to Simplify Your Log Viewing?</h2>
-            <p>Grafito is open-source and easy to set up. Check out the project on GitHub to get started!</p>
-            <a href="https://github.com/ralsina/grafito" target="_blank" role="button" class="contrast" style="font-size: 1.1rem; padding: 0.75rem 1.5rem;">
-                View on GitHub & Get Started
-            </a>
-        </section>
+      <section class="cta-section">
+        <h2>Ready to Simplify Your Log Viewing?</h2>
+        <p>
+          Grafito is open-source and easy to set up. Check out the project on
+          GitHub to get started!
+        </p>
+        <a
+          href="https://github.com/ralsina/grafito"
+          target="_blank"
+          role="button"
+          class="contrast"
+          style="font-size: 1.1rem; padding: 0.75rem 1.5rem"
+        >
+          View on GitHub & Get Started
+        </a>
+      </section>
     </main>
 
     <footer class="container">
-        <hr>
-        <p>
-            <a href="https://links.ralsina.me" target="_blank">©️ 2025 Roberto Alsina</a>
-            <span>//</span>
-            <a href="https://github.com/ralsina/grafito" target="_blank">Grafito Project 🖥️</a>
-        </p>
+      <hr />
+      <p>
+        <a href="https://links.ralsina.me" target="_blank"
+          >©️ 2025 Roberto Alsina</a
+        >
+        <span>//</span>
+        <a href="https://github.com/ralsina/grafito" target="_blank"
+          >Grafito Project 🖥️</a
+        >
+      </p>
     </footer>
 
     <script>
@@ -219,31 +291,34 @@
         const htmlElement = document.documentElement;
 
         function applyTheme(theme) {
-          if (theme === 'dark') {
-            htmlElement.setAttribute('data-theme', 'dark');
+          if (theme === "dark") {
+            htmlElement.setAttribute("data-theme", "dark");
             if (themeSwitch) themeSwitch.checked = true;
           } else {
-            htmlElement.setAttribute('data-theme', 'light');
+            htmlElement.setAttribute("data-theme", "light");
             if (themeSwitch) themeSwitch.checked = false;
           }
-          localStorage.setItem('theme', theme);
+          localStorage.setItem("theme", theme);
         }
 
-        const savedTheme = localStorage.getItem('theme');
+        const savedTheme = localStorage.getItem("theme");
         if (savedTheme) {
           applyTheme(savedTheme);
-        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          applyTheme('dark');
+        } else if (
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        ) {
+          applyTheme("dark");
         } else {
-          applyTheme('light'); // Default
+          applyTheme("light"); // Default
         }
 
         if (themeSwitch) {
-          themeSwitch.addEventListener('change', function() {
-            applyTheme(this.checked ? 'dark' : 'light');
+          themeSwitch.addEventListener("change", function () {
+            applyTheme(this.checked ? "dark" : "light");
           });
         }
       });
     </script>
-</body>
+  </body>
 </html>
