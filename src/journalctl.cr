@@ -109,7 +109,12 @@ class Journalctl
 
     # Getter for the cleaned message
     def message : String
-      @message_raw.to_s.strip
+      msg = @message_raw.to_s.strip
+      container_name = @data["CONTAINER_NAME"]?
+      if container_name && !container_name.strip.empty?
+        return "[#{container_name.strip}]: #{msg}"
+      end
+      msg
     end
 
     # Getter for the priority string (e.g., "0" to "7")
