@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 ### 💼 Other
 
 - Release v0.4.0
+- Release v0.4.0
 
 ### 🚜 Refactor
 
@@ -36,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - Unit tests for timeline
 - Unit tests for LogEntry
 - Unit tests for build_query_command
+- Unit tests for journalctl
 
 ## [0.3.0] - 2025-05-27
 
