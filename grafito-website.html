@@ -15,13 +15,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300..700&family=WDXL+Lubrifont+TC&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <title>Grafito - Friendly Systemd Journal Log Viewer</title>
     <style>
-      html, h1, h2, h3, h4, body {
+      html,
+      h1,
+      h2,
+      h3,
+      h4,
+      body {
         font-family: "WDXL Lubrifont TC", "sans";
       }
       .grafito-title {
@@ -102,23 +107,26 @@
       footer.container {
         text-align: center;
       }
+      .emoji {
+        font-family: "Noto Emoji", sans-serif;
+      }
     </style>
   </head>
   <body>
     <nav class="container-fluid">
-      <ul>
-      </ul>
+      <ul></ul>
       <ul>
         <li>
           <div class="theme-switch-wrapper-footer" style="padding-top: 0">
             <!-- Removed padding-top for nav consistency -->
             <label for="theme-switch" title="Toggle light/dark mode">
-              🌞<input
+              <span class="emoji">🌞</span
+              ><input
                 type="checkbox"
                 id="theme-switch"
                 name="theme"
                 role="switch"
-              />🌒
+              /><span class="emoji">🌒</span>
             </label>
           </div>
         </li>
@@ -156,7 +164,7 @@
         <div class="features-grid">
           <article class="feature-card">
             <hgroup>
-              <h3><span class="feature-icon">🔍</span>Powerful Filtering</h3>
+              <h3><span class="feature-icon emoji">🔍</span>Powerful Filtering</h3>
             </hgroup>
             <p>
               Quickly find what you need. Search by text, systemd unit, syslog
@@ -167,7 +175,7 @@
 
           <article class="feature-card">
             <hgroup>
-              <h3><span class="feature-icon">📺</span>Live Log Streaming</h3>
+              <h3><span class="feature-icon emoji">📺</span>Live Log Streaming</h3>
             </hgroup>
             <p>
               Monitor logs in real-time with the "Live View" feature. See new
@@ -179,7 +187,7 @@
           <article class="feature-card">
             <hgroup>
               <h3>
-                <span class="feature-icon">❔</span>Understand Your Commands
+                <span class="feature-icon emoji">❔</span>Understand Your Commands
               </h3>
             </hgroup>
             <p>
@@ -191,7 +199,7 @@
           <article class="feature-card">
             <hgroup>
               <h3>
-                <span class="feature-icon">🔗</span>Shareable & Bookmarkable
+                <span class="feature-icon emoji">🔗</span>Shareable & Bookmarkable
                 Views
               </h3>
             </hgroup>
@@ -204,7 +212,7 @@
 
           <article class="feature-card">
             <hgroup>
-              <h3><span class="feature-icon">💾</span>Export Logs</h3>
+              <h3><span class="feature-icon emoji">💾</span>Export Logs</h3>
             </hgroup>
             <p>
               Need logs offline? Download your filtered log entries as a plain
@@ -215,7 +223,7 @@
 
           <article class="feature-card">
             <hgroup>
-              <h3><span class="feature-icon">🏠</span>Self-Hosted & Secure</h3>
+              <h3><span class="feature-icon emoji">🏠</span>Self-Hosted & Secure</h3>
             </hgroup>
             <p>
               Grafito runs on your own server. Your log data stays private and
@@ -227,7 +235,7 @@
           <article class="feature-card">
             <hgroup>
               <h3>
-                <span class="feature-icon">⚡</span>Lightweight & Responsive
+                <span class="feature-icon emoji">⚡</span>Lightweight & Responsive
               </h3>
             </hgroup>
             <p>
@@ -239,7 +247,7 @@
 
           <article class="feature-card">
             <hgroup>
-              <h3><span class="feature-icon">🎨</span>Clean & Intuitive UI</h3>
+              <h3><span class="feature-icon emoji">🎨</span>Clean & Intuitive UI</h3>
             </hgroup>
             <p>
               A modern, clutter-free interface styled with PicoCSS. Supports

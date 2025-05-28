@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300..700&family=WDXL+Lubrifont+TC&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -154,7 +154,7 @@
           <div class="sidebar-buttons-row">
             <button
               id="show-command-button"
-              class="secondary"
+              class="secondary emoji"
               aria-label="Show equivalent command"
               title="Show equivalent journalctl command"
               hx-get="command"
@@ -167,14 +167,14 @@
             </button>
             <button
               id="clear-filters-btn"
-              class="secondary"
+              class="secondary emoji"
               title="Clear all filters"
             >
               ❌
             </button>
             <button
               id="copy-link-button"
-              class="secondary"
+              class="secondary emoji"
               aria-label="Copy shareable link"
               title="Copy link with current filters"
               onclick="copyShareableLink()"
@@ -183,7 +183,7 @@
             </button>
             <button
               id="export-logs-button"
-              class="secondary"
+              class="secondary emoji"
               aria-label="Export logs"
               title="Export current logs as text"
               onclick="exportLogsAsText()"
@@ -212,14 +212,24 @@
         </div>
         <datalist id="unit-suggestions"></datalist>
         <footer class="container-fluid">
-          <a href="https://links.ralsina.me">©️ 2025 Roberto Alsina</a>
+          <a href="https://links.ralsina.me" style="text-decoration: none"
+            ><span class="emoji">🏃</span> 2025 Roberto Alsina</a
+          >
           <span>//</span>
-          <a href="https://grafito.ralsina.me">🏠</a>
+          <a href="https://grafito.ralsina.me"><span class="emoji">🏠</span></a>
           <span>//</span>
-          <a href="https://github.com/ralsina/grafito">🖥️</a>
+          <a href="https://github.com/ralsina/grafito"
+            ><span class="emoji">🖥︎</span></a
+          >
           <div class="theme-switch-wrapper">
             <label for="theme-switch" title="Toggle light/dark mode">
-              🌞<input type="checkbox" id="theme-switch" name="theme" role="switch" />🌒
+              <span class="emoji">🌞</span
+              ><input
+                type="checkbox"
+                id="theme-switch"
+                name="theme"
+                role="switch"
+              /><span class="emoji">🌒</span>
             </label>
           </div>
         </footer>
@@ -277,29 +287,32 @@
         const htmlElement = document.documentElement;
 
         function applyTheme(theme) {
-          if (theme === 'dark') {
-            htmlElement.setAttribute('data-theme', 'dark');
+          if (theme === "dark") {
+            htmlElement.setAttribute("data-theme", "dark");
             if (themeSwitch) themeSwitch.checked = true;
           } else {
-            htmlElement.setAttribute('data-theme', 'light');
+            htmlElement.setAttribute("data-theme", "light");
             if (themeSwitch) themeSwitch.checked = false;
           }
-          localStorage.setItem('theme', theme);
+          localStorage.setItem("theme", theme);
         }
 
         // Apply initial theme: 1. localStorage, 2. OS preference, 3. Default to light
-        const savedTheme = localStorage.getItem('theme');
+        const savedTheme = localStorage.getItem("theme");
         if (savedTheme) {
           applyTheme(savedTheme);
-        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          applyTheme('dark');
+        } else if (
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        ) {
+          applyTheme("dark");
         } else {
-          applyTheme('light'); // Default
+          applyTheme("light"); // Default
         }
 
         if (themeSwitch) {
-          themeSwitch.addEventListener('change', function() {
-            applyTheme(this.checked ? 'dark' : 'light');
+          themeSwitch.addEventListener("change", function () {
+            applyTheme(this.checked ? "dark" : "light");
           });
         }
         // --- END THEME SWITCHER LOGIC ---
@@ -447,11 +460,13 @@
 
           const element = document.getElementById(config.id);
           if (element) {
-            if (config.type === "checkbox") { // For any other potential checkboxes
+            if (config.type === "checkbox") {
+              // For any other potential checkboxes
               if (element.checked) {
                 params.set(config.param, config.trueValue);
               }
-            } else if (element.value) { // For text inputs and selects
+            } else if (element.value) {
+              // For text inputs and selects
               // Sending empty values (e.g., "" for "Any time") is fine,
               // the backend's optional_query_param handles them as nil.
               params.set(config.param, element.value);
@@ -463,9 +478,9 @@
 
         const exportUrl = "/logs?" + params.toString(); // Endpoint for logs
 
-        const tempLink = document.createElement('a');
+        const tempLink = document.createElement("a");
         tempLink.href = exportUrl;
-        tempLink.setAttribute('download', 'grafito-logs.txt'); // Suggested filename
+        tempLink.setAttribute("download", "grafito-logs.txt"); // Suggested filename
         document.body.appendChild(tempLink); // Append to body (needed for Firefox)
         tempLink.click(); // Programmatically click the link to trigger download
         document.body.removeChild(tempLink); // Clean up the temporary link

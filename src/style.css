@@ -182,7 +182,8 @@ main {
 
 
 footer.container-fluid {
-    text-align: center; /* Footer items will be centered */
+    text-align: center;
+    /* Footer items will be centered */
     padding-top: 20px;
     padding-bottom: 20px;
     margin-top: 20px;
@@ -195,9 +196,12 @@ footer a {
 
 /* Styles for the theme switcher when it's in the footer */
 footer.container-fluid .theme-switch-wrapper {
-    display: inline-block; /* Allows centering with text-align */
-    vertical-align: middle; /* Aligns switch with text/links */
-    margin-left: var(--spacing-horizontal, 0.5rem); /* Space from the last link */
+    display: inline-block;
+    /* Allows centering with text-align */
+    vertical-align: middle;
+    /* Aligns switch with text/links */
+    margin-left: var(--spacing-horizontal, 0.5rem);
+    /* Space from the last link */
 }
 
 h1 {
@@ -281,4 +285,8 @@ h1 {
     padding: 1em;
     border: 1px solid var(--pico-del-border, red);
     /* Optional: add a border for more emphasis */
+}
+
+.emoji {
+    font-family: "Noto Emoji", sans-serif;
 }
