@@ -122,18 +122,6 @@ describe Journalctl::LogEntry do
     end
 
     it "handles missing MESSAGE by defaulting to empty string" do
-      json_string = %({"__REALTIME_TIMESTAMP": "1698402600000000", "PRIORITY": "6"})
-      # JSON::Serializable will raise if a non-nilable field is missing and no default is in initialize
-      # Assuming message_raw in initialize defaults to "" or is made nilable and getter handles nil
-      # Based on current LogEntry, message_raw is not nilable in initialize.
-      # Let's assume JSON::Field(key: "MESSAGE", nilable: true) for message_raw for this test.
-      # If not, this test would expect a JSON::MissingFieldError.
-      # For now, we'll test the getter's behavior if message_raw were nil.
-      # This requires LogEntry.initialize to allow message_raw: nil or have a default.
-      # The current initialize has `message_raw : String`, so this test as-is would fail.
-      # To make it pass, `message_raw` in `initialize` would need to be `String? = nil`
-      # or the JSON mapping `@[JSON::Field(key: "MESSAGE", nilable: true)]`
-      # For the purpose of this test, let's assume the JSON is valid but the value is null.
       json_string_null_message = %({"__REALTIME_TIMESTAMP": "1698402600000000", "MESSAGE": null, "PRIORITY": "6"})
       entry = Journalctl::LogEntry.from_json(json_string_null_message)
       entry.message.should eq("") # Getter @message_raw.to_s.strip handles nil

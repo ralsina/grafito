@@ -5,11 +5,11 @@ require "../src/journalctl" # For Journalctl::LogEntry
 def new_log_entry(timestamp_str : String, message : String = "test", unit : String = "test.service", priority : String = "6")
   time = Time.parse_rfc3339(timestamp_str)
   Journalctl::LogEntry.new(
-timestamp: time, # Pass the Time object to the 'timestamp' property
-    message_raw: message, # Pass the message string to the 'message_raw' property
+    timestamp: time,            # Pass the Time object to the 'timestamp' property
+    message_raw: message,       # Pass the message string to the 'message_raw' property
     raw_priority_val: priority, # Pass the priority string to the 'raw_priority_val' property
-    internal_unit_name: unit # Pass the unit string to the 'internal_unit_name' property
-    )
+    internal_unit_name: unit    # Pass the unit string to the 'internal_unit_name' property
+  )
 end
 
 describe Timeline do
@@ -38,17 +38,17 @@ describe Timeline do
       # Check 10:00 hour
       point1 = timeline.find { |p| p[:start_time] == Time.utc(2023, 1, 1, 10, 0, 0) }
       point1.should_not be_nil
-      point1.not_nil![:count].should eq(3)
+      point1.as(NamedTuple)[:count].should eq(3)
 
       # Check 11:00 hour
       point2 = timeline.find { |p| p[:start_time] == Time.utc(2023, 1, 1, 11, 0, 0) }
       point2.should_not be_nil
-      point2.not_nil![:count].should eq(1)
+      point2.as(NamedTuple)[:count].should eq(1)
 
       # Check 12:00 hour
       point3 = timeline.find { |p| p[:start_time] == Time.utc(2023, 1, 1, 12, 0, 0) }
       point3.should_not be_nil
-      point3.not_nil![:count].should eq(1)
+      point3.as(NamedTuple)[:count].should eq(1)
 
       # Check sorting
       timeline[0][:start_time].should eq(Time.utc(2023, 1, 1, 10, 0, 0))
