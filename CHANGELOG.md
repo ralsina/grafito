@@ -8,11 +8,28 @@ All notable changes to this project will be documented in this file.
 
 - Download logs
 - Website
+- Show container name in log entries when available
+- Detail view
+
+### 💼 Other
+
+- Release v0.4.0
+
+### 🚜 Refactor
+
+- Keep all data in LogEntry.@data
+- Move helpers to separate file
 
 ### 📚 Documentation
 
 - Added systemd help
 - Updated README.md
+- Update README.md
+
+### 🎨 Styling
+
+- Use mono emoji
+- Use mono emoji
 
 ### 🧪 Testing
 
