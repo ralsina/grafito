@@ -9,22 +9,27 @@ class Journalctl
 
   # Custom JSON converter for __REALTIME_TIMESTAMP (microseconds string) to Time
   class MicrosecondsEpochConverter
-    def self.from_json(parser : JSON::PullParser) : Time
-      s = parser.read_string # Read as nullable string
-      if s.nil? || s.empty?
-        # Log.warn { "Nil or empty timestamp string received, defaulting to epoch." } # Optional: for debugging
-        return Time.unix(0) # Default to epoch for nil/empty string
-      end
-      Time.unix_ms(s.to_i64 // 1000)
+    # Helper to convert from a string value, also handling nil or empty strings.
+    def self.from_string(s_val : String?) : Time
+      return Time.unix(0) if s_val.nil? || s_val.strip.empty?
+      Time.unix_ms(s_val.to_i64 // 1000)
     rescue ex : ArgumentError
-      Journalctl::Log.warn(exception: ex) { "Failed to parse timestamp string '#{s}' for Time conversion, defaulting to epoch." }
-      Time.unix(0) # Default to epoch on parsing error
+      Journalctl::Log.warn(exception: ex) { "Failed to parse timestamp string '#{s_val}' for Time conversion, defaulting to epoch." }
+      Time.unix(0)
+    end
+
+    # Converts from JSON, typically called by JSON::Serializable.
+    # Uses read_string_or_null to correctly handle JSON null values.
+    def self.from_json(parser : JSON::PullParser) : Time
+      s = parser.read_string_or_null
+      from_string(s) # Delegate to the string version
     end
 
     def self.to_json(value : Time, builder : JSON::Builder)
       builder.string((value.to_unix_us).to_s)
     end
   end
+
 
   # Represents a single log entry retrieved from journalctl.
   #
@@ -45,16 +50,61 @@ class Journalctl
     @[JSON::Field(key: "_SYSTEMD_UNIT", nilable: true)] # Allow nil from JSON
     property internal_unit_name : String?               # Raw unit name from JSON, might be nil
 
+    # Will hold all raw data from journalctl as string key-value pairs
+    property data : Hash(String, String)
+
     # Constructor used by JSON::Serializable.
     # It's called with named arguments matching property names, after converters are applied.
     def initialize(
       @timestamp : Time,
-      @message_raw : String,
-      @raw_priority_val : String,
+      @message_raw : String?, # Changed to String? to match property type
+      @raw_priority_val : String?, # Changed to String? to match property type
       @internal_unit_name : String? = nil, # Default to nil if _SYSTEMD_UNIT is missing
+      @data : Hash(String, String) = {} of String => String
     )
       # Properties are assigned directly by JSON::Serializable
       # Stripping and defaulting are handled by getters below.
+    end
+
+    # Custom from_json class method to take control of parsing.
+    # This allows us to populate the 'data' field with all key-value pairs
+    # from the JSON, converting all values to strings.
+    def self.from_json(string_or_io, root : String? = nil)
+      # 1. Parse the entire JSON into Hash(String, JSON::Any)
+      # This allows access to all fields dynamically.
+      json_as_any_hash = Hash(String, JSON::Any).from_json(string_or_io)
+
+      # 2. Convert Hash(String, JSON::Any) to Hash(String, String) for the 'data' field
+      # All values are converted to their string representation.
+      all_data_as_string_hash = Hash(String, String).new
+      json_as_any_hash.each do |key, value|
+        all_data_as_string_hash[key] = value.to_s
+      end
+
+      # 3. Manually extract and convert specific fields for LogEntry properties
+      #    using the json_as_any_hash.
+
+      # Timestamp: Use the MicrosecondsEpochConverter.from_string helper
+      ts_json_val = json_as_any_hash["__REALTIME_TIMESTAMP"]?
+      timestamp = MicrosecondsEpochConverter.from_string(ts_json_val.try(&.as_s?))
+
+      # Message: Get as String?
+      message_raw = json_as_any_hash["MESSAGE"]?.try(&.as_s?)
+
+      # Priority: Get as String?
+      raw_priority_val = json_as_any_hash["PRIORITY"]?.try(&.as_s?)
+
+      # Unit: Get as String?
+      internal_unit_name = json_as_any_hash["_SYSTEMD_UNIT"]?.try(&.as_s?)
+
+      # 4. Instantiate LogEntry with the processed values and the complete data hash
+      LogEntry.new(
+        timestamp: timestamp,
+        message_raw: message_raw,
+        raw_priority_val: raw_priority_val,
+        internal_unit_name: internal_unit_name,
+        data: all_data_as_string_hash
+      )
     end
 
     # Getter for the cleaned message
