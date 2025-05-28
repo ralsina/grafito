@@ -2,6 +2,7 @@ require "kemal" # For HTTP::Server::Context and HTML
 require "json"
 require "./journalctl"
 require "./timeline"
+
 # Regex is part of Crystal core, no explicit require needed for it.
 
 module Grafito
@@ -90,15 +91,21 @@ module Grafito
       end
       headers_to_display << _generate_header_attributes("priority", "Priority", current_sort_by, current_sort_order)
       headers_to_display << _generate_header_attributes("message", "Message", current_sort_by, current_sort_order)
+      # Add a non-sortable header for Details
+      headers_to_display << {text: "Details", hx_vals: "", key_name: "details"} # key_name is arbitrary, hx_vals empty as it's not sortable
 
       str << "<thead><tr>"
       headers_to_display.each do |header|
-        str << "<th style=\"cursor: pointer;\" hx-get=\"/logs\" hx-vals='" << header[:hx_vals] << "' hx-include=\"#search-box, #unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view\" hx-target=\"#results\" hx-indicator=\"#loading-spinner\">" << header[:text] << "</th>"
+        if header[:key_name] == "details"
+          str << "<th>" << header[:text] << "</th>" # Non-sortable header
+        else
+          str << "<th style=\"cursor: pointer;\" hx-get=\"/logs\" hx-vals='" << header[:hx_vals] << "' hx-include=\"#search-box, #unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view\" hx-target=\"#results\" hx-indicator=\"#loading-spinner\">" << header[:text] << "</th>"
+        end
       end
       str << "</tr></thead>"
       str << "<tbody>"
 
-      colspan_value = unit_filter_active ? 3 : 4
+      colspan_value = (unit_filter_active ? 4 : 5)
 
       if logs.empty?
         str << "<tr><td colspan=\"#{colspan_value}\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>"
@@ -118,6 +125,20 @@ module Grafito
                                   escaped_message
                                 end
           str << "<td class=\"log-message-cell\">" << highlighted_message << "</td>"
+          # Add details link/icon cell
+          cursor = entry.data["__CURSOR"]?
+          if cursor
+            str << "<td style=\"text-align: center;\">"
+            str << "<button class=\"round-button\" "
+            str << "title=\"View full details for this log entry\" "
+            str << "hx-get=\"/details?" << URI::Params.encode({"cursor" => cursor}) << "\" "
+            str << "hx-target=\"#details-dialog-content\" "
+            str << "hx-swap=\"innerHTML\" "
+            str << "hx-on:htmx:before-request=\"document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;\" "
+            str << "hx-on:htmx:after-request=\"if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }\""
+            str << ">🔍</button>"
+            str << "</td>"
+          end
           str << "</tr>"
         end
       end

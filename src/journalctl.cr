@@ -30,7 +30,6 @@ class Journalctl
     end
   end
 
-
   # Represents a single log entry retrieved from journalctl.
   #
   # This class is used to parse and serialize log data.
@@ -57,8 +56,8 @@ class Journalctl
     # It's called with named arguments matching property names, after converters are applied.
     def initialize(
       @timestamp : Time,
-      @message_raw : String?, # Changed to String? to match property type
-      @raw_priority_val : String?, # Changed to String? to match property type
+      @message_raw : String?,              # Changed to String? to match property type
+      @raw_priority_val : String?,         # Changed to String? to match property type
       @internal_unit_name : String? = nil, # Default to nil if _SYSTEMD_UNIT is missing
       @data : Hash(String, String) = {} of String => String
     )
@@ -350,6 +349,45 @@ class Journalctl
     end
   rescue ex
     Log.error(exception: ex) { "Error executing systemctl for known_service_units." }
+    nil
+  end
+
+  # Retrieves a single log entry by its cursor.
+  #
+  # Args:
+  #   cursor: The journalctl cursor string.
+  #
+  # Returns:
+  #   A LogEntry object if found, or nil otherwise.
+  def self.get_entry_by_cursor(cursor : String) : LogEntry?
+    Log.debug { "Executing Journalctl.get_entry_by_cursor with cursor: #{cursor}" }
+
+    command = ["journalctl", "-o", "json", "--cursor", cursor, "-n", "1"]
+    Log.debug { "Generated journalctl command: #{command.inspect}" }
+
+    stdout = IO::Memory.new
+    result = Process.run(
+      command[0],
+      args: command[1..],
+      output: stdout,
+    )
+
+    if result.normal_exit?
+      line = stdout.to_s.strip
+      return nil if line.empty? # No entry found for this cursor
+
+      begin
+        LogEntry.from_json(line)
+      rescue ex : JSON::ParseException
+        Log.warn(exception: ex) { "Failed to parse log line for cursor #{cursor}: #{line.inspect[..100]}" }
+        nil
+      end
+    else
+      Log.error { "journalctl command failed for cursor #{cursor} with exit code: #{result}. Stdout: #{stdout.to_s[0..100]}" }
+      nil
+    end
+  rescue ex
+    Log.error(exception: ex) { "Error executing journalctl for get_entry_by_cursor with cursor: #{cursor}." }
     nil
   end
 end

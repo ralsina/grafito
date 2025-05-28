@@ -124,7 +124,8 @@ main {
 #show-command-button,
 #copy-link-button,
 #clear-filters-btn,
-#export-logs-button {
+#export-logs-button,
+.round-button {
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 50%;
