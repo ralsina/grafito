@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2025-05-28
+
+### 🚀 Features
+
+- Download logs
+- Website
+
+### 📚 Documentation
+
+- Added systemd help
+- Updated README.md
+
+### 🧪 Testing
+
+- Unit tests for timeline
+- Unit tests for LogEntry
+- Unit tests for build_query_command
+
 ## [0.3.0] - 2025-05-27
 
 ### 🚀 Features
@@ -14,6 +32,10 @@ All notable changes to this project will be documented in this file.
 
 - Command to run from source was wrong
 - More robust static files
+
+### 💼 Other
+
+- Release v0.3.0
 
 ### 🚜 Refactor
 
