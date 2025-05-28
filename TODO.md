@@ -3,7 +3,7 @@
 * ~~Handle configurable URLs~~
 * Authentication
 * Better error handling (client side!)
-* Docs
+* ~~Docs~~
 * Tests
 * ~~Site~~
 * ~~Select a nice color scheme using the nicolino base16-picocss theme generator~~
