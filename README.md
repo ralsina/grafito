@@ -57,6 +57,90 @@ Then open your web browser and navigate to `http://localhost:3000`
 The application requires `journalctl` and `systemctl` to be
 available on the system where it's run.
 
+## Running with systemd
+
+To run Grafito as a systemd service, you can create a service file.
+
+1.  **Create the service file:**
+
+    Create a file named `grafito.service` in `/etc/systemd/system/` (or `~/.config/systemd/user/` for a user service) with the following content. Adjust paths and user/group as necessary.
+
+    ```ini
+    [Unit]
+    Description=Grafito Log Viewer
+    After=network.target
+
+    [Service]
+    Type=simple
+    # Replace with the user you want to run Grafito as
+    User=your_user
+    # Replace with the group for the user or maybe systemd-journal
+    Group=your_group
+    # Replace with the actual path to your Grafito directory
+    WorkingDirectory=/path/to/grafito
+     # Replace with the actual path to the Grafito binary
+    ExecStart=/path/to/grafito/bin/grafito
+    Restart=on-failure
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+2. **Reload systemd daemon:**
+
+   ```bash
+   sudo systemctl daemon-reload
+    ```
+
+3. **Enable the service (to start on boot):**
+
+   ```bash
+   sudo systemctl enable grafito.service
+   ```
+
+4. **Start the service:**
+
+   ```bash
+   sudo systemctl start grafito.service
+   ```
+
+5. **Check the status:**
+
+   ```bash
+   sudo systemctl status grafito.service
+   ```
+
+## Journald Permissions
+
+By default, `journalctl` (and therefore Grafito) can only access the logs of the user running the command. To allow Grafito to access all system logs, the user running the Grafito process needs to be part of a group that has permissions to read system-wide journal logs.
+
+Typically, this is the `systemd-journal` group (the name might vary slightly depending on your Linux distribution).
+
+1. **Add the user to the `systemd-journal` group:**
+   Replace `your_user` with the actual username that will run the Grafito process.
+
+   ```bash
+   sudo usermod -a -G systemd-journal your_user
+   ```
+
+2. **Apply group changes:**
+   The user will need to log out and log back in for the new group membership to take effect.
+   If Grafito is already running as a service under this user, you might need to restart the
+   service:
+
+   ```bash
+   sudo systemctl restart grafito.service
+   ```
+
+Alternatively, if you are running Grafito directly (not as a service) and want to grant
+it temporary access for a session, you might run it with `sudo`, but this is generally
+not recommended for web applications for security reasons. Configuring the user with
+appropriate group membership is the preferred method.
+
+**Security Note:** Granting access to all system logs means that any user who can access
+Grafito will be able to see these logs. Ensure that Grafito itself is appropriately secured
+if it's exposed to untrusted networks.
+
 ## Development
 
 1. **Prerequisites:**
