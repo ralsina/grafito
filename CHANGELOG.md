@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 
 - Release v0.4.0
 - Release v0.4.0
+- Release v0.4.0
 
 ### 🚜 Refactor
 
