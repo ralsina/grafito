@@ -12,7 +12,8 @@ Key features include:
 * Embedded assets (HTML, favicon) for easy deployment as a single binary.
 * Built with the Crystal programming language and the Kemal web framework.
 
-![image](https://github.com/user-attachments/assets/be14d4c7-89f8-43f5-bbf1-4fd271275ff0)
+![image](https://github.com/user-attachments/assets/c02eb73a-0928-4428-9662-4080d9b43d02)
+
 
 ## Installation
 
