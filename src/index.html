@@ -264,9 +264,39 @@
         </div>
       </main>
     </div>
+
+    <!-- Details Dialog -->
+    <dialog id="details-dialog">
+      <article>
+        <header>
+          <a
+            href="#close"
+            aria-label="Close"
+            class="close"
+            onclick="this.closest('dialog').close(); return false;"
+          ></a>
+          Log Entry Details
+        </header>
+        <div
+          id="details-dialog-content"
+          style="max-height: 70vh; overflow-y: auto"
+        >
+          <!-- Content will be loaded here by HTMX -->
+        </div>
+        <template id="details-dialog-loading-spinner-template">
+          <div style="text-align: center; padding: 2em">
+            <span aria-busy="true">Loading details...</span>
+          </div>
+        </template>
+        <footer>
+          <form method="dialog" style="margin-bottom: 0">
+            <button type="submit" class="secondary">Close</button>
+          </form>
+        </footer>
+      </article>
+    </dialog>
     <script>
       // --- Shared Configuration for Filters ---
-      // Moved outside DOMContentLoaded to be accessible by global functions
       const SHARED_FILTER_CONFIGS = [
         { id: "search-box", param: "q", type: "value" },
         { id: "unit-filter", param: "unit", type: "value" },

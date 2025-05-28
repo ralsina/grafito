@@ -129,4 +129,39 @@ module Grafito
     env.response.content_type = "text/plain"
     env.response.print "\"#{command_array.join(" ")}\""
   end
+
+  # Exposes detailed information for a single log entry based on its cursor.
+  # Example usage:
+  #   GET /details?cursor=<CURSOR_STRING>
+  get "/details" do |env|
+    Log.debug { "Received /details request with query params: #{env.params.query.inspect}" }
+    cursor = optional_query_param(env, "cursor")
+
+    unless cursor
+      env.response.content_type = "text/html"
+      halt env, status_code: 400, response: "<p class=\"error\">Missing cursor parameter. Cannot load details.</p>"
+    end
+
+    entry = Journalctl.get_entry_by_cursor(cursor)
+
+    if entry
+      env.response.content_type = "text/html"
+      html_details = String.build do |sb|
+        if entry.data.empty?
+          sb << "<p>No details available for this log entry.</p>"
+        else
+          sb << "<pre>"
+          outp = IO::Memory.new
+          PrettyPrint.format(entry.data, io: outp, width: 60)
+          sb << outp.to_s
+          sb << "</pre>"
+        end
+      end
+      env.response.print html_details
+    else
+      env.response.status_code = 404
+      env.response.content_type = "text/html"
+      env.response.print "<p class=\"error\">Log entry not found for the given cursor.</p>"
+    end
+  end
 end
