@@ -66,88 +66,84 @@
         </div>
 
         <!-- Unit and Tag Filters -->
-        <div class="filter-group">
-          <div>
-            <input
-              type="text"
-              id="unit-filter"
-              name="unit"
-              list="unit-suggestions"
-              placeholder="Unit (e.g., docker)"
-              title="Filter logs by systemd unit (e.g., nginx)"
-              hx-get="logs"
-              hx-trigger="keyup changed delay:500ms"
-              hx-target="#results"
-              class="log-filter"
-              hx-indicator="#loading-spinner"
-              hx-include=".log-filter"
-            />
-          </div>
-          <div>
-            <input
-              type="text"
-              id="tag-filter"
-              name="tag"
-              placeholder="Syslog Tag (e.g., myapp)"
-              title="Filter logs by syslog identifier (tag)"
-              hx-get="logs"
-              hx-trigger="keyup changed delay:500ms"
-              hx-target="#results"
-              class="log-filter"
-              hx-indicator="#loading-spinner"
-              hx-include=".log-filter"
-            />
-          </div>
+        <div>
+          <input
+            type="text"
+            id="unit-filter"
+            name="unit"
+            list="unit-suggestions"
+            placeholder="Unit (e.g., docker)"
+            title="Filter logs by systemd unit (e.g., nginx)"
+            hx-get="logs"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#results"
+            class="log-filter"
+            hx-indicator="#loading-spinner"
+            hx-include=".log-filter"
+          />
+        </div>
+        <div>
+          <input
+            type="text"
+            id="tag-filter"
+            name="tag"
+            placeholder="Syslog Tag (e.g., myapp)"
+            title="Filter logs by syslog identifier (tag)"
+            hx-get="logs"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#results"
+            class="log-filter"
+            hx-indicator="#loading-spinner"
+            hx-include=".log-filter"
+          />
         </div>
 
         <!-- Row 3: Time and Priority Filters -->
-        <div class="filter-group">
-          <div>
-            <select
-              id="time-range-filter"
-              name="since"
-              hx-get="logs"
-              title="Filter logs by time range"
-              hx-trigger="change"
-              hx-target="#results"
-              class="log-filter"
-              hx-indicator="#loading-spinner"
-              hx-include=".log-filter"
-            >
-              <option value="">Any time</option>
-              <!-- Default/no filter -->
-              <option value="-15m">Last 15 minutes</option>
-              <option value="-1h">Last 1 hour</option>
-              <option value="-1d">Last 24 hours</option>
-              <option value="-7d">Last week</option>
-              <option value="-1M">Last month</option>
-              <option value="-3M">Last 3 months</option>
-              <option value="-1y">Last year</option>
-              <!-- You could add more specific date/time inputs here if needed -->
-            </select>
-          </div>
-          <div>
-            <select
-              id="priority-filter"
-              name="priority"
-              hx-get="logs"
-              title="Filter logs by priority level"
-              hx-trigger="change"
-              hx-target="#results"
-              class="log-filter"
-              hx-indicator="#loading-spinner"
-              hx-include=".log-filter"
-            >
-              <option value="0">Emergency</option>
-              <option value="1">Alert</option>
-              <option value="2">Critical</option>
-              <option value="3">Error</option>
-              <option value="4">Warning</option>
-              <option value="5" selected>Notice</option>
-              <option value="6">Informational</option>
-              <option value="7">Debug</option>
-            </select>
-          </div>
+        <div>
+          <select
+            id="time-range-filter"
+            name="since"
+            hx-get="logs"
+            title="Filter logs by time range"
+            hx-trigger="change"
+            hx-target="#results"
+            class="log-filter"
+            hx-indicator="#loading-spinner"
+            hx-include=".log-filter"
+          >
+            <option value="">Any time</option>
+            <!-- Default/no filter -->
+            <option value="-15m">Last 15 minutes</option>
+            <option value="-1h">Last 1 hour</option>
+            <option value="-1d">Last 24 hours</option>
+            <option value="-7d">Last week</option>
+            <option value="-1M">Last month</option>
+            <option value="-3M">Last 3 months</option>
+            <option value="-1y">Last year</option>
+            <!-- You could add more specific date/time inputs here if needed -->
+          </select>
+        </div>
+        <div>
+          <select
+            id="priority-filter"
+            name="priority"
+            hx-get="logs"
+            title="Filter logs by priority level"
+            hx-trigger="change"
+            hx-target="#results"
+            class="log-filter"
+            hx-indicator="#loading-spinner"
+            hx-include=".log-filter"
+          >
+            <option value="0">Emergency</option>
+            <option value="1">Alert</option>
+            <option value="2">Critical</option>
+            <option value="3">Error</option>
+            <option value="4">Warning</option>
+            <option value="5" selected>Notice</option>
+            <option value="6">Informational</option>
+            <option value="7">Debug</option>
+          </select>
         </div>
         <div class="sidebar-actions-area">
           <!-- Help button for command -->
