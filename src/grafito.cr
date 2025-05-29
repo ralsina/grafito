@@ -31,7 +31,7 @@ module Grafito
     content_type = MIME.from_extension("." + filename.split(".").last)
     env.response.content_type = content_type
     env.response.print file_content.gets_to_end
-  rescue KeyError # Or a more specific error if BakedFileSystem provides one
+  rescue KeyError
     env.response.status_code = 404
     env.response.print "File not found"
   end
@@ -45,7 +45,7 @@ module Grafito
 
     since = optional_query_param(env, "since")
     unit = optional_query_param(env, "unit")
-    unit_filter_active = unit.is_a?(String) && !unit.strip.empty?
+    unit_filter_active = !unit.nil? && !unit.strip.empty?
     tag = optional_query_param(env, "tag")
     search_query = optional_query_param(env, "q") # General search term from main input
     priority = optional_query_param(env, "priority")

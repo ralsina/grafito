@@ -9,13 +9,17 @@ module Grafito
   # Helper to get an optional query parameter, treating empty strings as nil.
   private def optional_query_param(env : HTTP::Server::Context, key : String) : String?
     param = env.params.query[key]?
-    return nil if param.nil? || param.strip.empty?
-    param
+    param.nil? || param.strip.empty? ? nil : param
   end
 
   # Generates attributes for sortable table headers.
   # Returns a NamedTuple with text, hx_vals (JSON string), and key_name.
-  private def _generate_header_attributes(column_key_name : String, display_text : String, current_sort_by : String?, current_sort_order : String?) : NamedTuple(text: String, hx_vals: String, key_name: String)
+  private def _generate_header_attributes(
+    column_key_name : String,
+    display_text : String,
+    current_sort_by : String?,
+    current_sort_order : String?,
+  ) : NamedTuple(text: String, hx_vals: String, key_name: String)
     sort_indicator = ""
     next_sort_order_for_click = "asc" # Default next sort is ascending
 
@@ -49,10 +53,8 @@ module Grafito
       else
         logs.each do |entry|
           str << entry.formatted_timestamp
-          unless unit_filter_active
-            str << " [" << entry.unit << "]"
-          end
-          str << " (" << entry.formatted_priority << ") "
+          str << " [#{entry.unit}]"
+          str << " (#{entry.formatted_priority}) "
           str << entry.message
           str << '\n'
         end
