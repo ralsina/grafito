@@ -88,7 +88,6 @@
         font-size: 0.95rem;
       }
       .feature-icon {
-        font-size: 1.5rem;
         margin-right: 0.5rem;
       }
       .cta-section {
@@ -115,6 +114,13 @@
       .emoji {
         font-family: "Noto Emoji", sans-serif;
       }
+      .cta-button-large {
+        font-size: 1.1rem;
+        padding: 0.75rem 1.5rem;
+      }
+      .theme-switch-wrapper-nav {
+        padding-top: 0 !important; /* Ensure override if needed */
+      }
     </style>
   </head>
   <body>
@@ -122,7 +128,7 @@
       <ul></ul>
       <ul>
         <li>
-          <div class="theme-switch-wrapper-footer" style="padding-top: 0">
+          <div class="theme-switch-wrapper-footer theme-switch-wrapper-nav">
             <label for="theme-switch" title="Toggle light/dark mode">
               <span class="emoji">🌞</span
               ><input
@@ -165,11 +171,9 @@
       <section id="features">
         <div class="features-grid">
           <article class="feature-card">
-            <hgroup>
-              <h2>
-                <span class="feature-icon emoji">🔍</span>Powerful Filtering
-              </h2>
-            </hgroup>
+            <h2>
+              <span class="feature-icon emoji">🔍</span>Powerful Filtering
+            </h2>
             <p>
               Quickly find what you need. Search by text, systemd unit, syslog
               tag, time range (e.g., "last 15 min", "last week"), and log
@@ -178,11 +182,9 @@
           </article>
 
           <article class="feature-card">
-            <hgroup>
-              <h2>
-                <span class="feature-icon emoji">📺</span>Live Log Streaming
-              </h2>
-            </hgroup>
+            <h2>
+              <span class="feature-icon emoji">📺</span>Live Log Streaming
+            </h2>
             <p>
               Monitor logs in real-time with the "Live View" feature. See new
               entries appear automatically without manual refreshes, perfect for
@@ -191,12 +193,9 @@
           </article>
 
           <article class="feature-card">
-            <hgroup>
-              <h2>
-                <span class="feature-icon emoji">❔</span>Understand Your
-                Commands
-              </h2>
-            </hgroup>
+            <h2>
+              <span class="feature-icon emoji">❔</span>Understand Your Commands
+            </h2>
             <p>
               Curious about the underlying `journalctl` magic? Grafito shows you
               the equivalent terminal command for your currently active filters.
@@ -204,12 +203,9 @@
           </article>
 
           <article class="feature-card">
-            <hgroup>
-              <h2>
-                <span class="feature-icon emoji">🔗</span>Shareable &
-                Bookmarkable Views
-              </h2>
-            </hgroup>
+            <h2>
+              <span class="feature-icon emoji">🔗</span>Shareable & Bookmarkable Views
+            </h2>
             <p>
               Easily copy a URL that includes all your current filter settings.
               Share it with colleagues or bookmark it for quick access to common
@@ -218,9 +214,9 @@
           </article>
 
           <article class="feature-card">
-            <hgroup>
-              <h2><span class="feature-icon emoji">💾</span>Export Logs</h2>
-            </hgroup>
+            <h2>
+              <span class="feature-icon emoji">💾</span>Export Logs
+            </h2>
             <p>
               Need logs offline? Download your filtered log entries as a plain
               text file for archiving, sharing, or further analysis in other
@@ -229,11 +225,9 @@
           </article>
 
           <article class="feature-card">
-            <hgroup>
-              <h2>
-                <span class="feature-icon emoji">🏠</span>Self-Hosted & Secure
-              </h2>
-            </hgroup>
+            <h2>
+              <span class="feature-icon emoji">🏠</span>Self-Hosted & Secure
+            </h2>
             <p>
               Grafito runs on your own server. Your log data stays private and
               under your control. Ideal for individuals and teams who prioritize
@@ -242,12 +236,9 @@
           </article>
 
           <article class="feature-card">
-            <hgroup>
-              <h2>
-                <span class="feature-icon emoji">⚡</span>Lightweight &
-                Responsive
-              </h2>
-            </hgroup>
+            <h2>
+              <span class="feature-icon emoji">⚡</span>Lightweight & Responsive
+            </h2>
             <p>
               Built with Crystal and HTMX, Grafito is designed to be fast and
               efficient, providing a smooth user experience even with many log
@@ -256,11 +247,9 @@
           </article>
 
           <article class="feature-card">
-            <hgroup>
-              <h2>
-                <span class="feature-icon emoji">🎨</span>Clean & Intuitive UI
-              </h2>
-            </hgroup>
+            <h2>
+              <span class="feature-icon emoji">🎨</span>Clean & Intuitive UI
+            </h2>
             <p>
               A modern, clutter-free interface styled with PicoCSS. Supports
               both light and dark modes to match your preference and reduce eye
@@ -280,8 +269,7 @@
           href="https://github.com/ralsina/grafito"
           target="_blank"
           role="button"
-          class="contrast"
-          style="font-size: 1.1rem; padding: 0.75rem 1.5rem"
+          class="contrast cta-button-large"
         >
           View on GitHub & Get Started
         </a>
