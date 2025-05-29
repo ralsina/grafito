@@ -46,17 +46,16 @@ module Grafito
   end
 
   # Generates a plain text representation of log entries.
-  private def _generate_text_log_output(logs : Array(Journalctl::LogEntry), unit_filter_active : Bool) : String
+  def _generate_text_log_output(logs : Array(Journalctl::LogEntry)) : String
     String.build do |str|
       if logs.empty?
         str << "No log entries found.\n"
       else
         logs.each do |entry|
           str << entry.formatted_timestamp
-          str << " [#{entry.unit}]"
+          str << " [#{entry.unit}]" # Always include unit in text output
           str << " (#{entry.formatted_priority}) "
-          str << entry.message
-          str << '\n'
+          str << entry.message << '\n'
         end
       end
     end

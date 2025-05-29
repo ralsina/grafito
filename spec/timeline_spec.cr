@@ -2,10 +2,14 @@ require "spec"
 require "../src/timeline"
 require "../src/journalctl" # For Journalctl::LogEntry
 
-def new_log_entry(timestamp_str : String, message : String = "test", unit : String = "test.service", priority : String = "6")
-  time = Time.parse_rfc3339(timestamp_str)
+def new_log_entry(
+  timestamp : Time,
+  message : String = "test",
+  unit : String = "test.service",
+  priority : String = "6",
+) : Journalctl::LogEntry
   Journalctl::LogEntry.new(
-    timestamp: time,            # Pass the Time object to the 'timestamp' property
+    timestamp: timestamp,            # Pass the Time object to the 'timestamp' property
     message_raw: message,       # Pass the message string to the 'message_raw' property
     raw_priority_val: priority, # Pass the priority string to the 'raw_priority_val' property
     internal_unit_name: unit    # Pass the unit string to the 'internal_unit_name' property
@@ -24,11 +28,11 @@ describe Timeline do
 
     it "groups logs by hour and counts them correctly" do
       logs = [
-        new_log_entry("2023-01-01T10:15:00Z"),
-        new_log_entry("2023-01-01T10:30:00Z"),
-        new_log_entry("2023-01-01T11:05:00Z"),
-        new_log_entry("2023-01-01T10:55:00Z"), # Another one in 10:00 hour
-        new_log_entry("2023-01-01T12:00:00Z"),
+        new_log_entry(Time.parse_rfc3339 "2023-01-01T10:15:00Z"),
+        new_log_entry(Time.parse_rfc3339 "2023-01-01T10:30:00Z"),
+        new_log_entry(Time.parse_rfc3339 "2023-01-01T11:05:00Z"),
+        new_log_entry(Time.parse_rfc3339 "2023-01-01T10:55:00Z"), # Another one in 10:00 hour
+        new_log_entry(Time.parse_rfc3339 "2023-01-01T12:00:00Z"),
       ]
 
       timeline = Timeline.generate_frequency_timeline(logs)
@@ -58,8 +62,8 @@ describe Timeline do
 
     it "handles logs with timestamps exactly on the hour" do
       logs = [
-        new_log_entry("2023-01-01T10:00:00Z"),
-        new_log_entry("2023-01-01T11:00:00Z"),
+        new_log_entry(Time.parse_rfc3339 "2023-01-01T10:00:00Z"),
+        new_log_entry(Time.parse_rfc3339 "2023-01-01T11:00:00Z"),
       ]
       timeline = Timeline.generate_frequency_timeline(logs)
       timeline.size.should eq(2)

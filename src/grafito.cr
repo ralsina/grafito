@@ -69,7 +69,7 @@ module Grafito
     if logs
       if output_format.downcase == "text"
         env.response.content_type = "text/plain"
-        text_output = _generate_text_log_output(logs, unit_filter_active)
+        text_output = _generate_text_log_output(logs)
         env.response.print text_output
       else # Default to HTML
         env.response.content_type = "text/html"
