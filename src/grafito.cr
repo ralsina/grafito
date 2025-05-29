@@ -45,7 +45,6 @@ module Grafito
 
     since = optional_query_param(env, "since")
     unit = optional_query_param(env, "unit")
-    unit_filter_active = !unit.nil? && !unit.strip.empty?
     tag = optional_query_param(env, "tag")
     search_query = optional_query_param(env, "q") # General search term from main input
     priority = optional_query_param(env, "priority")
@@ -54,7 +53,7 @@ module Grafito
     format_param = optional_query_param(env, "format")
     output_format = (format_param.presence || "html").downcase
 
-    Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect} (filter active: #{unit_filter_active}), tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}" }
+    Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}" }
 
     logs = Journalctl.query(
       since: since,
@@ -72,7 +71,7 @@ module Grafito
         output = _generate_text_log_output(logs)
       else # Default to HTML
         env.response.content_type = "text/html"
-        output = html_log_output(logs, current_sort_by, current_sort_order, unit_filter_active, search_query)
+        output = html_log_output(logs, current_sort_by, current_sort_order, search_query)
       end
       env.response.print output
     else # Failed to retrieve logs
@@ -189,7 +188,6 @@ module Grafito
         context_entries, # The logs to display
         nil,             # current_sort_by
         nil,             # current_sort_order
-        false,           # unit_filter_active (false means show Unit column)
         nil,             # search_query
         chart: false     # No chart in context view
       )

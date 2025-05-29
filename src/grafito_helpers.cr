@@ -67,7 +67,6 @@ module Grafito
     logs : Array(Journalctl::LogEntry),
     current_sort_by : String?,
     current_sort_order : String?,
-    unit_filter_active : Bool,
     search_query : String?,
     chart : Bool = true,
   ) : String
@@ -91,9 +90,7 @@ module Grafito
                       end
 
       headers_to_display = [_generate_header_attributes("timestamp", "Timestamp", current_sort_by, current_sort_order)]
-      unless unit_filter_active # Only add Service header if unit filter is NOT active
-        headers_to_display << _generate_header_attributes("service", "Unit", current_sort_by, current_sort_order)
-      end
+      headers_to_display << _generate_header_attributes("unit", "Unit", current_sort_by, current_sort_order)
       headers_to_display << _generate_header_attributes("priority", "Priority", current_sort_by, current_sort_order)
       headers_to_display << _generate_header_attributes("message", "Message", current_sort_by, current_sort_order)
       headers_to_display << {text: "", hx_vals: "", key_name: "details"}
