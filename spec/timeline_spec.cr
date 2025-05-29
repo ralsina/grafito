@@ -9,7 +9,7 @@ def new_log_entry(
   priority : String = "6",
 ) : Journalctl::LogEntry
   Journalctl::LogEntry.new(
-    timestamp: timestamp,            # Pass the Time object to the 'timestamp' property
+    timestamp: timestamp,       # Pass the Time object to the 'timestamp' property
     message_raw: message,       # Pass the message string to the 'message_raw' property
     raw_priority_val: priority, # Pass the priority string to the 'raw_priority_val' property
     internal_unit_name: unit    # Pass the unit string to the 'internal_unit_name' property
