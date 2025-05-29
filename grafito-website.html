@@ -121,6 +121,12 @@
       .theme-switch-wrapper-nav {
         padding-top: 0 !important; /* Ensure override if needed */
       }
+      .screenshot {
+        display: block;
+        max-width: 100%;
+        margin: 2rem auto; /* Centered with top/bottom margin */
+        border-radius: var(--pico-border-radius);
+      }
     </style>
   </head>
   <body>
@@ -162,10 +168,13 @@
           href="https://github.com/ralsina/grafito"
           target="_blank"
           role="button"
-          class="contrast"
           >Get Grafito on GitHub</a
+        >&nbsp;<a
+          href="https://grafito-demo.ralsina.me"
+          target="_blank"
+          role="button"
+          >View Demo Site</a
         >
-        <!-- If you had a live demo: <a href="YOUR_DEMO_URL" target="_blank" role="button" class="secondary">View Demo</a> -->
       </section>
 
       <section id="features">
@@ -177,7 +186,8 @@
             <p>
               Quickly find what you need. Search by text, systemd unit, syslog
               tag, time range (e.g., "last 15 min", "last week"), and log
-              priority. Filters update dynamically as you type! Detail and context views!
+              priority. Filters update dynamically as you type! Detail and
+              context views!
             </p>
           </article>
 
@@ -204,7 +214,8 @@
 
           <article class="feature-card">
             <h2>
-              <span class="feature-icon emoji">🔗</span>Shareable & Bookmarkable Views
+              <span class="feature-icon emoji">🔗</span>Shareable & Bookmarkable
+              Views
             </h2>
             <p>
               Easily copy a URL that includes all your current filter settings.
@@ -214,9 +225,7 @@
           </article>
 
           <article class="feature-card">
-            <h2>
-              <span class="feature-icon emoji">💾</span>Export Logs
-            </h2>
+            <h2><span class="feature-icon emoji">💾</span>Export Logs</h2>
             <p>
               Need logs offline? Download your filtered log entries as a plain
               text file for archiving, sharing, or further analysis in other
