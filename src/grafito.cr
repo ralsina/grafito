@@ -142,7 +142,7 @@ module Grafito
     if entry = Journalctl.get_entry_by_cursor(cursor)
       HTML.build do
         if entry.data.empty?
-          p do
+          p do # ameba:disable Lint/DebugCalls
             text "No details available for this log entry."
           end
         else

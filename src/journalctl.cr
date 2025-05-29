@@ -2,6 +2,10 @@ require "json"
 require "time"
 require "log"
 
+{% if flag?(:fake_journal) %}
+  require "./fake_journal_data" # For fake data generation
+{% end %}
+
 # A wrapper for journalctl
 class Journalctl
   # Setup a logger for this class
@@ -294,37 +298,44 @@ class Journalctl
   # Returns:
   #   An Array(String) containing unique service unit names, sorted, or nil if an error occurs.
   def self.known_service_units : Array(String) | Nil
-    Log.debug { "Executing Journalctl.known_service_units" }
-    # Using systemctl to list service units.
-    # --type=service: Only list service units.
-    # --all: Show all loaded units, including inactive ones.
-    # --no-legend: Suppress the legend header and footer.
-    # --plain: Output a plain list without ANSI escape codes or truncation.
-    command = ["systemctl", "list-units", "--type=service", "--all", "--no-legend", "--plain"]
+    {% if flag?(:fake_journal) %}
+      Log.info { "Journalctl.known_service_units: Using FAKE service units." }
+      fake_units = FakeJournalData::SAMPLE_UNIT_NAMES.compact.uniq.sort
+      Log.debug { "Returning #{fake_units.size} fake service units." }
+      return fake_units
+    {% else %}
+      Log.debug { "Executing Journalctl.known_service_units" }
+      # Using systemctl to list service units.
+      # --type=service: Only list service units.
+      # --all: Show all loaded units, including inactive ones.
+      # --no-legend: Suppress the legend header and footer.
+      # --plain: Output a plain list without ANSI escape codes or truncation.
+      command = ["systemctl", "list-units", "--type=service", "--all", "--no-legend", "--plain"]
 
-    Log.debug { "Generated systemctl command: #{command.inspect}" }
+      Log.debug { "Generated systemctl command: #{command.inspect}" }
 
-    stdout = IO::Memory.new
-    result = Process.run(
-      command[0],
-      args: command[1..],
-      output: stdout,
-    )
+      stdout = IO::Memory.new
+      result = Process.run(
+        command[0],
+        args: command[1..],
+        output: stdout,
+      )
 
-    if result.normal_exit?
-      known_units = Set(String).new
-      stdout.to_s.split("\n").each do |line|
-        next if line.strip.empty? # Skip empty or whitespace-only lines
-        # The first word on each line should be the unit name.
-        unit_name = line.split(" ").first?
-        known_units.add(unit_name) if unit_name
+      if result.normal_exit?
+        known_units = Set(String).new
+        stdout.to_s.split("\n").each do |line|
+          next if line.strip.empty? # Skip empty or whitespace-only lines
+          # The first word on each line should be the unit name.
+          unit_name = line.split(" ").first?
+          known_units.add(unit_name) if unit_name
+        end
+        Log.debug { "Found #{known_units.size} unique service units." }
+        known_units.to_a.sort
+      else
+        Log.error { "systemctl command failed with exit code: #{result}. Stdout: #{stdout.to_s[0..100]}" }
+        nil
       end
-      Log.debug { "Found #{known_units.size} unique service units." }
-      known_units.to_a.sort
-    else
-      Log.error { "systemctl command failed with exit code: #{result}. Stdout: #{stdout.to_s[0..100]}" }
-      nil
-    end
+    {% end %}
   rescue ex
     Log.error(exception: ex) { "Error executing systemctl for known_service_units." }
     nil
@@ -365,28 +376,40 @@ class Journalctl
   # Returns:
   #   An Array(LogEntry) parsed from the command output, or an empty array on failure.
   private def self.run_journalctl_and_parse(journalctl_args : Array(String), log_context_message : String) : Array(LogEntry)
-    command = ["journalctl"] + journalctl_args
-    Log.debug { "#{log_context_message}: Executing command: #{command.inspect}" }
+    {% if flag?(:fake_journal) %}
+      Log.info { "#{log_context_message}: Using FAKE journal data." }
+      # The fake function's arguments are prefixed with '_' indicating they might not be fully used.
+      # It's designed to match the signature for easy swapping.
+      FakeJournalData.fake_run_journalctl_and_parse(journalctl_args, log_context_message)
+    {% else %}
+      command = ["journalctl"] + journalctl_args
+      Log.debug { "#{log_context_message}: Executing command: #{command.inspect}" }
 
-    stdout = IO::Memory.new
-    process_result = Process.run(command[0], args: command[1..], output: stdout)
+      stdout = IO::Memory.new
+      process_result = Process.run(command[0], args: command[1..], output: stdout)
 
-    if process_result.normal_exit?
-      stdout.to_s.split("\n").compact_map do |line|
-        next if line.strip.empty?
-        begin
-          LogEntry.from_json(line)
-        rescue ex # Catches JSON::ParseException, ArgumentError, etc.
-          Log.warn(exception: ex) { "#{log_context_message}: Failed to parse log line: #{line.inspect[..100]}" }
-          nil
+      if process_result.normal_exit?
+        stdout.to_s.split("\n").compact_map do |line|
+          next if line.strip.empty?
+          begin
+            LogEntry.from_json(line)
+          rescue ex # Catches JSON::ParseException, ArgumentError, etc.
+            Log.warn(exception: ex) { "#{log_context_message}: Failed to parse log line: #{line.inspect[..100]}" }
+            nil
+          end
         end
+      else
+        Log.warn { "#{log_context_message}: journalctl command failed with exit code: #{process_result.system_exit_status}. Stdout: #{stdout.to_s[0..100]}" }
+        [] of LogEntry
       end
-    else
-      Log.warn { "#{log_context_message}: journalctl command failed with exit code: #{process_result.system_exit_status}. Stdout: #{stdout.to_s[0..100]}" }
-      [] of LogEntry
-    end
+    {% end %}
   rescue ex
-    Log.error(exception: ex) { "#{log_context_message}: Error executing journalctl. Command: #{command.inspect}" }
+    {% if flag?(:fake_journal) %}
+      Log.error(exception: ex) { "#{log_context_message}: Error in fake data generation." }
+    {% else %}
+      # 'command' is defined in the 'else' branch of the flag check
+      Log.error(exception: ex) { "#{log_context_message}: Error executing journalctl. Command: #{command.inspect}" }
+    {% end %}
     [] of LogEntry
   end
 

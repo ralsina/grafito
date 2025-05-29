@@ -18,3 +18,7 @@ Metrics/CyclomaticComplexity:
   - src/journalctl.cr
   Enabled: true
   Severity: Warning
+
+# This is a total hack that doesn't really need to work too well :-)
+Excluded:
+  - src/fake_journal_data.cr

@@ -19,6 +19,10 @@ dependencies:
   html_builder:
     github: crystal-lang/html_builder
 
-crystal: '>= 1.16.0'
+development_dependencies:
+  faker:
+    github: askn/faker
+
+crystal: ">= 1.16.0"
 
 license: MIT
