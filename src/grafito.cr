@@ -96,12 +96,13 @@ module Grafito
 
     if service_units
       # Build HTML options
-      options_html = String.build do |sb|
-        service_units.each do |unit_name|
-          sb << "<option value=\"" << HTML.escape(unit_name) << "\"></option>"
+      env.response.print(
+        HTML.build do
+          service_units.each do |unit_name|
+            option(value: HTML.escape(unit_name)) { }
+          end
         end
-      end
-      env.response.print options_html
+      )
     else
       env.response.status_code = 500
       env.response.print "<!-- Failed to retrieve service units -->"
