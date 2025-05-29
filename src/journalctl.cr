@@ -26,7 +26,7 @@ class Journalctl
     end
 
     def self.to_json(value : Time, builder : JSON::Builder)
-      builder.string((value.to_unix_us).to_s)
+      builder.string((value.to_unix_ms).to_s)
     end
   end
 

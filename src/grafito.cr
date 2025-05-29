@@ -147,9 +147,7 @@ module Grafito
           sb << "<p>No details available for this log entry.</p>"
         else
           sb << "<pre>"
-          outp = IO::Memory.new
-          PrettyPrint.format(entry.data, io: outp, width: 60)
-          sb << outp.to_s
+          sb << entry.to_pretty_json
           sb << "</pre>"
         end
       end
