@@ -2,7 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.0] - 2025-05-29
+## [0.6.0] - 2025-05-29
+
+### 🚀 Features
+
+- Implemented fake mode
+
+### 🐛 Bug Fixes
+
+- Don't escape things twice
+- Support grep in the demo server
+
+### 💼 Other
+
+- Build demo server for ... demo purposes
+
+### 🚜 Refactor
+
+- Use html_build for table generation
+- Use html_build for service completion
+- Use html_build for details endpoint
+
+### 📚 Documentation
+
+- Link to demo site
+
+### 🎨 Styling
+
+- Only show actions on row hover
+
+## [0.5.0] - 2025-05-29
 
 ### 🚀 Features
 
@@ -21,6 +50,7 @@ All notable changes to this project will be documented in this file.
 - Release v0.4.0
 - Release v0.4.0
 - Update static build to alpine edge
+- Release v0.5.0
 
 ### 🚜 Refactor
 
