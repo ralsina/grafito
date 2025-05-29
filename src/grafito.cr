@@ -92,7 +92,7 @@ module Grafito
   get "/services" do |env|
     Log.debug { "Received /services request" }
     service_units = Journalctl.known_service_units
-    env.response.content_type = "text/html" # Changed to text/html
+    env.response.content_type = "text/html"
 
     if service_units
       # Build HTML options
@@ -104,8 +104,6 @@ module Grafito
       env.response.print options_html
     else
       env.response.status_code = 500
-      # Return an HTML comment or an empty string if units can't be fetched.
-      # This prevents HTMX from erroring if it expects HTML.
       env.response.print "<!-- Failed to retrieve service units -->"
     end
   end
