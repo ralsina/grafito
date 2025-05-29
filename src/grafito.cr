@@ -69,13 +69,12 @@ module Grafito
     if logs
       if output_format.downcase == "text"
         env.response.content_type = "text/plain"
-        text_output = _generate_text_log_output(logs)
-        env.response.print text_output
+        output = _generate_text_log_output(logs)
       else # Default to HTML
         env.response.content_type = "text/html"
-        html_output = _generate_html_log_output(logs, current_sort_by, current_sort_order, unit_filter_active, search_query)
-        env.response.print html_output
+        output = _generate_html_log_output(logs, current_sort_by, current_sort_order, unit_filter_active, search_query)
       end
+      env.response.print output
     else # Failed to retrieve logs
       env.response.status_code = 500
       if output_format.downcase == "text"
