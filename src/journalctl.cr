@@ -59,7 +59,7 @@ class Journalctl
       @message_raw : String?,              # Changed to String? to match property type
       @raw_priority_val : String?,         # Changed to String? to match property type
       @internal_unit_name : String? = nil, # Default to nil if _SYSTEMD_UNIT is missing
-      @data : Hash(String, String) = {} of String => String
+      @data : Hash(String, String) = {} of String => String,
     )
       # Properties are assigned directly by JSON::Serializable
       # Stripping and defaulting are handled by getters below.
@@ -238,75 +238,53 @@ class Journalctl
     priority = nil if priority.is_a?(String) && priority.strip.empty?
     command = build_query_command(since, unit, tag, query, priority)
     Log.debug { "Generated journalctl command: #{command.inspect}" }
-    # Execute the command and capture the output.
-    stdout = IO::Memory.new
-    result = Process.run(
-      command[0],
-      args: command[1..],
-      output: stdout,
-    )
-    if result.normal_exit?
-      log_entries = stdout.to_s.split("\n").compact_map do |line|
-        next if line.strip.empty? # Skip empty or whitespace-only lines
-        begin
-          LogEntry.from_json(line) # Use from_json to leverage JSON::Serializable and converters
-        rescue ex : JSON::ParseException
-          Log.warn { "Failed to parse log line: #{line.inspect[..100]}: #{ex.message}" }
-          next
-        rescue ex : ArgumentError # Can be raised by MicrosecondsEpochConverter if to_i64 fails
-          Log.warn { "Failed to convert data in log line (e.g., timestamp): #{line.inspect[..100]}: #{ex.message}" }
-          next
-        end
-      end
-      # Sort the entries if sort_by is provided and log_entries is not nil
-      if sort_by && log_entries
-        is_ascending = sort_order.nil? || sort_order.downcase == "asc"
-        Log.debug { "Sorting by '#{sort_by}', order: #{is_ascending ? "ASC" : "DESC"}" }
 
-        log_entries.sort! do |a, b|
-          # Primary comparison
-          primary_cmp = case sort_by
-                        when "timestamp"
-                          a.timestamp <=> b.timestamp # Time objects are directly comparable
-                        when "priority"
-                          a.priority.to_i <=> b.priority.to_i # Uses getter, .to_i for numeric sort
-                        when "message"
-                          a.message.downcase <=> b.message.downcase # Uses getter
-                        when "unit"                                 # Renamed from service
-                          a.unit.downcase <=> b.unit.downcase
-                        else
-                          Log.warn { "Unknown sort_by key: #{sort_by}" }
-                          0 # No change for unknown key
-                        end
+    # Use the helper to run the command and parse entries
+    log_entries = run_journalctl_and_parse(command[1..], "Journalctl.query")
 
-          # If primary keys are different, use that comparison.
-          # Otherwise (if primary_cmp is 0), use timestamp as a secondary sort key,
-          # unless we are already sorting by timestamp.
-          final_cmp = if primary_cmp != 0 || sort_by == "timestamp"
-                        primary_cmp
+    # Sort the entries if sort_by is provided and log_entries is not empty
+    if sort_by && !log_entries.empty?
+      is_ascending = sort_order.nil? || sort_order.downcase == "asc"
+      Log.debug { "Sorting by '#{sort_by}', order: #{is_ascending ? "ASC" : "DESC"}" }
+
+      log_entries.sort! do |a, b|
+        # Primary comparison
+        primary_cmp = case sort_by
+                      when "timestamp"
+                        a.timestamp <=> b.timestamp # Time objects are directly comparable
+                      when "priority"
+                        a.priority.to_i <=> b.priority.to_i # Uses getter, .to_i for numeric sort
+                      when "message"
+                        a.message.downcase <=> b.message.downcase # Uses getter
+                      when "unit"                                 # Renamed from service
+                        a.unit.downcase <=> b.unit.downcase
                       else
-                        # Primary keys are equal, and not sorting by timestamp, so use timestamp as secondary.
-                        a.timestamp <=> b.timestamp
+                        Log.warn { "Unknown sort_by key: #{sort_by}" }
+                        0 # No change for unknown key
                       end
 
-          # Apply sort order
-          is_ascending ? final_cmp : -final_cmp
-        end
-      else
-        # If not sorting, journalctl -r already provides reverse chronological order (newest first)
-        Log.debug { "No specific sorting requested, relying on journalctl default order (or no entries)." }
-      end
+        # If primary keys are different, use that comparison.
+        # Otherwise (if primary_cmp is 0), use timestamp as a secondary sort key,
+        # unless we are already sorting by timestamp.
+        final_cmp = if primary_cmp != 0 || sort_by == "timestamp"
+                      primary_cmp
+                    else
+                      # Primary keys are equal, and not sorting by timestamp, so use timestamp as secondary.
+                      a.timestamp <=> b.timestamp
+                    end
 
-      Log.debug { "Returning #{log_entries.try &.size.to_s || "0"} log entries." }
-      log_entries # journalctl has already filtered if query was provided
+        # Apply sort order
+        is_ascending ? final_cmp : -final_cmp
+      end
     else
-      # Log an error if journalctl command failed
-      Log.error { "journalctl command failed with exit code: #{result}. Stdout: #{stdout.to_s[0..100]}" }
-      Log.debug { "Returning 0 log entries due to command failure." }
-      nil # Explicitly return nil on failure
+      # If not sorting, journalctl -r already provides reverse chronological order (newest first)
+      Log.debug { "No specific sorting requested, relying on journalctl default order (or no entries)." }
     end
+
+    Log.debug { "Returning #{log_entries.size} log entries." }
+    log_entries
   rescue ex
-    Log.error(exception: ex) { "Error executing journalctl. Result code: #{result rescue "unknown"}" }
+    Log.error(exception: ex) { "Error in Journalctl.query logic" }
     Log.debug { "Returning 0 log entries due to an exception." }
     nil
   end
@@ -361,33 +339,92 @@ class Journalctl
   #   A LogEntry object if found, or nil otherwise.
   def self.get_entry_by_cursor(cursor : String) : LogEntry?
     Log.debug { "Executing Journalctl.get_entry_by_cursor with cursor: #{cursor}" }
+    command_args = ["-o", "json", "--cursor", cursor, "-n", "1"]
 
-    command = ["journalctl", "-o", "json", "--cursor", cursor, "-n", "1"]
-    Log.debug { "Generated journalctl command: #{command.inspect}" }
+    entries = run_journalctl_and_parse(command_args, "Journalctl.get_entry_by_cursor for cursor '#{cursor}'")
+
+    if entries.empty?
+      Log.debug { "No entry found for cursor '#{cursor}' or command failed." }
+      return nil
+    end
+
+    entries.first # Should be only one entry if found
+
+
+  rescue ex # Catch unexpected errors in this method's logic
+    Log.error(exception: ex) { "Unexpected error in Journalctl.get_entry_by_cursor for cursor: #{cursor}." }
+    nil
+  end
+
+  # Helper method to run journalctl and parse JSON lines from its output.
+  #
+  # Args:
+  #   journalctl_args: An array of arguments to pass to journalctl (excluding "journalctl" itself).
+  #   log_context_message: A string to use as a prefix for log messages from this helper.
+  #
+  # Returns:
+  #   An Array(LogEntry) parsed from the command output, or an empty array on failure.
+  private def self.run_journalctl_and_parse(journalctl_args : Array(String), log_context_message : String) : Array(LogEntry)
+    command = ["journalctl"] + journalctl_args
+    Log.debug { "#{log_context_message}: Executing command: #{command.inspect}" }
 
     stdout = IO::Memory.new
-    result = Process.run(
-      command[0],
-      args: command[1..],
-      output: stdout,
-    )
+    process_result = Process.run(command[0], args: command[1..], output: stdout)
 
-    if result.normal_exit?
-      line = stdout.to_s.strip
-      return nil if line.empty? # No entry found for this cursor
-
-      begin
-        LogEntry.from_json(line)
-      rescue ex : JSON::ParseException
-        Log.warn(exception: ex) { "Failed to parse log line for cursor #{cursor}: #{line.inspect[..100]}" }
-        nil
+    if process_result.normal_exit?
+      stdout.to_s.split("\n").compact_map do |line|
+        next if line.strip.empty?
+        begin
+          LogEntry.from_json(line)
+        rescue ex # Catches JSON::ParseException, ArgumentError, etc.
+          Log.warn(exception: ex) { "#{log_context_message}: Failed to parse log line: #{line.inspect[..100]}" }
+          nil
+        end
       end
     else
-      Log.error { "journalctl command failed for cursor #{cursor} with exit code: #{result}. Stdout: #{stdout.to_s[0..100]}" }
-      nil
+      Log.warn { "#{log_context_message}: journalctl command failed with exit code: #{process_result.system_exit_status}. Stdout: #{stdout.to_s[0..100]}" }
+      [] of LogEntry
     end
   rescue ex
-    Log.error(exception: ex) { "Error executing journalctl for get_entry_by_cursor with cursor: #{cursor}." }
-    nil
+    Log.error(exception: ex) { "#{log_context_message}: Error executing journalctl. Command: #{command.inspect}" }
+    [] of LogEntry
+  end
+
+  # Retrieves log entries surrounding a specific entry identified by a cursor.
+  #
+  # Args:
+  #   cursor: The journalctl cursor string for the central entry.
+  #   count: The number of entries to retrieve before and after the central entry.
+  #
+  # Returns:
+  #   An Array(LogEntry) containing the 'before' entries, the target entry, and the 'after' entries,
+  #   all in chronological order. Returns nil if the target cursor is not found or count is non-positive.
+  def self.context(cursor : String, count : Int32) : Array(LogEntry)?
+    if count <= 0
+      Log.warn { "Context requested for cursor '#{cursor}' with non-positive count: #{count}. Returning nil." }
+      return nil
+    end
+
+    target_entry = get_entry_by_cursor(cursor)
+    unless target_entry
+      Log.warn { "Context: Target entry for cursor '#{cursor}' not found. Returning nil." }
+      return nil
+    end
+
+    # Fetch 'before' entries: `journalctl -o json --cursor <cursor> -n <count + 1> --reverse`
+    # This outputs: [Target, B1, B2, ..., B_count] (Target is newest, B1 is just before Target, etc.)
+    cmd_before_args = ["-o", "json", "--cursor", cursor, "-n", (count + 1).to_s, "--reverse"]
+    parsed_before_list = run_journalctl_and_parse(cmd_before_args, "Context (before entries for cursor '#{cursor}')")
+
+    before_entries = parsed_before_list.size > 1 ? parsed_before_list[1..].reverse : ([] of LogEntry)
+
+    # Fetch 'after' entries: `journalctl -o json --after-cursor <cursor> -n <count>`
+    # This outputs: [A1, A2, ..., A_count] (A1 is just after Target, in chronological order)
+    cmd_after_args = ["-o", "json", "--after-cursor", cursor, "-n", count.to_s]
+    after_entries = run_journalctl_and_parse(cmd_after_args, "Context (after entries for cursor '#{cursor}')")
+
+    result = before_entries + [target_entry] + after_entries
+    Log.info { "Context for cursor '#{cursor}' with count #{count}: Found #{before_entries.size} before, 1 target, #{after_entries.size} after. Total: #{result.size}" }
+    result
   end
 end

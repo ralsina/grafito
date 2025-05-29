@@ -62,18 +62,21 @@ module Grafito
   end
 
   # Generates an HTML representation of log entries.
-  private def _generate_html_log_output(
+  private def html_log_output(
     logs : Array(Journalctl::LogEntry),
     current_sort_by : String?,
     current_sort_order : String?,
     unit_filter_active : Bool,
     search_query : String?,
+    chart : Bool = true,
   ) : String
     String.build do |str|
-      # Generate and add the timeline SVG
-      timeline_data = Timeline.generate_frequency_timeline(logs)
-      svg_timeline_html = Timeline.generate_svg_timeline(timeline_data)
-      str << "<div style=\"margin-bottom: 1em;\">" << svg_timeline_html << "</div>"
+      if chart
+        # Generate and add the timeline SVG
+        timeline_data = Timeline.generate_frequency_timeline(logs)
+        svg_timeline_html = Timeline.generate_svg_timeline(timeline_data)
+        str << "<div style=\"margin-bottom: 1em;\">" << svg_timeline_html << "</div>"
+      end
 
       # Display results count
       count_message = if logs.size == 5000
@@ -92,13 +95,13 @@ module Grafito
       end
       headers_to_display << _generate_header_attributes("priority", "Priority", current_sort_by, current_sort_order)
       headers_to_display << _generate_header_attributes("message", "Message", current_sort_by, current_sort_order)
-      # Add a non-sortable header for Details
-      headers_to_display << {text: "Details", hx_vals: "", key_name: "details"} # key_name is arbitrary, hx_vals empty as it's not sortable
+      headers_to_display << {text: "", hx_vals: "", key_name: "details"}
+      headers_to_display << {text: "", hx_vals: "", key_name: "context"}
 
       str << "<thead><tr>"
       headers_to_display.each do |header|
-        if header[:key_name] == "details"
-          str << "<th>" << header[:text] << "</th>" # Non-sortable header
+        if header[:key_name] == "details" || header[:key_name] == "context"
+          str << "<th style=\"width: 1%;\">" << header[:text] << "</th>" # Non-sortable, minimal width header
         else
           str << "<th style=\"cursor: pointer;\" hx-get=\"/logs\" hx-vals='" << header[:hx_vals] << "' hx-include=\"#search-box, #unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view\" hx-target=\"#results\" hx-indicator=\"#loading-spinner\">" << header[:text] << "</th>"
         end
@@ -106,7 +109,10 @@ module Grafito
       str << "</tr></thead>"
       str << "<tbody>"
 
-      colspan_value = (unit_filter_active ? 4 : 5)
+      # Calculate colspan based on the actual number of headers being displayed.
+      # If unit_filter_active, Unit column is hidden.
+      # Headers: Timestamp, (Unit), Priority, Message, Details, Context
+      colspan_value = unit_filter_active ? 5 : 6
 
       if logs.empty?
         str << "<tr><td colspan=\"#{colspan_value}\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>"
@@ -129,16 +135,29 @@ module Grafito
           # Add details link/icon cell
           cursor = entry.data["__CURSOR"]?
           if cursor
-            str << "<td style=\"text-align: center;\">"
-            str << "<button class=\"round-button\" "
+            str << "<td style=\"width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;\">"
+            str << "<button class=\"round-button emoji\" "
             str << "title=\"View full details for this log entry\" "
             str << "hx-get=\"/details?" << URI::Params.encode({"cursor" => cursor}) << "\" "
             str << "hx-target=\"#details-dialog-content\" "
             str << "hx-swap=\"innerHTML\" "
             str << "hx-on:htmx:before-request=\"document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;\" "
-            str << "hx-on:htmx:after-request=\"if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }\""
+            str << "hx-on:htmx:after-request=\"if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }\" "
             str << ">🔍</button>"
             str << "</td>"
+            # Add Context Button
+            str << "<td style=\"width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;\">"
+            str << "<button class=\"round-button emoji\" "
+            str << "title=\"View context for this log entry (e.g., 5 before & 5 after)\" "
+            str << "hx-get=\"/context?" << URI::Params.encode({"cursor" => cursor, "count" => "5"}) << "\" " # count=5 is an example
+            str << "hx-target=\"#details-dialog-content\" "
+            str << "hx-swap=\"innerHTML\" "
+            str << "hx-on:htmx:before-request=\"document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;\" "
+            str << "hx-on:htmx:after-request=\"if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load context. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }\" "
+            str << ">🕗</button>"
+            str << "</td>"
+          else
+            str << "<td></td><td></td>" # Empty cells if no cursor, to maintain table structure
           end
           str << "</tr>"
         end
