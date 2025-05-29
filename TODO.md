@@ -8,6 +8,6 @@
 * ~~Site~~
 * ~~Select a nice color scheme using the nicolino base16-picocss theme generator~~
 * ~~Add CLI options to set the port and host etc.~~
-* Implement "context": link an entry to unfiltered nearby entries.
+* ~~Implement "context": link an entry to unfiltered nearby entries.~~
 * ~~Implement "detail": show all the fields in a table for a specific entry~~
-* Use <https://github.com/crystal-lang/html_builder> to build HTML
+* ~~Use <https://github.com/crystal-lang/html_builder> to build HTML~~
