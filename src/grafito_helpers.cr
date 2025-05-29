@@ -106,7 +106,7 @@ module Grafito
             headers_to_display.each do |header|
               if header[:key_name] == "details" || header[:key_name] == "context"
                 th(style: "width: 1%;") do
-                  text header[:text] # Non-sortable, minimal width header
+                  html header[:text] # Non-sortable, minimal width header
                 end
               else
                 th({
@@ -117,7 +117,7 @@ module Grafito
                   "hx-target"    => "#results",
                   "hx-indicator" => "#loading-spinner",
                 }) do
-                  text header[:text]
+                  html header[:text]
                 end
               end
             end
