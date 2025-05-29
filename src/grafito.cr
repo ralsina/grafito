@@ -52,7 +52,7 @@ module Grafito
     current_sort_by = optional_query_param(env, "sort_by")
     current_sort_order = optional_query_param(env, "sort_order")
     format_param = optional_query_param(env, "format")
-    output_format = format_param.presence || "html"
+    output_format = (format_param.presence || "html").downcase
 
     Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect} (filter active: #{unit_filter_active}), tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}" }
 
@@ -67,7 +67,7 @@ module Grafito
     )
 
     if logs
-      if output_format.downcase == "text"
+      if output_format == "text"
         env.response.content_type = "text/plain"
         output = _generate_text_log_output(logs)
       else # Default to HTML
@@ -77,13 +77,12 @@ module Grafito
       env.response.print output
     else # Failed to retrieve logs
       env.response.status_code = 500
-      if output_format.downcase == "text"
+      if output_format == "text"
         env.response.content_type = "text/plain"
-        env.response.print "Failed to retrieve logs. Please check server logs for more details."
       else # Default to HTML for errors too
         env.response.content_type = "text/html"
-        env.response.print "<p class=\"error\">Failed to retrieve logs. Please check server logs for more details.</p>"
       end
+      env.response.print "Failed to retrieve logs."
     end
   end
 
