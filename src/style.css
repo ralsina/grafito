@@ -301,7 +301,3 @@ h1 {
 .log-row-hover-actions:hover .hover-action-cell {
   opacity: 1; /* Visible on row hover */
 }
-
-/* Ensure buttons are still clickable even when opacity is 0,
-   if you prefer them to take up space and just be invisible.
-   If you want them to not be interactive until visible, opacity is fine. */
