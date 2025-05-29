@@ -2,6 +2,7 @@ require "kemal" # For HTTP::Server::Context and HTML
 require "json"
 require "./journalctl"
 require "./timeline"
+require "html_builder"
 
 # Regex is part of Crystal core, no explicit require needed for it.
 
@@ -70,12 +71,14 @@ module Grafito
     search_query : String?,
     chart : Bool = true,
   ) : String
-    String.build do |str|
+    HTML.build do
       if chart
         # Generate and add the timeline SVG
         timeline_data = Timeline.generate_frequency_timeline(logs)
         svg_timeline_html = Timeline.generate_svg_timeline(timeline_data)
-        str << "<div style=\"margin-bottom: 1em;\">" << svg_timeline_html << "</div>"
+        div(style: "margin-bottom: 1em;") do
+          html svg_timeline_html
+        end
       end
 
       # Display results count
@@ -86,8 +89,6 @@ module Grafito
                       else
                         "Showing #{logs.size} entries." # Handles 0 and other counts
                       end
-      str << "<p class=\"results-count\">#{count_message}</p>"
-      str << "<table class=\"striped\">"
 
       headers_to_display = [_generate_header_attributes("timestamp", "Timestamp", current_sort_by, current_sort_order)]
       unless unit_filter_active # Only add Service header if unit filter is NOT active
@@ -98,71 +99,98 @@ module Grafito
       headers_to_display << {text: "", hx_vals: "", key_name: "details"}
       headers_to_display << {text: "", hx_vals: "", key_name: "context"}
 
-      str << "<thead><tr>"
-      headers_to_display.each do |header|
-        if header[:key_name] == "details" || header[:key_name] == "context"
-          str << "<th style=\"width: 1%;\">" << header[:text] << "</th>" # Non-sortable, minimal width header
-        else
-          str << "<th style=\"cursor: pointer;\" hx-get=\"/logs\" hx-vals='" << header[:hx_vals] << "' hx-include=\"#search-box, #unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view\" hx-target=\"#results\" hx-indicator=\"#loading-spinner\">" << header[:text] << "</th>"
-        end
+      p(class: "results-count") do # ameba:disable Lint/DebugCalls
+        text count_message
       end
-      str << "</tr></thead>"
-      str << "<tbody>"
 
-      # Calculate colspan based on the actual number of headers being displayed.
-      # If unit_filter_active, Unit column is hidden.
-      # Headers: Timestamp, (Unit), Priority, Message, Details, Context
-      colspan_value = unit_filter_active ? 5 : 6
-
-      if logs.empty?
-        str << "<tr><td colspan=\"#{colspan_value}\" style=\"text-align: center; padding: 1em;\">No log entries found.</td></tr>"
-      else
-        logs.each do |entry|
-          str << "<tr class=\"priority-#{entry.priority.to_i}\" >"
-          str << "<td>" << entry.formatted_timestamp << "</td>"
-          unless unit_filter_active
-            str << "<td>" << HTML.escape(entry.unit) << "</td>"
+      table(class: "striped") do
+        thead do
+          tr do
+            headers_to_display.each do |header|
+              if header[:key_name] == "details" || header[:key_name] == "context"
+                th(style: "width: 1%;") do
+                  text header[:text] # Non-sortable, minimal width header
+                end
+              else
+                th({
+                  "style"        => "cursor: pointer;",
+                  "hx-get"       => "/logs",
+                  "hx-vals"      => header[:hx_vals],
+                  "hx-include"   => "#search-box, #unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view",
+                  "hx-target"    => "#results",
+                  "hx-indicator" => "#loading-spinner",
+                }) do
+                  text header[:text]
+                end
+              end
+            end
           end
-          str << "<td>" << HTML.escape(entry.formatted_priority) << "</td>"
-          escaped_message = HTML.escape(entry.message)
-          highlighted_message = if search_query && !search_query.strip.empty?
-                                  pattern = Regex.escape(search_query)
-                                  escaped_message.gsub(/#{pattern}/i, "<mark>\\0</mark>")
-                                else
-                                  escaped_message
-                                end
-          str << "<td class=\"log-message-cell\">" << highlighted_message << "</td>"
-          # Add details link/icon cell
-          cursor = entry.data["__CURSOR"]?
-          if cursor
-            str << "<td style=\"width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;\">"
-            str << "<button class=\"round-button emoji\" "
-            str << "title=\"View full details for this log entry\" "
-            str << "hx-get=\"/details?" << URI::Params.encode({"cursor" => cursor}) << "\" "
-            str << "hx-target=\"#details-dialog-content\" "
-            str << "hx-swap=\"innerHTML\" "
-            str << "hx-on:htmx:before-request=\"document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;\" "
-            str << "hx-on:htmx:after-request=\"if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }\" "
-            str << ">🔍</button>"
-            str << "</td>"
-            # Add Context Button
-            str << "<td style=\"width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;\">"
-            str << "<button class=\"round-button emoji\" "
-            str << "title=\"View context for this log entry (e.g., 5 before & 5 after)\" "
-            str << "hx-get=\"/context?" << URI::Params.encode({"cursor" => cursor, "count" => "5"}) << "\" " # count=5 is an example
-            str << "hx-target=\"#details-dialog-content\" "
-            str << "hx-swap=\"innerHTML\" "
-            str << "hx-on:htmx:before-request=\"document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;\" "
-            str << "hx-on:htmx:after-request=\"if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load context. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }\" "
-            str << ">🕗</button>"
-            str << "</td>"
+        end
+        tbody do
+          if logs.empty?
+            tr do
+              td(colspan: headers_to_display.size.to_s, style: "text-align: center; padding: 1em;") do
+                text "No log entries found."
+              end
+            end
           else
-            str << "<td></td><td></td>" # Empty cells if no cursor, to maintain table structure
+            logs.each do |entry|
+              tr(class: "priority-#{entry.priority.to_i}") do
+                td do
+                  text entry.formatted_timestamp
+                end
+                td do
+                  text HTML.escape(entry.unit)
+                end
+                td do
+                  text HTML.escape(entry.formatted_priority)
+                end
+                escaped_message = HTML.escape(entry.message)
+                highlighted_message = if search_query && !search_query.strip.empty?
+                                        pattern = Regex.escape(search_query)
+                                        escaped_message.gsub(/#{pattern}/i, "<mark>\\0</mark>")
+                                      else
+                                        escaped_message
+                                      end
+                td(class: "log-message-cell") do
+                  text highlighted_message
+                end
+                cursor = entry.data["__CURSOR"]?
+                if cursor
+                  # Details button
+                  td(style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
+                    button({
+                      "class"                     => "round-button emoji",
+                      "title"                     => "View full details for this log entry",
+                      "hx-get"                    => "details?#{URI::Params.encode({"cursor" => cursor})}",
+                      "hx-target"                 => "#details-dialog-content",
+                      "hx-swap"                   => "innerHTML",
+                      "hx-on:htmx:before-request" => "document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;",
+                      "hx-on:htmx:after-request"  => "if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }",
+                    }) do
+                      text "🔍"
+                    end
+                  end
+                  # Context button
+                  td(style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
+                    button({
+                      "class"                     => "round-button emoji",
+                      "title"                     => "View context for this log entry (e.g., 5 before & 5 after)",
+                      "hx-get"                    => "context?#{URI::Params.encode({"cursor" => cursor})}",
+                      "hx-target"                 => "#details-dialog-content",
+                      "hx-swap"                   => "innerHTML",
+                      "hx-on:htmx:before-request" => "document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;",
+                      "hx-on:htmx:after-request"  => "if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }",
+                    }) do
+                      text "🕗"
+                    end
+                  end
+                end
+              end
+            end
           end
-          str << "</tr>"
         end
       end
-      str << "</tbody></table>"
     end
   end
 end

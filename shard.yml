@@ -16,6 +16,8 @@ dependencies:
     branch: master
   docopt:
     github: ralsina/docopt.cr
+  html_builder:
+    github: crystal-lang/html_builder
 
 crystal: '>= 1.16.0'
 
