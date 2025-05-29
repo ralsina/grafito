@@ -135,7 +135,7 @@ module Grafito
             end
           else
             logs.each do |entry|
-              tr(class: "priority-#{entry.priority.to_i}") do
+              tr(class: "log-row-hover-actions priority-#{entry.priority.to_i}") do
                 td do
                   text entry.formatted_timestamp
                 end
@@ -158,7 +158,7 @@ module Grafito
                 cursor = entry.data["__CURSOR"]?
                 if cursor
                   # Details button
-                  td(style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
+                  td(class: "hover-action-cell", style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
                     button({
                       "class"                     => "round-button emoji",
                       "title"                     => "View full details for this log entry",
@@ -172,7 +172,7 @@ module Grafito
                     end
                   end
                   # Context button
-                  td(style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
+                  td(class: "hover-action-cell", style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
                     button({
                       "class"                     => "round-button emoji",
                       "title"                     => "View context for this log entry (e.g., 5 before & 5 after)",
