@@ -136,7 +136,7 @@ module Grafito
     env.response.content_type = "text/html"
 
     unless cursor
-      halt env, status_code: 400, response: "<p class=\"error\">Missing cursor parameter. Cannot load details.</p>"
+      halt env, status_code: 400, response: "Missing cursor parameter. Cannot load details."
     end
 
     if entry = Journalctl.get_entry_by_cursor(cursor)
@@ -153,7 +153,7 @@ module Grafito
       end
     else
       env.response.status_code = 404
-      env.response.print "<p class=\"error\">Log entry not found for the given cursor.</p>"
+      env.response.print "Log entry not found for the given cursor."
     end
   end
 
