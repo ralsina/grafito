@@ -2,7 +2,7 @@
 set e
 
 PKGNAME=$(basename "$PWD")
-VERSION=$(git cliff --bumped-version |cut -dv -f2)
+VERSION=$(git cliff --bumped-version --unreleased |cut -dv -f2)
 
 sed "s/^version:.*$/version: $VERSION/g" -i shard.yml
 ./build_static.sh
