@@ -153,7 +153,7 @@ module Grafito
                                         escaped_message
                                       end
                 td(class: "log-message-cell") do
-                  text highlighted_message
+                  html highlighted_message
                 end
                 cursor = entry.data["__CURSOR"]?
                 if cursor
