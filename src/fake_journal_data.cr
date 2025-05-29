@@ -70,6 +70,7 @@ module FakeJournalData
     target_cursor_value : String? = nil # For --cursor
     since_time_str : String? = nil
     until_time_str : String? = nil
+    grep_query : String? = nil          # For -g
 
     i = 0
     while i < journalctl_args.size
@@ -115,6 +116,11 @@ module FakeJournalData
       when "--until"
         if i + 1 < journalctl_args.size
           until_time_str = journalctl_args[i + 1]
+          i += 1 # Consume the value
+        end
+      when "-g" # Grep query
+        if i + 1 < journalctl_args.size
+          grep_query = journalctl_args[i + 1]
           i += 1 # Consume the value
         end
       when "-r", "--reverse"
@@ -169,6 +175,11 @@ module FakeJournalData
       # Filter by tags
       next if !include_tags.empty? && !include_tags.includes?(syslog_identifier) # Corrected: Filter on syslog_identifier
       next if !exclude_tags.empty? && exclude_tags.includes?(syslog_identifier)  # Corrected: Filter on syslog_identifier
+
+      # Filter by grep_query (if provided)
+      if q = grep_query
+        next unless message_raw.downcase.includes?(q.downcase)
+      end
 
       # Populate the data hash, simulating journalctl -o json output
       data = Hash(String, String).new
