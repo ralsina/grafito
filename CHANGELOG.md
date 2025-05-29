@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.0] - 2025-05-28
+## [0.4.0] - 2025-05-29
 
 ### 🚀 Features
 
@@ -10,17 +10,26 @@ All notable changes to this project will be documented in this file.
 - Website
 - Show container name in log entries when available
 - Detail view
+- Context view
+
+### 🐛 Bug Fixes
+
+- Pretty json for detail view
 
 ### 💼 Other
 
 - Release v0.4.0
 - Release v0.4.0
-- Release v0.4.0
+- Update static build to alpine edge
 
 ### 🚜 Refactor
 
 - Keep all data in LogEntry.@data
 - Move helpers to separate file
+- Helpers cleanup
+- Minor fix
+- Simplify common code
+- Removed useless comments
 
 ### 📚 Documentation
 
@@ -32,6 +41,7 @@ All notable changes to this project will be documented in this file.
 
 - Use mono emoji
 - Use mono emoji
+- Consistent spacing in sidebar
 
 ### 🧪 Testing
 
@@ -39,6 +49,7 @@ All notable changes to this project will be documented in this file.
 - Unit tests for LogEntry
 - Unit tests for build_query_command
 - Unit tests for journalctl
+- Unit tests for plain text logs
 
 ## [0.3.0] - 2025-05-27
 
