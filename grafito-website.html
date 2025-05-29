@@ -12,26 +12,36 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300..700&family=WDXL+Lubrifont+TC&display=swap"
-      rel="stylesheet"
-    />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <title>Grafito - Friendly Systemd Journal Log Viewer</title>
     <style>
+      @font-face {
+        font-family: "Noto Emoji";
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/l/font?kit=bMrnmSyK7YY-MEu6aWjPDs-ar6uWaGWuob-r0jwqU4EPZ3hdQF6D6BlQ-37VaZ2Wk6PhbCRNPv_Ox43zotu-RI-y-5IUzk6tlypLN4kXjp84QOMuyNs8P_7Cu_DfYqWNBoBwt8uLzLVWmJuw2j1Ihcp7JpHtBRlFikgFpx7h13YPZU15&skey=51363d29afc7180b&v=v53)
+          format("woff2");
+      }
+      @font-face {
+        font-family: "WDXL Lubrifont TC";
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/l/font?kit=nKKN-H4mPq1yJurnWXfJE8svQHonWc_7Csw76vt5n8P-xcmG7hzeHssJmQ5Yu_PpYO9-W_08gW5MKWadRmfYvylzVVvQbCEMFGs4u9dGrS3nzQi5wtpINGWKKS_klrKneMJ0vn_1h4bUKN6zMFaUTAR1LHg_L-QBHAg4cwQ4&skey=54c8ad5fbe0cde2e&v=v3)
+          format("woff2");
+      }
+
       html,
       h1,
       h2,
-      h3,
-      h4,
       body {
         font-family: "WDXL Lubrifont TC", "sans";
       }
       .grafito-title {
         font-weight: normal; /* Lubrifont is already quite bold */
-        font-size: 3rem; /* Adjust as needed */
+        font-size: 4rem; /* Adjust as needed */
         text-align: center;
         margin-bottom: 0.5rem;
       }
@@ -70,7 +80,7 @@
       .feature-card hgroup {
         margin-bottom: 1rem;
       }
-      .feature-card h3 {
+      .feature-card h2 {
         margin-bottom: 0.5rem;
       }
       .feature-card p {
@@ -164,7 +174,9 @@
         <div class="features-grid">
           <article class="feature-card">
             <hgroup>
-              <h3><span class="feature-icon emoji">🔍</span>Powerful Filtering</h3>
+              <h2>
+                <span class="feature-icon emoji">🔍</span>Powerful Filtering
+              </h2>
             </hgroup>
             <p>
               Quickly find what you need. Search by text, systemd unit, syslog
@@ -175,7 +187,9 @@
 
           <article class="feature-card">
             <hgroup>
-              <h3><span class="feature-icon emoji">📺</span>Live Log Streaming</h3>
+              <h2>
+                <span class="feature-icon emoji">📺</span>Live Log Streaming
+              </h2>
             </hgroup>
             <p>
               Monitor logs in real-time with the "Live View" feature. See new
@@ -186,9 +200,10 @@
 
           <article class="feature-card">
             <hgroup>
-              <h3>
-                <span class="feature-icon emoji">❔</span>Understand Your Commands
-              </h3>
+              <h2>
+                <span class="feature-icon emoji">❔</span>Understand Your
+                Commands
+              </h2>
             </hgroup>
             <p>
               Curious about the underlying `journalctl` magic? Grafito shows you
@@ -198,10 +213,10 @@
 
           <article class="feature-card">
             <hgroup>
-              <h3>
-                <span class="feature-icon emoji">🔗</span>Shareable & Bookmarkable
-                Views
-              </h3>
+              <h2>
+                <span class="feature-icon emoji">🔗</span>Shareable &
+                Bookmarkable Views
+              </h2>
             </hgroup>
             <p>
               Easily copy a URL that includes all your current filter settings.
@@ -212,7 +227,7 @@
 
           <article class="feature-card">
             <hgroup>
-              <h3><span class="feature-icon emoji">💾</span>Export Logs</h3>
+              <h2><span class="feature-icon emoji">💾</span>Export Logs</h2>
             </hgroup>
             <p>
               Need logs offline? Download your filtered log entries as a plain
@@ -223,7 +238,9 @@
 
           <article class="feature-card">
             <hgroup>
-              <h3><span class="feature-icon emoji">🏠</span>Self-Hosted & Secure</h3>
+              <h2>
+                <span class="feature-icon emoji">🏠</span>Self-Hosted & Secure
+              </h2>
             </hgroup>
             <p>
               Grafito runs on your own server. Your log data stays private and
@@ -234,9 +251,10 @@
 
           <article class="feature-card">
             <hgroup>
-              <h3>
-                <span class="feature-icon emoji">⚡</span>Lightweight & Responsive
-              </h3>
+              <h2>
+                <span class="feature-icon emoji">⚡</span>Lightweight &
+                Responsive
+              </h2>
             </hgroup>
             <p>
               Built with Crystal and HTMX, Grafito is designed to be fast and
@@ -247,7 +265,9 @@
 
           <article class="feature-card">
             <hgroup>
-              <h3><span class="feature-icon emoji">🎨</span>Clean & Intuitive UI</h3>
+              <h2>
+                <span class="feature-icon emoji">🎨</span>Clean & Intuitive UI
+              </h2>
             </hgroup>
             <p>
               A modern, clutter-free interface styled with PicoCSS. Supports
