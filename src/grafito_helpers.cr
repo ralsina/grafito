@@ -63,12 +63,14 @@ module Grafito
   end
 
   # Generates an HTML representation of log entries.
+  # ameba:disable Metrics/CyclomaticComplexity
   private def html_log_output(
     logs : Array(Journalctl::LogEntry),
     current_sort_by : String?,
     current_sort_order : String?,
     search_query : String?,
     chart : Bool = true,
+    highlight_cursor : String? = nil,
   ) : String
     HTML.build do
       if chart
@@ -132,7 +134,12 @@ module Grafito
             end
           else
             logs.each do |entry|
-              tr(class: "log-row-hover-actions priority-#{entry.priority.to_i}") do
+              row_classes = ["log-row-hover-actions", "priority-#{entry.priority.to_i}"]
+              entry_cursor = entry.data["__CURSOR"]?
+              if highlight_cursor && entry_cursor == highlight_cursor
+                row_classes << "highlighted-row"
+              end
+              tr(class: row_classes.join(" ")) do
                 td do
                   text entry.formatted_timestamp
                 end
@@ -152,15 +159,14 @@ module Grafito
                 td(class: "log-message-cell") do
                   html highlighted_message
                 end
-                cursor = entry.data["__CURSOR"]?
-                if cursor
+                if entry_cursor
                   # Details button
                   td(class: "hover-action-cell", style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
                     button({
                       "class"                     => "round-button emoji",
                       "title"                     => "View full details for this log entry",
-                      "hx-get"                    => "details?#{URI::Params.encode({"cursor" => cursor})}",
-                      "hx-target"                 => "#details-dialog-content",
+                      "hx-get"                    => "details?#{URI::Params.encode({"cursor" => entry_cursor})}",
+                      "hx-target"                 => "#details-dialog-content", # Target the content area within the modal
                       "hx-swap"                   => "innerHTML",
                       "hx-on:htmx:before-request" => "document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;",
                       "hx-on:htmx:after-request"  => "if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }",
@@ -173,8 +179,8 @@ module Grafito
                     button({
                       "class"                     => "round-button emoji",
                       "title"                     => "View context for this log entry (e.g., 5 before & 5 after)",
-                      "hx-get"                    => "context?#{URI::Params.encode({"cursor" => cursor})}",
-                      "hx-target"                 => "#details-dialog-content",
+                      "hx-get"                    => "context?#{URI::Params.encode({"cursor" => entry_cursor})}",
+                      "hx-target"                 => "#details-dialog-content", # Target the content area within the modal
                       "hx-swap"                   => "innerHTML",
                       "hx-on:htmx:before-request" => "document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;",
                       "hx-on:htmx:after-request"  => "if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }",

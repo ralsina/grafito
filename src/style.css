@@ -294,10 +294,18 @@ h1 {
 
 /* Styles for hover-to-show action buttons in log table */
 .hover-action-cell {
-  opacity: 0; /* Hidden by default */
-  transition: opacity 0.15s ease-in-out; /* Smooth transition */
+    opacity: 0;
+    /* Hidden by default */
+    transition: opacity 0.15s ease-in-out;
+    /* Smooth transition */
 }
 
 .log-row-hover-actions:hover .hover-action-cell {
-  opacity: 1; /* Visible on row hover */
+    opacity: 1;
+    /* Visible on row hover */
+}
+
+.highlighted-row {
+    border-left: solid 5px greenyellow !important;
+    font-weight: bold;
 }
