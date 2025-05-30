@@ -231,6 +231,11 @@
         </footer>
       </aside>
       <main>
+        <!-- Global HTMX Error Message Container -->
+        <div id="htmx-global-error-container" style="margin-bottom: 1em">
+          <!-- Error message will be injected here by JavaScript -->
+        </div>
+
         <!-- Spinner Element -->
         <div id="loading-spinner" class="htmx-indicator">
           <div>
@@ -308,6 +313,29 @@
       ];
 
       document.addEventListener("DOMContentLoaded", function () {
+        // --- GLOBAL HTMX ERROR HANDLER ---
+        const globalErrorContainer = document.getElementById(
+          "htmx-global-error-container"
+        );
+        if (globalErrorContainer) {
+          document.body.addEventListener("htmx:afterRequest", function (event) {
+            if (event.detail.error) {
+              console.error("HTMX Request Failed. Details:", event.detail); // For debugging
+              let errorText = event.detail.error.message || "Failed to send request"
+              globalErrorContainer.innerHTML = `
+                        <article role="alert" style="border: 1px solid var(--pico-form-element-invalid-border-color); background-color: var(--pico-form-element-invalid-background-color); color: var(--pico-color); padding: 1em;">
+                            <strong>Error:</strong> ${errorText}
+                        </article>`;
+              globalErrorContainer.style.display = "block";
+            } else if (event.detail.successful) {
+              // If any request succeeds, assume connectivity is restored and hide the global error.
+              globalErrorContainer.style.display = "none";
+              globalErrorContainer.innerHTML = "";
+            }
+          });
+        }
+        // --- END GLOBAL HTMX ERROR HANDLER ---
+
         // --- THEME SWITCHER LOGIC ---
         const themeSwitch = document.getElementById("theme-switch");
         const htmlElement = document.documentElement;

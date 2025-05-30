@@ -2,7 +2,7 @@
 
 * ~~Handle configurable URLs~~
 * Authentication
-* Better error handling (client side!)
+* ~~Better error handling (client side!)~~
 * ~~Docs~~
 * ~~Tests~~
 * ~~Site~~
