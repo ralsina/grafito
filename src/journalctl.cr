@@ -376,13 +376,13 @@ class Journalctl
   # Returns:
   #   An Array(LogEntry) parsed from the command output, or an empty array on failure.
   private def self.run_journalctl_and_parse(journalctl_args : Array(String), log_context_message : String) : Array(LogEntry)
+    command = ["journalctl"] + journalctl_args
     {% if flag?(:fake_journal) %}
       Log.info { "#{log_context_message}: Using FAKE journal data." }
       # The fake function's arguments are prefixed with '_' indicating they might not be fully used.
       # It's designed to match the signature for easy swapping.
       FakeJournalData.fake_run_journalctl_and_parse(journalctl_args, log_context_message)
     {% else %}
-      command = ["journalctl"] + journalctl_args
       Log.debug { "#{log_context_message}: Executing command: #{command.inspect}" }
 
       stdout = IO::Memory.new
@@ -404,12 +404,7 @@ class Journalctl
       end
     {% end %}
   rescue ex
-    {% if flag?(:fake_journal) %}
-      Log.error(exception: ex) { "#{log_context_message}: Error in fake data generation." }
-    {% else %}
-      # 'command' is defined in the 'else' branch of the flag check
-      Log.error(exception: ex) { "#{log_context_message}: Error executing journalctl. Command: #{command.inspect}" }
-    {% end %}
+    Log.error(exception: ex) { "#{log_context_message}: Error executing journalctl. Command: #{command.inspect}" }
     [] of LogEntry
   end
 
