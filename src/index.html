@@ -321,7 +321,8 @@
           document.body.addEventListener("htmx:afterRequest", function (event) {
             if (event.detail.error) {
               console.error("HTMX Request Failed. Details:", event.detail); // For debugging
-              let errorText = event.detail.error.message || "Failed to send request"
+              let errorText =
+                event.detail.error.message || "Failed to send request";
               globalErrorContainer.innerHTML = `
                         <article role="alert" style="border: 1px solid var(--pico-form-element-invalid-border-color); background-color: var(--pico-form-element-invalid-background-color); color: var(--pico-color); padding: 1em;">
                             <strong>Error:</strong> ${errorText}
@@ -331,6 +332,8 @@
               // If any request succeeds, assume connectivity is restored and hide the global error.
               globalErrorContainer.style.display = "none";
               globalErrorContainer.innerHTML = "";
+
+              updateBrowserURL();
             }
           });
         }
@@ -454,6 +457,7 @@
                 htmx.trigger(liveViewCheckbox, "change");
               }
               htmx.trigger(document.body, "initial-load-event", {}); // Reload logs
+              updateBrowserURL(); // Update URL after clearing filters
             });
           }
           // Apply initial state from localStorage
@@ -469,7 +473,8 @@
         }
       });
 
-      function copyShareableLink() {
+      // Helper function to build URLSearchParams from current filters
+      function buildFilterURLSearchParams() {
         const params = new URLSearchParams();
         SHARED_FILTER_CONFIGS.forEach((config) => {
           const element = document.getElementById(config.id);
@@ -478,13 +483,33 @@
               if (element.checked) {
                 params.set(config.param, config.trueValue);
               }
+              // If unchecked, the parameter is simply not added.
             } else if (element.value) {
-              // For text inputs and selects with a value
+              // For text inputs and selects.
+              // If element.value is "", like for "Any time", it will add "param=" to the query string.
+              // This is consistent with how copyShareableLink and exportLogsAsText work.
               params.set(config.param, element.value);
             }
           }
         });
+        return params;
+      }
 
+      function updateBrowserURL() {
+        const params = buildFilterURLSearchParams();
+
+        let queryString = params.toString();
+        const newUrl = queryString
+          ? window.location.origin +
+            window.location.pathname +
+            "?" +
+            queryString
+          : window.location.origin + window.location.pathname; // Clean URL if no params
+        window.history.pushState({ path: newUrl }, "", newUrl);
+      }
+
+      function copyShareableLink() {
+        const params = buildFilterURLSearchParams();
         const shareUrl =
           window.location.origin +
           window.location.pathname +
