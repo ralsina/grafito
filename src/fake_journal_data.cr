@@ -77,34 +77,34 @@ module FakeJournalData
       arg = journalctl_args[i]
       case arg
       when "-p"
-        val = journalctl_args[i + 1].to_i? # Assume value is present
+        val = journalctl_args[i + 1].to_i?
         target_priority_max_numeric = val if val && val.in?(0..7)
-        i += 1 # Consume the value
+        i += 1
       when "-u", "--unit"
-        target_unit = journalctl_args[i + 1] # Assume value is present
-        i += 1 # Consume the value
+        target_unit = journalctl_args[i + 1]
+        i += 1
       when "-n"
-        val = journalctl_args[i + 1].to_i? # Assume value is present
+        val = journalctl_args[i + 1].to_i?
         target_n_entries = val if val && val > 0
-        i += 1 # Consume the value
+        i += 1
       when "-t" # SYSLOG_IDENTIFIER to include
-        include_tags << journalctl_args[i + 1] # Assume value is present
-        i += 1 # Consume the value
+        include_tags << journalctl_args[i + 1]
+        i += 1
       when "-T" # SYSLOG_IDENTIFIER to exclude
-        exclude_tags << journalctl_args[i + 1] # Assume value is present
-        i += 1 # Consume the value
+        exclude_tags << journalctl_args[i + 1]
+        i += 1
       when "--cursor"
-        target_cursor_value = journalctl_args[i + 1] # Assume value is present
-        i += 1 # Consume the value
+        target_cursor_value = journalctl_args[i + 1]
+        i += 1
       when "-S", "--since"
-        since_time_str = journalctl_args[i + 1] # Assume value is present
-        i += 1 # Consume the value
+        since_time_str = journalctl_args[i + 1]
+        i += 1
       when "--until"
-        until_time_str = journalctl_args[i + 1] # Assume value is present
-        i += 1 # Consume the value
+        until_time_str = journalctl_args[i + 1]
+        i += 1
       when "-g" # Grep query
-        grep_query = journalctl_args[i + 1] # Assume value is present
-        i += 1 # Consume the value
+        grep_query = journalctl_args[i + 1]
+        i += 1
       when "-r", "--reverse"
         should_reverse_order = true
       end
