@@ -467,14 +467,6 @@
           // Trigger the initial load for #results after filters are set from URL
           htmx.trigger(document.body, "initial-load-event", {});
         }
-
-        // Disable copy link button if not in a secure context
-        const copyLinkButton = document.getElementById("copy-link-button");
-        if (copyLinkButton && !window.isSecureContext) {
-          copyLinkButton.disabled = true;
-          copyLinkButton.title =
-            "Cannot copy link: Page is not loaded in a secure context (HTTPS).";
-        }
       });
 
       function copyShareableLink() {
@@ -498,10 +490,16 @@
           window.location.pathname +
           "?" +
           params.toString();
-        navigator.clipboard
-          .writeText(shareUrl)
-          .then(() => alert("Link copied to clipboard!"))
-          .catch((err) => alert("Failed to copy link: " + err));
+
+        if (window.isSecureContext && navigator.clipboard) {
+          navigator.clipboard
+            .writeText(shareUrl)
+            .then(() => alert("Link copied to clipboard!"))
+            .catch((err) => alert("Failed to copy link: " + err));
+        } else {
+          // Fallback for non-secure contexts or if clipboard API is not available
+          alert("Shareable Link (copy manually):\n\n" + shareUrl);
+        }
       }
 
       function exportLogsAsText() {
