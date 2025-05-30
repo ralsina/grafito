@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2025-05-30
+
+### 🚀 Features
+
+- Highlight central line in context view
+- Client-side network error handling
+
+### 🐛 Bug Fixes
+
+- Some table headers were double-quoted
+
+### 💼 Other
+
+- Slightly faster
+
+### 🚜 Refactor
+
+- Remove unused unit_filter_active parameter
+- Simpler code
+
+### 🧪 Testing
+
+- Unit tests for fake data generator
+
 ## [0.6.0] - 2025-05-29
 
 ### 🚀 Features
@@ -16,6 +40,7 @@ All notable changes to this project will be documented in this file.
 ### 💼 Other
 
 - Build demo server for ... demo purposes
+- Release v0.6.0
 
 ### 🚜 Refactor
 
