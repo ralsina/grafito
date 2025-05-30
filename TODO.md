@@ -1,7 +1,7 @@
 # Things To Do
 
 * ~~Handle configurable URLs~~
-* Authentication
+* ~~Authentication~~
 * ~~Better error handling (client side!)~~
 * ~~Docs~~
 * ~~Tests~~

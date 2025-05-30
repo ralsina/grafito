@@ -9,8 +9,6 @@ targets:
     main: src/main.cr
 
 dependencies:
-  kemal:
-    github: kemalcr/kemal
   baked_file_system:
     github: ralsina/baked_file_system
     branch: master
@@ -18,11 +16,15 @@ dependencies:
     github: ralsina/docopt.cr
   html_builder:
     github: crystal-lang/html_builder
+  kemal:
+    github: kemalcr/kemal
+  kemal-basic-auth:
+    github: kemalcr/kemal-basic-auth
 
 development_dependencies:
   faker:
     github: askn/faker
 
-crystal: ">= 1.16.0"
+crystal: ">=1.16.0"
 
 license: MIT

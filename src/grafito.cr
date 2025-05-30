@@ -1,10 +1,10 @@
-require "kemal"
-require "mime"
-require "json"
+require "./grafito_helpers"
 require "./journalctl"
 require "./timeline"
-require "./grafito_helpers"
 require "baked_file_system"
+require "json"
+require "kemal"
+require "mime"
 
 module Grafito
   extend self
