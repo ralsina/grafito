@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2025-05-30
+
+### 🚀 Features
+
+- Basic auth support
+
+### 🐛 Bug Fixes
+
+- Make link useful in unsafe connections
+- Update the URL whenever a filter changes so it matches the set filters
+
 ## [0.7.0] - 2025-05-30
 
 ### 🚀 Features
@@ -16,6 +27,7 @@ All notable changes to this project will be documented in this file.
 ### 💼 Other
 
 - Slightly faster
+- Release v0.7.0
 
 ### 🚜 Refactor
 
