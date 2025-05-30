@@ -77,52 +77,34 @@ module FakeJournalData
       arg = journalctl_args[i]
       case arg
       when "-p"
-        if i + 1 < journalctl_args.size
-          val = journalctl_args[i + 1].to_i?
-          target_priority_max_numeric = val if val && val.in?(0..7)
-          i += 1 # Consume the value
-        end
+        val = journalctl_args[i + 1].to_i? # Assume value is present
+        target_priority_max_numeric = val if val && val.in?(0..7)
+        i += 1 # Consume the value
       when "-u", "--unit"
-        if i + 1 < journalctl_args.size
-          target_unit = journalctl_args[i + 1]
-          i += 1 # Consume the value
-        end
+        target_unit = journalctl_args[i + 1] # Assume value is present
+        i += 1 # Consume the value
       when "-n"
-        if i + 1 < journalctl_args.size
-          val = journalctl_args[i + 1].to_i?
-          target_n_entries = val if val && val > 0
-          i += 1 # Consume the value
-        end
+        val = journalctl_args[i + 1].to_i? # Assume value is present
+        target_n_entries = val if val && val > 0
+        i += 1 # Consume the value
       when "-t" # SYSLOG_IDENTIFIER to include
-        if i + 1 < journalctl_args.size
-          include_tags << journalctl_args[i + 1]
-          i += 1 # Consume the value
-        end
+        include_tags << journalctl_args[i + 1] # Assume value is present
+        i += 1 # Consume the value
       when "-T" # SYSLOG_IDENTIFIER to exclude
-        if i + 1 < journalctl_args.size
-          exclude_tags << journalctl_args[i + 1]
-          i += 1 # Consume the value
-        end
+        exclude_tags << journalctl_args[i + 1] # Assume value is present
+        i += 1 # Consume the value
       when "--cursor"
-        if i + 1 < journalctl_args.size
-          target_cursor_value = journalctl_args[i + 1]
-          i += 1 # Consume the value
-        end
+        target_cursor_value = journalctl_args[i + 1] # Assume value is present
+        i += 1 # Consume the value
       when "-S", "--since"
-        if i + 1 < journalctl_args.size
-          since_time_str = journalctl_args[i + 1]
-          i += 1 # Consume the value
-        end
+        since_time_str = journalctl_args[i + 1] # Assume value is present
+        i += 1 # Consume the value
       when "--until"
-        if i + 1 < journalctl_args.size
-          until_time_str = journalctl_args[i + 1]
-          i += 1 # Consume the value
-        end
+        until_time_str = journalctl_args[i + 1] # Assume value is present
+        i += 1 # Consume the value
       when "-g" # Grep query
-        if i + 1 < journalctl_args.size
-          grep_query = journalctl_args[i + 1]
-          i += 1 # Consume the value
-        end
+        grep_query = journalctl_args[i + 1] # Assume value is present
+        i += 1 # Consume the value
       when "-r", "--reverse"
         should_reverse_order = true
       end
