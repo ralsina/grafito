@@ -1,9 +1,9 @@
 html {
-    font-size: 85%;
+    font-size: 80%;
 }
 
 body {
-    font-family: "WDXL Lubrifont TC", sans-serif;
+    font-family: "Chivo", sans-serif;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -177,7 +177,7 @@ main {
 
 #results {
     white-space: pre-wrap;
-    font-family: monospace;
+    font-family: "Chivo Mono", monospace;
     overflow-x: auto;
 }
 
@@ -206,7 +206,7 @@ footer.container-fluid .theme-switch-wrapper {
 }
 
 h1 {
-    font-family: "WDXL Lubrifont TC", sans-serif;
+    font-family: "Chivo", sans-serif; /* Explicitly set for h1, or can inherit from body */
     font-size: 4em;
     margin-bottom: 0;
 }
@@ -276,6 +276,7 @@ h1 {
     white-space: normal;
     overflow-wrap: break-word;
     word-wrap: break-word;
+    font-family: "Chivo Mono", monospace;
     max-width: 60vw;
 }
 
