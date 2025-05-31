@@ -12,32 +12,37 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
     />
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com" /> -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- <link
+      href="https://fonts.googleapis.com/css2?family=Chivo&family=Noto+Emoji&display=swap&text=%20!%22%26().%2C-.%3FABCDEFGHIJKLMNOPQRSTUVWXYZ%60abcdefghijklmnopqrstuvwxyz15%7C%F0%9F%94%8D%F0%9F%93%BA%E2%9D%94%F0%9F%94%97%F0%9F%92%BE%F0%9F%8F%A0%E2%9A%A1%F0%9F%8E%A8%F0%9F%8F%83%F0%9F%96%A5%EF%B8%8E%F0%9F%8C%9E%F0%9F%8C%92"
+      rel="stylesheet"
+    /> -->
+
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <title>Grafito - Friendly Systemd Journal Log Viewer</title>
     <style>
+      @font-face {
+        font-family: "Chivo";
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/l/font?kit=va9b4kzIxd1KFppkaRKvDRPJVDf_vB_uknilPVjqrpshY53g0jQtKsUjf6dY3PK7k0PkF31LpY2qQZBlmcFn1dbTMDu2jjSZ30TKHpdMrItwfUp5H1YRusrnkw5w8a4ZPQMsmCkjAFsU2FbwS8PkRuL3O3Q8f31ghlAtrRElN6qT1r1V1QUfv_M_SxRoGw&skey=c7ef26a9bd28e2ff&v=v18)
+          format("woff2");
+      }
       @font-face {
         font-family: "Noto Emoji";
         font-style: normal;
         font-weight: 400;
         font-display: swap;
-        src: url(https://fonts.gstatic.com/l/font?kit=bMrnmSyK7YY-MEu6aWjPDs-ar6uWaGWuob-r0jwqU4EPZ3hdQF6D6BlQ-37VaZ2Wk6PhbCRNPv_Ox43zotu-RI-y-5IUzk6tlypLN4kXjp84QOMuyNs8P_7Cu_DfYqWNBoBwt8uLzLVWmJuw2j1Ihcp7JpHtBRlFikgFpx7h13YPZU15&skey=51363d29afc7180b&v=v53)
+        src: url(https://fonts.gstatic.com/l/font?kit=bMrnmSyK7YY-MEu6aWjPDs-ar6uWaGWuob-r0jwqU5ZuBBk_LTHojX4rhQzaZI6DhLbycTtQLerZ6KDAl-yLd7KNxqEh-UCjhThdIZsFkIEqUvWhPBWu0xhedwtZilFmjGMes5r234lJv5rDtS5V1aVoKt-CFCIP5VgS2nHx4xFgaGUse1q__24NNIxO6JbIudZy&skey=51363d29afc7180b&v=v54)
           format("woff2");
       }
-      @font-face {
-        font-family: "WDXL Lubrifont TC";
-        font-style: normal;
-        font-weight: 400;
-        font-display: swap;
-        src: url(https://fonts.gstatic.com/l/font?kit=nKKN-H4mPq1yJurnWXfJE8svQHonWc_7Csw76vt5n8P-xcmG7hzeHssJmQ5Yu_PpYO9-W_08gW5MKWadRmfYvylzVVvQbCEMFGs4u9dGrS3nzQi5wtpINGWKKS_klrKneMJ0vn_1h4bUKN6zMFaUTAR1LHg_L-QBHAg4cwQ4&skey=54c8ad5fbe0cde2e&v=v3)
-          format("woff2");
-      }
-
       html,
       h1,
       h2,
       body {
-        font-family: "WDXL Lubrifont TC", "sans";
+        font-family: "Chivo", "sans";
       }
       .grafito-title {
         font-weight: normal;

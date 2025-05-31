@@ -19,6 +19,9 @@ module Grafito
     bake_file "index.html", {{ read_file "#{__DIR__}/index.html" }}
     bake_file "favicon.svg", {{ read_file "#{__DIR__}/favicon.svg" }}
     bake_file "style.css", {{ read_file "#{__DIR__}/style.css" }}
+    bake_file "pico.min.css", {{ read_file "#{__DIR__}/pico.min.css" }}
+    bake_file "robots.txt", {{ read_file "#{__DIR__}/robots.txt" }}
+    bake_file "htmx.org@1.9.10.js", {{ read_file "#{__DIR__}/htmx.org@1.9.10.js" }}
   end
 
   get "/" do |env|
@@ -30,6 +33,7 @@ module Grafito
     file_content = Assets.get(filename)
     content_type = MIME.from_extension("." + filename.split(".").last)
     env.response.content_type = content_type
+    env.response.headers.add("Cache-Control", "max-age=604800")
     env.response.print file_content.gets_to_end
   rescue KeyError
     env.response.status_code = 404
