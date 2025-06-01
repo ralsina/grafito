@@ -151,7 +151,13 @@ module Grafito
                   text entry.timestamp.to_s("%m-%d %H:%M:%S")
                 end
                 td do
-                  text HTML.escape(entry.unit)
+                  # Make the unit name clickable to set the filter
+                  display_unit_name = HTML.escape(entry.unit)
+                  # JSON.generate creates a valid JavaScript string literal, e.g., "\"my-unit\""
+                  js_arg_unit_name = entry.unit.to_json
+                  a(href: "#", onclick: "return setUnitFilterAndTrigger(#{js_arg_unit_name});") do
+                    text display_unit_name
+                  end
                 end
                 td do
                   text HTML.escape(entry.formatted_priority)

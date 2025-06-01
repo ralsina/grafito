@@ -94,7 +94,7 @@
             placeholder="Unit (e.g., docker)"
             title="Filter logs by systemd unit (e.g., nginx)"
             hx-get="logs"
-            hx-trigger="keyup changed delay:500ms"
+            hx-trigger="keyup delay:500ms, change delay:500ms, immediateUnitFilterUpdate"
             hx-target="#results"
             class="log-filter"
             hx-indicator="#loading-spinner"
@@ -602,6 +602,16 @@
         document.body.appendChild(tempLink); // Append to body (needed for Firefox)
         tempLink.click(); // Programmatically click the link to trigger download
         document.body.removeChild(tempLink); // Clean up the temporary link
+      }
+
+      function setUnitFilterAndTrigger(unitName) {
+        const unitFilterInput = document.getElementById('unit-filter');
+        if (unitFilterInput) {
+          unitFilterInput.value = unitName;
+          // Trigger a custom event that is configured for immediate HTMX requests
+          htmx.trigger(unitFilterInput, 'immediateUnitFilterUpdate');
+        }
+        return false; // Prevent default anchor link behavior
       }
     </script>
   </body>
