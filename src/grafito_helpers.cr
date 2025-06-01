@@ -169,7 +169,7 @@ module Grafito
                   # Details button
                   td(class: "hover-action-cell", style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
                     button({
-                      "class"                     => "round-button emoji",
+                      "class"                     => "round-button",
                       "title"                     => "View full details for this log entry",
                       "hx-get"                    => "details?#{URI::Params.encode({"cursor" => entry_cursor})}",
                       "hx-target"                 => "#details-dialog-content", # Target the content area within the modal
@@ -185,7 +185,7 @@ module Grafito
                   # Context button
                   td(class: "hover-action-cell", style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
                     button({
-                      "class"                     => "round-button emoji",
+                      "class"                     => "round-button",
                       "title"                     => "View context for this log entry (e.g., 5 before & 5 after)",
                       "hx-get"                    => "context?#{URI::Params.encode({"cursor" => entry_cursor})}",
                       "hx-target"                 => "#details-dialog-content", # Target the content area within the modal

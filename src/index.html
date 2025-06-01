@@ -8,10 +8,7 @@
     <link rel="stylesheet" href="pico.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&family=Noto+Emoji&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet" />
     <link
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet"
@@ -34,6 +31,7 @@
         aria-expanded="true"
         aria-controls="filters-sidebar"
         title="Hide Filters Sidebar"
+        style="font-size: 0.7em; padding: 0.35rem 0.5rem;"
       >
         <span class="material-icons" style="vertical-align: middle">menu</span>
       </button>
@@ -148,7 +146,7 @@
           <div class="sidebar-buttons-row">
             <button
               id="show-command-button"
-              class="secondary emoji"
+              class="secondary"
               aria-label="Show equivalent command"
               title="Show equivalent journalctl command"
               hx-get="command"
@@ -163,7 +161,7 @@
             </button>
             <button
               id="clear-filters-btn"
-              class="secondary emoji"
+              class="secondary"
               title="Clear all filters"
             >
               <span class="material-icons" style="vertical-align: middle"
@@ -172,7 +170,7 @@
             </button>
             <button
               id="copy-link-button"
-              class="secondary emoji"
+              class="secondary"
               aria-label="Copy shareable link"
               title="Copy link with current filters"
               onclick="copyShareableLink()"
@@ -183,7 +181,7 @@
             </button>
             <button
               id="export-logs-button"
-              class="secondary emoji"
+              class="secondary"
               aria-label="Export logs"
               title="Export current logs as text"
               onclick="exportLogsAsText()"
