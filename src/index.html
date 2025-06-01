@@ -54,7 +54,6 @@
         aria-expanded="true"
         aria-controls="filters-sidebar"
         title="Hide Filters Sidebar"
-        style="font-size: 0.7em; padding: 0.35rem 0.5rem;"
       >
         <span class="material-icons" style="vertical-align: middle">menu</span>
       </button>
@@ -237,15 +236,15 @@
         <footer class="container-fluid">
           <a href="https://links.ralsina.me" style="text-decoration: none"
             ><span class="material-icons" style="vertical-align: middle"
-              >directions_run</span
-            >Roberto Alsina|</a
-          >
+              >directions_run</span >
+            Roberto Alsina</a >
+          <span> | </span>
           <a href="https://grafito.ralsina.me"
             ><span class="material-icons" style="vertical-align: middle"
               >home</span
             ></a
           >
-          <span>|</span>
+          <span> | </span>
           <a href="https://github.com/ralsina/grafito"
             ><span class="material-icons" style="vertical-align: middle"
               >code</span
@@ -254,19 +253,11 @@
           <hr />
           <div class="theme-switch-wrapper">
             <label for="theme-switch" title="Toggle light/dark mode">
-              <input
-                type="checkbox"
-                id="theme-switch"
-                name="theme"
-                role="switch"
-              /><label for="theme-switch" title="Toggle light/dark mode"
-                ><span class="material-icons" style="vertical-align: middle"
-                  >dark_mode</span
-                ><span class="material-icons" style="vertical-align: middle"
-                  >light_mode</span
-                ></label
-              ></label
-            >
+              <input type="checkbox" id="theme-switch" name="theme" role="switch" />
+              <!-- Icons should be siblings of the input, within the same label -->
+              <span class="material-icons" style="vertical-align: middle">dark_mode</span>
+              <span class="material-icons" style="vertical-align: middle">light_mode</span>
+            </label>
           </div>
         </footer>
       </aside>
@@ -444,8 +435,7 @@
 
         // Constants for button and sidebar interaction
         const BUTTON_TITLE_EXPAND = "Show Filters Sidebar";
-        const BUTTON_TITLE_COLLAPSE = "Hide Filters Sidebar";
-        const BUTTON_FIXED_LEFT_OFFSET = "1rem"; // Button's fixed distance from the left edge of the viewport (matches CSS)
+        const BUTTON_TITLE_COLLAPSE = "Hide Filters Sidebar"; // BUTTON_FIXED_LEFT_OFFSET was unused
         function setSidebarState(isCollapsed) {
           // Ensure all necessary elements exist
           if (!sidebar || !toggleButton || !mainContent) {
@@ -463,9 +453,6 @@
             sidebar.classList.remove("collapsed");
             toggleButton.setAttribute("aria-expanded", "true");
             toggleButton.setAttribute("title", BUTTON_TITLE_COLLAPSE);
-            // Note: The button's left position is now handled by CSS position: fixed
-            // and the BUTTON_FIXED_LEFT_OFFSET constant is for documentation/potential JS override
-            // toggleButton.style.left = BUTTON_FIXED_LEFT_OFFSET; // This line is no longer needed here
           }
         }
 
