@@ -11,28 +11,14 @@ module Grafito
   # Setup a logger for this module
   Log = ::Log.for(self)
 
-  VERSION = {{ `shards version #{__DIR__}`.chomp.stringify }}
+  VERSION = {{ `shards version #{__DIR__}/../`.chomp.stringify }} # Adjusted path for shards version
 
   # Any assets we want baked into the binary.
   class Assets
     extend BakedFileSystem
-    bake_file "index.html", {{ read_file "#{__DIR__}/index.html" }}
-    bake_file "favicon.svg", {{ read_file "#{__DIR__}/favicon.svg" }}
-    bake_file "style.css", {{ read_file "#{__DIR__}/style.css" }}
-    bake_file "pico.min.css", {{ read_file "#{__DIR__}/pico.min.css" }}
-    bake_file "robots.txt", {{ read_file "#{__DIR__}/robots.txt" }}
-    bake_file "htmx.org@1.9.10.js", {{ read_file "#{__DIR__}/htmx.org@1.9.10.js" }}
-  end
-
-  def serve_file(env, filename)
-    file_content = Assets.get(filename)
-    content_type = MIME.from_extension("." + filename.split(".").last)
-    env.response.content_type = content_type
-    env.response.headers.add("Cache-Control", "max-age=604800")
-    env.response.print file_content.gets_to_end
-  rescue KeyError
-    env.response.status_code = 404
-    env.response.print "File not found"
+    # Bake all files from the src/assets directory.
+    # The keys in the baked FS will be like "assets/index.html", "assets/style.css", etc.
+    bake_folder "./assets"
   end
 
   get "/" do |env|
@@ -42,6 +28,20 @@ module Grafito
   get "/:file" do |env|
     filename = env.params.url["file"]
     serve_file(env, filename)
+  end
+
+  # Serves a file from the baked assets.
+  # `requested_filename` is the name of the file as requested by the client (e.g., "style.css").
+  private def serve_file(env, requested_filename)
+    baked_path = "/#{requested_filename}" # Files are stored under the "assets" prefix
+    file_content = Assets.get(baked_path)
+    content_type = MIME.from_extension("." + requested_filename.split(".").last)
+    env.response.content_type = content_type
+    env.response.headers.add("Cache-Control", "max-age=604800") # Cache for 1 week
+    env.response.print file_content.gets_to_end
+  rescue KeyError
+    env.response.status_code = 404
+    env.response.print "File not found: #{HTML.escape(requested_filename)}"
   end
 
   # Exposes the Journalctl wrapper via a REST API.
