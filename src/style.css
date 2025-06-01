@@ -289,10 +289,6 @@ h1 {
     /* Optional: add a border for more emphasis */
 }
 
-.emoji {
-    font-family: "Noto Emoji", sans-serif;
-}
-
 /* Styles for hover-to-show action buttons in log table */
 .hover-action-cell {
     opacity: 0;

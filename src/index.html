@@ -24,6 +24,29 @@
     hx-trigger="load"
     hx-swap="innerHTML"
   >
+    <!-- Global HTMX Error Dialog -->
+    <dialog id="global-error-dialog">
+      <article>
+        <header>
+          <a
+            href="#close"
+            aria-label="Close"
+            class="close"
+            onclick="this.closest('dialog').close(); return false;"
+          ></a>
+          Network Error
+        </header>
+        <div id="global-error-dialog-content">
+          <!-- Error message will be injected here by JavaScript -->
+        </div>
+        <footer>
+          <form method="dialog" style="margin-bottom: 0">
+            <button type="submit" class="secondary">Close</button>
+          </form>
+        </footer>
+      </article>
+    </dialog>
+
     <div id="page-content-layout" class="container-fluid">
       <button
         id="toggle-sidebar-btn"
@@ -248,10 +271,6 @@
         </footer>
       </aside>
       <main>
-        <!-- Global HTMX Error Message Container -->
-        <div id="htmx-global-error-container" style="margin-bottom: 1em">
-          <!-- Error message will be injected here by JavaScript -->
-        </div>
 
         <!-- Spinner Element -->
         <div id="loading-spinner" class="htmx-indicator">
@@ -331,24 +350,29 @@
 
       document.addEventListener("DOMContentLoaded", function () {
         // --- GLOBAL HTMX ERROR HANDLER ---
-        const globalErrorContainer = document.getElementById(
-          "htmx-global-error-container"
-        );
-        if (globalErrorContainer) {
+        const globalErrorDialog = document.getElementById("global-error-dialog");
+        const globalErrorDialogContent = document.getElementById("global-error-dialog-content");
+
+        if (globalErrorDialog && globalErrorDialogContent) {
           document.body.addEventListener("htmx:afterRequest", function (event) {
             if (event.detail.error) {
               console.error("HTMX Request Failed. Details:", event.detail); // For debugging
               let errorText =
                 event.detail.error.message || "Failed to send request";
-              globalErrorContainer.innerHTML = `
-                        <article role="alert" style="border: 1px solid var(--pico-form-element-invalid-border-color); background-color: var(--pico-form-element-invalid-background-color); color: var(--pico-color); padding: 1em;">
-                            <strong>Error:</strong> ${errorText}
-                        </article>`;
-              globalErrorContainer.style.display = "block";
+              // Using Pico's alert-like styling within the dialog content
+              globalErrorDialogContent.innerHTML = `
+                <p role="alert" style="border: 1px solid var(--pico-form-element-invalid-border-color); background-color: var(--pico-form-element-invalid-background-color); color: var(--pico-color); padding: 1em; margin-bottom:0;">
+                  <strong>Details:</strong> ${errorText}
+                </p>`;
+              if (!globalErrorDialog.open) {
+                globalErrorDialog.showModal();
+              }
             } else if (event.detail.successful) {
-              // If any request succeeds, assume connectivity is restored and hide the global error.
-              globalErrorContainer.style.display = "none";
-              globalErrorContainer.innerHTML = "";
+              // If any request succeeds, assume connectivity is restored and close the global error dialog if it's open.
+              if (globalErrorDialog.open) {
+                globalErrorDialog.close();
+                globalErrorDialogContent.innerHTML = ""; // Clear content
+              }
 
               updateBrowserURL();
             }
