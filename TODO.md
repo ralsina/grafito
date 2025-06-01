@@ -11,3 +11,4 @@
 * ~~Implement "context": link an entry to unfiltered nearby entries.~~
 * ~~Implement "detail": show all the fields in a table for a specific entry~~
 * ~~Use <https://github.com/crystal-lang/html_builder> to build HTML~~
+* Make it literate, push through crycco, produce nice site
