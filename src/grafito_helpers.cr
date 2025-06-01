@@ -113,12 +113,12 @@ module Grafito
           tr do
             headers_to_display.each do |header|
               if header[:key_name] == "details" || header[:key_name] == "context"
-                th(style: "width: 1%;") do
+                th(style: "width: 1%; vertical-align: middle;") do
                   html header[:text] # Non-sortable, minimal width header
                 end
               else
                 th({
-                  "style"        => "cursor: pointer;",
+                  "style"        => "cursor: pointer; vertical-align: middle;",
                   "hx-get"       => "/logs",
                   "hx-vals"      => header[:hx_vals],
                   "hx-include"   => "#search-box, #unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view",
@@ -146,8 +146,9 @@ module Grafito
                 row_classes << "highlighted-row"
               end
               tr(class: row_classes.join(" ")) do
-                td do
-                  text entry.formatted_timestamp
+                td(style: "white-space: nowrap; min-width: 14ch;") do
+                  # Using a more compact timestamp format: MM-DD HH:MM:SS
+                  text entry.timestamp.to_s("%m-%d %H:%M:%S")
                 end
                 td do
                   text HTML.escape(entry.unit)
