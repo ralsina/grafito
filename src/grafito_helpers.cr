@@ -89,24 +89,24 @@ module Grafito
       end
 
       # Display results count
-      count_message = if logs.size == 5000
-                        "Results limited to latest 5000 entries."
-                      elsif logs.size == 1
-                        "Showing 1 entry."
-                      else
-                        "Showing #{logs.size} entries." # Handles 0 and other counts
-                      end
+      count_message_inner_text = if logs.size == 5000
+                                   "showing first 5000 entries"
+                                 elsif logs.size == 1
+                                   "showing 1 entry"
+                                 else
+                                   "showing #{logs.size} entries" # Handles 0 and other counts
+                                 end
+
+      # Prepare the styled count message for the header
+      styled_count_span = %Q(<span style="font-style: italic; font-size: 0.9em; color: var(--pico-muted-color); margin-left: 0.5em;">(#{count_message_inner_text})</span>)
+      message_header_text = "Message #{styled_count_span}"
 
       headers_to_display = [_generate_header_attributes("timestamp", "Timestamp", current_sort_by, current_sort_order)]
       headers_to_display << _generate_header_attributes("unit", "Unit", current_sort_by, current_sort_order)
       headers_to_display << _generate_header_attributes("priority", "Priority", current_sort_by, current_sort_order)
-      headers_to_display << _generate_header_attributes("message", "Message", current_sort_by, current_sort_order)
+      headers_to_display << _generate_header_attributes("message", message_header_text, current_sort_by, current_sort_order)
       headers_to_display << {text: "", hx_vals: "", key_name: "details"}
       headers_to_display << {text: "", hx_vals: "", key_name: "context"}
-
-      p(class: "results-count") do # ameba:disable Lint/DebugCalls
-        text count_message
-      end
 
       table(class: "striped") do
         thead do
