@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.2] - 2025-06-01
+
+### 🐛 Bug Fixes
+
+- Use actual icons instead of emoji
+- Show sorting indicator more consistently
+
+### 🎨 Styling
+
+- No more emoji class/font
+- More compact rows in log table
+- Error messages are now a dialog for better ux
+- Integrate message counter in table heading
+
 ## [0.8.1] - 2025-06-01
 
 ### 🐛 Bug Fixes
@@ -10,6 +24,10 @@ All notable changes to this project will be documented in this file.
 - Use chivo fonts
 - Avoid a redirect
 - Avoid chrome complaint
+
+### 💼 Other
+
+- Release v0.8.1
 
 ### 🎨 Styling
 
