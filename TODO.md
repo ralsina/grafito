@@ -12,3 +12,4 @@
 * ~~Implement "detail": show all the fields in a table for a specific entry~~
 * ~~Use <https://github.com/crystal-lang/html_builder> to build HTML~~
 * Make it literate, push through crycco, produce nice site
+* Replace emoji icons with actual icons (see https://fonts.google.com/icons)
