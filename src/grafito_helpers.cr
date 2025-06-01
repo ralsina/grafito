@@ -24,17 +24,23 @@ module Grafito
     sort_indicator = ""
     next_sort_order_for_click = "asc" # Default next sort is ascending
 
-    if current_sort_by == column_key_name
-      case current_sort_order # rubocop:disable Lint/SendWithMixinArgument
+    if current_sort_by == column_key_name # This column is currently being sorted
+      case current_sort_order
       when "asc" # Up arrow for ascending
         sort_indicator = %q( <span class="material-icons" aria-hidden="true" style="font-size: inherit; vertical-align: middle;">arrow_upward</span>)
         next_sort_order_for_click = "desc" # Next click will be descending
-      when "desc" # Down arrow for descending
+      when "desc"                          # Down arrow for descending
         sort_indicator = %q( <span class="material-icons" aria-hidden="true" style="font-size: inherit; vertical-align: middle;">arrow_downward</span>)
         next_sort_order_for_click = "asc" # Next click will be ascending
-      else # current_sort_order is nil or something else, treat as unsorted for this column
+      else                                # current_sort_order is nil or unexpected, default to ascending for next click
         next_sort_order_for_click = "asc"
       end
+    elsif current_sort_by.nil? && column_key_name == "timestamp"
+      # No specific sort requested by user, and this is the timestamp column.
+      # Default sort is by timestamp, descending.
+      sort_indicator = %q( <span class="material-icons" aria-hidden="true" style="font-size: inherit; vertical-align: middle;">arrow_downward</span>)
+      # If user clicks on timestamp, the next sort should be ascending.
+      next_sort_order_for_click = "asc"
     end
 
     vals_json = %({"sort_by": "#{column_key_name}", "sort_order": "#{next_sort_order_for_click}"})
