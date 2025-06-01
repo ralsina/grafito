@@ -12,6 +12,10 @@
       href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&family=Noto+Emoji&display=swap"
       rel="stylesheet"
     />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="style.css" />
     <title>Grafito Log Viewer</title>
@@ -31,7 +35,7 @@
         aria-controls="filters-sidebar"
         title="Hide Filters Sidebar"
       >
-        ☰
+        <span class="material-icons" style="vertical-align: middle">menu</span>
       </button>
       <aside id="filters-sidebar">
         <hgroup class="sidebar-header-info" style="text-align: right">
@@ -153,14 +157,18 @@
               hx-swap="none"
               hx-on:htmx:after-request="if(event.detail.successful) alert('These filters are the equivalent of: ' + event.detail.xhr.responseText); else alert('Error fetching command: ' + event.detail.xhr.statusText + '\\nCheck console for more details.');"
             >
-              ❔
+              <span class="material-icons" style="vertical-align: middle"
+                >help_outline</span
+              >
             </button>
             <button
               id="clear-filters-btn"
               class="secondary emoji"
               title="Clear all filters"
             >
-              ❌
+              <span class="material-icons" style="vertical-align: middle"
+                >clear</span
+              >
             </button>
             <button
               id="copy-link-button"
@@ -169,7 +177,9 @@
               title="Copy link with current filters"
               onclick="copyShareableLink()"
             >
-              🔗
+              <span class="material-icons" style="vertical-align: middle"
+                >link</span
+              >
             </button>
             <button
               id="export-logs-button"
@@ -178,7 +188,9 @@
               title="Export current logs as text"
               onclick="exportLogsAsText()"
             >
-              💾
+              <span class="material-icons" style="vertical-align: middle"
+                >save_alt</span
+              >
             </button>
             <div class="live-view-controls">
               <label
@@ -203,25 +215,37 @@
         <datalist id="unit-suggestions"></datalist>
         <footer class="container-fluid">
           <a href="https://links.ralsina.me" style="text-decoration: none"
-            ><span class="emoji">🏃</span>Roberto Alsina</a
+            ><span class="material-icons" style="vertical-align: middle"
+              >directions_run</span
+            >Roberto Alsina|</a
           >
-          <span>//</span>
-          <a href="https://grafito.ralsina.me"><span class="emoji">🏠</span></a>
-          <span>//</span>
+          <a href="https://grafito.ralsina.me"
+            ><span class="material-icons" style="vertical-align: middle"
+              >home</span
+            ></a
+          >
+          <span>|</span>
           <a href="https://github.com/ralsina/grafito"
-            ><span class="emoji">🖥︎</span></a
+            ><span class="material-icons" style="vertical-align: middle"
+              >code</span
+            ></a
           >
           <hr />
           <div class="theme-switch-wrapper">
             <label for="theme-switch" title="Toggle light/dark mode">
-              <span class="emoji">🌞</span
-              ><input
+              <input
                 type="checkbox"
                 id="theme-switch"
                 name="theme"
                 role="switch"
-              /><span class="emoji">🌒</span>
-            </label>
+              /><label for="theme-switch" title="Toggle light/dark mode"
+                ><span class="material-icons" style="vertical-align: middle"
+                  >dark_mode</span
+                ><span class="material-icons" style="vertical-align: middle"
+                  >light_mode</span
+                ></label
+              ></label
+            >
           </div>
         </footer>
       </aside>

@@ -25,14 +25,14 @@ module Grafito
     next_sort_order_for_click = "asc" # Default next sort is ascending
 
     if current_sort_by == column_key_name
-      case current_sort_order
-      when "asc"
-        sort_indicator = " <span aria-hidden=\"true\">▲</span>" # Up arrow for ascending
-        next_sort_order_for_click = "desc"                      # Next click will be descending
-      when "desc"
-        sort_indicator = " <span aria-hidden=\"true\">▼</span>" # Down arrow for descending
-        next_sort_order_for_click = "asc"                       # Next click will be ascending
-      else                                                      # current_sort_order is nil or something else, treat as unsorted for this column
+      case current_sort_order # rubocop:disable Lint/SendWithMixinArgument
+      when "asc" # Up arrow for ascending
+        sort_indicator = %q( <span class="material-icons" aria-hidden="true" style="font-size: inherit; vertical-align: middle;">arrow_upward</span>)
+        next_sort_order_for_click = "desc" # Next click will be descending
+      when "desc" # Down arrow for descending
+        sort_indicator = %q( <span class="material-icons" aria-hidden="true" style="font-size: inherit; vertical-align: middle;">arrow_downward</span>)
+        next_sort_order_for_click = "asc" # Next click will be ascending
+      else # current_sort_order is nil or something else, treat as unsorted for this column
         next_sort_order_for_click = "asc"
       end
     end
@@ -171,7 +171,9 @@ module Grafito
                       "hx-on:htmx:before-request" => "document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;",
                       "hx-on:htmx:after-request"  => "if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }",
                     }) do
-                      text "🔍"
+                      span(class: "material-icons", style: "vertical-align: middle;") do
+                        text "search"
+                      end
                     end
                   end
                   # Context button
@@ -185,7 +187,9 @@ module Grafito
                       "hx-on:htmx:before-request" => "document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;",
                       "hx-on:htmx:after-request"  => "if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }",
                     }) do
-                      text "🕗"
+                      span(class: "material-icons", style: "vertical-align: middle;") do
+                        text "history"
+                      end
                     end
                   end
                 end
