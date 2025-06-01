@@ -499,7 +499,7 @@
             "?" +
             queryString
           : window.location.origin + window.location.pathname; // Clean URL if no params
-        window.history.pushState({ path: newUrl }, "", newUrl);
+        window.history.replaceState({ path: newUrl }, "", newUrl);
       }
 
       function copyShareableLink() {
