@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.1] - 2025-06-01
+
+### 🐛 Bug Fixes
+
+- Embed all functional dependencies (htmx/pico.css)
+- Use chivo fonts
+- Avoid a redirect
+- Avoid chrome complaint
+
+### 🎨 Styling
+
+- Footer tweaks
+
 ## [0.8.0] - 2025-05-30
 
 ### 🚀 Features
@@ -12,6 +25,10 @@ All notable changes to this project will be documented in this file.
 
 - Make link useful in unsafe connections
 - Update the URL whenever a filter changes so it matches the set filters
+
+### 💼 Other
+
+- Release v0.8.0
 
 ## [0.7.0] - 2025-05-30
 
