@@ -24,12 +24,7 @@ module Grafito
     bake_file "htmx.org@1.9.10.js", {{ read_file "#{__DIR__}/htmx.org@1.9.10.js" }}
   end
 
-  get "/" do |env|
-    env.redirect "/index.html"
-  end
-
-  get "/:file" do |env|
-    filename = env.params.url["file"]
+  def serve_file(env, filename)
     file_content = Assets.get(filename)
     content_type = MIME.from_extension("." + filename.split(".").last)
     env.response.content_type = content_type
@@ -38,6 +33,15 @@ module Grafito
   rescue KeyError
     env.response.status_code = 404
     env.response.print "File not found"
+  end
+
+  get "/" do |env|
+    serve_file(env, "index.html")
+  end
+
+  get "/:file" do |env|
+    filename = env.params.url["file"]
+    serve_file(env, filename)
   end
 
   # Exposes the Journalctl wrapper via a REST API.
