@@ -15,3 +15,4 @@
 * ~~Replace emoji icons with actual icons (see https://fonts.google.com/icons)~~
 * ~~Use minified assets automatically~~
 * ~~Package for arch (with systemd service)~~
+* Create install script?
