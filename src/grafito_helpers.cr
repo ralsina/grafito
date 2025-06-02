@@ -105,28 +105,21 @@ module Grafito
       headers_to_display << _generate_header_attributes("unit", "Unit", current_sort_by, current_sort_order)
       headers_to_display << _generate_header_attributes("priority", "Priority", current_sort_by, current_sort_order)
       headers_to_display << _generate_header_attributes("message", message_header_text, current_sort_by, current_sort_order)
-      headers_to_display << {text: "", hx_vals: "", key_name: "details"}
-      headers_to_display << {text: "", hx_vals: "", key_name: "context"}
 
       table(class: "striped") do
         thead do
           tr do
             headers_to_display.each do |header|
-              if header[:key_name] == "details" || header[:key_name] == "context"
-                th(style: "width: 1%; vertical-align: middle;") do
-                  html header[:text] # Non-sortable, minimal width header
-                end
-              else
-                th({
-                  "style"        => "cursor: pointer; vertical-align: middle;",
-                  "hx-get"       => "/logs",
-                  "hx-vals"      => header[:hx_vals],
-                  "hx-include"   => "#search-box, #unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view",
-                  "hx-target"    => "#results",
-                  "hx-indicator" => "#loading-spinner",
-                }) do
-                  html header[:text]
-                end
+              # All remaining headers are sortable and will use this block
+              th({
+                "style"        => "cursor: pointer; vertical-align: middle;",
+                "hx-get"       => "/logs",
+                "hx-vals"      => header[:hx_vals],
+                "hx-include"   => "#search-box, #unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view",
+                "hx-target"    => "#results",
+                "hx-indicator" => "#loading-spinner",
+              }) do
+                html header[:text]
               end
             end
           end
