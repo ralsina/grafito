@@ -178,7 +178,7 @@ module Grafito
                   end
                 end
                 if show_unit
-                  td do
+                  td(class: "log-unit-cell") do
                     # Make the unit name clickable to set the filter
                     display_unit_name = HTML.escape(entry.unit)
                     # JSON.generate creates a valid JavaScript string literal, e.g., "\"my-unit\""
@@ -201,7 +201,7 @@ module Grafito
                                         else
                                           escaped_message
                                         end
-                  td(class: "log-message-cell", style: "max-width: 60ch; overflow-wrap: break-word; word-break: break-word;") do
+                  td(class: "log-message-cell") do
                     html highlighted_message
                   end
                 end

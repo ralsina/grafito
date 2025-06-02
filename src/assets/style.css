@@ -263,6 +263,16 @@ h1 {
     /* Moved from inline style, preferred over vw for text */
 }
 
+/* Style for the Unit column cells */
+.log-unit-cell {
+    max-width: 20ch;
+    /* Adjust as needed */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    /* Important for ellipsis to work */
+}
+
 .error {
     color: var(--pico-del-color, red);
     /* Using PicoCSS variable for destructive/error color */
