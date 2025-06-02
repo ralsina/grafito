@@ -201,7 +201,7 @@ module Grafito
                                         else
                                           escaped_message
                                         end
-                  td(class: "log-message-cell") do
+                  td(class: "log-message-cell", style: "max-width: 60ch; overflow-wrap: break-word; word-break: break-word;") do
                     html highlighted_message
                   end
                 end
