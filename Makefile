@@ -42,8 +42,7 @@ run-release: build
 .PHONY: watch
 watch: shards
 	@echo "Watching for changes in $(CRYSTAL_SRC_DIR)/ and re-running with entr..."
-	@echo "Command: fd $(CRYSTAL_SRC_DIR)/ --full-path | entr -r shards run $(EXECUTABLE_NAME) -- -b 0.0.0.0 -p 3000"
-	fd $(CRYSTAL_SRC_DIR)/ --full-path | entr -r shards run $(EXECUTABLE_NAME) -- -b 0.0.0.0 -p 3000
+	fd $(CRYSTAL_SRC_DIR)/ --full-path | entr -r make run
 
 # Clean build artifacts
 .PHONY: clean
