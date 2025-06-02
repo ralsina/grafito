@@ -169,7 +169,12 @@ module Grafito
                 end
                 if show_hostname
                   td do
-                    text HTML.escape(entry.hostname)
+                    # Make the hostname clickable to set the filter
+                    display_hostname = HTML.escape(entry.hostname)
+                    js_arg_hostname = entry.hostname.to_json # Ensures proper JS string escaping
+                    a(href: "#", onclick: "return setHostnameFilterAndTrigger(#{js_arg_hostname});") do
+                      text display_hostname
+                    end
                   end
                 end
                 if show_unit

@@ -126,7 +126,7 @@
             placeholder="Hostname (e.g., server1)"
             title="Filter logs by hostname (_HOSTNAME)"
             hx-get="logs"
-            hx-trigger="keyup changed delay:500ms"
+            hx-trigger="keyup delay:500ms, change delay:500ms, immediateHostnameFilterUpdate"
             hx-target="#results"
             class="log-filter"
             hx-indicator="#loading-spinner"
@@ -772,6 +772,16 @@
           unitFilterInput.value = unitName;
           // Trigger a custom event that is configured for immediate HTMX requests
           htmx.trigger(unitFilterInput, "immediateUnitFilterUpdate");
+        }
+        return false; // Prevent default anchor link behavior
+      }
+
+      function setHostnameFilterAndTrigger(hostname) {
+        const hostnameFilterInput = document.getElementById("hostname-filter");
+        if (hostnameFilterInput) {
+          hostnameFilterInput.value = hostname;
+          // Trigger a custom event that is configured for immediate HTMX requests
+          htmx.trigger(hostnameFilterInput, "immediateHostnameFilterUpdate");
         }
         return false; // Prevent default anchor link behavior
       }
