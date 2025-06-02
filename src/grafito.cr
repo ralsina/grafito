@@ -1,3 +1,7 @@
+# # The Grafito Module
+#
+# This module defines the API for the grafito backend.
+
 require "./grafito_helpers"
 require "./journalctl"
 require "./timeline"
@@ -8,16 +12,32 @@ require "mime"
 
 module Grafito
   extend self
-  # Setup a logger for this module
+  # Setup a logger for this module.
   Log = ::Log.for(self)
 
+  # Obtain the version number automatically at compile time from [shard.yml](../shard.yml.html)
   VERSION = {{ `shards version #{__DIR__}/../`.chomp.stringify }} # Adjusted path for shards version
 
-  # Any assets we want baked into the binary.
+  # ## The Assets class
+  #
+  # Bake all files from the src/assets directory into the binary.
+  # The keys in the baked FS will be like "/index.html" for "assets/index.html", etc.
+  #
+  # This is important because it's what allows distributing Grafito as a single binary
+  # without the need to ship a bunch of files alongside it.
+  #
+  # All the things that are needed to function are baked-in:
+  #
+  # * pico.css
+  # * htmx
+  # * index.html
+  # * style.css
+  #
+  # We are not embedding fonts and icons because they are not strictly
+  # needed for Grafito to run, so if you run it without Internet access
+  # it will work fine but fonts will look different and icons may be missing.
   class Assets
     extend BakedFileSystem
-    # Bake all files from the src/assets directory.
-    # The keys in the baked FS will be like "assets/index.html", "assets/style.css", etc.
     bake_folder "./assets"
   end
 
@@ -31,46 +51,68 @@ module Grafito
   end
 
   # Serves a file from the baked assets.
-  # `requested_filename` is the name of the file as requested by the client (e.g., "style.css").
+  # `requested_filename` is the name of the file as requested by the client (e.g., `style.css`).
   private def serve_file(env, requested_filename)
-    baked_path = "/#{requested_filename}" # Files are stored under the "assets" prefix
+    # Files are stored as /style.css so fix the path and get the file contents.
+    baked_path = "/#{requested_filename}"
     file_content = Assets.get(baked_path)
+    # We have to guess the content type based on the file extension.
     content_type = MIME.from_extension("." + requested_filename.split(".").last)
     env.response.content_type = content_type
+    # Set a reasonable cache lifetime
     env.response.headers.add("Cache-Control", "max-age=604800") # Cache for 1 week
+    # And send the data on its way.
     env.response.print file_content.gets_to_end
   rescue KeyError
+    # If it's not baked in, give a 404. Grafito will *NOT* return any files from disk.
     env.response.status_code = 404
     env.response.print "File not found: #{HTML.escape(requested_filename)}"
   end
 
+  # ## The `/logs` endpoint
+  #
   # Exposes the Journalctl wrapper via a REST API.
   # Example usage:
+  #   ```text
   #   GET /logs?unit=sshd.service&tag=sshd
   #   GET /logs?unit=nginx.service&since=-1h
+  #   ```
+  # In general all the parameters are derived from the journalctl CLI
   get "/logs" do |env|
     Log.debug { "Received /logs request with query params: #{env.params.query.inspect}" }
-
+    # A time definition. For example: `-1w` means "since 1 week ago"
     since = optional_query_param(env, "since")
+    # What systemd unit do we want to see logs for.
     unit = optional_query_param(env, "unit")
+    # Filter logs by syslog tag
     tag = optional_query_param(env, "tag")
-    search_query = optional_query_param(env, "q") # General search term from main input
+    # General search term from main input. Can be a regex and is matched to the message field.
+    search_query = optional_query_param(env, "q")
+    # Filter logs by priority. All priorities "less important" than the requested one will be ignored.
     priority = optional_query_param(env, "priority")
+    # Filter logs by hostname (you can concentrate logs from multiple hosts!)
     hostname = optional_query_param(env, "hostname")
+    # The UI allows for sorting by different fields
     current_sort_by = optional_query_param(env, "sort_by")
     current_sort_order = optional_query_param(env, "sort_order")
+    # This endpoint can return in both HTML or text formats. HTML is useful because
+    # the frontend is written using [HTMX](https://htmx.org)
     format_param = optional_query_param(env, "format")
 
-    # Determine column visibility from query parameters
+    # Determine column visibility from query parameters. The frontend allows
+    # choosing which fields of the log entries are visible.
     show_timestamp_col = env.params.query.has_key?("col-visible-timestamp")
     show_hostname_col = env.params.query.has_key?("col-visible-hostname")
     show_unit_col = env.params.query.has_key?("col-visible-unit")
     show_priority_col = env.params.query.has_key?("col-visible-priority")
     show_message_col = env.params.query.has_key?("col-visible-message")
 
+    # FIXME: simplify
     output_format = (format_param.presence || "html").downcase
     Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, hostname=#{hostname.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}, show_timestamp=#{show_timestamp_col}, show_hostname=#{show_hostname_col}, show_unit=#{show_unit_col}, show_priority=#{show_priority_col}, show_message=#{show_message_col}" }
 
+    # Now that we know exactly what logs we want, we send the query to the `journalctl` wrapper
+    # defined in [journalctl.cr](journalctl.cr.html).
     logs = Journalctl.query(
       since: since,
       unit: unit,
@@ -82,7 +124,10 @@ module Grafito
       sort_order: current_sort_order
     )
 
+    # If there are no logs matching our filters logs will be Nil.
     if logs
+      # But if we *do* have logs, we use one of two helpers to
+      # create the actual responses.
       if output_format == "text"
         env.response.content_type = "text/plain"
         output = _generate_text_log_output(logs)
@@ -101,7 +146,9 @@ module Grafito
         )
       end
       env.response.print output
-    else # Failed to retrieve logs
+    else
+      # If we failed to retrieve logs, we raise an error.
+      # Probably 500 is the wrong one, and it should be a 404?
       env.response.status_code = 500
       if output_format == "text"
         env.response.content_type = "text/plain"
@@ -112,16 +159,22 @@ module Grafito
     end
   end
 
-  # Exposes the list of known service units.
+  # ## The `/services` endpoint
+  #
+  # Exposes the list of known service units. The frontend uses
+  # it for autocomplete.
   # Example usage:
-  #   GET /services
+  # ```text
+  # GET /services
+  # ```
   get "/services" do |env|
     Log.debug { "Received /services request" }
+    # Here `known_service_units` is a wrapper around systemctl.
     service_units = Journalctl.known_service_units
     env.response.content_type = "text/html"
 
     if service_units
-      # Build HTML options
+      # Build HTML options using html_builder
       env.response.print(
         HTML.build do
           service_units.each do |unit_name|
@@ -130,14 +183,23 @@ module Grafito
         end
       )
     else
+      # This should never happen unless something is broken in the system.
       env.response.status_code = 500
       env.response.print "<!-- Failed to retrieve service units -->"
     end
   end
 
+  # ## The `/command` endpoint
+  #
   # Exposes the command that would be run by /logs with the given parameters.
   # Example usage:
-  #   GET /command?since=-1h&unit=nginx.service&q=error
+  # ```text
+  # GET /command?since=-1h&unit=nginx.service&q=error`
+  # ```
+  #
+  # The frontend uss this to show what the `journalctl` command equivalent to the
+  # configured filters would be.
+
   get "/command" do |env|
     Log.debug { "Received /command request with query params: #{env.params.query.inspect}" }
 
@@ -148,44 +210,64 @@ module Grafito
     priority = optional_query_param(env, "priority")
     hostname = optional_query_param(env, "hostname") # Also add to /command endpoint for consistency
     Log.debug { "Building command with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, hostname=#{hostname.inspect}" }
+    # Here `build_query_command` is the same function used by `Journalctl.query` so the command line
+    # should always be correct.
     command_array = Journalctl.build_query_command(since: since, unit: unit, tag: tag, query: search_query, priority: priority, hostname: hostname)
     env.response.content_type = "text/plain"
     env.response.print "\"#{command_array.join(" ")}\""
   end
 
+  # ## The `/details` endpoint
+  #
   # Exposes detailed information for a single log entry based on its cursor.
   # Example usage:
-  #   GET /details?cursor=<CURSOR_STRING>
+  # ```text
+  # GET /details?cursor=<CURSOR_STRING>`
+  # ```
+  #
+  # It will return a "pretty JSON" representation of the raw log entry
+  # represented by the `cursor`
   get "/details" do |env|
     Log.debug { "Received /details request with query params: #{env.params.query.inspect}" }
     cursor = optional_query_param(env, "cursor")
     env.response.content_type = "text/html"
 
+    # If there is no cursor, error out.
     unless cursor
       halt env, status_code: 400, response: "Missing cursor parameter. Cannot load details."
     end
 
     if entry = Journalctl.get_entry_by_cursor(cursor)
       HTML.build do
+        # We have no data for the entry, just show a message
         if entry.data.empty?
           p do # ameba:disable Lint/DebugCalls
             text "No details available for this log entry."
           end
         else
+          # Create a pretty JSON version of the raw entry
           tag("pre") do
             text entry.to_pretty_json
           end
         end
       end
     else
+      # We didn't find the entry, so error out with a 404
       env.response.status_code = 404
       env.response.print "Log entry not found for the given cursor."
     end
   end
 
+  # ## The `/context` endpoint
+  #
   # Exposes log entry context (entries before and after a given cursor).
   # Example usage:
-  #   GET /context?cursor=<CURSOR_STRING>&count=5
+  # ```text
+  # GET /context?cursor=<CURSOR_STRING>&count=5`
+  # ```
+  #
+  # Works like `/query` but it will return some of the log entries
+  # that are around the requested one for context.
   get "/context" do |env|
     Log.debug { "Received /context request with query params: #{env.params.query.inspect}" }
     cursor = optional_query_param(env, "cursor")
@@ -196,12 +278,14 @@ module Grafito
       halt env, status_code: 400, response: "<p class=\"error\">Missing cursor parameter. Cannot load context.</p>"
     end
 
-    count = count_str.try(&.to_i?) || 5 # Default to 5 if not provided or invalid
+    # Default to 5 if not provided or invalid
+    count = count_str.try(&.to_i?) || 5
     if count <= 0
       env.response.content_type = "text/html"
       halt env, status_code: 400, response: "<p class=\"error\">Context count must be positive.</p>"
     end
 
+    # Get `count` entries before and after the cursor
     context_entries = Journalctl.context(cursor, count)
 
     env.response.content_type = "text/html"
