@@ -1,3 +1,5 @@
+[![Crystal CI](https://github.com/ralsina/grafito/actions/workflows/crystal.yml/badge.svg)](https://github.com/ralsina/grafito/actions/workflows/crystal.yml)
+
 # grafito
 
 Grafito is a simple, self-contained web-based log viewer for `journalctl`.
