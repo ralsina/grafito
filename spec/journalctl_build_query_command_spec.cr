@@ -3,7 +3,7 @@ require "../src/journalctl"
 
 describe Journalctl do
   describe ".build_query_command" do
-    base_command = ["journalctl", "-o", "json", "-n", "5000", "-r"]
+    base_command = ["journalctl", "-m", "-o", "json", "-n", "5000", "-r"]
 
     it "returns the base command when no parameters are provided" do
       command = Journalctl.build_query_command(since: nil, unit: nil, tag: nil, query: nil, priority: nil)

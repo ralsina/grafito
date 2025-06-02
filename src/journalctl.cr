@@ -171,7 +171,7 @@ class Journalctl
     query : String | Nil,
     priority : String | Nil,
   ) : Array(String)
-    command = ["journalctl", "-o", "json", "-n", "5000", "-r"]
+    command = ["journalctl", "-m", "-o", "json", "-n", "5000", "-r"]
 
     if since
       command << "-S" << since
@@ -350,7 +350,7 @@ class Journalctl
   #   A LogEntry object if found, or nil otherwise.
   def self.get_entry_by_cursor(cursor : String) : LogEntry?
     Log.debug { "Executing Journalctl.get_entry_by_cursor with cursor: #{cursor}" }
-    command_args = ["-o", "json", "--cursor", cursor, "-n", "1"]
+    command_args = ["-m", "-o", "json", "--cursor", cursor, "-n", "1"]
 
     entries = run_journalctl_and_parse(command_args, "Journalctl.get_entry_by_cursor for cursor '#{cursor}'")
 
@@ -431,14 +431,14 @@ class Journalctl
 
     # Fetch 'before' entries: `journalctl -o json --cursor <cursor> -n <count + 1> --reverse`
     # This outputs: [Target, B1, B2, ..., B_count] (Target is newest, B1 is just before Target, etc.)
-    cmd_before_args = ["-o", "json", "--cursor", cursor, "-n", (count + 1).to_s, "--reverse"]
+    cmd_before_args = ["-m", "-o", "json", "--cursor", cursor, "-n", (count + 1).to_s, "--reverse"]
     parsed_before_list = run_journalctl_and_parse(cmd_before_args, "Context (before entries for cursor '#{cursor}')")
 
     before_entries = parsed_before_list.size > 1 ? parsed_before_list[1..].reverse : ([] of LogEntry)
 
     # Fetch 'after' entries: `journalctl -o json --after-cursor <cursor> -n <count>`
     # This outputs: [A1, A2, ..., A_count] (A1 is just after Target, in chronological order)
-    cmd_after_args = ["-o", "json", "--after-cursor", cursor, "-n", count.to_s]
+    cmd_after_args = ["-m", "-o", "json", "--after-cursor", cursor, "-n", count.to_s]
     after_entries = run_journalctl_and_parse(cmd_after_args, "Context (after entries for cursor '#{cursor}')")
 
     result = before_entries + [target_entry] + after_entries
