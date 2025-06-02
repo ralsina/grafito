@@ -8,7 +8,10 @@
     <link rel="stylesheet" href="pico.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap"
+      rel="stylesheet"
+    />
     <link
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet"
@@ -131,7 +134,6 @@
           />
         </div>
 
-
         <!-- Row 3: Time and Priority Filters -->
         <div>
           <select
@@ -179,6 +181,112 @@
             <option value="7">Debug</option>
           </select>
         </div>
+
+        <!-- Column Visibility Toggles -->
+        <details class="column-visibility-controls">
+          <summary
+            role="button"
+            class="secondary outline"
+            style="font-weight: bold; margin-bottom: var(--pico-form-element-spacing-vertical);"
+          >
+            Column Visibility
+          </summary>
+          <div>
+            <!-- Content of the collapsible section -->
+            <hr style="margin-top: var(--pico-form-element-spacing-vertical);" />
+            <div>
+              <label for="col-visible-timestamp"
+                ><input
+                  type="checkbox"
+                  id="col-visible-timestamp"
+                  name="col-visible-timestamp"
+                  class="log-filter"
+                  role="switch"
+                  hx-get="logs"
+                  hx-target="#results"
+                  hx-indicator="#loading-spinner"
+                  hx-include=".log-filter"
+                  hx-trigger="change"
+                  checked
+                />
+                Timestamp</label
+              >
+            </div>
+            <div>
+              <label for="col-visible-hostname"
+                ><input
+                  type="checkbox"
+                  id="col-visible-hostname"
+                  name="col-visible-hostname"
+                  class="log-filter"
+                  role="switch"
+                  hx-get="logs"
+                  hx-target="#results"
+                  hx-indicator="#loading-spinner"
+                  hx-include=".log-filter"
+                  hx-trigger="change"
+                  checked
+                />
+                Hostname</label
+              >
+            </div>
+            <div>
+              <label for="col-visible-unit"
+                ><input
+                  type="checkbox"
+                  id="col-visible-unit"
+                  name="col-visible-unit"
+                  class="log-filter"
+                  role="switch"
+                  hx-get="logs"
+                  hx-target="#results"
+                  hx-indicator="#loading-spinner"
+                  hx-include=".log-filter"
+                  hx-trigger="change"
+                  checked
+                />
+                Unit</label
+              >
+            </div>
+            <div>
+              <label for="col-visible-priority"
+                ><input
+                  type="checkbox"
+                  id="col-visible-priority"
+                  name="col-visible-priority"
+                  class="log-filter"
+                  role="switch"
+                  hx-get="logs"
+                  hx-target="#results"
+                  hx-indicator="#loading-spinner"
+                  hx-include=".log-filter"
+                  hx-trigger="change"
+                  checked
+                />
+                Priority</label
+              >
+            </div>
+            <div>
+              <label for="col-visible-message"
+                ><input
+                  type="checkbox"
+                  id="col-visible-message"
+                  name="col-visible-message"
+                  class="log-filter"
+                  role="switch"
+                  hx-get="logs"
+                  hx-target="#results"
+                  hx-indicator="#loading-spinner"
+                  hx-include=".log-filter"
+                  hx-trigger="change"
+                  checked
+                />
+                Message</label
+              >
+            </div>
+            <!-- Note: Action columns (Details, Context) are not included here as they are typically always desired -->
+          </div>
+        </details>
         <div class="sidebar-actions-area">
           <!-- Help button for command -->
           <div class="sidebar-buttons-row">
@@ -252,8 +360,10 @@
         <footer class="container-fluid">
           <a href="https://links.ralsina.me" style="text-decoration: none"
             ><span class="material-icons" style="vertical-align: middle"
-              >directions_run</span >
-            Roberto Alsina</a >
+              >directions_run</span
+            >
+            Roberto Alsina</a
+          >
           <span> | </span>
           <a href="https://grafito.ralsina.me"
             ><span class="material-icons" style="vertical-align: middle"
@@ -269,16 +379,24 @@
           <hr />
           <div class="theme-switch-wrapper">
             <label for="theme-switch" title="Toggle light/dark mode">
-              <input type="checkbox" id="theme-switch" name="theme" role="switch" />
+              <input
+                type="checkbox"
+                id="theme-switch"
+                name="theme"
+                role="switch"
+              />
               <!-- Icons should be siblings of the input, within the same label -->
-              <span class="material-icons" style="vertical-align: middle">dark_mode</span>
-              <span class="material-icons" style="vertical-align: middle">light_mode</span>
+              <span class="material-icons" style="vertical-align: middle"
+                >dark_mode</span
+              >
+              <span class="material-icons" style="vertical-align: middle"
+                >light_mode</span
+              >
             </label>
           </div>
         </footer>
       </aside>
       <main>
-
         <!-- Spinner Element -->
         <div id="loading-spinner" class="htmx-indicator">
           <div>
@@ -354,12 +472,21 @@
           type: "checkbox",
           trueValue: "on",
         },
+        { id: "col-visible-timestamp", param: "col-visible-timestamp", type: "checkbox", trueValue: "on" },
+        { id: "col-visible-hostname", param: "col-visible-hostname", type: "checkbox", trueValue: "on" },
+        { id: "col-visible-unit", param: "col-visible-unit", type: "checkbox", trueValue: "on" },
+        { id: "col-visible-priority", param: "col-visible-priority", type: "checkbox", trueValue: "on" },
+        { id: "col-visible-message", param: "col-visible-message", type: "checkbox", trueValue: "on" },
       ];
 
       document.addEventListener("DOMContentLoaded", function () {
         // --- GLOBAL HTMX ERROR HANDLER ---
-        const globalErrorDialog = document.getElementById("global-error-dialog");
-        const globalErrorDialogContent = document.getElementById("global-error-dialog-content");
+        const globalErrorDialog = document.getElementById(
+          "global-error-dialog"
+        );
+        const globalErrorDialogContent = document.getElementById(
+          "global-error-dialog-content"
+        );
 
         if (globalErrorDialog && globalErrorDialogContent) {
           document.body.addEventListener("htmx:afterRequest", function (event) {
@@ -423,6 +550,29 @@
         }
         // --- END THEME SWITCHER LOGIC ---
 
+        // --- COLUMN VISIBILITY PERSISTENCE ---
+        const COLUMN_VISIBILITY_CHECKBOX_IDS = [
+          "col-visible-timestamp",
+          "col-visible-hostname",
+          "col-visible-unit",
+          "col-visible-priority",
+          "col-visible-message",
+        ];
+
+        COLUMN_VISIBILITY_CHECKBOX_IDS.forEach(id => {
+          const checkbox = document.getElementById(id);
+          if (checkbox) {
+            const localStorageKey = `grafito-${id}-checked`;
+            const savedState = localStorage.getItem(localStorageKey);
+            if (savedState !== null) {
+              checkbox.checked = (savedState === 'true');
+            }
+            checkbox.addEventListener('change', function() {
+              localStorage.setItem(localStorageKey, this.checked);
+              // HTMX attributes on the checkbox will handle the refresh
+            });
+          }
+        });
         // --- Populate Filters from URL Parameters ---
         const params = new URLSearchParams(window.location.search);
         SHARED_FILTER_CONFIGS.forEach((config) => {
@@ -440,7 +590,12 @@
                 element.value = paramValue;
               }
             } else if (config.type === "checkbox") {
-              element.checked = paramValue === config.trueValue;
+              // For checkboxes like 'live-view' or 'col-visible-*', they are included in URL if true (e.g., live-view=on).
+              // If the param is present and matches trueValue, it's checked.
+              // If the param is present but doesn't match (shouldn't happen for "on"), or if param is absent, it's unchecked.
+              // This correctly makes checkboxes reflect the URL state.
+              // Note: `params.get(config.param)` returns `null` if not present.
+              element.checked = params.get(config.param) === config.trueValue;
             }
           }
         });
@@ -527,9 +682,11 @@
           if (element) {
             if (config.type === "checkbox") {
               if (element.checked) {
-                params.set(config.param, config.trueValue);
+                // Use element.value if available (usually "on" for checkboxes), otherwise config.trueValue
+                params.set(config.param, element.value || config.trueValue);
               }
               // If unchecked, the parameter is simply not added.
+              // This works with server-side `has_key?` logic.
             } else if (element.value) {
               // For text inputs and selects.
               // If element.value is "", like for "Any time", it will add "param=" to the query string.
@@ -610,11 +767,11 @@
       }
 
       function setUnitFilterAndTrigger(unitName) {
-        const unitFilterInput = document.getElementById('unit-filter');
+        const unitFilterInput = document.getElementById("unit-filter");
         if (unitFilterInput) {
           unitFilterInput.value = unitName;
           // Trigger a custom event that is configured for immediate HTMX requests
-          htmx.trigger(unitFilterInput, 'immediateUnitFilterUpdate');
+          htmx.trigger(unitFilterInput, "immediateUnitFilterUpdate");
         }
         return false; // Prevent default anchor link behavior
       }
