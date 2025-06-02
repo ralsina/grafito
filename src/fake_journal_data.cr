@@ -17,6 +17,11 @@ module FakeJournalData
     "webapp_prod_1", "api_gateway_alpha", "worker_beta_3", nil, # nil for non-containerized logs
   ]
 
+  # A list of sample hostnames.
+  SAMPLE_HOSTNAMES = [
+    "server-alpha", "server-beta", "server-gamma",
+  ]
+
   # Parses a time string similar to how journalctl might interpret it.
   # Handles just what we need.
 
@@ -65,12 +70,13 @@ module FakeJournalData
     target_unit : String? = nil
     target_n_entries : Int32 = 200 # Default, might be overridden by -n
     reverse = false
-    include_tags = [] of String         # For -t SYSLOG_IDENTIFIER
-    exclude_tags = [] of String         # For -T SYSLOG_IDENTIFIER to exclude
-    cursor : String? = nil              # For --cursor
+    include_tags = [] of String # For -t SYSLOG_IDENTIFIER
+    exclude_tags = [] of String # For -T SYSLOG_IDENTIFIER to exclude
+    cursor : String? = nil      # For --cursor
     since_time : String? = nil
     until_time : String? = nil
-    query : String? = nil # For -g
+    query : String? = nil           # For -g
+    target_hostname : String? = nil # For --host
 
     i = 0
     while i < journalctl_args.size
@@ -105,6 +111,14 @@ module FakeJournalData
         i += 1
       when "-r", "--reverse"
         reverse = true
+      else
+        # This argument was not a recognized flag. Check if it's a _HOSTNAME filter.
+        if arg.starts_with?("_HOSTNAME=")
+          parts = arg.split('=', 2)
+          if parts.size == 2 && !parts[1].empty?
+            target_hostname = parts[1]
+          end
+        end
       end
       i += 1
     end
@@ -125,7 +139,6 @@ module FakeJournalData
       start_time = end_time
     end
 
-
     # We make a number of attempts to create entries that match what we want so the UI
     # is coherent with what we provide.
 
@@ -142,10 +155,15 @@ module FakeJournalData
       random_unix_ms = (start_unix_ms <= end_unix_ms) ? rand(start_unix_ms..end_unix_ms) : start_unix_ms
       timestamp = Time.unix_ms(random_unix_ms)
 
+      # Determine hostname for this entry
+      # If a target_hostname is specified, all generated entries must match it.
+      # Otherwise, pick a random one from the sample list.
+      current_hostname = target_hostname || SAMPLE_HOSTNAMES.sample
+
       raw_priority_val = priority ? rand(0..priority).to_s : rand(0..7).to_s
 
-      current_internal_unit_name = target_unit || SAMPLE_UNIT_NAMES.sample # Corrected: Use SAMPLE_UNIT_NAMES
-      syslog_identifier = current_internal_unit_name.nil? ? "kernel" : current_internal_unit_name.gsub(/\.service$/, "")
+      current_internal_unit_name = target_unit || SAMPLE_UNIT_NAMES.sample                                                                                                # Corrected: Use SAMPLE_UNIT_NAMES
+      syslog_identifier = current_internal_unit_name.nil? ? (current_hostname == "kernel_host" ? "kernel" : "system") : current_internal_unit_name.gsub(/\.service$/, "") # A bit more variety
       message_raw = Faker::Hacker.say_something_smart
       container_name = SAMPLE_CONTAINER_NAMES.sample
 
@@ -165,8 +183,8 @@ module FakeJournalData
       data["__CURSOR"] = cursor || "fakecursor_#{entries.size}_#{timestamp.to_unix_ms}"
       data["_BOOT_ID"] = "fakebootid1234567890abcdef12345678"
       data["_TRANSPORT"] = ["journal", "stdout", "kernel"].sample
-      data["_MACHINE_ID"] = "fakemachineid1234567890abcdef12"
-      data["_HOSTNAME"] = "fakehost"
+      data["_MACHINE_ID"] = "fake_machine_id_for_#{current_hostname}" # Make machine ID somewhat related to hostname
+      data["_HOSTNAME"] = current_hostname
       data["PRIORITY"] = raw_priority_val
       data["SYSLOG_FACILITY"] = rand(0..23).to_s
       data["SYSLOG_IDENTIFIER"] = syslog_identifier # Use the derived and filtered identifier
@@ -195,13 +213,14 @@ module FakeJournalData
         message_raw: message_raw,
         raw_priority_val: raw_priority_val,
         internal_unit_name: current_internal_unit_name,
+        hostname: current_hostname,
         data: data
       )
       entries << entry
     end
 
     if attempts >= max_attempts && entries.size < target_n_entries
-      Log.warn { "Fake data generation: Reached max attempts (#{max_attempts}) but only generated #{entries.size}/#{target_n_entries} entries due to restrictive filters (priority, unit, or tags)." }
+      Log.warn { "Fake data generation: Reached max attempts (#{max_attempts}) but only generated #{entries.size}/#{target_n_entries} entries due to restrictive filters (priority, unit, tags, or hostname)." }
     end
 
     # Sort entries based on whether a reverse flag was present
