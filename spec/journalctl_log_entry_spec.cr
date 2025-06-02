@@ -92,7 +92,7 @@ describe Journalctl::LogEntry do
         internal_unit_name: "my.service"
       )
       # Expected format: "#{timestamp.to_s("%Y-%m-%d %H:%M:%S.%L")} [#{unit}] [Prio: #{priority}] - #{message}"
-      expected_string = "2023-10-27 10:30:00.000 [my] [Prio: 4] - Log message"
+      expected_string = "2023-10-27 10:30:00.000 [localhost] [my] [Prio: 4] - Log message"
       entry.to_s.should eq(expected_string)
     end
   end

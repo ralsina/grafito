@@ -7,12 +7,14 @@ def new_log_entry(
   message : String = "test",
   unit : String = "test.service",
   priority : String = "6",
+  hostname : String = "localhost",
 ) : Journalctl::LogEntry
   Journalctl::LogEntry.new(
     timestamp: timestamp,       # Pass the Time object to the 'timestamp' property
     message_raw: message,       # Pass the message string to the 'message_raw' property
     raw_priority_val: priority, # Pass the priority string to the 'raw_priority_val' property
-    internal_unit_name: unit    # Pass the unit string to the 'internal_unit_name' property
+    internal_unit_name: unit,   # Pass the unit string to the 'internal_unit_name' property
+    hostname: hostname,         # Pass the hostname string to the 'hostname' property
   )
 end
 

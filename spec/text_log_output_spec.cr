@@ -13,7 +13,7 @@ describe "_generate_text_log_output" do
     # This test assumes the message is part of the output.
     # Based on typical log formats, including the message is expected.
     expected_ts = logs[0].formatted_timestamp
-    output.should eq("#{expected_ts} [unit1] (Informational) Test message 1\n")
+    output.should eq("#{expected_ts} [localhost] [unit1] (Informational) Test message 1\n")
   end
 
   it "formats multiple log entries" do
@@ -25,8 +25,8 @@ describe "_generate_text_log_output" do
     output = Grafito._generate_text_log_output(logs)
     ts1 = logs[0].formatted_timestamp
     ts2 = logs[1].formatted_timestamp
-    expected_output = "#{ts1} [unitA] (Informational) Message A\n" +
-                      "#{ts2} [unitB] (Error) Message B\n"
+    expected_output = "#{ts1} [localhost] [unitA] (Informational) Message A\n" +
+                      "#{ts2} [localhost] [unitB] (Error) Message B\n"
     output.should eq(expected_output)
   end
 end

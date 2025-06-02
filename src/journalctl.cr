@@ -53,6 +53,9 @@ class Journalctl
     @[JSON::Field(key: "_SYSTEMD_UNIT", nilable: true)] # Allow nil from JSON
     property internal_unit_name : String?               # Raw unit name from JSON, might be nil
 
+    @[JSON::Field(key: "_HOSTNAME", nilable: true)] # Allow nil from JSON
+    property hostname : String?                     # Raw hostname from JSON, might be nil
+
     # Will hold all raw data from journalctl as string key-value pairs
     property data : Hash(String, String)
 
@@ -63,6 +66,7 @@ class Journalctl
       @message_raw : String?,              # Changed to String? to match property type
       @raw_priority_val : String?,         # Changed to String? to match property type
       @internal_unit_name : String? = nil, # Default to nil if _SYSTEMD_UNIT is missing
+      @hostname : String? = nil,           # Default to nil if there is no _HOSTNAME
       @data : Hash(String, String) = {} of String => String,
     )
       # Properties are assigned directly by JSON::Serializable
@@ -134,7 +138,7 @@ class Journalctl
 
     # Getter for the hostname
     def hostname : String
-      (@data["_HOSTNAME"] || "N/A").strip
+      (@data["_HOSTNAME"]? || "localhost").strip
     end
 
     def to_s
