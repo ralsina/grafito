@@ -14,4 +14,4 @@
 * Make it literate, push through crycco, produce nice site
 * ~~Replace emoji icons with actual icons (see https://fonts.google.com/icons)~~
 * ~~Use minified assets automatically~~
-* Package for arch (with systemd service)
+* ~~Package for arch (with systemd service)~~
