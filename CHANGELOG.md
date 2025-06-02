@@ -2,12 +2,57 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] - 2025-06-02
+
+### 🚀 Features
+
+- Filter by unit when clicking on a unit name in a log entry.
+- Support multi-host logs concentrated via journald
+- Control column visibility
+- Auto-filtering when clicking on a hostname
+
+### 🐛 Bug Fixes
+
+- Use minified files
+- Use -m flag when calling journalctl
+
+### 💼 Other
+
+- Added Makefile
+- Better watch target respecting minify
+
+### 🚜 Refactor
+
+- Removed dead HTML and CSS
+- Moved assets into separate folder
+
+### 📚 Documentation
+
+- Add test badge
+- Update README.md
+
+### 🎨 Styling
+
+- New favicon
+- Use grouped buttons
+- Make 'advanced' filters section collapsable
+- Fix word wrapping in message cells
+- Fix word wrapping in unit cells
+
+### 🧪 Testing
+
+- Fix tests
+
 ## [0.8.2] - 2025-06-01
 
 ### 🐛 Bug Fixes
 
 - Use actual icons instead of emoji
 - Show sorting indicator more consistently
+
+### 💼 Other
+
+- Release v0.8.2
 
 ### 🎨 Styling
 
