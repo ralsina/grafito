@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.1] - 2025-06-02
+
+### 🐛 Bug Fixes
+
+- Make fake server support hostname filtering
+
+### 📚 Documentation
+
+- Example service file
+
+### 🎨 Styling
+
+- Fix theme switch
+- Start with filters open
+
 ## [0.9.0] - 2025-06-02
 
 ### 🚀 Features
@@ -20,6 +35,7 @@ All notable changes to this project will be documented in this file.
 
 - Added Makefile
 - Better watch target respecting minify
+- Release v0.9.0
 
 ### 🚜 Refactor
 
