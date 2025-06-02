@@ -132,9 +132,14 @@ class Journalctl
       (@internal_unit_name || "N/A").strip.gsub(/\.service$/, "")
     end
 
+    # Getter for the hostname
+    def hostname : String
+      (@data["_HOSTNAME"] || "N/A").strip
+    end
+
     def to_s
       # Use a standard timestamp format for to_s, and getters for other fields
-      "#{timestamp.to_s("%Y-%m-%d %H:%M:%S.%L")} [#{unit}] [Prio: #{priority}] - #{message}"
+      "#{timestamp.to_s("%Y-%m-%d %H:%M:%S.%L")} [#{hostname}] [#{unit}] [Prio: #{priority}] - #{message}"
     end
 
     # Converts the raw timestamp string to a formatted date/time string.
@@ -170,6 +175,7 @@ class Journalctl
     tag : String | Nil,
     query : String | Nil,
     priority : String | Nil,
+    hostname : String | Nil,
   ) : Array(String)
     command = ["journalctl", "-m", "-o", "json", "-n", "5000", "-r"]
 
@@ -203,6 +209,11 @@ class Journalctl
     if priority
       command << "-p" << priority
     end
+
+    if hostname && !hostname.strip.empty?
+      # Add as a match filter for the _HOSTNAME field
+      command << "_HOSTNAME=#{hostname.strip}"
+    end
     command
   end
 
@@ -223,6 +234,7 @@ class Journalctl
     tag : String | Nil = nil,
     query : String | Nil = nil,
     priority : String | Nil = nil,
+    hostname : String | Nil = nil,
     sort_by : String | Nil = nil,
     sort_order : String | Nil = nil,
   ) : Array(LogEntry) | Nil
@@ -232,6 +244,7 @@ class Journalctl
     Log.debug { "  Tag: #{tag.inspect}" }
     Log.debug { "  Query: #{query.inspect}" }
     Log.debug { "  Priority: #{priority.inspect}" }
+    Log.debug { "  Hostname: #{hostname.inspect}" }
     Log.debug { "  SortBy: #{sort_by.inspect}" }
     Log.debug { "  SortOrder: #{sort_order.inspect}" }
 
@@ -240,7 +253,8 @@ class Journalctl
     tag = nil if tag.is_a?(String) && tag.strip.empty?
     query = nil if query.is_a?(String) && query.strip.empty?
     priority = nil if priority.is_a?(String) && priority.strip.empty?
-    command = build_query_command(since, unit, tag, query, priority)
+    hostname_param = hostname.is_a?(String) && hostname.strip.empty? ? nil : hostname
+    command = build_query_command(since, unit, tag, query, priority, hostname_param)
     Log.debug { "Generated journalctl command: #{command.inspect}" }
 
     # Use the helper to run the command and parse entries

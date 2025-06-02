@@ -60,7 +60,8 @@ module Grafito
       else
         logs.each do |entry|
           str << entry.formatted_timestamp
-          str << " [#{entry.unit}]" # Always include unit in text output
+          str << " [#{entry.hostname}]" # Add hostname to text output
+          str << " [#{entry.unit}]"     # Always include unit in text output
           str << " (#{entry.formatted_priority}) "
           str << entry.message << '\n'
         end
@@ -69,7 +70,6 @@ module Grafito
   end
 
   # Generates an HTML representation of log entries.
-  # ameba:disable Metrics/CyclomaticComplexity
   private def html_log_output(
     logs : Array(Journalctl::LogEntry),
     current_sort_by : String?,
@@ -102,6 +102,7 @@ module Grafito
       message_header_text = "Message #{styled_count_span}"
 
       headers_to_display = [_generate_header_attributes("timestamp", "Timestamp", current_sort_by, current_sort_order)]
+      headers_to_display << _generate_header_attributes("hostname", "Hostname", current_sort_by, current_sort_order)
       headers_to_display << _generate_header_attributes("unit", "Unit", current_sort_by, current_sort_order)
       headers_to_display << _generate_header_attributes("priority", "Priority", current_sort_by, current_sort_order)
       headers_to_display << _generate_header_attributes("message", message_header_text, current_sort_by, current_sort_order)
@@ -142,6 +143,9 @@ module Grafito
                 td(style: "white-space: nowrap; min-width: 14ch;") do
                   # Using a more compact timestamp format: MM-DD HH:MM:SS
                   text entry.timestamp.to_s("%m-%d %H:%M:%S")
+                end
+                td do
+                  text HTML.escape(entry.hostname)
                 end
                 td do
                   # Make the unit name clickable to set the filter

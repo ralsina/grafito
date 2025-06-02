@@ -56,12 +56,12 @@ module Grafito
     tag = optional_query_param(env, "tag")
     search_query = optional_query_param(env, "q") # General search term from main input
     priority = optional_query_param(env, "priority")
+    hostname = optional_query_param(env, "hostname")
     current_sort_by = optional_query_param(env, "sort_by")
     current_sort_order = optional_query_param(env, "sort_order")
     format_param = optional_query_param(env, "format")
     output_format = (format_param.presence || "html").downcase
-
-    Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}" }
+    Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, hostname=#{hostname.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}" }
 
     logs = Journalctl.query(
       since: since,
@@ -69,6 +69,7 @@ module Grafito
       tag: tag,
       query: search_query,
       priority: priority,
+      hostname: hostname,
       sort_by: current_sort_by,
       sort_order: current_sort_order
     )
@@ -127,9 +128,9 @@ module Grafito
     tag = optional_query_param(env, "tag")
     search_query = optional_query_param(env, "q")
     priority = optional_query_param(env, "priority")
-
-    Log.debug { "Building command with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}" }
-    command_array = Journalctl.build_query_command(since: since, unit: unit, tag: tag, query: search_query, priority: priority)
+    hostname = optional_query_param(env, "hostname") # Also add to /command endpoint for consistency
+    Log.debug { "Building command with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, hostname=#{hostname.inspect}" }
+    command_array = Journalctl.build_query_command(since: since, unit: unit, tag: tag, query: search_query, priority: priority, hostname: hostname)
     env.response.content_type = "text/plain"
     env.response.print "\"#{command_array.join(" ")}\""
   end

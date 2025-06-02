@@ -115,6 +115,22 @@
             hx-include=".log-filter"
           />
         </div>
+        <div>
+          <input
+            type="text"
+            id="hostname-filter"
+            name="hostname"
+            placeholder="Hostname (e.g., server1)"
+            title="Filter logs by hostname (_HOSTNAME)"
+            hx-get="logs"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#results"
+            class="log-filter"
+            hx-indicator="#loading-spinner"
+            hx-include=".log-filter"
+          />
+        </div>
+
 
         <!-- Row 3: Time and Priority Filters -->
         <div>
@@ -329,6 +345,7 @@
         { id: "search-box", param: "q", type: "value" },
         { id: "unit-filter", param: "unit", type: "value" },
         { id: "tag-filter", param: "tag", type: "value" },
+        { id: "hostname-filter", param: "hostname", type: "value" },
         { id: "time-range-filter", param: "since", type: "select" },
         { id: "priority-filter", param: "priority", type: "select" },
         {
@@ -472,6 +489,7 @@
               document.getElementById("search-box").value = "";
               document.getElementById("unit-filter").value = "";
               document.getElementById("tag-filter").value = "";
+              document.getElementById("hostname-filter").value = "";
 
               // Reset select elements to their default values
               document.getElementById("time-range-filter").value = ""; // "Any time"

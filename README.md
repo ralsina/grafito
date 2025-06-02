@@ -149,6 +149,30 @@ appropriate group membership is the preferred method.
 Grafito will be able to see these logs. Ensure that Grafito itself is appropriately secured
 if it's exposed to untrusted networks.
 
+## Logs from multiple hosts
+
+Systemd Journald offers mechanisms to centralize logs from multiple hosts onto a single machine. This is particularly useful for managing logs in a distributed environment. Two common tools for this are `systemd-journal-remote` and `systemd-journal-upload`.
+
+* **`systemd-journal-upload`**: This service runs on client machines and uploads their local journal entries to a remote `systemd-journal-remote` instance. It can be configured to send logs securely over HTTPS.
+* **`systemd-journal-remote`**: This service runs on a central log server and listens for incoming journal data (typically via HTTP/HTTPS) from `systemd-journal-upload` instances. It then stores these logs in the local journal on the central server.
+
+When logs from multiple hosts are consolidated onto the server where Grafito is running, each log entry will typically retain its original `_HOSTNAME` field. This is where Grafito's **Hostname filter** becomes very useful.
+
+By using the "Hostname" filter in the Grafito UI, you can easily isolate and view logs originating from a specific client machine, even though all logs are stored and queried on the central Grafito server. For example, if you have logs from `server1`, `server2`, and `web-node-alpha` all being sent to your Grafito host, you can simply type `server1` into the Hostname filter to see only its logs.
+
+### Configuration Sketch
+
+1. **On the Central Log Server (where Grafito runs):**
+   * Install and configure `systemd-journal-remote` to listen for incoming logs. You'll typically configure it to use HTTPS for security.
+   * Ensure the journal on this server has enough storage space.
+
+2. **On Each Client Host:**
+   * Install and configure `systemd-journal-upload`.
+   * Point it to the address and port of your central `systemd-journal-remote` instance.
+   * Configure necessary authentication (e.g., client certificates) if HTTPS is used.
+
+Once set up, logs from all client hosts will appear in Grafito on the central server, and you can use the Hostname filter to distinguish between them. Refer to the official systemd documentation for detailed instructions on configuring `systemd-journal-remote` and `systemd-journal-upload`.
+
 ## Development
 
 1. **Prerequisites:**
