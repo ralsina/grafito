@@ -19,6 +19,8 @@ Key features include:
 
 ## Installation
 
+If you are using Arch Linux grafito is [available in AUR](https://aur.archlinux.org/packages/grafito)
+
 To install from prebuilt binaries, download the latest release from the
 [releases page](github.com/ralsina/grafito/releases). The binaries are
 available for linux, both x86_64 and arm64 architectures.
