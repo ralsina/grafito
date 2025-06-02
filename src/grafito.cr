@@ -22,7 +22,7 @@ module Grafito
   end
 
   get "/" do |env|
-    serve_file(env, "index.html")
+    serve_file(env, "index.min.html")
   end
 
   get "/:file" do |env|
