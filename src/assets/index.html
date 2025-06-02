@@ -86,114 +86,130 @@
           />
         </div>
 
-        <!-- Unit and Tag Filters -->
-        <div>
-          <input
-            type="text"
-            id="unit-filter"
-            name="unit"
-            list="unit-suggestions"
-            placeholder="Unit (e.g., docker)"
-            title="Filter logs by systemd unit (e.g., nginx)"
-            hx-get="logs"
-            hx-trigger="keyup delay:500ms, change delay:500ms, immediateUnitFilterUpdate"
-            hx-target="#results"
-            class="log-filter"
-            hx-indicator="#loading-spinner"
-            hx-include=".log-filter"
-          />
-        </div>
-        <div>
-          <input
-            type="text"
-            id="tag-filter"
-            name="tag"
-            placeholder="Syslog Tag (e.g., myapp)"
-            title="Filter logs by syslog identifier (tag)"
-            hx-get="logs"
-            hx-trigger="keyup changed delay:500ms"
-            hx-target="#results"
-            class="log-filter"
-            hx-indicator="#loading-spinner"
-            hx-include=".log-filter"
-          />
-        </div>
-        <div>
-          <input
-            type="text"
-            id="hostname-filter"
-            name="hostname"
-            placeholder="Hostname (e.g., server1)"
-            title="Filter logs by hostname (_HOSTNAME)"
-            hx-get="logs"
-            hx-trigger="keyup delay:500ms, change delay:500ms, immediateHostnameFilterUpdate"
-            hx-target="#results"
-            class="log-filter"
-            hx-indicator="#loading-spinner"
-            hx-include=".log-filter"
-          />
-        </div>
+        <details class="filter-group-controls">
+          <summary
+            role="button"
+            class="secondary outline"
+            style="
+              font-weight: bold;
+              margin-bottom: var(--pico-form-element-spacing-vertical);
+            "
+          >
+            Advanced Filters
+          </summary>
+          <div>
+            <hr style="margin-top: var(--pico-form-element-spacing-vertical)" />
+            <!-- Unit and Tag Filters -->
+            <div>
+              <input
+                type="text"
+                id="unit-filter"
+                name="unit"
+                list="unit-suggestions"
+                placeholder="Unit (e.g., docker)"
+                title="Filter logs by systemd unit (e.g., nginx)"
+                hx-get="logs"
+                hx-trigger="keyup delay:500ms, change delay:500ms, immediateUnitFilterUpdate"
+                hx-target="#results"
+                class="log-filter"
+                hx-indicator="#loading-spinner"
+                hx-include=".log-filter"
+              />
+            </div>
+            <div>
+              <input
+                type="text"
+                id="tag-filter"
+                name="tag"
+                placeholder="Syslog Tag (e.g., myapp)"
+                title="Filter logs by syslog identifier (tag)"
+                hx-get="logs"
+                hx-trigger="keyup changed delay:500ms"
+                hx-target="#results"
+                class="log-filter"
+                hx-indicator="#loading-spinner"
+                hx-include=".log-filter"
+              />
+            </div>
+            <div>
+              <input
+                type="text"
+                id="hostname-filter"
+                name="hostname"
+                placeholder="Hostname (e.g., server1)"
+                title="Filter logs by hostname (_HOSTNAME)"
+                hx-get="logs"
+                hx-trigger="keyup delay:500ms, change delay:500ms, immediateHostnameFilterUpdate"
+                hx-target="#results"
+                class="log-filter"
+                hx-indicator="#loading-spinner"
+                hx-include=".log-filter"
+              />
+            </div>
 
-        <!-- Row 3: Time and Priority Filters -->
-        <div>
-          <select
-            id="time-range-filter"
-            name="since"
-            hx-get="logs"
-            title="Filter logs by time range"
-            hx-trigger="change"
-            hx-target="#results"
-            class="log-filter"
-            hx-indicator="#loading-spinner"
-            hx-include=".log-filter"
-          >
-            <option value="">Any time</option>
-            <!-- Default/no filter -->
-            <option value="-15m">Last 15 minutes</option>
-            <option value="-1h">Last 1 hour</option>
-            <option value="-1d">Last 24 hours</option>
-            <option value="-7d">Last week</option>
-            <option value="-1M">Last month</option>
-            <option value="-3M">Last 3 months</option>
-            <option value="-1y">Last year</option>
-            <!-- You could add more specific date/time inputs here if needed -->
-          </select>
-        </div>
-        <div>
-          <select
-            id="priority-filter"
-            name="priority"
-            hx-get="logs"
-            title="Filter logs by priority level"
-            hx-trigger="change"
-            hx-target="#results"
-            class="log-filter"
-            hx-indicator="#loading-spinner"
-            hx-include=".log-filter"
-          >
-            <option value="0">Emergency</option>
-            <option value="1">Alert</option>
-            <option value="2">Critical</option>
-            <option value="3">Error</option>
-            <option value="4">Warning</option>
-            <option value="5" selected>Notice</option>
-            <option value="6">Informational</option>
-            <option value="7">Debug</option>
-          </select>
-        </div>
+            <!-- Time and Priority Filters -->
+            <div>
+              <select
+                id="time-range-filter"
+                name="since"
+                hx-get="logs"
+                title="Filter logs by time range"
+                hx-trigger="change"
+                hx-target="#results"
+                class="log-filter"
+                hx-indicator="#loading-spinner"
+                hx-include=".log-filter"
+              >
+                <option value="">Any time</option>
+                <option value="-15m">Last 15 minutes</option>
+                <option value="-1h">Last 1 hour</option>
+                <option value="-1d">Last 24 hours</option>
+                <option value="-7d">Last week</option>
+                <option value="-1M">Last month</option>
+                <option value="-3M">Last 3 months</option>
+                <option value="-1y">Last year</option>
+              </select>
+            </div>
+            <div>
+              <select
+                id="priority-filter"
+                name="priority"
+                hx-get="logs"
+                title="Filter logs by priority level"
+                hx-trigger="change"
+                hx-target="#results"
+                class="log-filter"
+                hx-indicator="#loading-spinner"
+                hx-include=".log-filter"
+              >
+                <option value="0">Emergency</option>
+                <option value="1">Alert</option>
+                <option value="2">Critical</option>
+                <option value="3">Error</option>
+                <option value="4">Warning</option>
+                <option value="5" selected>Notice</option>
+                <option value="6">Informational</option>
+                <option value="7">Debug</option>
+              </select>
+            </div>
+          </div>
+        </details>
 
         <!-- Column Visibility Toggles -->
         <details class="column-visibility-controls">
           <summary
             role="button"
             class="secondary outline"
-            style="font-weight: bold; margin-bottom: var(--pico-form-element-spacing-vertical);"
+            style="
+              font-weight: bold;
+              margin-bottom: var(--pico-form-element-spacing-vertical);
+            "
           >
             Column Visibility
           </summary>
           <div>
             <!-- Content of the collapsible section -->
-            <hr style="margin-top: var(--pico-form-element-spacing-vertical);" />
+            <hr style="margin-top: var(--pico-form-element-spacing-vertical)" />
             <div>
               <label for="col-visible-timestamp"
                 ><input
@@ -472,11 +488,36 @@
           type: "checkbox",
           trueValue: "on",
         },
-        { id: "col-visible-timestamp", param: "col-visible-timestamp", type: "checkbox", trueValue: "on" },
-        { id: "col-visible-hostname", param: "col-visible-hostname", type: "checkbox", trueValue: "on" },
-        { id: "col-visible-unit", param: "col-visible-unit", type: "checkbox", trueValue: "on" },
-        { id: "col-visible-priority", param: "col-visible-priority", type: "checkbox", trueValue: "on" },
-        { id: "col-visible-message", param: "col-visible-message", type: "checkbox", trueValue: "on" },
+        {
+          id: "col-visible-timestamp",
+          param: "col-visible-timestamp",
+          type: "checkbox",
+          trueValue: "on",
+        },
+        {
+          id: "col-visible-hostname",
+          param: "col-visible-hostname",
+          type: "checkbox",
+          trueValue: "on",
+        },
+        {
+          id: "col-visible-unit",
+          param: "col-visible-unit",
+          type: "checkbox",
+          trueValue: "on",
+        },
+        {
+          id: "col-visible-priority",
+          param: "col-visible-priority",
+          type: "checkbox",
+          trueValue: "on",
+        },
+        {
+          id: "col-visible-message",
+          param: "col-visible-message",
+          type: "checkbox",
+          trueValue: "on",
+        },
       ];
 
       document.addEventListener("DOMContentLoaded", function () {
@@ -559,15 +600,15 @@
           "col-visible-message",
         ];
 
-        COLUMN_VISIBILITY_CHECKBOX_IDS.forEach(id => {
+        COLUMN_VISIBILITY_CHECKBOX_IDS.forEach((id) => {
           const checkbox = document.getElementById(id);
           if (checkbox) {
             const localStorageKey = `grafito-${id}-checked`;
             const savedState = localStorage.getItem(localStorageKey);
             if (savedState !== null) {
-              checkbox.checked = (savedState === 'true');
+              checkbox.checked = savedState === "true";
             }
-            checkbox.addEventListener('change', function() {
+            checkbox.addEventListener("change", function () {
               localStorage.setItem(localStorageKey, this.checked);
               // HTMX attributes on the checkbox will handle the refresh
             });

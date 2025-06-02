@@ -33,9 +33,12 @@ main {
     top: var(--spacing, 2.5rem);
     left: 1rem;
     /* Adjust this value to increase/decrease left margin */
-    z-index: 1050; /* Ensure it's above sidebar but potentially below modals */
-    font-size: 0.7em; /* Smaller font size for the icon */
-    padding: 0.35rem 0.5rem; /* Smaller padding */
+    z-index: 1050;
+    /* Ensure it's above sidebar but potentially below modals */
+    font-size: 0.7em;
+    /* Smaller font size for the icon */
+    padding: 0.35rem 0.5rem;
+    /* Smaller padding */
     line-height: 1;
     border: none;
     cursor: pointer;
@@ -192,7 +195,8 @@ footer.container-fluid .theme-switch-wrapper {
 }
 
 h1 {
-    font-family: "Chivo", sans-serif; /* Explicitly set for h1, or can inherit from body */
+    font-family: "Chivo", sans-serif;
+    /* Explicitly set for h1, or can inherit from body */
     font-size: 4em;
     margin-bottom: 0;
 }
@@ -248,6 +252,7 @@ h1 {
     padding: 0.1em 0;
     /* Optional: adds a little vertical breathing room */
 }
+
 .log-message-cell {
     white-space: normal;
     overflow-wrap: break-word;
