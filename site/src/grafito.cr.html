@@ -22,17 +22,17 @@
    will add more as I know what they do and which semantic
    value from base16 may make sense */
 
-/* Theme: Default Dark */
-/* Author: Chris Kempson (http://chriskempson.com) */
+/* Theme: Apathy */
+/* Author: Jannik Siebert (https://github.com/janniks) */
 
 :root {
-    --pico-background-color: #181818; /* Default backround */
-    --pico-color: #d8d8d8; /* Default foreground */
-    --pico-text-selection-color: #383838; /* Selection background */
-    --pico-primary: #7cafc2; /* Headings */
+    --pico-background-color: #031a16; /* Default backround */
+    --pico-color: #81b5ac; /* Default foreground */
+    --pico-text-selection-color: #184e45; /* Selection background */
+    --pico-primary: #96883e; /* Headings */
     --pico-primary-underline: var(--pico-primary);
-    --pico-primary-background: #383838;
-    --pico-primary-hover: #dc9656; /* Link URL */
+    --pico-primary-background: #184e45;
+    --pico-primary-hover: #3e7996; /* Link URL */
     --pico-primary-hover-underline: var(--pico-primary-hover);
     --pico-h1-color: var(--pico-primary); /* Default foreground */
     --pico-h2-color: var(--pico-primary); /* Default foreground */
@@ -53,7 +53,7 @@
     }
 
     html {
-        background: linear-gradient(to right, var(--pico-background-color) 50%, #282828 50%);
+        background: linear-gradient(to right, var(--pico-background-color) 50%, #0b342d 50%);
     }
 
     body {
@@ -64,8 +64,8 @@
 
     footer {
         text-align: center;
-        border-top: solid 1px #b8b8b8;
-        background-color: #181818;
+        border-top: solid 1px #5f9c92;
+        background-color: #031a16;
         margin-top: auto;
     }
     code,
@@ -73,11 +73,11 @@
         font-family: 'Chivo Mono', monospace !important;
         padding-top: 0 !important;
         padding-left: 0 !important;
-        background-color: #282828 !important;
+        background-color: #0b342d !important;
     }
 
     div.doc>pre>code {
-        background-color: #383838;
+        background-color: #184e45;
         padding: 1em !important;
     }
 
@@ -292,15 +292,6 @@ it will work fine but fonts will look different and icons may be missing.</p>
         <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="nc">Assets</span><span class="t">
 </span><span class="t">    </span><span class="nk">extend</span><span class="t"> </span><span class="nc">BakedFileSystem</span><span class="t">
 </span><span class="t">    </span><span class="t">bake_folder</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./assets</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">  </span><span class="nk">end</span><span class="t">
-</span><span class="t">
-</span><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t">
-</span><span class="t">    </span><span class="t">serve_file</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">index.min.html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
-</span><span class="t">  </span><span class="nk">end</span><span class="t">
-</span><span class="t">
-</span><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/:file</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t">
-</span><span class="t">    </span><span class="t">filename</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">url</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">file</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">
-</span><span class="t">    </span><span class="t">serve_file</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="t">filename</span><span class="t">)</span><span class="t">
 </span><span class="t">  </span><span class="nk">end</span></code></pre>
     </div>
 </div>
@@ -309,6 +300,42 @@ it will work fine but fonts will look different and icons may be missing.</p>
     <div class="doc" id="section-5">
         <span class="anchor">
             <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>One special endpoint is <code>/</code> because it serves the only page in the app.
+We are serving a minified version which is source-mapped to the &quot;real&quot;
+one <a href="">assets/index.html</a> sadly there is no literate version of it yet
+because <a href="https://crycco.ralsina.me">Crycco</a> the tool I wrote and am
+using has no support for HTML source files (yet)</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t">
+</span><span class="t">    </span><span class="t">serve_file</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">index.min.html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc" id="section-6">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>This endpoint is just a wrapper to <code>serve_file</code> which sends the user
+files from the baked assets.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/:file</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t">
+</span><span class="t">    </span><span class="t">filename</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">url</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">file</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">
+</span><span class="t">    </span><span class="t">serve_file</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="t">filename</span><span class="t">)</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc" id="section-7">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
         </span>
         <p>Serves a file from the baked assets.
 <code>requested_filename</code> is the name of the file as requested by the client (e.g., <code>style.css</code>).</p>
@@ -319,10 +346,10 @@ it will work fine but fonts will look different and icons may be missing.</p>
     </div>
 </div>
 
-<div id="section-6" class="grid">
-    <div class="doc" id="section-6">
+<div id="section-8" class="grid">
+    <div class="doc" id="section-8">
         <span class="anchor">
-            <a href="#section-6" class="anchor">↦</a>
+            <a href="#section-8" class="anchor">↦</a>
         </span>
         <p>Files are stored as /style.css so fix the path and get the file contents.</p>
 
@@ -333,10 +360,10 @@ it will work fine but fonts will look different and icons may be missing.</p>
     </div>
 </div>
 
-<div id="section-7" class="grid">
-    <div class="doc" id="section-7">
+<div id="section-9" class="grid">
+    <div class="doc" id="section-9">
         <span class="anchor">
-            <a href="#section-7" class="anchor">↦</a>
+            <a href="#section-9" class="anchor">↦</a>
         </span>
         <p>We have to guess the content type based on the file extension.</p>
 
@@ -347,10 +374,10 @@ it will work fine but fonts will look different and icons may be missing.</p>
     </div>
 </div>
 
-<div id="section-8" class="grid">
-    <div class="doc" id="section-8">
+<div id="section-10" class="grid">
+    <div class="doc" id="section-10">
         <span class="anchor">
-            <a href="#section-8" class="anchor">↦</a>
+            <a href="#section-10" class="anchor">↦</a>
         </span>
         <p>Set a reasonable cache lifetime</p>
 
@@ -360,10 +387,10 @@ it will work fine but fonts will look different and icons may be missing.</p>
     </div>
 </div>
 
-<div id="section-9" class="grid">
-    <div class="doc" id="section-9">
+<div id="section-11" class="grid">
+    <div class="doc" id="section-11">
         <span class="anchor">
-            <a href="#section-9" class="anchor">↦</a>
+            <a href="#section-11" class="anchor">↦</a>
         </span>
         <p>And send the data on its way.</p>
 
@@ -374,10 +401,10 @@ it will work fine but fonts will look different and icons may be missing.</p>
     </div>
 </div>
 
-<div id="section-10" class="grid">
-    <div class="doc" id="section-10">
+<div id="section-12" class="grid">
+    <div class="doc" id="section-12">
         <span class="anchor">
-            <a href="#section-10" class="anchor">↦</a>
+            <a href="#section-12" class="anchor">↦</a>
         </span>
         <p>If it's not baked in, give a 404. Grafito will <em>NOT</em> return any files from disk.</p>
 
@@ -389,10 +416,10 @@ it will work fine but fonts will look different and icons may be missing.</p>
     </div>
 </div>
 
-<div id="section-11" class="grid">
-    <div class="doc" id="section-11">
+<div id="section-13" class="grid">
+    <div class="doc" id="section-13">
         <span class="anchor">
-            <a href="#section-11" class="anchor">↦</a>
+            <a href="#section-13" class="anchor">↦</a>
         </span>
         <h2>The <code>/logs</code> endpoint</h2>
 <p>Exposes the Journalctl wrapper via a REST API.
@@ -407,10 +434,10 @@ Example usage:</p>
     </div>
 </div>
 
-<div id="section-12" class="grid">
-    <div class="doc" id="section-12">
+<div id="section-14" class="grid">
+    <div class="doc" id="section-14">
         <span class="anchor">
-            <a href="#section-12" class="anchor">↦</a>
+            <a href="#section-14" class="anchor">↦</a>
         </span>
         <p>A time definition. For example: <code>-1w</code> means &quot;since 1 week ago&quot;</p>
 
@@ -420,10 +447,10 @@ Example usage:</p>
     </div>
 </div>
 
-<div id="section-13" class="grid">
-    <div class="doc" id="section-13">
+<div id="section-15" class="grid">
+    <div class="doc" id="section-15">
         <span class="anchor">
-            <a href="#section-13" class="anchor">↦</a>
+            <a href="#section-15" class="anchor">↦</a>
         </span>
         <p>What systemd unit do we want to see logs for.</p>
 
@@ -433,10 +460,10 @@ Example usage:</p>
     </div>
 </div>
 
-<div id="section-14" class="grid">
-    <div class="doc" id="section-14">
+<div id="section-16" class="grid">
+    <div class="doc" id="section-16">
         <span class="anchor">
-            <a href="#section-14" class="anchor">↦</a>
+            <a href="#section-16" class="anchor">↦</a>
         </span>
         <p>Filter logs by syslog tag</p>
 
@@ -446,10 +473,10 @@ Example usage:</p>
     </div>
 </div>
 
-<div id="section-15" class="grid">
-    <div class="doc" id="section-15">
+<div id="section-17" class="grid">
+    <div class="doc" id="section-17">
         <span class="anchor">
-            <a href="#section-15" class="anchor">↦</a>
+            <a href="#section-17" class="anchor">↦</a>
         </span>
         <p>General search term from main input. Can be a regex and is matched to the message field.</p>
 
@@ -459,10 +486,10 @@ Example usage:</p>
     </div>
 </div>
 
-<div id="section-16" class="grid">
-    <div class="doc" id="section-16">
+<div id="section-18" class="grid">
+    <div class="doc" id="section-18">
         <span class="anchor">
-            <a href="#section-16" class="anchor">↦</a>
+            <a href="#section-18" class="anchor">↦</a>
         </span>
         <p>Filter logs by priority. All priorities &quot;less important&quot; than the requested one will be ignored.</p>
 
@@ -472,10 +499,10 @@ Example usage:</p>
     </div>
 </div>
 
-<div id="section-17" class="grid">
-    <div class="doc" id="section-17">
+<div id="section-19" class="grid">
+    <div class="doc" id="section-19">
         <span class="anchor">
-            <a href="#section-17" class="anchor">↦</a>
+            <a href="#section-19" class="anchor">↦</a>
         </span>
         <p>Filter logs by hostname (you can concentrate logs from multiple hosts!)</p>
 
@@ -485,10 +512,10 @@ Example usage:</p>
     </div>
 </div>
 
-<div id="section-18" class="grid">
-    <div class="doc" id="section-18">
+<div id="section-20" class="grid">
+    <div class="doc" id="section-20">
         <span class="anchor">
-            <a href="#section-18" class="anchor">↦</a>
+            <a href="#section-20" class="anchor">↦</a>
         </span>
         <p>The UI allows for sorting by different fields</p>
 
@@ -499,10 +526,10 @@ Example usage:</p>
     </div>
 </div>
 
-<div id="section-19" class="grid">
-    <div class="doc" id="section-19">
+<div id="section-21" class="grid">
+    <div class="doc" id="section-21">
         <span class="anchor">
-            <a href="#section-19" class="anchor">↦</a>
+            <a href="#section-21" class="anchor">↦</a>
         </span>
         <p>This endpoint can return in both HTML or text formats. HTML is useful because
 the frontend is written using <a href="https://htmx.org">HTMX</a></p>
@@ -513,10 +540,10 @@ the frontend is written using <a href="https://htmx.org">HTMX</a></p>
     </div>
 </div>
 
-<div id="section-20" class="grid">
-    <div class="doc" id="section-20">
+<div id="section-22" class="grid">
+    <div class="doc" id="section-22">
         <span class="anchor">
-            <a href="#section-20" class="anchor">↦</a>
+            <a href="#section-22" class="anchor">↦</a>
         </span>
         <p>Determine column visibility from query parameters. The frontend allows
 choosing which fields of the log entries are visible.</p>
@@ -531,10 +558,10 @@ choosing which fields of the log entries are visible.</p>
     </div>
 </div>
 
-<div id="section-21" class="grid">
-    <div class="doc" id="section-21">
+<div id="section-23" class="grid">
+    <div class="doc" id="section-23">
         <span class="anchor">
-            <a href="#section-21" class="anchor">↦</a>
+            <a href="#section-23" class="anchor">↦</a>
         </span>
         <p>FIXME: simplify</p>
 
@@ -545,10 +572,10 @@ choosing which fields of the log entries are visible.</p>
     </div>
 </div>
 
-<div id="section-22" class="grid">
-    <div class="doc" id="section-22">
+<div id="section-24" class="grid">
+    <div class="doc" id="section-24">
         <span class="anchor">
-            <a href="#section-22" class="anchor">↦</a>
+            <a href="#section-24" class="anchor">↦</a>
         </span>
         <p>Now that we know exactly what logs we want, we send the query to the <code>journalctl</code> wrapper
 defined in <a href="journalctl.cr.html">journalctl.cr</a>.</p>
@@ -568,10 +595,10 @@ defined in <a href="journalctl.cr.html">journalctl.cr</a>.</p>
     </div>
 </div>
 
-<div id="section-23" class="grid">
-    <div class="doc" id="section-23">
+<div id="section-25" class="grid">
+    <div class="doc" id="section-25">
         <span class="anchor">
-            <a href="#section-23" class="anchor">↦</a>
+            <a href="#section-25" class="anchor">↦</a>
         </span>
         <p>If there are no logs matching our filters logs will be Nil.</p>
 
@@ -581,10 +608,10 @@ defined in <a href="journalctl.cr.html">journalctl.cr</a>.</p>
     </div>
 </div>
 
-<div id="section-24" class="grid">
-    <div class="doc" id="section-24">
+<div id="section-26" class="grid">
+    <div class="doc" id="section-26">
         <span class="anchor">
-            <a href="#section-24" class="anchor">↦</a>
+            <a href="#section-26" class="anchor">↦</a>
         </span>
         <p>But if we <em>do</em> have logs, we use one of two helpers to
 create the actual responses.</p>
@@ -613,10 +640,10 @@ create the actual responses.</p>
     </div>
 </div>
 
-<div id="section-25" class="grid">
-    <div class="doc" id="section-25">
+<div id="section-27" class="grid">
+    <div class="doc" id="section-27">
         <span class="anchor">
-            <a href="#section-25" class="anchor">↦</a>
+            <a href="#section-27" class="anchor">↦</a>
         </span>
         <p>If we failed to retrieve logs, we raise an error.
 Probably 500 is the wrong one, and it should be a 404?</p>
@@ -635,10 +662,10 @@ Probably 500 is the wrong one, and it should be a 404?</p>
     </div>
 </div>
 
-<div id="section-26" class="grid">
-    <div class="doc" id="section-26">
+<div id="section-28" class="grid">
+    <div class="doc" id="section-28">
         <span class="anchor">
-            <a href="#section-26" class="anchor">↦</a>
+            <a href="#section-28" class="anchor">↦</a>
         </span>
         <h2>The <code>/services</code> endpoint</h2>
 <p>Exposes the list of known service units. The frontend uses
@@ -652,10 +679,10 @@ Example usage:</p>
     </div>
 </div>
 
-<div id="section-27" class="grid">
-    <div class="doc" id="section-27">
+<div id="section-29" class="grid">
+    <div class="doc" id="section-29">
         <span class="anchor">
-            <a href="#section-27" class="anchor">↦</a>
+            <a href="#section-29" class="anchor">↦</a>
         </span>
         <p>Here <code>known_service_units</code> is a wrapper around systemctl.</p>
 
@@ -668,10 +695,10 @@ Example usage:</p>
     </div>
 </div>
 
-<div id="section-28" class="grid">
-    <div class="doc" id="section-28">
+<div id="section-30" class="grid">
+    <div class="doc" id="section-30">
         <span class="anchor">
-            <a href="#section-28" class="anchor">↦</a>
+            <a href="#section-30" class="anchor">↦</a>
         </span>
         <p>Build HTML options using html_builder</p>
 
@@ -688,10 +715,10 @@ Example usage:</p>
     </div>
 </div>
 
-<div id="section-29" class="grid">
-    <div class="doc" id="section-29">
+<div id="section-31" class="grid">
+    <div class="doc" id="section-31">
         <span class="anchor">
-            <a href="#section-29" class="anchor">↦</a>
+            <a href="#section-31" class="anchor">↦</a>
         </span>
         <p>This should never happen unless something is broken in the system.</p>
 
@@ -704,10 +731,10 @@ Example usage:</p>
     </div>
 </div>
 
-<div id="section-30" class="grid">
-    <div class="doc" id="section-30">
+<div id="section-32" class="grid">
+    <div class="doc" id="section-32">
         <span class="anchor">
-            <a href="#section-30" class="anchor">↦</a>
+            <a href="#section-32" class="anchor">↦</a>
         </span>
         <h2>The <code>/command</code> endpoint</h2>
 <p>Exposes the command that would be run by /logs with the given parameters.
@@ -730,10 +757,10 @@ configured filters would be.</p>
     </div>
 </div>
 
-<div id="section-31" class="grid">
-    <div class="doc" id="section-31">
+<div id="section-33" class="grid">
+    <div class="doc" id="section-33">
         <span class="anchor">
-            <a href="#section-31" class="anchor">↦</a>
+            <a href="#section-33" class="anchor">↦</a>
         </span>
         <p>Here <code>build_query_command</code> is the same function used by <code>Journalctl.query</code> so the command line
 should always be correct.</p>
@@ -747,10 +774,10 @@ should always be correct.</p>
     </div>
 </div>
 
-<div id="section-32" class="grid">
-    <div class="doc" id="section-32">
+<div id="section-34" class="grid">
+    <div class="doc" id="section-34">
         <span class="anchor">
-            <a href="#section-32" class="anchor">↦</a>
+            <a href="#section-34" class="anchor">↦</a>
         </span>
         <h2>The <code>/details</code> endpoint</h2>
 <p>Exposes detailed information for a single log entry based on its cursor.
@@ -767,10 +794,10 @@ represented by the <code>cursor</code></p>
     </div>
 </div>
 
-<div id="section-33" class="grid">
-    <div class="doc" id="section-33">
+<div id="section-35" class="grid">
+    <div class="doc" id="section-35">
         <span class="anchor">
-            <a href="#section-33" class="anchor">↦</a>
+            <a href="#section-35" class="anchor">↦</a>
         </span>
         <p>If there is no cursor, error out.</p>
 
@@ -785,10 +812,10 @@ represented by the <code>cursor</code></p>
     </div>
 </div>
 
-<div id="section-34" class="grid">
-    <div class="doc" id="section-34">
+<div id="section-36" class="grid">
+    <div class="doc" id="section-36">
         <span class="anchor">
-            <a href="#section-34" class="anchor">↦</a>
+            <a href="#section-36" class="anchor">↦</a>
         </span>
         <p>We have no data for the entry, just show a message</p>
 
@@ -802,10 +829,10 @@ represented by the <code>cursor</code></p>
     </div>
 </div>
 
-<div id="section-35" class="grid">
-    <div class="doc" id="section-35">
+<div id="section-37" class="grid">
+    <div class="doc" id="section-37">
         <span class="anchor">
-            <a href="#section-35" class="anchor">↦</a>
+            <a href="#section-37" class="anchor">↦</a>
         </span>
         <p>Create a pretty JSON version of the raw entry</p>
 
@@ -820,10 +847,10 @@ represented by the <code>cursor</code></p>
     </div>
 </div>
 
-<div id="section-36" class="grid">
-    <div class="doc" id="section-36">
+<div id="section-38" class="grid">
+    <div class="doc" id="section-38">
         <span class="anchor">
-            <a href="#section-36" class="anchor">↦</a>
+            <a href="#section-38" class="anchor">↦</a>
         </span>
         <p>We didn't find the entry, so error out with a 404</p>
 
@@ -836,10 +863,10 @@ represented by the <code>cursor</code></p>
     </div>
 </div>
 
-<div id="section-37" class="grid">
-    <div class="doc" id="section-37">
+<div id="section-39" class="grid">
+    <div class="doc" id="section-39">
         <span class="anchor">
-            <a href="#section-37" class="anchor">↦</a>
+            <a href="#section-39" class="anchor">↦</a>
         </span>
         <h2>The <code>/context</code> endpoint</h2>
 <p>Exposes log entry context (entries before and after a given cursor).
@@ -861,10 +888,10 @@ that are around the requested one for context.</p>
     </div>
 </div>
 
-<div id="section-38" class="grid">
-    <div class="doc" id="section-38">
+<div id="section-40" class="grid">
+    <div class="doc" id="section-40">
         <span class="anchor">
-            <a href="#section-38" class="anchor">↦</a>
+            <a href="#section-40" class="anchor">↦</a>
         </span>
         <p>Default to 5 if not provided or invalid</p>
 
@@ -878,10 +905,10 @@ that are around the requested one for context.</p>
     </div>
 </div>
 
-<div id="section-39" class="grid">
-    <div class="doc" id="section-39">
+<div id="section-41" class="grid">
+    <div class="doc" id="section-41">
         <span class="anchor">
-            <a href="#section-39" class="anchor">↦</a>
+            <a href="#section-41" class="anchor">↦</a>
         </span>
         <p>Get <code>count</code> entries before and after the cursor</p>
 
@@ -894,10 +921,10 @@ that are around the requested one for context.</p>
     </div>
 </div>
 
-<div id="section-40" class="grid">
-    <div class="doc" id="section-40">
+<div id="section-42" class="grid">
+    <div class="doc" id="section-42">
         <span class="anchor">
-            <a href="#section-40" class="anchor">↦</a>
+            <a href="#section-42" class="anchor">↦</a>
         </span>
         <p>Retain the specific title for the context view</p>
 
@@ -907,13 +934,15 @@ that are around the requested one for context.</p>
     </div>
 </div>
 
-<div id="section-41" class="grid">
-    <div class="doc" id="section-41">
+<div id="section-43" class="grid">
+    <div class="doc" id="section-43">
         <span class="anchor">
-            <a href="#section-41" class="anchor">↦</a>
+            <a href="#section-43" class="anchor">↦</a>
         </span>
         <p>For context view, we generally want to see all columns, including Unit.
-Sorting and search query are not directly applicable here.</p>
+Sorting and search query are not directly applicable here, and we don´t
+want the <code>chart</code>, a timeline of events, since they are all consecutive
+in a short period.</p>
 
     </div>
     <div class="code">
@@ -933,10 +962,10 @@ Sorting and search query are not directly applicable here.</p>
     </div>
 </div>
 
-<div id="section-42" class="grid">
-    <div class="doc" id="section-42">
+<div id="section-44" class="grid">
+    <div class="doc" id="section-44">
         <span class="anchor">
-            <a href="#section-42" class="anchor">↦</a>
+            <a href="#section-44" class="anchor">↦</a>
         </span>
         <p>Combine the custom title with the table generated by the helper</p>
 
@@ -947,10 +976,10 @@ Sorting and search query are not directly applicable here.</p>
     </div>
 </div>
 
-<div id="section-43" class="grid">
-    <div class="doc" id="section-43">
+<div id="section-45" class="grid">
+    <div class="doc" id="section-45">
         <span class="anchor">
-            <a href="#section-43" class="anchor">↦</a>
+            <a href="#section-45" class="anchor">↦</a>
         </span>
         <p>Journalctl.context might return nil if the original cursor was not found
 or if the count was invalid (though we check count above).</p>
@@ -971,7 +1000,7 @@ or if the count was invalid (though we check count above).</p>
         » Layout
 sidebyside
 
-        » Theme: Default Dark
+        » Theme: Apathy
         » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
             Family</a>
     </footer>

@@ -5,7 +5,7 @@
 # a tool such as [crycco](https://crycco.ralsina.me) it will turn into
 # a readable guided tour.
 #
-# It doesn´t hurt that there is not so much code 🤣
+# It doesn't hurt that there is not so much code 🤣
 #
 # Grafito is a simple log viewer. While it tries to have a nice UI, the
 # *idea* itself is simple. Your Linux system already provides a nice
@@ -100,6 +100,7 @@ def main
   end
 
   # Tell kemal to listen on the right port. That's it. The rest is done in [grafito.cr](grafito.cr.html)
+  # where the kemal endpoints are defined.
   Kemal.run(port: port)
 end
 

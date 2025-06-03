@@ -80,4 +80,4 @@ test:
 
 .PHONY: website
 website:
-	crycco shard.yml src/*.cr -o site
+	crycco --theme=apathy shard.yml src/*.cr -o site

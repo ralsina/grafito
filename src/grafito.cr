@@ -48,9 +48,18 @@ module Grafito
     bake_folder "./assets"
   end
 
+  # One special endpoint is `/` because it serves the only page in the app.
+  # We are serving a minified version which is source-mapped to the "real"
+  # one [assets/index.html]() sadly there is no literate version of it yet
+  # because [Crycco](https://crycco.ralsina.me) the tool I wrote and am
+  # using has no support for HTML source files (yet)
+
   get "/" do |env|
     serve_file(env, "index.min.html")
   end
+
+  # This endpoint is just a wrapper to `serve_file` which sends the user
+  # files from the baked assets.
 
   get "/:file" do |env|
     filename = env.params.url["file"]
