@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>journalctl.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;}.nc {color: #7cafc2;}.nc {color: #dc9656;}.nd {color: #dc9656;}.nf {color: #7cafc2;}.nn {color: #7cafc2;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.ln {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.ls {color: #a1b56c;}.lsi {color: #a16946;}.lsr {color: #86c1b9;}.lss {color: #dc9656;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Default Dark */
+/* Author: Chris Kempson (http://chriskempson.com) */
+
+:root {
+    --pico-background-color: #181818; /* Default backround */
+    --pico-color: #d8d8d8; /* Default foreground */
+    --pico-text-selection-color: #383838; /* Selection background */
+    --pico-primary: #7cafc2; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #383838;
+    --pico-primary-hover: #dc9656; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-variant-ligatures: none;
+        font-weight: 300;
+        overflow: visible !important;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 50%, #282828 50%);
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #b8b8b8;
+        background-color: #181818;
+        margin-top: auto;
+    }
+    code,
+    code * {
+        font-family: 'Chivo Mono', monospace !important;
+        padding-top: 0 !important;
+        padding-left: 0 !important;
+        background-color: #282828 !important;
+    }
+
+    div.doc>pre>code {
+        background-color: #383838;
+        padding: 1em !important;
+    }
+
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+
+            {
+            # font-size: 150%;
+            #
+        }
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/journalctl.cr</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc" id="section-1">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">time</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">log</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">
+</span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="lss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t">
+</span><span class="t">  </span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./fake_journal_data</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># For fake data generation</span><span class="t">
+</span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span></code></pre>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc" id="section-2">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>A wrapper for journalctl</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="nk">class</span><span class="t"> </span><span class="nc">Journalctl</span></code></pre>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc" id="section-3">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>Setup a logger for this class</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nc">Log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="nk">for</span><span class="t">(</span><span class="nk">self</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc" id="section-4">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>Custom JSON converter for __REALTIME_TIMESTAMP (microseconds string) to Time</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="nc">MicrosecondsEpochConverter</span></code></pre>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc" id="section-5">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>Helper to convert from a string value, also handling nil or empty strings.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">from_string</span><span class="t">(</span><span class="t">s_val</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Time</span><span class="t">
+</span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="nc">Time</span><span class="t">.</span><span class="t">unix</span><span class="t">(</span><span class="ln">0</span><span class="t">)</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">s_val</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">s_val</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t">
+</span><span class="t">      </span><span class="nc">Time</span><span class="t">.</span><span class="t">unix_ms</span><span class="t">(</span><span class="t">s_val</span><span class="t">.</span><span class="t">to_i64</span><span class="t"> </span><span class="o">//</span><span class="t"> </span><span class="ln">1000</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">ArgumentError</span><span class="t">
+</span><span class="t">      </span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Failed to parse timestamp string &#39;</span><span class="lsi">#{</span><span class="t">s_val</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; for Time conversion, defaulting to epoch.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">      </span><span class="nc">Time</span><span class="t">.</span><span class="t">unix</span><span class="t">(</span><span class="ln">0</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc" id="section-6">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>Converts from JSON, typically called by JSON::Serializable.
+Uses read_string_or_null to correctly handle JSON null values.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">from_json</span><span class="t">(</span><span class="t">parser</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">JSON</span><span class="nc">::</span><span class="nc">PullParser</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Time</span><span class="t">
+</span><span class="t">      </span><span class="t">s</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parser</span><span class="t">.</span><span class="t">read_string_or_null</span><span class="t">
+</span><span class="t">      </span><span class="t">from_string</span><span class="t">(</span><span class="t">s</span><span class="t">)</span><span class="t"> </span><span class="c"># Delegate to the string version</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">to_json</span><span class="t">(</span><span class="t">value</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Time</span><span class="t">,</span><span class="t"> </span><span class="t">builder</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">JSON</span><span class="nc">::</span><span class="nc">Builder</span><span class="t">)</span><span class="t">
+</span><span class="t">      </span><span class="t">builder</span><span class="t">.</span><span class="t">string</span><span class="t">(</span><span class="t">(</span><span class="t">value</span><span class="t">.</span><span class="t">to_unix_ms</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc" id="section-7">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>Represents a single log entry retrieved from journalctl.</p>
+<p>This class is used to parse and serialize log data.
+It includes <code>JSON::Serializable</code> to allow easy conversion to and from JSON.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="nc">LogEntry</span><span class="t">
+</span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="nc">JSON</span><span class="nc">::</span><span class="nc">Serializable</span></code></pre>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc" id="section-8">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>The __REALTIME_TIMESTAMP from journalctl is microseconds since epoch, as a string.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">@[</span><span class="nc">JSON</span><span class="nc">::</span><span class="nc">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">__REALTIME_TIMESTAMP</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">converter</span><span class="t">:</span><span class="t"> </span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">MicrosecondsEpochConverter</span><span class="t">)</span><span class="t">]</span><span class="t">
+</span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">timestamp</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Time</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">@[</span><span class="nc">JSON</span><span class="nc">::</span><span class="nc">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">MESSAGE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">]</span><span class="t">
+</span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">message_raw</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="c"># Raw message from JSON</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">@[</span><span class="nc">JSON</span><span class="nc">::</span><span class="nc">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">PRIORITY</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">]</span><span class="t">
+</span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">raw_priority_val</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="c"># Raw priority string from JSON (e.g., &quot;3&quot;)</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">@[</span><span class="nc">JSON</span><span class="nc">::</span><span class="nc">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">_SYSTEMD_UNIT</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">nilable</span><span class="t">:</span><span class="t"> </span><span class="l">true</span><span class="t">)</span><span class="t">]</span><span class="t"> </span><span class="c"># Allow nil from JSON</span><span class="t">
+</span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">internal_unit_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">               </span><span class="c"># Raw unit name from JSON, might be nil</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">@[</span><span class="nc">JSON</span><span class="nc">::</span><span class="nc">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">_HOSTNAME</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">nilable</span><span class="t">:</span><span class="t"> </span><span class="l">true</span><span class="t">)</span><span class="t">]</span><span class="t"> </span><span class="c"># Allow nil from JSON</span><span class="t">
+</span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">                     </span><span class="c"># Raw hostname from JSON, might be nil</span></code></pre>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc" id="section-9">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>Will hold all raw data from journalctl as string key-value pairs</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">data</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Hash</span><span class="t">(</span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc" id="section-10">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
+        <p>Constructor used by JSON::Serializable.
+It's called with named arguments matching property names, after converters are applied.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">initialize</span><span class="t">(</span><span class="t">
+</span><span class="t">      </span><span class="t">@timestamp</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Time</span><span class="t">,</span><span class="t">
+</span><span class="t">      </span><span class="t">@message_raw</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">,</span><span class="t">              </span><span class="c"># Changed to String? to match property type</span><span class="t">
+</span><span class="t">      </span><span class="t">@raw_priority_val</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">,</span><span class="t">         </span><span class="c"># Changed to String? to match property type</span><span class="t">
+</span><span class="t">      </span><span class="t">@internal_unit_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"> </span><span class="c"># Default to nil if _SYSTEMD_UNIT is missing</span><span class="t">
+</span><span class="t">      </span><span class="t">@hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">           </span><span class="c"># Default to nil if there is no _HOSTNAME</span><span class="t">
+</span><span class="t">      </span><span class="t">@data</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Hash</span><span class="t">(</span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">{</span><span class="t">}</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-11" class="grid">
+    <div class="doc" id="section-11">
+        <span class="anchor">
+            <a href="#section-11" class="anchor">↦</a>
+        </span>
+        <p>Properties are assigned directly by JSON::Serializable
+Stripping and defaulting are handled by getters below.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-12" class="grid">
+    <div class="doc" id="section-12">
+        <span class="anchor">
+            <a href="#section-12" class="anchor">↦</a>
+        </span>
+        <p>Custom from_json class method to take control of parsing.
+This allows us to populate the 'data' field with all key-value pairs
+from the JSON, converting all values to strings.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">from_json</span><span class="t">(</span><span class="t">string_or_io</span><span class="t">,</span><span class="t"> </span><span class="t">root</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-13" class="grid">
+    <div class="doc" id="section-13">
+        <span class="anchor">
+            <a href="#section-13" class="anchor">↦</a>
+        </span>
+        <ol>
+<li>Parse the entire JSON into Hash(String, JSON::Any)
+This allows access to all fields dynamically.</li>
+</ol>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">json_as_any_hash</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Hash</span><span class="t">(</span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="nc">JSON</span><span class="nc">::</span><span class="nc">Any</span><span class="t">)</span><span class="t">.</span><span class="t">from_json</span><span class="t">(</span><span class="t">string_or_io</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-14" class="grid">
+    <div class="doc" id="section-14">
+        <span class="anchor">
+            <a href="#section-14" class="anchor">↦</a>
+        </span>
+        <ol start="2">
+<li>Convert Hash(String, JSON::Any) to Hash(String, String) for the 'data' field
+All values are converted to their string representation.</li>
+</ol>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">all_data_as_string_hash</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Hash</span><span class="t">(</span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t">
+</span><span class="t">      </span><span class="t">json_as_any_hash</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">key</span><span class="t">,</span><span class="t"> </span><span class="t">value</span><span class="o">|</span><span class="t">
+</span><span class="t">        </span><span class="t">all_data_as_string_hash</span><span class="t">[</span><span class="t">key</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">value</span><span class="t">.</span><span class="t">to_s</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-15" class="grid">
+    <div class="doc" id="section-15">
+        <span class="anchor">
+            <a href="#section-15" class="anchor">↦</a>
+        </span>
+        <ol start="3">
+<li>Manually extract and convert specific fields for LogEntry properties
+using the json_as_any_hash.</li>
+</ol>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"></code></pre>
+    </div>
+</div>
+
+<div id="section-16" class="grid">
+    <div class="doc" id="section-16">
+        <span class="anchor">
+            <a href="#section-16" class="anchor">↦</a>
+        </span>
+        <p>Timestamp: Use the MicrosecondsEpochConverter.from_string helper</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">ts_json_val</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">json_as_any_hash</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">__REALTIME_TIMESTAMP</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">
+</span><span class="t">      </span><span class="t">timestamp</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">MicrosecondsEpochConverter</span><span class="t">.</span><span class="t">from_string</span><span class="t">(</span><span class="t">ts_json_val</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">as_s?</span><span class="t">)</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-17" class="grid">
+    <div class="doc" id="section-17">
+        <span class="anchor">
+            <a href="#section-17" class="anchor">↦</a>
+        </span>
+        <p>Message: Get as String?</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">message_raw</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">json_as_any_hash</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">MESSAGE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">as_s?</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-18" class="grid">
+    <div class="doc" id="section-18">
+        <span class="anchor">
+            <a href="#section-18" class="anchor">↦</a>
+        </span>
+        <p>Priority: Get as String?</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">raw_priority_val</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">json_as_any_hash</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">PRIORITY</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">as_s?</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-19" class="grid">
+    <div class="doc" id="section-19">
+        <span class="anchor">
+            <a href="#section-19" class="anchor">↦</a>
+        </span>
+        <p>Unit: Get as String?</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">internal_unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">json_as_any_hash</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_SYSTEMD_UNIT</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">as_s?</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-20" class="grid">
+    <div class="doc" id="section-20">
+        <span class="anchor">
+            <a href="#section-20" class="anchor">↦</a>
+        </span>
+        <ol start="4">
+<li>Instantiate LogEntry with the processed values and the complete data hash</li>
+</ol>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="nc">LogEntry</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">
+</span><span class="t">        </span><span class="t">timestamp</span><span class="t">:</span><span class="t"> </span><span class="t">timestamp</span><span class="t">,</span><span class="t">
+</span><span class="t">        </span><span class="t">message_raw</span><span class="t">:</span><span class="t"> </span><span class="t">message_raw</span><span class="t">,</span><span class="t">
+</span><span class="t">        </span><span class="t">raw_priority_val</span><span class="t">:</span><span class="t"> </span><span class="t">raw_priority_val</span><span class="t">,</span><span class="t">
+</span><span class="t">        </span><span class="t">internal_unit_name</span><span class="t">:</span><span class="t"> </span><span class="t">internal_unit_name</span><span class="t">,</span><span class="t">
+</span><span class="t">        </span><span class="t">data</span><span class="t">:</span><span class="t"> </span><span class="t">all_data_as_string_hash</span><span class="t">
+</span><span class="t">      </span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-21" class="grid">
+    <div class="doc" id="section-21">
+        <span class="anchor">
+            <a href="#section-21" class="anchor">↦</a>
+        </span>
+        <p>Getter for the cleaned message</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">message</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">
+</span><span class="t">      </span><span class="t">msg</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@message_raw</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">strip</span><span class="t">
+</span><span class="t">      </span><span class="t">container_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">CONTAINER_NAME</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">
+</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">container_name</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">container_name</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t">
+</span><span class="t">        </span><span class="nk">return</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">[</span><span class="lsi">#{</span><span class="t">container_name</span><span class="t">.</span><span class="t">strip</span><span class="t"></span><span class="lsi">}</span><span class="ls">]: </span><span class="lsi">#{</span><span class="t">msg</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">      </span><span class="t">msg</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-22" class="grid">
+    <div class="doc" id="section-22">
+        <span class="anchor">
+            <a href="#section-22" class="anchor">↦</a>
+        </span>
+        <p>Getter for the priority string (e.g., &quot;0&quot; to &quot;7&quot;)
+This maintains compatibility with previous direct <code>priority</code> field access.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">
+</span><span class="t">      </span><span class="t">val</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@raw_priority_val</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">strip</span><span class="t">
+</span><span class="t">      </span><span class="t">val</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">7</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">val</span><span class="t"> </span><span class="c"># Default to &quot;7&quot; (debug) if empty or not a standard number</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-23" class="grid">
+    <div class="doc" id="section-23">
+        <span class="anchor">
+            <a href="#section-23" class="anchor">↦</a>
+        </span>
+        <p>Getter for the cleaned unit name</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="k">def</span><span class="t"> </span><span class="nf">unit</span><span class="t"> </span><span class="p">:</span><span class="t"> </span><span class="nb">String</span><span class="t">
+</span><span class="t">      </span><span class="p">(</span><span class="nvi">@internal_unit_name</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">N/A</span><span class="lsd">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="o">.</span><span class="n">gsub</span><span class="p">(</span><span class="lsr">/</span><span class="lsr">\</span><span class="lsr">.service$</span><span class="lsr">/</span><span class="p">,</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">&quot;</span><span class="p">)</span><span class="t">
+</span><span class="t">    </span><span class="k">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-24" class="grid">
+    <div class="doc" id="section-24">
+        <span class="anchor">
+            <a href="#section-24" class="anchor">↦</a>
+        </span>
+        <p>Getter for the hostname</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">
+</span><span class="t">      </span><span class="t">(</span><span class="t">@data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_HOSTNAME</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">localhost</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">strip</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">to_s</span></code></pre>
+    </div>
+</div>
+
+<div id="section-25" class="grid">
+    <div class="doc" id="section-25">
+        <span class="anchor">
+            <a href="#section-25" class="anchor">↦</a>
+        </span>
+        <p>Use a standard timestamp format for to_s, and getters for other fields</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="ls">&quot;</span><span class="lsi">#{</span><span class="t">timestamp</span><span class="t">.</span><span class="t">to_s</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">%Y-%m-%d %H:%M:%S.%L</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls"> [</span><span class="lsi">#{</span><span class="t">hostname</span><span class="t"></span><span class="lsi">}</span><span class="ls">] [</span><span class="lsi">#{</span><span class="t">unit</span><span class="t"></span><span class="lsi">}</span><span class="ls">] [Prio: </span><span class="lsi">#{</span><span class="t">priority</span><span class="t"></span><span class="lsi">}</span><span class="ls">] - </span><span class="lsi">#{</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-26" class="grid">
+    <div class="doc" id="section-26">
+        <span class="anchor">
+            <a href="#section-26" class="anchor">↦</a>
+        </span>
+        <p>Converts the raw timestamp string to a formatted date/time string.
+Example format: &quot;2023-10-27 15:04:05.123&quot;</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">formatted_timestamp</span><span class="t">(</span><span class="t">format</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">%b %d %H:%M:%S</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">
+</span><span class="t">      </span><span class="t">@timestamp</span><span class="t">.</span><span class="t">to_s</span><span class="t">(</span><span class="t">format</span><span class="t">)</span><span class="t"> </span><span class="c"># @timestamp is now a Time object</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-27" class="grid">
+    <div class="doc" id="section-27">
+        <span class="anchor">
+            <a href="#section-27" class="anchor">↦</a>
+        </span>
+        <p>Converts the numeric priority string to its textual representation.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">formatted_priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">
+</span><span class="t">      </span><span class="nk">case</span><span class="t"> </span><span class="nk">self</span><span class="t">.</span><span class="t">priority</span><span class="t"> </span><span class="c"># Use the getter to ensure defaulting/cleaning</span><span class="t">
+</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">0</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">then</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Emergency</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">1</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">then</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Alert</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">2</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">then</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Critical</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">3</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">then</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Error</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">4</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">then</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Warning</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">5</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">then</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Notice</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">6</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">then</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Informational</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">7</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">then</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Debug</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nk">else</span></code></pre>
+    </div>
+</div>
+
+<div id="section-28" class="grid">
+    <div class="doc" id="section-28">
+        <span class="anchor">
+            <a href="#section-28" class="anchor">↦</a>
+        </span>
+        <p>If priority is unknown or not a standard number, return the original value</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Unknown priority value: &#39;</span><span class="lsi">#{</span><span class="nk">self</span><span class="t">.</span><span class="t">priority</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">        </span><span class="nk">self</span><span class="t">.</span><span class="t">priority</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-29" class="grid">
+    <div class="doc" id="section-29">
+        <span class="anchor">
+            <a href="#section-29" class="anchor">↦</a>
+        </span>
+        <p>Builds the journalctl command array based on the provided filters.
+This is a private helper method.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">build_query_command</span><span class="t">(</span><span class="t">
+</span><span class="t">    </span><span class="t">since</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">unit</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">tag</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">query</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">,</span><span class="t">
+</span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">command</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-m</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-o</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">5000</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-r</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">since</span><span class="t">
+</span><span class="t">      </span><span class="t">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-S</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">since</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">unit</span></code></pre>
+    </div>
+</div>
+
+<div id="section-30" class="grid">
+    <div class="doc" id="section-30">
+        <span class="anchor">
+            <a href="#section-30" class="anchor">↦</a>
+        </span>
+        <p>Split the unit string into words and add -u for each word</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">unit</span><span class="t">.</span><span class="t">split</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">u_word</span><span class="o">|</span><span class="t">
+</span><span class="t">        </span><span class="t">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-u</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">u_word</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">u_word</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="c"># Avoid adding empty strings</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">tag</span><span class="t">
+</span><span class="t">      </span><span class="t">tag</span><span class="t">.</span><span class="t">split</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">word</span><span class="o">|</span><span class="t">
+</span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">word</span><span class="t">.</span><span class="t">starts_with?</span><span class="t">(</span><span class="lsc">&#39;-&#39;</span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">word</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="ln">1</span></code></pre>
+    </div>
+</div>
+
+<div id="section-31" class="grid">
+    <div class="doc" id="section-31">
+        <span class="anchor">
+            <a href="#section-31" class="anchor">↦</a>
+        </span>
+        <p>Tags to exclude</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">          </span><span class="t">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-T</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">word</span><span class="t">[</span><span class="ln">1</span><span class="t">..</span><span class="t">]</span><span class="t"> </span><span class="c"># Add -T flag and the word without the leading &#39;-&#39;</span><span class="t">
+</span><span class="t">        </span><span class="nk">elsif</span><span class="t"> </span><span class="o">!</span><span class="t">word</span><span class="t">.</span><span class="t">starts_with?</span><span class="t"> </span><span class="lsc">&#39;-&#39;</span></code></pre>
+    </div>
+</div>
+
+<div id="section-32" class="grid">
+    <div class="doc" id="section-32">
+        <span class="anchor">
+            <a href="#section-32" class="anchor">↦</a>
+        </span>
+        <p>Tags to include</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">          </span><span class="t">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-t</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">word</span><span class="t"> </span><span class="c"># Add -t flag and the word</span><span class="t">
+</span><span class="t">        </span><span class="nk">end</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">query</span><span class="t">
+</span><span class="t">      </span><span class="t">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-g</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">query</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">priority</span><span class="t">
+</span><span class="t">      </span><span class="t">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-p</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">priority</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">hostname</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">hostname</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span></code></pre>
+    </div>
+</div>
+
+<div id="section-33" class="grid">
+    <div class="doc" id="section-33">
+        <span class="anchor">
+            <a href="#section-33" class="anchor">↦</a>
+        </span>
+        <p>Add as a match filter for the _HOSTNAME field</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">_HOSTNAME=</span><span class="lsi">#{</span><span class="t">hostname</span><span class="t">.</span><span class="t">strip</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">    </span><span class="t">command</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-34" class="grid">
+    <div class="doc" id="section-34">
+        <span class="anchor">
+            <a href="#section-34" class="anchor">↦</a>
+        </span>
+        <p>Queries the logs based on the provided criteria.</p>
+<p>Args:
+since: A time offset, like -15m or nil for no filter
+unit: The systemd unit to filter by (e.g., &quot;nginx.service&quot;).
+tag:  The syslog identifier (tag) to filter by.
+live: A boolean indicating if the logs should be streamed live (not implemented yet).
+query: A string to filter logs by a specific search term.</p>
+<p>Returns:
+An array of LogEntry</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">query</span><span class="t">(</span><span class="t">
+</span><span class="t">    </span><span class="t">since</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">unit</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">tag</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">query</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">sort_by</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">sort_order</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Executing Journalctl.query with arguments:</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  Since: </span><span class="lsi">#{</span><span class="t">since</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  Unit: </span><span class="lsi">#{</span><span class="t">unit</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  Tag: </span><span class="lsi">#{</span><span class="t">tag</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  Query: </span><span class="lsi">#{</span><span class="t">query</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  Priority: </span><span class="lsi">#{</span><span class="t">priority</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  Hostname: </span><span class="lsi">#{</span><span class="t">hostname</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  SortBy: </span><span class="lsi">#{</span><span class="t">sort_by</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  SortOrder: </span><span class="lsi">#{</span><span class="t">sort_order</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span></code></pre>
+    </div>
+</div>
+
+<div id="section-35" class="grid">
+    <div class="doc" id="section-35">
+        <span class="anchor">
+            <a href="#section-35" class="anchor">↦</a>
+        </span>
+        <p>Treat empty string parameters for unit and tag as nil</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">unit</span><span class="t">.</span><span class="nk">is_a?</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">unit</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t">
+</span><span class="t">    </span><span class="t">tag</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">tag</span><span class="t">.</span><span class="nk">is_a?</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">tag</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t">
+</span><span class="t">    </span><span class="t">query</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">query</span><span class="t">.</span><span class="nk">is_a?</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">query</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t">
+</span><span class="t">    </span><span class="t">priority</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">priority</span><span class="t">.</span><span class="nk">is_a?</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">priority</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t">
+</span><span class="t">    </span><span class="t">hostname_param</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">hostname</span><span class="t">.</span><span class="nk">is_a?</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">hostname</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="l">nil</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">hostname</span><span class="t">
+</span><span class="t">    </span><span class="t">command</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">build_query_command</span><span class="t">(</span><span class="t">since</span><span class="t">,</span><span class="t"> </span><span class="t">unit</span><span class="t">,</span><span class="t"> </span><span class="t">tag</span><span class="t">,</span><span class="t"> </span><span class="t">query</span><span class="t">,</span><span class="t"> </span><span class="t">priority</span><span class="t">,</span><span class="t"> </span><span class="t">hostname_param</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Generated journalctl command: </span><span class="lsi">#{</span><span class="t">command</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span></code></pre>
+    </div>
+</div>
+
+<div id="section-36" class="grid">
+    <div class="doc" id="section-36">
+        <span class="anchor">
+            <a href="#section-36" class="anchor">↦</a>
+        </span>
+        <p>Use the helper to run the command and parse entries</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">log_entries</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">run_journalctl_and_parse</span><span class="t">(</span><span class="t">command</span><span class="t">[</span><span class="ln">1</span><span class="t">..</span><span class="t">]</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Journalctl.query</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-37" class="grid">
+    <div class="doc" id="section-37">
+        <span class="anchor">
+            <a href="#section-37" class="anchor">↦</a>
+        </span>
+        <p>Sort the entries if sort_by is provided and log_entries is not empty</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">sort_by</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">log_entries</span><span class="t">.</span><span class="t">empty?</span><span class="t">
+</span><span class="t">      </span><span class="t">is_ascending</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">sort_order</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">sort_order</span><span class="t">.</span><span class="t">downcase</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">asc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Sorting by &#39;</span><span class="lsi">#{</span><span class="t">sort_by</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39;, order: </span><span class="lsi">#{</span><span class="t">is_ascending</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">ASC</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">DESC</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">
+</span><span class="t">      </span><span class="t">log_entries</span><span class="t">.</span><span class="t">sort!</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">a</span><span class="t">,</span><span class="t"> </span><span class="t">b</span><span class="o">|</span></code></pre>
+    </div>
+</div>
+
+<div id="section-38" class="grid">
+    <div class="doc" id="section-38">
+        <span class="anchor">
+            <a href="#section-38" class="anchor">↦</a>
+        </span>
+        <p>Primary comparison</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="t">primary_cmp</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nk">case</span><span class="t"> </span><span class="t">sort_by</span><span class="t">
+</span><span class="t">                      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">timestamp</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">                        </span><span class="t">a</span><span class="t">.</span><span class="t">timestamp</span><span class="t"> </span><span class="o">&lt;=&gt;</span><span class="t"> </span><span class="t">b</span><span class="t">.</span><span class="t">timestamp</span><span class="t"> </span><span class="c"># Time objects are directly comparable</span><span class="t">
+</span><span class="t">                      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">priority</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">                        </span><span class="t">a</span><span class="t">.</span><span class="t">priority</span><span class="t">.</span><span class="t">to_i</span><span class="t"> </span><span class="o">&lt;=&gt;</span><span class="t"> </span><span class="t">b</span><span class="t">.</span><span class="t">priority</span><span class="t">.</span><span class="t">to_i</span><span class="t"> </span><span class="c"># Uses getter, .to_i for numeric sort</span><span class="t">
+</span><span class="t">                      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">message</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">                        </span><span class="t">a</span><span class="t">.</span><span class="t">message</span><span class="t">.</span><span class="t">downcase</span><span class="t"> </span><span class="o">&lt;=&gt;</span><span class="t"> </span><span class="t">b</span><span class="t">.</span><span class="t">message</span><span class="t">.</span><span class="t">downcase</span><span class="t"> </span><span class="c"># Uses getter</span><span class="t">
+</span><span class="t">                      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">unit</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                                 </span><span class="c"># Renamed from service</span><span class="t">
+</span><span class="t">                        </span><span class="t">a</span><span class="t">.</span><span class="t">unit</span><span class="t">.</span><span class="t">downcase</span><span class="t"> </span><span class="o">&lt;=&gt;</span><span class="t"> </span><span class="t">b</span><span class="t">.</span><span class="t">unit</span><span class="t">.</span><span class="t">downcase</span><span class="t">
+</span><span class="t">                      </span><span class="nk">else</span><span class="t">
+</span><span class="t">                        </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Unknown sort_by key: </span><span class="lsi">#{</span><span class="t">sort_by</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">                        </span><span class="ln">0</span><span class="t"> </span><span class="c"># No change for unknown key</span><span class="t">
+</span><span class="t">                      </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-39" class="grid">
+    <div class="doc" id="section-39">
+        <span class="anchor">
+            <a href="#section-39" class="anchor">↦</a>
+        </span>
+        <p>If primary keys are different, use that comparison.
+Otherwise (if primary_cmp is 0), use timestamp as a secondary sort key,
+unless we are already sorting by timestamp.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="t">final_cmp</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">primary_cmp</span><span class="t"> </span><span class="o">!=</span><span class="t"> </span><span class="ln">0</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">sort_by</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">timestamp</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">                      </span><span class="t">primary_cmp</span><span class="t">
+</span><span class="t">                    </span><span class="nk">else</span></code></pre>
+    </div>
+</div>
+
+<div id="section-40" class="grid">
+    <div class="doc" id="section-40">
+        <span class="anchor">
+            <a href="#section-40" class="anchor">↦</a>
+        </span>
+        <p>Primary keys are equal, and not sorting by timestamp, so use timestamp as secondary.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">                      </span><span class="t">a</span><span class="t">.</span><span class="t">timestamp</span><span class="t"> </span><span class="o">&lt;=&gt;</span><span class="t"> </span><span class="t">b</span><span class="t">.</span><span class="t">timestamp</span><span class="t">
+</span><span class="t">                    </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-41" class="grid">
+    <div class="doc" id="section-41">
+        <span class="anchor">
+            <a href="#section-41" class="anchor">↦</a>
+        </span>
+        <p>Apply sort order</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="t">is_ascending</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">final_cmp</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="o">-</span><span class="t">final_cmp</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">    </span><span class="nk">else</span></code></pre>
+    </div>
+</div>
+
+<div id="section-42" class="grid">
+    <div class="doc" id="section-42">
+        <span class="anchor">
+            <a href="#section-42" class="anchor">↦</a>
+        </span>
+        <p>If not sorting, journalctl -r already provides reverse chronological order (newest first)</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">No specific sorting requested, relying on journalctl default order (or no entries).</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Returning </span><span class="lsi">#{</span><span class="t">log_entries</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> log entries.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="t">log_entries</span><span class="t">
+</span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Error in Journalctl.query logic</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Returning 0 log entries due to an exception.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="l">nil</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-43" class="grid">
+    <div class="doc" id="section-43">
+        <span class="anchor">
+            <a href="#section-43" class="anchor">↦</a>
+        </span>
+        <p>Retrieves a list of all known systemd service units using systemctl.</p>
+<p>Returns:
+An Array(String) containing unique service unit names, sorted, or nil if an error occurs.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">known_service_units</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">
+</span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="lss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t">
+</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Journalctl.known_service_units: Using FAKE service units.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">      </span><span class="t">fake_units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">FakeJournalData</span><span class="nc">::</span><span class="nc">SAMPLE_UNIT_NAMES</span><span class="t">.</span><span class="t">compact</span><span class="t">.</span><span class="t">uniq</span><span class="t">.</span><span class="t">sort</span><span class="t">
+</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Returning </span><span class="lsi">#{</span><span class="t">fake_units</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> fake service units.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">fake_units</span><span class="t">
+</span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">else</span><span class="t"> </span><span class="o">%}</span><span class="t">
+</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Executing Journalctl.known_service_units</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span></code></pre>
+    </div>
+</div>
+
+<div id="section-44" class="grid">
+    <div class="doc" id="section-44">
+        <span class="anchor">
+            <a href="#section-44" class="anchor">↦</a>
+        </span>
+        <p>Using systemctl to list service units.
+--type=service: Only list service units.
+--all: Show all loaded units, including inactive ones.
+--no-legend: Suppress the legend header and footer.
+--plain: Output a plain list without ANSI escape codes or truncation.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">command</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">systemctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">list-units</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--type=service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--all</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--no-legend</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--plain</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">
+</span><span class="t">
+</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Generated systemctl command: </span><span class="lsi">#{</span><span class="t">command</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">
+</span><span class="t">      </span><span class="t">stdout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">IO</span><span class="nc">::</span><span class="nc">Memory</span><span class="t">.</span><span class="t">new</span><span class="t">
+</span><span class="t">      </span><span class="t">result</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Process</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">
+</span><span class="t">        </span><span class="t">command</span><span class="t">[</span><span class="ln">0</span><span class="t">]</span><span class="t">,</span><span class="t">
+</span><span class="t">        </span><span class="t">args</span><span class="t">:</span><span class="t"> </span><span class="t">command</span><span class="t">[</span><span class="ln">1</span><span class="t">..</span><span class="t">]</span><span class="t">,</span><span class="t">
+</span><span class="t">        </span><span class="t">output</span><span class="t">:</span><span class="t"> </span><span class="t">stdout</span><span class="t">,</span><span class="t">
+</span><span class="t">      </span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">result</span><span class="t">.</span><span class="t">normal_exit?</span><span class="t">
+</span><span class="t">        </span><span class="t">known_units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Set</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t">
+</span><span class="t">        </span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">\n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t">
+</span><span class="t">          </span><span class="nk">next</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="c"># Skip empty or whitespace-only lines</span></code></pre>
+    </div>
+</div>
+
+<div id="section-45" class="grid">
+    <div class="doc" id="section-45">
+        <span class="anchor">
+            <a href="#section-45" class="anchor">↦</a>
+        </span>
+        <p>The first word on each line should be the unit name.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">          </span><span class="t">unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls"> </span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">first?</span><span class="t">
+</span><span class="t">          </span><span class="t">known_units</span><span class="t">.</span><span class="t">add</span><span class="t">(</span><span class="t">unit_name</span><span class="t">)</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">unit_name</span><span class="t">
+</span><span class="t">        </span><span class="nk">end</span><span class="t">
+</span><span class="t">        </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Found </span><span class="lsi">#{</span><span class="t">known_units</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> unique service units.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">        </span><span class="t">known_units</span><span class="t">.</span><span class="t">to_a</span><span class="t">.</span><span class="t">sort</span><span class="t">
+</span><span class="t">      </span><span class="nk">else</span><span class="t">
+</span><span class="t">        </span><span class="nc">Log</span><span class="t">.</span><span class="t">error</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">systemctl command failed with exit code: </span><span class="lsi">#{</span><span class="t">result</span><span class="t"></span><span class="lsi">}</span><span class="ls">. Stdout: </span><span class="lsi">#{</span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t">[</span><span class="ln">0</span><span class="t">..</span><span class="ln">100</span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">        </span><span class="l">nil</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t">
+</span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Error executing systemctl for known_service_units.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="l">nil</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-46" class="grid">
+    <div class="doc" id="section-46">
+        <span class="anchor">
+            <a href="#section-46" class="anchor">↦</a>
+        </span>
+        <p>Retrieves a single log entry by its cursor.</p>
+<p>Args:
+cursor: The journalctl cursor string.</p>
+<p>Returns:
+A LogEntry object if found, or nil otherwise.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">get_entry_by_cursor</span><span class="t">(</span><span class="t">cursor</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">LogEntry</span><span class="t">?</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Executing Journalctl.get_entry_by_cursor with cursor: </span><span class="lsi">#{</span><span class="t">cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="t">command_args</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">-m</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-o</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">cursor</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">1</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">entries</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">run_journalctl_and_parse</span><span class="t">(</span><span class="t">command_args</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Journalctl.get_entry_by_cursor for cursor &#39;</span><span class="lsi">#{</span><span class="t">cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">entries</span><span class="t">.</span><span class="t">empty?</span><span class="t">
+</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">No entry found for cursor &#39;</span><span class="lsi">#{</span><span class="t">cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; or command failed.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="l">nil</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">entries</span><span class="t">.</span><span class="t">first</span><span class="t"> </span><span class="c"># Should be only one entry if found</span><span class="t">
+</span><span class="t">
+</span><span class="t">
+</span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="c"># Catch unexpected errors in this method&#39;s logic</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Unexpected error in Journalctl.get_entry_by_cursor for cursor: </span><span class="lsi">#{</span><span class="t">cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="l">nil</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-47" class="grid">
+    <div class="doc" id="section-47">
+        <span class="anchor">
+            <a href="#section-47" class="anchor">↦</a>
+        </span>
+        <p>Helper method to run journalctl and parse JSON lines from its output.</p>
+<p>Args:
+journalctl_args: An array of arguments to pass to journalctl (excluding &quot;journalctl&quot; itself).
+log_context_message: A string to use as a prefix for log messages from this helper.</p>
+<p>Returns:
+An Array(LogEntry) parsed from the command output, or an empty array on failure.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">run_journalctl_and_parse</span><span class="t">(</span><span class="t">journalctl_args</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">,</span><span class="t"> </span><span class="t">log_context_message</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">command</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">
+</span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="lss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t">
+</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="lsi">#{</span><span class="t">log_context_message</span><span class="t"></span><span class="lsi">}</span><span class="ls">: Using FAKE journal data.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span></code></pre>
+    </div>
+</div>
+
+<div id="section-48" class="grid">
+    <div class="doc" id="section-48">
+        <span class="anchor">
+            <a href="#section-48" class="anchor">↦</a>
+        </span>
+        <p>The fake function's arguments are prefixed with '_' indicating they might not be fully used.
+It's designed to match the signature for easy swapping.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="nc">FakeJournalData</span><span class="t">.</span><span class="t">fake_run_journalctl_and_parse</span><span class="t">(</span><span class="t">journalctl_args</span><span class="t">,</span><span class="t"> </span><span class="t">log_context_message</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">else</span><span class="t"> </span><span class="o">%}</span><span class="t">
+</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="lsi">#{</span><span class="t">log_context_message</span><span class="t"></span><span class="lsi">}</span><span class="ls">: Executing command: </span><span class="lsi">#{</span><span class="t">command</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">
+</span><span class="t">      </span><span class="t">stdout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">IO</span><span class="nc">::</span><span class="nc">Memory</span><span class="t">.</span><span class="t">new</span><span class="t">
+</span><span class="t">      </span><span class="t">process_result</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Process</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">command</span><span class="t">[</span><span class="ln">0</span><span class="t">]</span><span class="t">,</span><span class="t"> </span><span class="t">args</span><span class="t">:</span><span class="t"> </span><span class="t">command</span><span class="t">[</span><span class="ln">1</span><span class="t">..</span><span class="t">]</span><span class="t">,</span><span class="t"> </span><span class="t">output</span><span class="t">:</span><span class="t"> </span><span class="t">stdout</span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">process_result</span><span class="t">.</span><span class="t">normal_exit?</span><span class="t">
+</span><span class="t">        </span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">\n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">compact_map</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t">
+</span><span class="t">          </span><span class="nk">next</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t">
+</span><span class="t">          </span><span class="nk">begin</span><span class="t">
+</span><span class="t">            </span><span class="nc">LogEntry</span><span class="t">.</span><span class="t">from_json</span><span class="t">(</span><span class="t">line</span><span class="t">)</span><span class="t">
+</span><span class="t">          </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="c"># Catches JSON::ParseException, ArgumentError, etc.</span><span class="t">
+</span><span class="t">            </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="lsi">#{</span><span class="t">log_context_message</span><span class="t"></span><span class="lsi">}</span><span class="ls">: Failed to parse log line: </span><span class="lsi">#{</span><span class="t">line</span><span class="t">.</span><span class="t">inspect</span><span class="t">[</span><span class="t">..</span><span class="ln">100</span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">            </span><span class="l">nil</span><span class="t">
+</span><span class="t">          </span><span class="nk">end</span><span class="t">
+</span><span class="t">        </span><span class="nk">end</span><span class="t">
+</span><span class="t">      </span><span class="nk">else</span><span class="t">
+</span><span class="t">        </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="lsi">#{</span><span class="t">log_context_message</span><span class="t"></span><span class="lsi">}</span><span class="ls">: journalctl command failed with exit code: </span><span class="lsi">#{</span><span class="t">process_result</span><span class="t">.</span><span class="t">system_exit_status</span><span class="t"></span><span class="lsi">}</span><span class="ls">. Stdout: </span><span class="lsi">#{</span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t">[</span><span class="ln">0</span><span class="t">..</span><span class="ln">100</span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">        </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">LogEntry</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t">
+</span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="lsi">#{</span><span class="t">log_context_message</span><span class="t"></span><span class="lsi">}</span><span class="ls">: Error executing journalctl. Command: </span><span class="lsi">#{</span><span class="t">command</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">LogEntry</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-49" class="grid">
+    <div class="doc" id="section-49">
+        <span class="anchor">
+            <a href="#section-49" class="anchor">↦</a>
+        </span>
+        <p>Retrieves log entries surrounding a specific entry identified by a cursor.</p>
+<p>Args:
+cursor: The journalctl cursor string for the central entry.
+count: The number of entries to retrieve before and after the central entry.</p>
+<p>Returns:
+An Array(LogEntry) containing the 'before' entries, the target entry, and the 'after' entries,
+all in chronological order. Returns nil if the target cursor is not found or count is non-positive.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">context</span><span class="t">(</span><span class="t">cursor</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="t">count</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t">?</span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">count</span><span class="t"> </span><span class="o">&lt;=</span><span class="t"> </span><span class="ln">0</span><span class="t">
+</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Context requested for cursor &#39;</span><span class="lsi">#{</span><span class="t">cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; with non-positive count: </span><span class="lsi">#{</span><span class="t">count</span><span class="t"></span><span class="lsi">}</span><span class="ls">. Returning nil.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="l">nil</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">target_entry</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">get_entry_by_cursor</span><span class="t">(</span><span class="t">cursor</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="nk">unless</span><span class="t"> </span><span class="t">target_entry</span><span class="t">
+</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Context: Target entry for cursor &#39;</span><span class="lsi">#{</span><span class="t">cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; not found. Returning nil.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="l">nil</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-50" class="grid">
+    <div class="doc" id="section-50">
+        <span class="anchor">
+            <a href="#section-50" class="anchor">↦</a>
+        </span>
+        <p>Fetch 'before' entries: <code>journalctl -o json --cursor &lt;cursor&gt; -n &lt;count + 1&gt; --reverse</code>
+This outputs: [Target, B1, B2, ..., B_count] (Target is newest, B1 is just before Target, etc.)</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">cmd_before_args</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">-m</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-o</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">cursor</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">(</span><span class="t">count</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--reverse</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">
+</span><span class="t">    </span><span class="t">parsed_before_list</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">run_journalctl_and_parse</span><span class="t">(</span><span class="t">cmd_before_args</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Context (before entries for cursor &#39;</span><span class="lsi">#{</span><span class="t">cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39;)</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">before_entries</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parsed_before_list</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="ln">1</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">parsed_before_list</span><span class="t">[</span><span class="ln">1</span><span class="t">..</span><span class="t">]</span><span class="t">.</span><span class="t">reverse</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">(</span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">LogEntry</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-51" class="grid">
+    <div class="doc" id="section-51">
+        <span class="anchor">
+            <a href="#section-51" class="anchor">↦</a>
+        </span>
+        <p>Fetch 'after' entries: <code>journalctl -o json --after-cursor &lt;cursor&gt; -n &lt;count&gt;</code>
+This outputs: [A1, A2, ..., A_count] (A1 is just after Target, in chronological order)</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">cmd_after_args</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">-m</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-o</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--after-cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">cursor</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">count</span><span class="t">.</span><span class="t">to_s</span><span class="t">]</span><span class="t">
+</span><span class="t">    </span><span class="t">after_entries</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">run_journalctl_and_parse</span><span class="t">(</span><span class="t">cmd_after_args</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Context (after entries for cursor &#39;</span><span class="lsi">#{</span><span class="t">cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39;)</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">result</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">before_entries</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">[</span><span class="t">target_entry</span><span class="t">]</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">after_entries</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Context for cursor &#39;</span><span class="lsi">#{</span><span class="t">cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; with count </span><span class="lsi">#{</span><span class="t">count</span><span class="t"></span><span class="lsi">}</span><span class="ls">: Found </span><span class="lsi">#{</span><span class="t">before_entries</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> before, 1 target, </span><span class="lsi">#{</span><span class="t">after_entries</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> after. Total: </span><span class="lsi">#{</span><span class="t">result</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="t">result</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span><span class="t">
+</span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Default Dark
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

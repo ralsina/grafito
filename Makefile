@@ -77,3 +77,7 @@ $(STYLE_CSS_MIN): $(STYLE_CSS_SRC)
 .PHONY: test
 test:
 	crystal spec
+
+.PHONY: website
+website:
+	crycco shard.yml src/*.cr -o site

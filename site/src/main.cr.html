@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>main.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;}.nc {color: #7cafc2;}.nc {color: #dc9656;}.nd {color: #dc9656;}.nf {color: #7cafc2;}.nn {color: #7cafc2;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.ln {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.ls {color: #a1b56c;}.lsi {color: #a16946;}.lsr {color: #86c1b9;}.lss {color: #dc9656;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Default Dark */
+/* Author: Chris Kempson (http://chriskempson.com) */
+
+:root {
+    --pico-background-color: #181818; /* Default backround */
+    --pico-color: #d8d8d8; /* Default foreground */
+    --pico-text-selection-color: #383838; /* Selection background */
+    --pico-primary: #7cafc2; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #383838;
+    --pico-primary-hover: #dc9656; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-variant-ligatures: none;
+        font-weight: 300;
+        overflow: visible !important;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 50%, #282828 50%);
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #b8b8b8;
+        background-color: #181818;
+        margin-top: auto;
+    }
+    code,
+    code * {
+        font-family: 'Chivo Mono', monospace !important;
+        padding-top: 0 !important;
+        padding-left: 0 !important;
+        background-color: #282828 !important;
+    }
+
+    div.doc>pre>code {
+        background-color: #383838;
+        padding: 1em !important;
+    }
+
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+
+            {
+            # font-size: 150%;
+            #
+        }
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/main.cr</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc" id="section-1">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./grafito</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">docopt</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal-basic-auth</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">
+</span><span class="nc">DOC</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&lt;&lt;-DOCOPT</span><span class="t">
+</span><span class="ls">Grafito - A simple log viewer.</span><span class="ls">
+</span><span class="ls">
+Usage:</span><span class="ls">
+  grafito [options]</span><span class="ls">
+  grafito (-h | --help)</span><span class="ls">
+  grafito --version</span><span class="ls">
+</span><span class="ls">
+Options:</span><span class="ls">
+  -p PORT, --port=PORT          Port to listen on [default: 3000].</span><span class="ls">
+  -b ADDRESS, --bind=ADDRESS    Address to bind to [default: 127.0.0.1].</span><span class="ls">
+  -h --help                     Show this screen.</span><span class="ls">
+  --version                     Show version.</span><span class="ls">
+DOCOPT</span><span class="ls"></span><span class="t">
+</span><span class="t">
+</span><span class="nk">def</span><span class="t"> </span><span class="nv">main</span><span class="t">
+</span><span class="t">  </span><span class="t">args</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Docopt</span><span class="t">.</span><span class="t">docopt</span><span class="t">(</span><span class="nc">DOC</span><span class="t">,</span><span class="t"> </span><span class="nc">ARGV</span><span class="t">,</span><span class="t"> </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">VERSION</span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">  </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--port</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">.</span><span class="t">to_i32</span><span class="t">
+</span><span class="t">  </span><span class="t">bind_address</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--bind</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">  </span><span class="nc">Log</span><span class="t">.</span><span class="t">setup</span><span class="t">(</span><span class="lss">:debug</span><span class="t">)</span><span class="t"> </span><span class="c"># Or use Log.setup_from_env for more flexibility</span><span class="t">
+</span><span class="t">  </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Starting Grafito server on </span><span class="lsi">#{</span><span class="t">bind_address</span><span class="t"></span><span class="lsi">}</span><span class="ls">:</span><span class="lsi">#{</span><span class="t">port</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">  </span><span class="nc">Kemal</span><span class="t">.</span><span class="t">config</span><span class="t">.</span><span class="t">host_binding</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">bind_address</span></code></pre>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc" id="section-2">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>--- Basic Authentication Configuration ---
+Read credentials and realm from environment variables</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">auth_user</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">ENV</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">GRAFITO_AUTH_USER</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">
+</span><span class="t">  </span><span class="t">auth_pass</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">ENV</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">GRAFITO_AUTH_PASS</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">
+</span><span class="t">
+</span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">auth_pass</span></code></pre>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc" id="section-3">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>Both username and password are set, enable basic authentication</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Basic Authentication enabled. User: </span><span class="lsi">#{</span><span class="t">auth_user</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="t">basic_auth</span><span class="t"> </span><span class="t">auth_user</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">,</span><span class="t"> </span><span class="t">auth_pass</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">
+</span><span class="t">  </span><span class="nk">elsif</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">auth_pass</span></code></pre>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc" id="section-4">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>Only one of the credentials was set - this is a misconfiguration.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Basic Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="ln">1</span><span class="t"> </span><span class="c"># Exit with an error code to prevent running in an insecure state.</span><span class="t">
+</span><span class="t">  </span><span class="nk">else</span></code></pre>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc" id="section-5">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>Neither username nor password are set, run without authentication.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Basic Authentication is DISABLED. To enable, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS environment variables.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">  </span><span class="nc">Kemal</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="t">port</span><span class="t">)</span><span class="t">
+</span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">main</span><span class="t">(</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Default Dark
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

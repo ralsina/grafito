@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>timeline.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;}.nc {color: #7cafc2;}.nc {color: #dc9656;}.nd {color: #dc9656;}.nf {color: #7cafc2;}.nn {color: #7cafc2;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.ln {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.ls {color: #a1b56c;}.lsi {color: #a16946;}.lsr {color: #86c1b9;}.lss {color: #dc9656;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Default Dark */
+/* Author: Chris Kempson (http://chriskempson.com) */
+
+:root {
+    --pico-background-color: #181818; /* Default backround */
+    --pico-color: #d8d8d8; /* Default foreground */
+    --pico-text-selection-color: #383838; /* Selection background */
+    --pico-primary: #7cafc2; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #383838;
+    --pico-primary-hover: #dc9656; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-variant-ligatures: none;
+        font-weight: 300;
+        overflow: visible !important;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 50%, #282828 50%);
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #b8b8b8;
+        background-color: #181818;
+        margin-top: auto;
+    }
+    code,
+    code * {
+        font-family: 'Chivo Mono', monospace !important;
+        padding-top: 0 !important;
+        padding-left: 0 !important;
+        background-color: #282828 !important;
+    }
+
+    div.doc>pre>code {
+        background-color: #383838;
+        padding: 1em !important;
+    }
+
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+
+            {
+            # font-size: 150%;
+            #
+        }
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/timeline.cr</span>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc" id="section-1">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">time</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">         </span><span class="c"># For HTML.escape</span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># For Journalctl::LogEntry type</span><span class="t">
+</span><span class="t">
+</span><span class="nk">module</span><span class="t"> </span><span class="nc">Timeline</span><span class="t">
+</span><span class="t">  </span><span class="nk">extend</span><span class="t"> </span><span class="nk">self</span><span class="t"> </span><span class="c"># Allows calling methods like Timeline.generate_frequency_timeline</span></code></pre>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc" id="section-2">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>Alias for the data structure representing a point in the frequency timeline.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">alias</span><span class="t"> </span><span class="nc">TimelinePoint</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">NamedTuple</span><span class="t">(</span><span class="t">start_time</span><span class="t">:</span><span class="t"> </span><span class="nc">Time</span><span class="t">,</span><span class="t"> </span><span class="t">count</span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc" id="section-3">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>Generates a timeline of log entry frequencies.</p>
+<p>This function takes an array of log entries and groups them into time buckets
+based on the specified interval, counting the number of entries in each bucket.</p>
+<p>Arguments:
+logs: An array of <code>Journalctl::LogEntry</code> objects. It's assumed that each
+entry has a <code>timestamp</code> attribute of type <code>Time</code>.
+Log entries will be bucketed by the hour.</p>
+<p>Returns:
+An array of <code>TimelinePoint</code> named tuples, sorted chronologically by <code>start_time</code>.
+Each <code>TimelinePoint</code> contains the <code>start_time</code> of the bucket and the <code>count</code>
+of log entries within that bucket.
+Returns an empty array if the input <code>logs</code> array is empty.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">generate_frequency_timeline</span><span class="t">(</span><span class="t">
+</span><span class="t">    </span><span class="t">logs</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t">,</span><span class="t">
+</span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">TimelinePoint</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">TimelinePoint</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">empty?</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">counts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Hash</span><span class="t">(</span><span class="nc">Time</span><span class="t">,</span><span class="t"> </span><span class="nc">Int32</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="ln">0</span><span class="t">)</span><span class="t"> </span><span class="c"># Initialize with default value 0 for counts</span><span class="t">
+</span><span class="t">    </span><span class="t">logs</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t">
+</span><span class="t">      </span><span class="t">ts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">timestamp</span><span class="t">
+</span><span class="t">      </span><span class="t">truncated_ts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">ts</span><span class="t">.</span><span class="t">at_beginning_of_hour</span><span class="t"> </span><span class="c"># Truncate to the hour</span><span class="t">
+</span><span class="t">      </span><span class="t">counts</span><span class="t">[</span><span class="t">truncated_ts</span><span class="t">]</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">timeline</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">counts</span><span class="t">.</span><span class="t">map</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">start_time</span><span class="t">,</span><span class="t"> </span><span class="t">count</span><span class="o">|</span><span class="t"> </span><span class="t">{</span><span class="t">start_time</span><span class="t">:</span><span class="t"> </span><span class="t">start_time</span><span class="t">,</span><span class="t"> </span><span class="t">count</span><span class="t">:</span><span class="t"> </span><span class="t">count</span><span class="t">}</span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="t">timeline</span><span class="t">.</span><span class="t">sort_by!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">[</span><span class="lss">:start_time</span><span class="t">]</span><span class="t">)</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc" id="section-4">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>Generates an SVG representation of a timeline.</p>
+<p>Arguments:
+timeline_data: An array of <code>TimelinePoint</code> data to plot.
+width: Total width of the SVG.
+height: Total height of the SVG.
+padding: Uniform padding around the chart area.
+bar_color: Color of the bars.
+font_family: Font family for text elements in the SVG. (No longer used as text elements are removed)</p>
+<p>Returns:
+A string containing the SVG markup.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">generate_svg_timeline</span><span class="t">(</span><span class="t">
+</span><span class="t">    </span><span class="t">timeline_data</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">TimelinePoint</span><span class="t">)</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">width</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">800</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">height</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">100</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">padding</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">10</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">bar_color</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">steelblue</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">font_family</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Arial, sans-serif</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="c"># Parameter kept for potential future use, but not currently applied</span><span class="t">
+</span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">
+</span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">IO</span><span class="nc">::</span><span class="nc">Memory</span><span class="t">.</span><span class="t">new</span></code></pre>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc" id="section-5">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>Handle empty data case</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">timeline_data</span><span class="t">.</span><span class="t">empty?</span><span class="t">
+</span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">&lt;svg width=&quot;</span><span class="lsi">#{</span><span class="t">width</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; height=&quot;</span><span class="lsi">#{</span><span class="t">height</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;text x=&quot;</span><span class="lsi">#{</span><span class="t">width</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="ln">2</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; y=&quot;</span><span class="lsi">#{</span><span class="t">height</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="ln">2</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; class=&quot;no-data-text&quot;&gt;No data available&lt;/text&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">&lt;/svg&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">svg</span><span class="t">.</span><span class="t">to_s</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc" id="section-6">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>Calculate actual chart dimensions</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">chart_width</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">width</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">(</span><span class="ln">2</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">padding</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">chart_height</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">height</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">(</span><span class="ln">2</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">padding</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc" id="section-7">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>Determine max count for Y-axis scaling</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">max_val</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">timeline_data</span><span class="t">.</span><span class="t">max_of</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">[</span><span class="lss">:count</span><span class="t">]</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">max_count</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">max_val</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ln">0</span><span class="t">)</span><span class="t">.</span><span class="t">to_f</span><span class="t">
+</span><span class="t">    </span><span class="t">max_count</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">1.0</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">max_count</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ln">0.0</span><span class="t"> </span><span class="c"># Avoid division by zero if all counts are 0</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">num_points</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">timeline_data</span><span class="t">.</span><span class="t">size</span><span class="t">
+</span><span class="t">    </span><span class="t">slot_width</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">chart_width</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">num_points</span><span class="t">       </span><span class="c"># Width for each bar + its spacing</span><span class="t">
+</span><span class="t">    </span><span class="t">actual_bar_width</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">slot_width</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="ln">0.8</span><span class="t">              </span><span class="c"># Bar takes 80% of the slot</span><span class="t">
+</span><span class="t">    </span><span class="t">bar_margin</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">slot_width</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">actual_bar_width</span><span class="t">)</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="ln">2</span><span class="t"> </span><span class="c"># Margin on each side of the bar within its slot</span></code></pre>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc" id="section-8">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>SVG header and styles</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">&lt;svg width=&quot;100%&quot; height=&quot;</span><span class="lsi">#{</span><span class="t">height</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; viewBox=&quot;0 0 </span><span class="lsi">#{</span><span class="t">width</span><span class="t"></span><span class="lsi">}</span><span class="ls"> </span><span class="lsi">#{</span><span class="t">height</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;style&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">    .bar { fill: </span><span class="lsi">#{</span><span class="t">bar_color</span><span class="t"></span><span class="lsi">}</span><span class="ls">; }&quot;</span><span class="ls">)</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">    .bar:hover { opacity: 0.8; }&quot;</span><span class="ls">)</span><span class="ls"></span></code></pre>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc" id="section-9">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>.text-label, .y-axis-label, .x-axis-label, .title-label classes and their font-family styles removed</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;/style&gt;</span><span class="ls">)</span><span class="ls"></span></code></pre>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc" id="section-10">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
+        <p>Bars</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">timeline_data</span><span class="t">.</span><span class="t">each_with_index</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">point</span><span class="t">,</span><span class="t"> </span><span class="t">index</span><span class="o">|</span><span class="t">
+</span><span class="t">      </span><span class="t">bar_h</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">point</span><span class="t">[</span><span class="lss">:count</span><span class="t">]</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">max_count</span><span class="t">)</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">chart_height</span><span class="t">
+</span><span class="t">      </span><span class="t">bar_h</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">0.0</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">bar_h</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="ln">0</span><span class="t"> </span><span class="c"># Ensure non-negative height, though counts should be &gt;= 0</span><span class="t">
+</span><span class="t">
+</span><span class="t">      </span><span class="t">bar_x</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">padding</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">index</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">slot_width</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">bar_margin</span><span class="t">
+</span><span class="t">      </span><span class="t">bar_y</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">height</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">padding</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">bar_h</span><span class="t">
+</span><span class="t">
+</span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;rect x=&quot;</span><span class="lsi">#{</span><span class="t">bar_x</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="ln">2</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; y=&quot;</span><span class="lsi">#{</span><span class="t">bar_y</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="ln">2</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; width=&quot;</span><span class="lsi">#{</span><span class="t">actual_bar_width</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="ln">2</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; height=&quot;</span><span class="lsi">#{</span><span class="t">bar_h</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="ln">2</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; class=&quot;bar&quot;&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">    &lt;title&gt;</span><span class="lsi">#{</span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">point</span><span class="t">[</span><span class="lss">:start_time</span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">%Y-%m-%d %H:%M</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">: </span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">point</span><span class="t">[</span><span class="lss">:count</span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&lt;/title&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"> </span><span class="c"># Tooltip</span><span class="t">
+</span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;/rect&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">&lt;/svg&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="t">svg</span><span class="t">.</span><span class="t">to_s</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span><span class="t">
+</span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Default Dark
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

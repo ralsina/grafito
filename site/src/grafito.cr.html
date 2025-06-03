@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>grafito.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;}.nc {color: #7cafc2;}.nc {color: #dc9656;}.nd {color: #dc9656;}.nf {color: #7cafc2;}.nn {color: #7cafc2;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.ln {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.ls {color: #a1b56c;}.lsi {color: #a16946;}.lsr {color: #86c1b9;}.lss {color: #dc9656;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Default Dark */
+/* Author: Chris Kempson (http://chriskempson.com) */
+
+:root {
+    --pico-background-color: #181818; /* Default backround */
+    --pico-color: #d8d8d8; /* Default foreground */
+    --pico-text-selection-color: #383838; /* Selection background */
+    --pico-primary: #7cafc2; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #383838;
+    --pico-primary-hover: #dc9656; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-variant-ligatures: none;
+        font-weight: 300;
+        overflow: visible !important;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 50%, #282828 50%);
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #b8b8b8;
+        background-color: #181818;
+        margin-top: auto;
+    }
+    code,
+    code * {
+        font-family: 'Chivo Mono', monospace !important;
+        padding-top: 0 !important;
+        padding-left: 0 !important;
+        background-color: #282828 !important;
+    }
+
+    div.doc>pre>code {
+        background-color: #383838;
+        padding: 1em !important;
+    }
+
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+
+            {
+            # font-size: 150%;
+            #
+        }
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/grafito.cr</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc" id="section-1">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./grafito_helpers</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./timeline</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">baked_file_system</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">mime</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">
+</span><span class="nk">module</span><span class="t"> </span><span class="nc">Grafito</span><span class="t">
+</span><span class="t">  </span><span class="nk">extend</span><span class="t"> </span><span class="nk">self</span></code></pre>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc" id="section-2">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>Setup a logger for this module</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nc">Log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="nk">for</span><span class="t">(</span><span class="nk">self</span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">  </span><span class="nc">VERSION</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">{{</span><span class="t"> </span><span class="ls">`</span><span class="ls">shards version </span><span class="lsi">#{</span><span class="t">__DIR__</span><span class="t"></span><span class="lsi">}</span><span class="ls">/../</span><span class="ls">`</span><span class="ls"></span><span class="t">.</span><span class="t">chomp</span><span class="t">.</span><span class="t">stringify</span><span class="t"> </span><span class="t">}</span><span class="t">}</span><span class="t"> </span><span class="c"># Adjusted path for shards version</span></code></pre>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc" id="section-3">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>Any assets we want baked into the binary.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="nc">Assets</span><span class="t">
+</span><span class="t">    </span><span class="nk">extend</span><span class="t"> </span><span class="nc">BakedFileSystem</span></code></pre>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc" id="section-4">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>Bake all files from the src/assets directory.
+The keys in the baked FS will be like &quot;assets/index.html&quot;, &quot;assets/style.css&quot;, etc.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">bake_folder</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./assets</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t">
+</span><span class="t">    </span><span class="t">serve_file</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">index.min.html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/:file</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t">
+</span><span class="t">    </span><span class="t">filename</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">url</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">file</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">
+</span><span class="t">    </span><span class="t">serve_file</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="t">filename</span><span class="t">)</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc" id="section-5">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>Serves a file from the baked assets.
+<code>requested_filename</code> is the name of the file as requested by the client (e.g., &quot;style.css&quot;).</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">serve_file</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="t">requested_filename</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">baked_path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/</span><span class="lsi">#{</span><span class="t">requested_filename</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Files are stored under the &quot;assets&quot; prefix</span><span class="t">
+</span><span class="t">    </span><span class="t">file_content</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Assets</span><span class="t">.</span><span class="t">get</span><span class="t">(</span><span class="t">baked_path</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">MIME</span><span class="t">.</span><span class="t">from_extension</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">requested_filename</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">last</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">content_type</span><span class="t">
+</span><span class="t">    </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">headers</span><span class="t">.</span><span class="t">add</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">Cache-Control</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">max-age=604800</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="c"># Cache for 1 week</span><span class="t">
+</span><span class="t">    </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">print</span><span class="t"> </span><span class="t">file_content</span><span class="t">.</span><span class="t">gets_to_end</span><span class="t">
+</span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="nc">KeyError</span><span class="t">
+</span><span class="t">    </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">404</span><span class="t">
+</span><span class="t">    </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">print</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">File not found: </span><span class="lsi">#{</span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">requested_filename</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc" id="section-6">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>Exposes the Journalctl wrapper via a REST API.
+Example usage:
+GET /logs?unit=sshd.service&amp;tag=sshd
+GET /logs?unit=nginx.service&amp;since=-1h</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/logs</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Received /logs request with query params: </span><span class="lsi">#{</span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">query</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">since</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">since</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">unit</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">tag</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">tag</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">search_query</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">q</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="c"># General search term from main input</span><span class="t">
+</span><span class="t">    </span><span class="t">priority</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">priority</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">hostname</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">current_sort_by</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">sort_by</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">current_sort_order</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">sort_order</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">format_param</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">format</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc" id="section-7">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>Determine column visibility from query parameters</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">show_timestamp_col</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">query</span><span class="t">.</span><span class="t">has_key?</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">col-visible-timestamp</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">show_hostname_col</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">query</span><span class="t">.</span><span class="t">has_key?</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">col-visible-hostname</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">show_unit_col</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">query</span><span class="t">.</span><span class="t">has_key?</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">col-visible-unit</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">show_priority_col</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">query</span><span class="t">.</span><span class="t">has_key?</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">col-visible-priority</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">show_message_col</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">query</span><span class="t">.</span><span class="t">has_key?</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">col-visible-message</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">output_format</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">format_param</span><span class="t">.</span><span class="t">presence</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">downcase</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Querying Journalctl with: since=</span><span class="lsi">#{</span><span class="t">since</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, unit=</span><span class="lsi">#{</span><span class="t">unit</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, tag=</span><span class="lsi">#{</span><span class="t">tag</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, q=</span><span class="lsi">#{</span><span class="t">search_query</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, priority=</span><span class="lsi">#{</span><span class="t">priority</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, hostname=</span><span class="lsi">#{</span><span class="t">hostname</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, sort_by=</span><span class="lsi">#{</span><span class="t">current_sort_by</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, sort_order=</span><span class="lsi">#{</span><span class="t">current_sort_order</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, show_timestamp=</span><span class="lsi">#{</span><span class="t">show_timestamp_col</span><span class="t"></span><span class="lsi">}</span><span class="ls">, show_hostname=</span><span class="lsi">#{</span><span class="t">show_hostname_col</span><span class="t"></span><span class="lsi">}</span><span class="ls">, show_unit=</span><span class="lsi">#{</span><span class="t">show_unit_col</span><span class="t"></span><span class="lsi">}</span><span class="ls">, show_priority=</span><span class="lsi">#{</span><span class="t">show_priority_col</span><span class="t"></span><span class="lsi">}</span><span class="ls">, show_message=</span><span class="lsi">#{</span><span class="t">show_message_col</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">logs</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Journalctl</span><span class="t">.</span><span class="t">query</span><span class="t">(</span><span class="t">
+</span><span class="t">      </span><span class="t">since</span><span class="t">:</span><span class="t"> </span><span class="t">since</span><span class="t">,</span><span class="t">
+</span><span class="t">      </span><span class="t">unit</span><span class="t">:</span><span class="t"> </span><span class="t">unit</span><span class="t">,</span><span class="t">
+</span><span class="t">      </span><span class="t">tag</span><span class="t">:</span><span class="t"> </span><span class="t">tag</span><span class="t">,</span><span class="t">
+</span><span class="t">      </span><span class="t">query</span><span class="t">:</span><span class="t"> </span><span class="t">search_query</span><span class="t">,</span><span class="t">
+</span><span class="t">      </span><span class="t">priority</span><span class="t">:</span><span class="t"> </span><span class="t">priority</span><span class="t">,</span><span class="t">
+</span><span class="t">      </span><span class="t">hostname</span><span class="t">:</span><span class="t"> </span><span class="t">hostname</span><span class="t">,</span><span class="t">
+</span><span class="t">      </span><span class="t">sort_by</span><span class="t">:</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t">
+</span><span class="t">      </span><span class="t">sort_order</span><span class="t">:</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">
+</span><span class="t">    </span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">
+</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">output_format</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text/plain</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">        </span><span class="t">output</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">_generate_text_log_output</span><span class="t">(</span><span class="t">logs</span><span class="t">)</span><span class="t">
+</span><span class="t">      </span><span class="nk">else</span><span class="t"> </span><span class="c"># Default to HTML</span><span class="t">
+</span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text/html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">        </span><span class="t">output</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">html_log_output</span><span class="t">(</span><span class="t">
+</span><span class="t">          </span><span class="t">logs</span><span class="t">,</span><span class="t">
+</span><span class="t">          </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t">
+</span><span class="t">          </span><span class="t">current_sort_order</span><span class="t">,</span><span class="t">
+</span><span class="t">          </span><span class="t">search_query</span><span class="t">,</span><span class="t">
+</span><span class="t">          </span><span class="t">show_timestamp</span><span class="t">:</span><span class="t"> </span><span class="t">show_timestamp_col</span><span class="t">,</span><span class="t">
+</span><span class="t">          </span><span class="t">show_hostname</span><span class="t">:</span><span class="t"> </span><span class="t">show_hostname_col</span><span class="t">,</span><span class="t">
+</span><span class="t">          </span><span class="t">show_unit</span><span class="t">:</span><span class="t"> </span><span class="t">show_unit_col</span><span class="t">,</span><span class="t">
+</span><span class="t">          </span><span class="t">show_priority</span><span class="t">:</span><span class="t"> </span><span class="t">show_priority_col</span><span class="t">,</span><span class="t">
+</span><span class="t">          </span><span class="t">show_message</span><span class="t">:</span><span class="t"> </span><span class="t">show_message_col</span><span class="t">
+</span><span class="t">        </span><span class="t">)</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">print</span><span class="t"> </span><span class="t">output</span><span class="t">
+</span><span class="t">    </span><span class="nk">else</span><span class="t"> </span><span class="c"># Failed to retrieve logs</span><span class="t">
+</span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">500</span><span class="t">
+</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">output_format</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text/plain</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nk">else</span><span class="t"> </span><span class="c"># Default to HTML for errors too</span><span class="t">
+</span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text/html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">print</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Failed to retrieve logs.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc" id="section-8">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>Exposes the list of known service units.
+Example usage:
+GET /services</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/services</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Received /services request</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="t">service_units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Journalctl</span><span class="t">.</span><span class="t">known_service_units</span><span class="t">
+</span><span class="t">    </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text/html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">service_units</span></code></pre>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc" id="section-9">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>Build HTML options</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">print</span><span class="t">(</span><span class="t">
+</span><span class="t">        </span><span class="nc">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t">
+</span><span class="t">          </span><span class="t">service_units</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">unit_name</span><span class="o">|</span><span class="t">
+</span><span class="t">            </span><span class="t">option</span><span class="t">(</span><span class="t">value</span><span class="t">:</span><span class="t"> </span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">unit_name</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">          </span><span class="nk">end</span><span class="t">
+</span><span class="t">        </span><span class="nk">end</span><span class="t">
+</span><span class="t">      </span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="nk">else</span><span class="t">
+</span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">500</span><span class="t">
+</span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">print</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">&lt;!-- Failed to retrieve service units --&gt;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc" id="section-10">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
+        <p>Exposes the command that would be run by /logs with the given parameters.
+Example usage:
+GET /command?since=-1h&amp;unit=nginx.service&amp;q=error</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/command</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Received /command request with query params: </span><span class="lsi">#{</span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">query</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">since</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">since</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">unit</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">tag</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">tag</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">search_query</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">q</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">priority</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">priority</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">hostname</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="c"># Also add to /command endpoint for consistency</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Building command with: since=</span><span class="lsi">#{</span><span class="t">since</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, unit=</span><span class="lsi">#{</span><span class="t">unit</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, tag=</span><span class="lsi">#{</span><span class="t">tag</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, q=</span><span class="lsi">#{</span><span class="t">search_query</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, priority=</span><span class="lsi">#{</span><span class="t">priority</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">, hostname=</span><span class="lsi">#{</span><span class="t">hostname</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="t">command_array</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Journalctl</span><span class="t">.</span><span class="t">build_query_command</span><span class="t">(</span><span class="t">since</span><span class="t">:</span><span class="t"> </span><span class="t">since</span><span class="t">,</span><span class="t"> </span><span class="t">unit</span><span class="t">:</span><span class="t"> </span><span class="t">unit</span><span class="t">,</span><span class="t"> </span><span class="t">tag</span><span class="t">:</span><span class="t"> </span><span class="t">tag</span><span class="t">,</span><span class="t"> </span><span class="t">query</span><span class="t">:</span><span class="t"> </span><span class="t">search_query</span><span class="t">,</span><span class="t"> </span><span class="t">priority</span><span class="t">:</span><span class="t"> </span><span class="t">priority</span><span class="t">,</span><span class="t"> </span><span class="t">hostname</span><span class="t">:</span><span class="t"> </span><span class="t">hostname</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text/plain</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">print</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">\&quot;</span><span class="lsi">#{</span><span class="t">command_array</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls"> </span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">\&quot;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-11" class="grid">
+    <div class="doc" id="section-11">
+        <span class="anchor">
+            <a href="#section-11" class="anchor">↦</a>
+        </span>
+        <p>Exposes detailed information for a single log entry based on its cursor.
+Example usage:
+GET /details?cursor=&lt;CURSOR_STRING&gt;</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/details</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Received /details request with query params: </span><span class="lsi">#{</span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">query</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="t">cursor</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text/html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">unless</span><span class="t"> </span><span class="t">cursor</span><span class="t">
+</span><span class="t">      </span><span class="t">halt</span><span class="t"> </span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="t">status_code</span><span class="t">:</span><span class="t"> </span><span class="ln">400</span><span class="t">,</span><span class="t"> </span><span class="t">response</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Missing cursor parameter. Cannot load details.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">entry</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Journalctl</span><span class="t">.</span><span class="t">get_entry_by_cursor</span><span class="t">(</span><span class="t">cursor</span><span class="t">)</span><span class="t">
+</span><span class="t">      </span><span class="nc">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t">
+</span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">data</span><span class="t">.</span><span class="t">empty?</span><span class="t">
+</span><span class="t">          </span><span class="t">p</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="c"># ameba:disable Lint/DebugCalls</span><span class="t">
+</span><span class="t">            </span><span class="t">text</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">No details available for this log entry.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">          </span><span class="nk">end</span><span class="t">
+</span><span class="t">        </span><span class="nk">else</span><span class="t">
+</span><span class="t">          </span><span class="t">tag</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">pre</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
+</span><span class="t">            </span><span class="t">text</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">to_pretty_json</span><span class="t">
+</span><span class="t">          </span><span class="nk">end</span><span class="t">
+</span><span class="t">        </span><span class="nk">end</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">    </span><span class="nk">else</span><span class="t">
+</span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">404</span><span class="t">
+</span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">print</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Log entry not found for the given cursor.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-12" class="grid">
+    <div class="doc" id="section-12">
+        <span class="anchor">
+            <a href="#section-12" class="anchor">↦</a>
+        </span>
+        <p>Exposes log entry context (entries before and after a given cursor).
+Example usage:
+GET /context?cursor=&lt;CURSOR_STRING&gt;&amp;count=5</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/context</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Received /context request with query params: </span><span class="lsi">#{</span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">query</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="t">cursor</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">count_str</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">count</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="nk">unless</span><span class="t"> </span><span class="t">cursor</span><span class="t">
+</span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text/html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="t">halt</span><span class="t"> </span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="t">status_code</span><span class="t">:</span><span class="t"> </span><span class="ln">400</span><span class="t">,</span><span class="t"> </span><span class="t">response</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">&lt;p class=</span><span class="ls">\&quot;</span><span class="ls">error</span><span class="ls">\&quot;</span><span class="ls">&gt;Missing cursor parameter. Cannot load context.&lt;/p&gt;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">count</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">count_str</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">to_i?</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ln">5</span><span class="t"> </span><span class="c"># Default to 5 if not provided or invalid</span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">count</span><span class="t"> </span><span class="o">&lt;=</span><span class="t"> </span><span class="ln">0</span><span class="t">
+</span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text/html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">      </span><span class="t">halt</span><span class="t"> </span><span class="t">env</span><span class="t">,</span><span class="t"> </span><span class="t">status_code</span><span class="t">:</span><span class="t"> </span><span class="ln">400</span><span class="t">,</span><span class="t"> </span><span class="t">response</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">&lt;p class=</span><span class="ls">\&quot;</span><span class="ls">error</span><span class="ls">\&quot;</span><span class="ls">&gt;Context count must be positive.&lt;/p&gt;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">context_entries</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Journalctl</span><span class="t">.</span><span class="t">context</span><span class="t">(</span><span class="t">cursor</span><span class="t">,</span><span class="t"> </span><span class="t">count</span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text/html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">context_entries</span></code></pre>
+    </div>
+</div>
+
+<div id="section-13" class="grid">
+    <div class="doc" id="section-13">
+        <span class="anchor">
+            <a href="#section-13" class="anchor">↦</a>
+        </span>
+        <p>Retain the specific title for the context view</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">title_html</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">&lt;h4&gt;Log Context (</span><span class="lsi">#{</span><span class="t">count</span><span class="t"></span><span class="lsi">}</span><span class="ls"> before &amp; after)&lt;/h4&gt;</span><span class="ls">&quot;</span><span class="ls"></span></code></pre>
+    </div>
+</div>
+
+<div id="section-14" class="grid">
+    <div class="doc" id="section-14">
+        <span class="anchor">
+            <a href="#section-14" class="anchor">↦</a>
+        </span>
+        <p>For context view, we generally want to see all columns, including Unit.
+Sorting and search query are not directly applicable here.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">generated_table_html</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">html_log_output</span><span class="t">(</span><span class="t">
+</span><span class="t">        </span><span class="t">context_entries</span><span class="t">,</span><span class="t">          </span><span class="c"># The logs to display</span><span class="t">
+</span><span class="t">        </span><span class="l">nil</span><span class="t">,</span><span class="t">                      </span><span class="c"># current_sort_by</span><span class="t">
+</span><span class="t">        </span><span class="l">nil</span><span class="t">,</span><span class="t">                      </span><span class="c"># current_sort_order</span><span class="t">
+</span><span class="t">        </span><span class="l">nil</span><span class="t">,</span><span class="t">                      </span><span class="c"># search_query</span><span class="t">
+</span><span class="t">        </span><span class="t">chart</span><span class="t">:</span><span class="t"> </span><span class="l">false</span><span class="t">,</span><span class="t">             </span><span class="c"># No chart in context view</span><span class="t">
+</span><span class="t">        </span><span class="t">highlight_cursor</span><span class="t">:</span><span class="t"> </span><span class="t">cursor</span><span class="t">,</span><span class="t"> </span><span class="c"># Highlight the original entry</span><span class="t">
+</span><span class="t">        </span><span class="t">show_timestamp</span><span class="t">:</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t">     </span><span class="c"># Always show all columns in context view</span><span class="t">
+</span><span class="t">        </span><span class="t">show_hostname</span><span class="t">:</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t">
+</span><span class="t">        </span><span class="t">show_unit</span><span class="t">:</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t">
+</span><span class="t">        </span><span class="t">show_priority</span><span class="t">:</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t">
+</span><span class="t">        </span><span class="t">show_message</span><span class="t">:</span><span class="t"> </span><span class="l">true</span><span class="t">
+</span><span class="t">      </span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-15" class="grid">
+    <div class="doc" id="section-15">
+        <span class="anchor">
+            <a href="#section-15" class="anchor">↦</a>
+        </span>
+        <p>Combine the custom title with the table generated by the helper</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">print</span><span class="t"> </span><span class="t">title_html</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">generated_table_html</span><span class="t">
+</span><span class="t">    </span><span class="nk">else</span></code></pre>
+    </div>
+</div>
+
+<div id="section-16" class="grid">
+    <div class="doc" id="section-16">
+        <span class="anchor">
+            <a href="#section-16" class="anchor">↦</a>
+        </span>
+        <p>Journalctl.context might return nil if the original cursor was not found
+or if the count was invalid (though we check count above).</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">print</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">&lt;p class=</span><span class="ls">\&quot;</span><span class="ls">error</span><span class="ls">\&quot;</span><span class="ls">&gt;Could not retrieve context for cursor: </span><span class="lsi">#{</span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">cursor</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">. The entry might not exist or an error occurred.&lt;/p&gt;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span><span class="t">
+</span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Default Dark
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

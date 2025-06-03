@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>shard.yml</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;}.nc {color: #7cafc2;}.nc {color: #dc9656;}.nd {color: #dc9656;}.nf {color: #7cafc2;}.nn {color: #7cafc2;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.ln {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.ls {color: #a1b56c;}.lsi {color: #a16946;}.lsr {color: #86c1b9;}.lss {color: #dc9656;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Default Dark */
+/* Author: Chris Kempson (http://chriskempson.com) */
+
+:root {
+    --pico-background-color: #181818; /* Default backround */
+    --pico-color: #d8d8d8; /* Default foreground */
+    --pico-text-selection-color: #383838; /* Selection background */
+    --pico-primary: #7cafc2; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #383838;
+    --pico-primary-hover: #dc9656; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-variant-ligatures: none;
+        font-weight: 300;
+        overflow: visible !important;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 50%, #282828 50%);
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #b8b8b8;
+        background-color: #181818;
+        margin-top: auto;
+    }
+    code,
+    code * {
+        font-family: 'Chivo Mono', monospace !important;
+        padding-top: 0 !important;
+        padding-left: 0 !important;
+        background-color: #282828 !important;
+    }
+
+    div.doc>pre>code {
+        background-color: #383838;
+        padding: 1em !important;
+    }
+
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+
+            {
+            # font-size: 150%;
+            #
+        }
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <span>shard.yml</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc" id="section-1">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="nt">name</span><span class="p">:</span><span class="tw"> </span><span class="l">grafito</span><span class="tw">
+</span><span class="tw"></span><span class="nt">version</span><span class="p">:</span><span class="tw"> </span><span class="ln">0.9</span><span class="ln">.1</span><span class="tw">
+</span><span class="tw">
+</span><span class="tw"></span><span class="nt">authors</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">  </span><span class="t">- </span><span class="l">Roberto Alsina &lt;roberto.alsina@gmail.com&gt;</span><span class="tw">
+</span><span class="tw">
+</span><span class="tw"></span><span class="nt">targets</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">  </span><span class="nt">grafito</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">    </span><span class="nt">main</span><span class="p">:</span><span class="tw"> </span><span class="l">src/main.cr</span><span class="tw">
+</span><span class="tw">
+</span><span class="tw"></span><span class="nt">dependencies</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">  </span><span class="nt">baked_file_system</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/baked_file_system</span><span class="tw">
+</span><span class="tw">    </span><span class="nt">branch</span><span class="p">:</span><span class="tw"> </span><span class="l">master</span><span class="tw">
+</span><span class="tw">  </span><span class="nt">docopt</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/docopt.cr</span><span class="tw">
+</span><span class="tw">  </span><span class="nt">html_builder</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">crystal-lang/html_builder</span><span class="tw">
+</span><span class="tw">  </span><span class="nt">kemal</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">kemalcr/kemal</span><span class="tw">
+</span><span class="tw">  </span><span class="nt">kemal-basic-auth</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">kemalcr/kemal-basic-auth</span><span class="tw">
+</span><span class="tw">
+</span><span class="tw"></span><span class="nt">development_dependencies</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">  </span><span class="nt">faker</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">askn/faker</span><span class="tw">
+</span><span class="tw">
+</span><span class="tw"></span><span class="nt">crystal</span><span class="p">:</span><span class="tw"> </span><span class="lsd">&quot;&gt;=1.16.0&quot;</span><span class="tw">
+</span><span class="tw">
+</span><span class="tw"></span><span class="nt">license</span><span class="p">:</span><span class="tw"> </span><span class="l">MIT</span></code></pre>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Default Dark
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>
