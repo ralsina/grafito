@@ -8,6 +8,14 @@ targets:
   grafito:
     main: src/main.cr
 
+# Trying to keep dependencies to a minimum.
+#
+# * `kemal` and `kemal-basic-auth` to make this a web app
+# * `docopt` because I like it and it's small
+# * `baked-file-system` because it *must* be a single binary
+# * `html_builder` because generating complex HTML tables without it
+#   makes for horrible-looking code
+
 dependencies:
   baked_file_system:
     github: ralsina/baked_file_system
@@ -23,6 +31,8 @@ dependencies:
   baked_file_handler:
     github: ralsina/baked_file_handler
 
+# Faker is used for the demo version which displays
+# fake data.
 development_dependencies:
   faker:
     github: askn/faker
