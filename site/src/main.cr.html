@@ -68,17 +68,20 @@
         background-color: #031a16;
         margin-top: auto;
     }
-    code,
-    code * {
+    code {
         font-family: 'Chivo Mono', monospace !important;
-        padding-top: 0 !important;
-        padding-left: 0 !important;
+        padding: .15rem;
         background-color: #0b342d !important;
     }
 
-    div.doc>pre>code {
+    code>span {
+        font-family: 'Chivo Mono', monospace !important;
+    }
+
+    div.doc>pre>code  {
         background-color: #184e45;
         padding: 1em !important;
+        font-family: 'Chivo Mono', monospace !important;
     }
 
     span.anchor {
@@ -222,7 +225,7 @@
 comments in the literate programming style, so when passing it through
 a tool such as <a href="https://crycco.ralsina.me">crycco</a> it will turn into
 a readable guided tour.</p>
-<p>It doesn´t hurt that there is not so much code 🤣</p>
+<p>It doesn't hurt that there is not so much code 🤣</p>
 <p>Grafito is a simple log viewer. While it tries to have a nice UI, the
 <em>idea</em> itself is simple. Your Linux system already provides a nice
 log management system in <code>journald</code> but accessing it via the terminal
