@@ -217,15 +217,58 @@
         <span class="anchor">
             <a href="#section-1" class="anchor">↦</a>
         </span>
+        <h1>Grafito</h1>
+<p>Welcome to the Grafito source code! I will try to make this code have
+comments in the literate programming style, so when passing it through
+a tool such as <a href="https://crycco.ralsina.me">crycco</a> it will turn into
+a readable guided tour.</p>
+<p>It doesn´t hurt that there is not so much code 🤣</p>
+<p>Grafito is a simple log viewer. While it tries to have a nice UI, the
+<em>idea</em> itself is simple. Your Linux system already provides a nice
+log management system in <code>journald</code> but accessing it via the terminal
+using <code>journalctl</code> is a bit old fashioned and not terribly convenient.</p>
+<p>One solution many use is to use some sort of log collection and viewing
+stack, such as Grafana and others. While those solutions make sense for
+a complex infrastructure in a company, I don´t think a personal server
+or homelab has the same requirements.</p>
+<p>Therefore, Grafito tries to expose the important bits of <code>journald</code> in
+a comfortable environment. View the logs. Filter them in the most common
+ways. Provide, when possible, escape hatches so you can just drop down
+into the more powerful terminal.</p>
+<p>Don´t try to replace the existing, built-in solution that you already
+have working, but build upon it.</p>
+<p>ALso, choose the tooling so it's easy to install, requires minimal setup
+and configuration and is performant. Easy, right?</p>
 
     </div>
     <div class="code">
         <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./grafito</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
 </span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">docopt</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
 </span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal-basic-auth</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">
-</span><span class="nc">DOC</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&lt;&lt;-DOCOPT</span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span></code></pre>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc" id="section-2">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>This file <a href="main.cr.html">main.cr</a> is the starting point for grafito. We get the instructions from the
+user about how to start via the command line, using <a href="https://docopt.org">docopt</a>
+which lets us just write the help and then everything Just Works.</p>
+<p>Since one of the goals is easy setup and minimal config, there are exactly 4 configurable things:</p>
+<ul>
+<li>Address</li>
+<li>Port</li>
+<li>User</li>
+<li>Password</li>
+</ul>
+<p>And they are all optinal ;-)</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="nc">DOC</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&lt;&lt;-DOCOPT</span><span class="t">
 </span><span class="ls">Grafito - A simple log viewer.</span><span class="ls">
 </span><span class="ls">
 Usage:</span><span class="ls">
@@ -238,34 +281,7 @@ Options:</span><span class="ls">
   -b ADDRESS, --bind=ADDRESS    Address to bind to [default: 127.0.0.1].</span><span class="ls">
   -h --help                     Show this screen.</span><span class="ls">
   --version                     Show version.</span><span class="ls">
-DOCOPT</span><span class="ls"></span><span class="t">
-</span><span class="t">
-</span><span class="nk">def</span><span class="t"> </span><span class="nv">main</span><span class="t">
-</span><span class="t">  </span><span class="t">args</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Docopt</span><span class="t">.</span><span class="t">docopt</span><span class="t">(</span><span class="nc">DOC</span><span class="t">,</span><span class="t"> </span><span class="nc">ARGV</span><span class="t">,</span><span class="t"> </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">VERSION</span><span class="t">)</span><span class="t">
-</span><span class="t">
-</span><span class="t">  </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--port</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">.</span><span class="t">to_i32</span><span class="t">
-</span><span class="t">  </span><span class="t">bind_address</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--bind</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">
-</span><span class="t">
-</span><span class="t">  </span><span class="nc">Log</span><span class="t">.</span><span class="t">setup</span><span class="t">(</span><span class="lss">:debug</span><span class="t">)</span><span class="t"> </span><span class="c"># Or use Log.setup_from_env for more flexibility</span><span class="t">
-</span><span class="t">  </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Starting Grafito server on </span><span class="lsi">#{</span><span class="t">bind_address</span><span class="t"></span><span class="lsi">}</span><span class="ls">:</span><span class="lsi">#{</span><span class="t">port</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
-</span><span class="t">  </span><span class="nc">Kemal</span><span class="t">.</span><span class="t">config</span><span class="t">.</span><span class="t">host_binding</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">bind_address</span></code></pre>
-    </div>
-</div>
-
-<div id="section-2" class="grid">
-    <div class="doc" id="section-2">
-        <span class="anchor">
-            <a href="#section-2" class="anchor">↦</a>
-        </span>
-        <p>--- Basic Authentication Configuration ---
-Read credentials and realm from environment variables</p>
-
-    </div>
-    <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">auth_user</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">ENV</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">GRAFITO_AUTH_USER</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">
-</span><span class="t">  </span><span class="t">auth_pass</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">ENV</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">GRAFITO_AUTH_PASS</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">
-</span><span class="t">
-</span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">auth_pass</span></code></pre>
+DOCOPT</span><span class="ls"></span></code></pre>
     </div>
 </div>
 
@@ -274,13 +290,12 @@ Read credentials and realm from environment variables</p>
         <span class="anchor">
             <a href="#section-3" class="anchor">↦</a>
         </span>
-        <p>Both username and password are set, enable basic authentication</p>
+        <p>This <code>main()</code>function is called from the top-level so it's code that
+always gets executed.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Basic Authentication enabled. User: </span><span class="lsi">#{</span><span class="t">auth_user</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
-</span><span class="t">    </span><span class="t">basic_auth</span><span class="t"> </span><span class="t">auth_user</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">,</span><span class="t"> </span><span class="t">auth_pass</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">
-</span><span class="t">  </span><span class="nk">elsif</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">auth_pass</span></code></pre>
+        <pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">main</span></code></pre>
     </div>
 </div>
 
@@ -289,13 +304,11 @@ Read credentials and realm from environment variables</p>
         <span class="anchor">
             <a href="#section-4" class="anchor">↦</a>
         </span>
-        <p>Only one of the credentials was set - this is a misconfiguration.</p>
+        <p>We parse the command line (<code>ARGV</code>) using the help we described above.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Basic Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
-</span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="ln">1</span><span class="t"> </span><span class="c"># Exit with an error code to prevent running in an insecure state.</span><span class="t">
-</span><span class="t">  </span><span class="nk">else</span></code></pre>
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">args</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Docopt</span><span class="t">.</span><span class="t">docopt</span><span class="t">(</span><span class="nc">DOC</span><span class="t">,</span><span class="t"> </span><span class="nc">ARGV</span><span class="t">,</span><span class="t"> </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">VERSION</span><span class="t">)</span></code></pre>
     </div>
 </div>
 
@@ -304,14 +317,112 @@ Read credentials and realm from environment variables</p>
         <span class="anchor">
             <a href="#section-5" class="anchor">↦</a>
         </span>
+        <p>Port and binding address are important</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--port</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">.</span><span class="t">to_i32</span><span class="t">
+</span><span class="t">  </span><span class="t">bind_address</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--bind</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc" id="section-6">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>Log at debug level. Probably worth making it configurable.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nc">Log</span><span class="t">.</span><span class="t">setup</span><span class="t">(</span><span class="lss">:debug</span><span class="t">)</span><span class="t"> </span><span class="c"># Or use Log.setup_from_env for more flexibility</span><span class="t">
+</span><span class="t">  </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Starting Grafito server on </span><span class="lsi">#{</span><span class="t">bind_address</span><span class="t"></span><span class="lsi">}</span><span class="ls">:</span><span class="lsi">#{</span><span class="t">port</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span></code></pre>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc" id="section-7">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>Start kemal listening on the right address</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nc">Kemal</span><span class="t">.</span><span class="t">config</span><span class="t">.</span><span class="t">host_binding</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">bind_address</span></code></pre>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc" id="section-8">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>Read credentials and realm from environment variables</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">auth_user</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">ENV</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">GRAFITO_AUTH_USER</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">
+</span><span class="t">  </span><span class="t">auth_pass</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">ENV</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">GRAFITO_AUTH_PASS</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span></code></pre>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc" id="section-9">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>Both username and password are set, enable basic authentication</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">auth_pass</span><span class="t">
+</span><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Basic Authentication enabled. User: </span><span class="lsi">#{</span><span class="t">auth_user</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="t">basic_auth</span><span class="t"> </span><span class="t">auth_user</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">,</span><span class="t"> </span><span class="t">auth_pass</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">
+</span><span class="t">  </span><span class="nk">elsif</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">auth_pass</span></code></pre>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc" id="section-10">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
+        <p>Only one of the credentials was set - this is a misconfiguration.
+Exit with an error code to prevent running in an insecure state.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Basic Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="ln">1</span><span class="t">
+</span><span class="t">  </span><span class="nk">else</span></code></pre>
+    </div>
+</div>
+
+<div id="section-11" class="grid">
+    <div class="doc" id="section-11">
+        <span class="anchor">
+            <a href="#section-11" class="anchor">↦</a>
+        </span>
         <p>Neither username nor password are set, run without authentication.</p>
 
     </div>
     <div class="code">
         <pre class="b" ><code class="b"><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Basic Authentication is DISABLED. To enable, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS environment variables.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
-</span><span class="t">  </span><span class="nk">end</span><span class="t">
-</span><span class="t">
-</span><span class="t">  </span><span class="nc">Kemal</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="t">port</span><span class="t">)</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-12" class="grid">
+    <div class="doc" id="section-12">
+        <span class="anchor">
+            <a href="#section-12" class="anchor">↦</a>
+        </span>
+        <p>Tell kemal to listen on the right port. That's it. The rest is done in <a href="grafito.cr.html">grafito.cr</a></p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nc">Kemal</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="t">port</span><span class="t">)</span><span class="t">
 </span><span class="nk">end</span><span class="t">
 </span><span class="t">
 </span><span class="t">main</span><span class="t">(</span><span class="t">)</span></code></pre>

@@ -1,6 +1,13 @@
 # # The Grafito Module
 #
 # This module defines the API for the grafito backend.
+#
+# Since Grafito is not a very complicated application, the backend is just a few endpoints
+# exposing enough functionality to let you access log information. Because it's all
+# read only, they all use the `GET` method.
+#
+# Some of them have perhaps too many arguments because they have grown following the UI
+# and could use some refactoring.
 
 require "./grafito_helpers"
 require "./journalctl"
@@ -294,7 +301,9 @@ module Grafito
       title_html = "<h4>Log Context (#{count} before & after)</h4>"
 
       # For context view, we generally want to see all columns, including Unit.
-      # Sorting and search query are not directly applicable here.
+      # Sorting and search query are not directly applicable here, and we don´t
+      # want the `chart`, a timeline of events, since they are all consecutive
+      # in a short period.
       generated_table_html = html_log_output(
         context_entries,          # The logs to display
         nil,                      # current_sort_by

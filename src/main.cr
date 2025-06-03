@@ -1,10 +1,33 @@
 # # Grafito
+#
 # Welcome to the Grafito source code! I will try to make this code have
 # comments in the literate programming style, so when passing it through
 # a tool such as [crycco](https://crycco.ralsina.me) it will turn into
 # a readable guided tour.
 #
 # It doesn´t hurt that there is not so much code 🤣
+#
+# Grafito is a simple log viewer. While it tries to have a nice UI, the
+# *idea* itself is simple. Your Linux system already provides a nice
+# log management system in `journald` but accessing it via the terminal
+# using `journalctl` is a bit old fashioned and not terribly convenient.
+#
+# One solution many use is to use some sort of log collection and viewing
+# stack, such as Grafana and others. While those solutions make sense for
+# a complex infrastructure in a company, I don´t think a personal server
+# or homelab has the same requirements.
+#
+# Therefore, Grafito tries to expose the important bits of `journald` in
+# a comfortable environment. View the logs. Filter them in the most common
+# ways. Provide, when possible, escape hatches so you can just drop down
+# into the more powerful terminal.
+#
+# Don´t try to replace the existing, built-in solution that you already
+# have working, but build upon it.
+#
+# ALso, choose the tooling so it's easy to install, requires minimal setup
+# and configuration and is performant. Easy, right?
+
 
 require "./grafito"
 require "docopt"
@@ -14,6 +37,15 @@ require "kemal"
 # This file [main.cr](main.cr.html) is the starting point for grafito. We get the instructions from the
 # user about how to start via the command line, using [docopt](https://docopt.org)
 # which lets us just write the help and then everything Just Works.
+#
+# Since one of the goals is easy setup and minimal config, there are exactly 4 configurable things:
+#
+# * Address
+# * Port
+# * User
+# * Password
+#
+# And they are all optinal ;-)
 
 DOC = <<-DOCOPT
 Grafito - A simple log viewer.
@@ -30,7 +62,7 @@ Options:
   --version                     Show version.
 DOCOPT
 
-# This `main()`function is called from the top-level so it's the code that
+# This `main()`function is called from the top-level so it's code that
 # always gets executed.
 
 def main
