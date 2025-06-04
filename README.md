@@ -32,7 +32,7 @@ For a quick installation on Linux systems with systemd, you can use the provided
 To use the script, run the following command:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/ralsina/grafito/master/website/install.sh | sudo bash
+curl -sSL https://grafito.ralsina.me/install.sh | sudo bash
 ```
 
 After installation, Grafito should be running and accessible at `http://<your_server_ip>:1111` (or the port configured in the service). You can check its status with `systemctl status grafito.service`.
