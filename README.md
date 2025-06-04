@@ -21,13 +21,34 @@ Key features include:
 
 If you are using Arch Linux grafito is [available in AUR](https://aur.archlinux.org/packages/grafito)
 
+### Using the Install Script (Linux with systemd)
+
+For a quick installation on Linux systems with systemd, you can use the provided installation script. This script will:
+
+1. Download the correct Grafito binary for your system's architecture (amd64 or arm64) for the latest version tagged in the script.
+2. Install it to `/usr/local/bin/grafito`.
+3. Set up and enable a systemd service for Grafito.
+
+To use the script, run the following command:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/ralsina/grafito/master/website/install.sh | sudo bash
+```
+
+After installation, Grafito should be running and accessible at `http://<your_server_ip>:1111` (or the port configured in the service). You can check its status with `systemctl status grafito.service`.
+
+### Prebuilt Binaries
+
 To install from prebuilt binaries, download the latest release from the
 [releases page](github.com/ralsina/grafito/releases). The binaries are
-available for linux, both x86_64 and arm64 architectures.
+available for linux, both x86_64 and arm64 architectures. You can get an example
+`grafito.service` [from the repository.](https://github.com/ralsina/grafito/blob/main/grafito.service)
 
-To install from source:
+
+### Install from source:
 
 1. **Clone the repository:**
+
 
     ```bash
     git clone https://github.com/ralsina/grafito.git
@@ -66,7 +87,7 @@ available on the system where it's run.
 
 To run Grafito as a systemd service, you can create a service file.
 
-1.  **Create the service file:**
+1. **Create the service file:**
 
     Create a file named `grafito.service` in `/etc/systemd/system/` (or `~/.config/systemd/user/` for a user service) with the following content. Adjust paths and user/group as necessary.
 
