@@ -64,29 +64,28 @@ Options:
   --version                     Show version.
 DOCOPT
 
-  # ## The Assets class
-  #
-  # Bake all files from the src/assets directory into the binary.
-  # The keys in the baked FS will be like "/index.html" for "assets/index.html", etc.
-  #
-  # This is important because it's what allows distributing Grafito as a single binary
-  # without the need to ship a bunch of files alongside it.
-  #
-  # All the things that are needed to function are baked-in:
-  #
-  # * pico.css
-  # * htmx
-  # * index.html
-  # * style.css
-  #
-  # We are not embedding fonts and icons because they are not strictly
-  # needed for Grafito to run, so if you run it without Internet access
-  # it will work fine but fonts will look different and icons may be missing.
-  class Assets
-    extend BakedFileSystem
-    bake_folder "./assets"
-  end
-
+# ## The Assets class
+#
+# Bake all files from the src/assets directory into the binary.
+# The keys in the baked FS will be like "/index.html" for "assets/index.html", etc.
+#
+# This is important because it's what allows distributing Grafito as a single binary
+# without the need to ship a bunch of files alongside it.
+#
+# All the things that are needed to function are baked-in:
+#
+# * pico.css
+# * htmx
+# * index.html
+# * style.css
+#
+# We are not embedding fonts and icons because they are not strictly
+# needed for Grafito to run, so if you run it without Internet access
+# it will work fine but fonts will look different and icons may be missing.
+class Assets
+  extend BakedFileSystem
+  bake_folder "./assets"
+end
 
 # This `main()`function is called from the top-level so it's code that
 # always gets executed.

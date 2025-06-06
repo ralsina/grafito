@@ -106,20 +106,16 @@ module Grafito
         return
       end
 
-      # If direct path failed, and it's a "directory" path (ends with / or is root),
+      # If direct path failed, and it's a "directory" path (ends with / or is "." for root),
       # and @serve_index_html is true, try serving an index.html file from that path.
       if @serve_index_html && (request_path.ends_with?('/') || request_path == ".")
-        # For a path like "/foo/", baked_key might be "foo" or "foo/"
-        # We want to try "foo/index.html"
-        # Path.join handles multiple slashes correctly.
-        index_key = Path.posix(baked_key).join("index.html").normalize.to_s
-        index_key = "index.html" if baked_key == "." # Special case for root
+        index_key = (baked_key == ".") ? "index.html" : Path.posix(baked_key).join("index.html").normalize.to_s
         if serve_baked_key(context, index_key)
           return
         end
       end
 
-      # If file not found or not handled, fallthrough
+      # If nothing worked, fall through to the next handler.
       call_next(context)
     end
 
@@ -138,9 +134,9 @@ module Grafito
         io = @baked_fs_class.get(baked_key)
         extension = Path.new(baked_key).extension.to_s # .to_s handles nil if no extension
         context.response.content_type = MIME.from_extension(extension) || "application/octet-stream"
-        if cc = @cache_control
+        @cache_control.try { |cc|
           context.response.headers["Cache-Control"] = cc
-        end
+        }
         context.response.content_length = io.size
         # For GET requests, we copy the IO content to the response.
         if context.request.method == "GET"
