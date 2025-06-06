@@ -72,7 +72,12 @@ module Grafito
     #     requests to directory-like paths (e.g., `/admin/` serves `/admin/index.html`).
     #   - `cache_control`: Sets the `Cache-Control` header for successful responses.
     #     Defaults to "max-age=604800" (1 week). Set to `nil` to omit this header.
-    def initialize(@baked_fs_class : Class, fallthrough = true, @serve_index_html = true, @cache_control = "max-age=604800")
+    def initialize(
+      @baked_fs_class : BakedFileSystem,
+      fallthrough = true,
+      @serve_index_html = true,
+      @cache_control = "max-age=604800",
+    )
       # Call super with a dummy public_dir, as we override `call` and don't use parent's fs logic.
       # Parent's directory_listing is also made false as we don't support it.
       super("/", fallthrough, directory_listing: false)
@@ -84,20 +89,16 @@ module Grafito
     def call(context : HTTP::Server::Context)
       request_path = context.request.path
 
-      case context.request.method
-      when "GET", "HEAD"
-        # Proceed
-      else
+      unless ["GET", "HEAD"].includes? context.request.method
         # Method not allowed
         if @fallthrough
           return call_next(context)
         else
-          context.response.status = :method_not_allowed # 405
+          context.response.status = HTTP::Status::METHOD_NOT_ALLOWED # 405
           context.response.headers["Allow"] = "GET, HEAD"
           return
         end
       end
-
       baked_key = Path.posix(URI.decode(request_path)).relative_to("/").to_s
 
       # Attempt to serve the direct path
