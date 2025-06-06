@@ -28,7 +28,7 @@
 # ALso, choose the tooling so it's easy to install, requires minimal setup
 # and configuration and is performant. Easy, right?
 
-
+require "./baked_handler"
 require "./grafito"
 require "docopt"
 require "kemal-basic-auth"
@@ -98,6 +98,11 @@ def main
     # Neither username nor password are set, run without authentication.
     Grafito::Log.warn { "Basic Authentication is DISABLED. To enable, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS environment variables." }
   end
+
+  # Add the BakedFileHandler to serve static assets from Grafito::Assets
+  # It will serve files like /style.css and /index.html (for / requests)
+  baked_asset_handler = Grafito::BakedFileHandler.new(Grafito::Assets)
+  add_handler baked_asset_handler
 
   # Tell kemal to listen on the right port. That's it. The rest is done in [grafito.cr](grafito.cr.html)
   # where the kemal endpoints are defined.

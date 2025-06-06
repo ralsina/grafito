@@ -48,43 +48,6 @@ module Grafito
     bake_folder "./assets"
   end
 
-  # One special endpoint is `/` because it serves the only page in the app.
-  # We are serving a minified version which is source-mapped to the "real"
-  # one [assets/index.html]() sadly there is no literate version of it yet
-  # because [Crycco](https://crycco.ralsina.me) the tool I wrote and am
-  # using has no support for HTML source files (yet)
-
-  get "/" do |env|
-    serve_file(env, "index.min.html")
-  end
-
-  # This endpoint is just a wrapper to `serve_file` which sends the user
-  # files from the baked assets.
-
-  get "/:file" do |env|
-    filename = env.params.url["file"]
-    serve_file(env, filename)
-  end
-
-  # Serves a file from the baked assets.
-  # `requested_filename` is the name of the file as requested by the client (e.g., `style.css`).
-  private def serve_file(env, requested_filename)
-    # Files are stored as /style.css so fix the path and get the file contents.
-    baked_path = "/#{requested_filename}"
-    file_content = Assets.get(baked_path)
-    # We have to guess the content type based on the file extension.
-    content_type = MIME.from_extension("." + requested_filename.split(".").last)
-    env.response.content_type = content_type
-    # Set a reasonable cache lifetime
-    env.response.headers.add("Cache-Control", "max-age=604800") # Cache for 1 week
-    # And send the data on its way.
-    env.response.print file_content.gets_to_end
-  rescue KeyError
-    # If it's not baked in, give a 404. Grafito will *NOT* return any files from disk.
-    env.response.status_code = 404
-    env.response.print "File not found: #{HTML.escape(requested_filename)}"
-  end
-
   # ## The `/logs` endpoint
   #
   # Exposes the Journalctl wrapper via a REST API.
@@ -123,7 +86,6 @@ module Grafito
     show_priority_col = env.params.query.has_key?("col-visible-priority")
     show_message_col = env.params.query.has_key?("col-visible-message")
 
-    # FIXME: simplify
     output_format = (format_param.presence || "html").downcase
     Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, hostname=#{hostname.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}, show_timestamp=#{show_timestamp_col}, show_hostname=#{show_hostname_col}, show_unit=#{show_unit_col}, show_priority=#{show_priority_col}, show_message=#{show_message_col}" }
 
