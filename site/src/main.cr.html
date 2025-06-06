@@ -167,31 +167,37 @@
 
             <li>
 
-                <a href="../shard.yml.html"><span>shard.yml</span></a>
+                <a href="shard.yml.html"><span>shard.yml</span></a>
 
             </li>
 
             <li>
 
-                <a href="fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+                <a href="src/baked_handler.cr.html"><span>src/baked_handler.cr</span></a>
 
             </li>
 
             <li>
 
-                <a href="grafito.cr.html"><span>src/grafito.cr</span></a>
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
 
             </li>
 
             <li>
 
-                <a href="grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
 
             </li>
 
             <li>
 
-                <a href="journalctl.cr.html"><span>src/journalctl.cr</span></a>
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
 
             </li>
 
@@ -203,7 +209,7 @@
 
             <li>
 
-                <a href="timeline.cr.html"><span>src/timeline.cr</span></a>
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
 
             </li>
 
@@ -245,10 +251,7 @@ and configuration and is performant. Easy, right?</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./grafito</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">docopt</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal-basic-auth</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span></code></pre>
+        <pre class="b" ><code class="b"></code></pre>
     </div>
 </div>
 
@@ -256,6 +259,23 @@ and configuration and is performant. Easy, right?</p>
     <div class="doc" id="section-2">
         <span class="anchor">
             <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <h2>main.cr</h2>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./baked_handler</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./grafito</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">docopt</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal-basic-auth</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span></code></pre>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc" id="section-3">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
         </span>
         <p>This file <a href="main.cr.html">main.cr</a> is the starting point for grafito. We get the instructions from the
 user about how to start via the command line, using <a href="https://docopt.org">docopt</a>
@@ -288,10 +308,40 @@ DOCOPT</span><span class="ls"></span></code></pre>
     </div>
 </div>
 
-<div id="section-3" class="grid">
-    <div class="doc" id="section-3">
+<div id="section-4" class="grid">
+    <div class="doc" id="section-4">
         <span class="anchor">
-            <a href="#section-3" class="anchor">↦</a>
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <h2>The Assets class</h2>
+<p>Bake all files from the src/assets directory into the binary.
+The keys in the baked FS will be like &quot;/index.html&quot; for &quot;assets/index.html&quot;, etc.</p>
+<p>This is important because it's what allows distributing Grafito as a single binary
+without the need to ship a bunch of files alongside it.</p>
+<p>All the things that are needed to function are baked-in:</p>
+<ul>
+<li>pico.css</li>
+<li>htmx</li>
+<li>index.html</li>
+<li>style.css</li>
+</ul>
+<p>We are not embedding fonts and icons because they are not strictly
+needed for Grafito to run, so if you run it without Internet access
+it will work fine but fonts will look different and icons may be missing.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="nc">Assets</span><span class="t">
+</span><span class="t">    </span><span class="nk">extend</span><span class="t"> </span><span class="nc">BakedFileSystem</span><span class="t">
+</span><span class="t">    </span><span class="t">bake_folder</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./assets</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc" id="section-5">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
         </span>
         <p>This <code>main()</code>function is called from the top-level so it's code that
 always gets executed.</p>
@@ -302,10 +352,10 @@ always gets executed.</p>
     </div>
 </div>
 
-<div id="section-4" class="grid">
-    <div class="doc" id="section-4">
+<div id="section-6" class="grid">
+    <div class="doc" id="section-6">
         <span class="anchor">
-            <a href="#section-4" class="anchor">↦</a>
+            <a href="#section-6" class="anchor">↦</a>
         </span>
         <p>We parse the command line (<code>ARGV</code>) using the help we described above.</p>
 
@@ -315,10 +365,10 @@ always gets executed.</p>
     </div>
 </div>
 
-<div id="section-5" class="grid">
-    <div class="doc" id="section-5">
+<div id="section-7" class="grid">
+    <div class="doc" id="section-7">
         <span class="anchor">
-            <a href="#section-5" class="anchor">↦</a>
+            <a href="#section-7" class="anchor">↦</a>
         </span>
         <p>Port and binding address are important</p>
 
@@ -329,10 +379,10 @@ always gets executed.</p>
     </div>
 </div>
 
-<div id="section-6" class="grid">
-    <div class="doc" id="section-6">
+<div id="section-8" class="grid">
+    <div class="doc" id="section-8">
         <span class="anchor">
-            <a href="#section-6" class="anchor">↦</a>
+            <a href="#section-8" class="anchor">↦</a>
         </span>
         <p>Log at debug level. Probably worth making it configurable.</p>
 
@@ -343,10 +393,10 @@ always gets executed.</p>
     </div>
 </div>
 
-<div id="section-7" class="grid">
-    <div class="doc" id="section-7">
+<div id="section-9" class="grid">
+    <div class="doc" id="section-9">
         <span class="anchor">
-            <a href="#section-7" class="anchor">↦</a>
+            <a href="#section-9" class="anchor">↦</a>
         </span>
         <p>Start kemal listening on the right address</p>
 
@@ -356,10 +406,10 @@ always gets executed.</p>
     </div>
 </div>
 
-<div id="section-8" class="grid">
-    <div class="doc" id="section-8">
+<div id="section-10" class="grid">
+    <div class="doc" id="section-10">
         <span class="anchor">
-            <a href="#section-8" class="anchor">↦</a>
+            <a href="#section-10" class="anchor">↦</a>
         </span>
         <p>Read credentials and realm from environment variables</p>
 
@@ -370,10 +420,10 @@ always gets executed.</p>
     </div>
 </div>
 
-<div id="section-9" class="grid">
-    <div class="doc" id="section-9">
+<div id="section-11" class="grid">
+    <div class="doc" id="section-11">
         <span class="anchor">
-            <a href="#section-9" class="anchor">↦</a>
+            <a href="#section-11" class="anchor">↦</a>
         </span>
         <p>Both username and password are set, enable basic authentication</p>
 
@@ -386,10 +436,10 @@ always gets executed.</p>
     </div>
 </div>
 
-<div id="section-10" class="grid">
-    <div class="doc" id="section-10">
+<div id="section-12" class="grid">
+    <div class="doc" id="section-12">
         <span class="anchor">
-            <a href="#section-10" class="anchor">↦</a>
+            <a href="#section-12" class="anchor">↦</a>
         </span>
         <p>Only one of the credentials was set - this is a misconfiguration.
 Exit with an error code to prevent running in an insecure state.</p>
@@ -402,10 +452,10 @@ Exit with an error code to prevent running in an insecure state.</p>
     </div>
 </div>
 
-<div id="section-11" class="grid">
-    <div class="doc" id="section-11">
+<div id="section-13" class="grid">
+    <div class="doc" id="section-13">
         <span class="anchor">
-            <a href="#section-11" class="anchor">↦</a>
+            <a href="#section-13" class="anchor">↦</a>
         </span>
         <p>Neither username nor password are set, run without authentication.</p>
 
@@ -416,10 +466,26 @@ Exit with an error code to prevent running in an insecure state.</p>
     </div>
 </div>
 
-<div id="section-12" class="grid">
-    <div class="doc" id="section-12">
+<div id="section-14" class="grid">
+    <div class="doc" id="section-14">
         <span class="anchor">
-            <a href="#section-12" class="anchor">↦</a>
+            <a href="#section-14" class="anchor">↦</a>
+        </span>
+        <p>The <code>BakedFileHandler</code> is a custom handler that serves files that are baked
+into the application. In our case, the Assets class we defined above.</p>
+<p>You can see how it's implemented in the <a href="baked_handler.cr.html">baked_handler.cr</a> file.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">baked_asset_handler</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">BakedFileHandler</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="nc">Assets</span><span class="t">)</span><span class="t">
+</span><span class="t">  </span><span class="t">add_handler</span><span class="t"> </span><span class="t">baked_asset_handler</span></code></pre>
+    </div>
+</div>
+
+<div id="section-15" class="grid">
+    <div class="doc" id="section-15">
+        <span class="anchor">
+            <a href="#section-15" class="anchor">↦</a>
         </span>
         <p>Tell kemal to listen on the right port. That's it. The rest is done in <a href="grafito.cr.html">grafito.cr</a>
 where the kemal endpoints are defined.</p>

@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>baked_handler.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;}.nc {color: #7cafc2;}.nc {color: #dc9656;}.nd {color: #dc9656;}.nf {color: #7cafc2;}.nn {color: #7cafc2;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.ln {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.ls {color: #a1b56c;}.lsi {color: #a16946;}.lsr {color: #86c1b9;}.lss {color: #dc9656;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Apathy */
+/* Author: Jannik Siebert (https://github.com/janniks) */
+
+:root {
+    --pico-background-color: #031a16; /* Default backround */
+    --pico-color: #81b5ac; /* Default foreground */
+    --pico-text-selection-color: #184e45; /* Selection background */
+    --pico-primary: #96883e; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #184e45;
+    --pico-primary-hover: #3e7996; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-variant-ligatures: none;
+        font-weight: 300;
+        overflow: visible !important;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 50%, #0b342d 50%);
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #5f9c92;
+        background-color: #031a16;
+        margin-top: auto;
+    }
+    code {
+        font-family: 'Chivo Mono', monospace !important;
+        padding: .15rem;
+        background-color: #0b342d !important;
+    }
+
+    code>span {
+        font-family: 'Chivo Mono', monospace !important;
+    }
+
+    div.doc>pre>code  {
+        background-color: #184e45;
+        padding: 1em !important;
+        font-family: 'Chivo Mono', monospace !important;
+    }
+
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+
+            {
+            # font-size: 150%;
+            #
+        }
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/baked_handler.cr</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc" id="section-1">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+        <h1>baked_handler.cr</h1>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">baked_file_system</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">
+</span><span class="nk">module</span><span class="t"> </span><span class="nc">Grafito</span></code></pre>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc" id="section-2">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <h1>BakedFileHandler</h1>
+<p><code>BakedFileHandler</code> is a specialized <code>HTTP::Handler</code> designed to serve
+files embedded within the application binary using a <code>BakedFileSystem</code>
+compatible class.</p>
+<p>It replaces standard filesystem lookups with lookups in the provided
+baked assets class. This allows serving static content (HTML, CSS, JS,
+images, etc.) directly from memory, making the application distributable
+as a single binary without loose asset files.</p>
+<h2>Features:</h2>
+<ul>
+<li>Serves files from a <code>BakedFileSystem</code> class.</li>
+<li>Handles GET and HEAD requests.</li>
+<li>Optionally serves <code>index.html</code> for directory-like paths (e.g., <code>/admin/</code> serves <code>/admin/index.html</code>).</li>
+<li>Sets <code>Content-Type</code> based on file extension.</li>
+<li>Allows configuring <code>Cache-Control</code> headers.</li>
+<li>Fallthrough to the next handler if a file is not found or the method is not supported.</li>
+</ul>
+<h2>Usage:</h2>
+<pre class="b" ><code class="b"><span class="t">require &quot;kemal&quot;</span><span class="t">
+</span><span class="t"></span><span class="t">require &quot;baked_file_system&quot;</span><span class="t">
+</span><span class="t"></span><span class="t">
+</span><span class="t"></span><span class="t"># Example BakedFileSystem class</span><span class="t">
+</span><span class="t"></span><span class="t">class MyAssets</span><span class="t">
+</span><span class="t"></span><span class="t">  extend BakedFileSystem</span><span class="t">
+</span><span class="t"></span><span class="t">  bake_folder &quot;./public_assets&quot;</span><span class="t">
+</span><span class="t"></span><span class="t">end</span><span class="t">
+</span><span class="t"></span><span class="t">
+</span><span class="t"></span><span class="t"># In your Kemal app:</span><span class="t">
+</span><span class="t"></span><span class="t">baked_asset_handler = BakedFileHandler.new(</span><span class="t">
+</span><span class="t"></span><span class="t">  MyAssets)</span><span class="t">
+</span><span class="t"></span><span class="t">add_handler baked_asset_handler</span><span class="t">
+</span><span class="t"></span><span class="t">
+</span><span class="t"></span><span class="t">Kemal.run</span></code></pre><p>When a request like <code>GET /css/style.css</code> is received, <code>BakedFileHandler</code>
+will attempt to retrieve and serve the file associated with the key
+<code>&quot;/css/style.css&quot;</code> from the <code>MyAssets</code> class.</p>
+<h2>Caveats:</h2>
+<ul>
+<li>Directory listing is not supported.</li>
+<li>File modification times and ETag based on <code>mtime</code> are not used for caching,
+as baked assets are immutable at runtime. Caching relies on <code>Cache-Control</code>.</li>
+<li>Range requests are not explicitly supported by this handler;
+the entire file content is served.</li>
+</ul>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="nc">BakedFileHandler</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="nc">Kemal</span><span class="nc">::</span><span class="nc">StaticFileHandler</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="nk">for</span><span class="t">(</span><span class="nk">self</span><span class="t">)</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="t">@baked_fs_class</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">BakedFileSystem</span><span class="t">
+</span><span class="t">    </span><span class="t">@serve_index_html</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">
+</span><span class="t">    </span><span class="t">@cache_control</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">max-age=604800</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Default 1 week</span></code></pre>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc" id="section-3">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>Creates a new <code>BakedFileHandler</code>.</p>
+<p>Arguments:</p>
+<ul>
+<li><code>baked_fs_class</code>: The class object (e.g., <code>MyAssets</code>) that extends <code>BakedFileSystem</code>
+and contains the baked files.</li>
+<li><code>fallthrough</code>: If <code>true</code> (default), calls the next handler if a file is not found
+or if the request method is not GET or HEAD. (Passed to <code>super</code>)</li>
+<li><code>serve_index_html</code>: If <code>true</code> (default), attempts to serve <code>index.html</code> for
+requests to directory-like paths (e.g., <code>/admin/</code> serves <code>/admin/index.html</code>).</li>
+<li><code>cache_control</code>: Sets the <code>Cache-Control</code> header for successful responses.
+Defaults to &quot;max-age=604800&quot; (1 week). Set to <code>nil</code> to omit this header.</li>
+</ul>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">initialize</span><span class="t">(</span><span class="t">@baked_fs_class</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Class</span><span class="t">,</span><span class="t"> </span><span class="t">fallthrough</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"> </span><span class="t">@serve_index_html</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"> </span><span class="t">@cache_control</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">max-age=604800</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc" id="section-4">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>Call super with a dummy public_dir, as we override <code>call</code> and don't use parent's fs logic.
+Parent's directory_listing is also made false as we don't support it.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="nk">super</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">/</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">fallthrough</span><span class="t">,</span><span class="t"> </span><span class="t">directory_listing</span><span class="t">:</span><span class="t"> </span><span class="l">false</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc" id="section-5">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>Overrides the main request handling method from <code>HTTP::StaticFileHandler</code>.
+This implementation bypasses filesystem checks and serves directly from
+the <code>BakedFileSystem</code>.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">call</span><span class="t">(</span><span class="t">context</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">HTTP</span><span class="nc">::</span><span class="nc">Server</span><span class="nc">::</span><span class="nc">Context</span><span class="t">)</span><span class="t">
+</span><span class="t">      </span><span class="t">request_path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">context</span><span class="t">.</span><span class="t">request</span><span class="t">.</span><span class="t">path</span><span class="t">
+</span><span class="t">
+</span><span class="t">      </span><span class="nk">case</span><span class="t"> </span><span class="t">context</span><span class="t">.</span><span class="t">request</span><span class="t">.</span><span class="t">method</span><span class="t">
+</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">GET</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">HEAD</span><span class="ls">&quot;</span><span class="ls"></span></code></pre>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc" id="section-6">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>Proceed</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="nk">else</span></code></pre>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc" id="section-7">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>Method not allowed</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">@fallthrough</span><span class="t">
+</span><span class="t">          </span><span class="nk">return</span><span class="t"> </span><span class="t">call_next</span><span class="t">(</span><span class="t">context</span><span class="t">)</span><span class="t">
+</span><span class="t">        </span><span class="nk">else</span><span class="t">
+</span><span class="t">          </span><span class="t">context</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="lss">:method_not_allowed</span><span class="t"> </span><span class="c"># 405</span><span class="t">
+</span><span class="t">          </span><span class="t">context</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">headers</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">Allow</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">GET, HEAD</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">          </span><span class="nk">return</span><span class="t">
+</span><span class="t">        </span><span class="nk">end</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">      </span><span class="t">baked_key</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Path</span><span class="t">.</span><span class="t">posix</span><span class="t">(</span><span class="nc">URI</span><span class="t">.</span><span class="t">decode</span><span class="t">(</span><span class="t">request_path</span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="t">relative_to</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">/</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span></code></pre>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc" id="section-8">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>Attempt to serve the direct path</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">serve_baked_key</span><span class="t">(</span><span class="t">context</span><span class="t">,</span><span class="t"> </span><span class="t">baked_key</span><span class="t">)</span><span class="t">
+</span><span class="t">        </span><span class="nk">return</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc" id="section-9">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>If direct path failed, and it's a &quot;directory&quot; path (ends with / or is root),
+and @serve_index_html is true, try serving an index.html file from that path.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">@serve_index_html</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">(</span><span class="t">request_path</span><span class="t">.</span><span class="t">ends_with?</span><span class="t">(</span><span class="lsc">&#39;/&#39;</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">request_path</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc" id="section-10">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
+        <p>For a path like &quot;/foo/&quot;, baked_key might be &quot;foo&quot; or &quot;foo/&quot;
+We want to try &quot;foo/index.html&quot;
+Path.join handles multiple slashes correctly.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="t">index_key</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Path</span><span class="t">.</span><span class="t">posix</span><span class="t">(</span><span class="t">baked_key</span><span class="t">)</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">index.html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">normalize</span><span class="t">.</span><span class="t">to_s</span><span class="t">
+</span><span class="t">        </span><span class="t">index_key</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">index.html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">baked_key</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Special case for root</span><span class="t">
+</span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">serve_baked_key</span><span class="t">(</span><span class="t">context</span><span class="t">,</span><span class="t"> </span><span class="t">index_key</span><span class="t">)</span><span class="t">
+</span><span class="t">          </span><span class="nk">return</span><span class="t">
+</span><span class="t">        </span><span class="nk">end</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-11" class="grid">
+    <div class="doc" id="section-11">
+        <span class="anchor">
+            <a href="#section-11" class="anchor">↦</a>
+        </span>
+        <p>If file not found or not handled, fallthrough</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">call_next</span><span class="t">(</span><span class="t">context</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-12" class="grid">
+    <div class="doc" id="section-12">
+        <span class="anchor">
+            <a href="#section-12" class="anchor">↦</a>
+        </span>
+        <p>Helper to serve a file from BakedFileSystem using its key.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">serve_baked_key</span><span class="t">(</span><span class="t">context</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">HTTP</span><span class="nc">::</span><span class="nc">Server</span><span class="nc">::</span><span class="nc">Context</span><span class="t">,</span><span class="t"> </span><span class="t">baked_key</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t">
+</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Attempting to serve baked key: &#39;</span><span class="lsi">#{</span><span class="t">baked_key</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; from </span><span class="lsi">#{</span><span class="t">@baked_fs_class</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span></code></pre>
+    </div>
+</div>
+
+<div id="section-13" class="grid">
+    <div class="doc" id="section-13">
+        <span class="anchor">
+            <a href="#section-13" class="anchor">↦</a>
+        </span>
+        <p>Check for file existence in the BakedFileSystem first.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="nk">unless</span><span class="t"> </span><span class="t">@baked_fs_class</span><span class="t">.</span><span class="t">get?</span><span class="t">(</span><span class="t">baked_key</span><span class="t">)</span><span class="t">
+</span><span class="t">        </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Baked key not found: &#39;</span><span class="lsi">#{</span><span class="t">baked_key</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; in </span><span class="lsi">#{</span><span class="t">@baked_fs_class</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">        </span><span class="nk">return</span><span class="t"> </span><span class="l">false</span><span class="t"> </span><span class="c"># Not served, allow fallthrough</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">      </span><span class="nk">begin</span></code></pre>
+    </div>
+</div>
+
+<div id="section-14" class="grid">
+    <div class="doc" id="section-14">
+        <span class="anchor">
+            <a href="#section-14" class="anchor">↦</a>
+        </span>
+        <p>Now that we know it exists, get it.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="t">io</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@baked_fs_class</span><span class="t">.</span><span class="t">get</span><span class="t">(</span><span class="t">baked_key</span><span class="t">)</span><span class="t">
+</span><span class="t">        </span><span class="t">extension</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Path</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">baked_key</span><span class="t">)</span><span class="t">.</span><span class="t">extension</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="c"># .to_s handles nil if no extension</span><span class="t">
+</span><span class="t">        </span><span class="t">context</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">MIME</span><span class="t">.</span><span class="t">from_extension</span><span class="t">(</span><span class="t">extension</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/octet-stream</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">cc</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@cache_control</span><span class="t">
+</span><span class="t">          </span><span class="t">context</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">headers</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">Cache-Control</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">cc</span><span class="t">
+</span><span class="t">        </span><span class="nk">end</span><span class="t">
+</span><span class="t">        </span><span class="t">context</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_length</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">io</span><span class="t">.</span><span class="t">size</span></code></pre>
+    </div>
+</div>
+
+<div id="section-15" class="grid">
+    <div class="doc" id="section-15">
+        <span class="anchor">
+            <a href="#section-15" class="anchor">↦</a>
+        </span>
+        <p>For GET requests, we copy the IO content to the response.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">context</span><span class="t">.</span><span class="t">request</span><span class="t">.</span><span class="t">method</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">GET</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">          </span><span class="nc">IO</span><span class="t">.</span><span class="t">copy</span><span class="t">(</span><span class="t">io</span><span class="t">,</span><span class="t"> </span><span class="t">context</span><span class="t">.</span><span class="t">response</span><span class="t">)</span><span class="t">
+</span><span class="t">        </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-16" class="grid">
+    <div class="doc" id="section-16">
+        <span class="anchor">
+            <a href="#section-16" class="anchor">↦</a>
+        </span>
+        <p>Served</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Successfully served baked key: &#39;</span><span class="lsi">#{</span><span class="t">baked_key</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">        </span><span class="l">true</span><span class="t">
+</span><span class="t">      </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span></code></pre>
+    </div>
+</div>
+
+<div id="section-17" class="grid">
+    <div class="doc" id="section-17">
+        <span class="anchor">
+            <a href="#section-17" class="anchor">↦</a>
+        </span>
+        <p>Catch errors during the actual serving process and
+ensure a response is sent if not already closed, to prevent hanging</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="nc">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Error serving (already confirmed) baked key: &#39;</span><span class="lsi">#{</span><span class="t">baked_key</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">        </span><span class="nk">unless</span><span class="t"> </span><span class="t">context</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">closed?</span><span class="t">
+</span><span class="t">          </span><span class="nk">begin</span><span class="t">
+</span><span class="t">            </span><span class="t">context</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="lss">:internal_server_error</span><span class="t">
+</span><span class="t">            </span><span class="t">context</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">print</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Error serving file.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="t">          </span><span class="nk">rescue</span><span class="t"> </span><span class="t">error</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">IO</span><span class="nc">::</span><span class="nc">Error</span><span class="t">
+</span><span class="t">            </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">error</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Could not send full 500 error response for &#39;</span><span class="lsi">#{</span><span class="t">baked_key</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; (e.g., headers already sent or stream closed).</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">          </span><span class="nk">end</span><span class="t">
+</span><span class="t">        </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-18" class="grid">
+    <div class="doc" id="section-18">
+        <span class="anchor">
+            <a href="#section-18" class="anchor">↦</a>
+        </span>
+        <p>Consider this handled with an error, do not fallthrough</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="l">true</span><span class="t">
+</span><span class="t">      </span><span class="nk">ensure</span></code></pre>
+    </div>
+</div>
+
+<div id="section-19" class="grid">
+    <div class="doc" id="section-19">
+        <span class="anchor">
+            <a href="#section-19" class="anchor">↦</a>
+        </span>
+        <p>Ensure the IO is closed if it was opened (probably not needed)</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="t">io</span><span class="t">.</span><span class="t">try</span><span class="t"> </span><span class="o">&amp;</span><span class="t">.</span><span class="t">close</span><span class="t">
+</span><span class="t">      </span><span class="nk">end</span><span class="t">
+</span><span class="t">    </span><span class="nk">end</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span><span class="t">
+</span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Apathy
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

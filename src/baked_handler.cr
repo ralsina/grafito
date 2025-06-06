@@ -1,3 +1,5 @@
+# # baked_handler.cr
+
 require "baked_file_system"
 require "kemal"
 
@@ -25,17 +27,17 @@ module Grafito
   #
   # ```
   # require "kemal"
-  # require "baked_file_system" # Your BakedFileSystem module/class
-  # require "log"               # For ::Log
+  # require "baked_file_system"
   #
   # # Example BakedFileSystem class
   # class MyAssets
   #   extend BakedFileSystem
-  #   bake_folder "./public_assets" # Path to assets at compile time
+  #   bake_folder "./public_assets"
   # end
   #
   # # In your Kemal app:
-  # baked_asset_handler = Kemal::BakedFileHandler.new(MyAssets.class)
+  # baked_asset_handler = BakedFileHandler.new(
+  #   MyAssets)
   # add_handler baked_asset_handler
   #
   # Kemal.run
@@ -135,38 +137,34 @@ module Grafito
         io = @baked_fs_class.get(baked_key)
         extension = Path.new(baked_key).extension.to_s # .to_s handles nil if no extension
         context.response.content_type = MIME.from_extension(extension) || "application/octet-stream"
-
         if cc = @cache_control
           context.response.headers["Cache-Control"] = cc
         end
-
-        # Set Content-Length.
         context.response.content_length = io.size
-
-        # For HEAD requests, we only send headers, not the body.
         # For GET requests, we copy the IO content to the response.
-        unless context.request.method == "HEAD"
+        if context.request.method == "GET"
           IO.copy(io, context.response)
         end
-
+        # Served
         Log.debug { "Successfully served baked key: '#{baked_key}'" }
-        true    # Served
-      rescue ex # Catch errors during the actual serving process (e.g., IO errors, unexpected issues after .exist? was true)
+        true
+      rescue ex
+        # Catch errors during the actual serving process and
+        # ensure a response is sent if not already closed, to prevent hanging
         Log.error(exception: ex) { "Error serving (already confirmed) baked key: '#{baked_key}'" }
-        # Ensure a response is sent if not already closed, to prevent hanging
         unless context.response.closed?
           begin
-            # Attempt to set status. This will raise IO::Error if headers were already sent.
             context.response.status = :internal_server_error
-            # If setting status succeeded, headers were not previously sent. Now try to print.
             context.response.print "Error serving file."
           rescue error : IO::Error
             Log.warn(exception: error) { "Could not send full 500 error response for '#{baked_key}' (e.g., headers already sent or stream closed)." }
           end
         end
-        true # Consider this handled with an error, do not fallthrough
+        # Consider this handled with an error, do not fallthrough
+        true
       ensure
-        io.try &.close # Ensure the IO is closed if it was opened
+        # Ensure the IO is closed if it was opened (probably not needed)
+        io.try &.close
       end
     end
   end
