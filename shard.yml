@@ -20,6 +20,8 @@ dependencies:
     github: kemalcr/kemal
   kemal-basic-auth:
     github: kemalcr/kemal-basic-auth
+  baked_file_handler:
+    github: ralsina/baked_file_handler
 
 development_dependencies:
   faker:

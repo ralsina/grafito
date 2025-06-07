@@ -30,8 +30,9 @@
 
 # ## main.cr
 
-require "./baked_handler"
 require "./grafito"
+require "baked_file_handler"
+require "baked_file_system"
 require "docopt"
 require "kemal-basic-auth"
 require "kemal"
@@ -128,7 +129,7 @@ def main
   # into the application. In our case, the Assets class we defined above.
   #
   # You can see how it's implemented in the [baked_handler.cr](baked_handler.cr.html) file.
-  baked_asset_handler = Grafito::BakedFileHandler.new(Assets)
+  baked_asset_handler = BakedFileHandler::BakedFileHandler.new(Assets)
   add_handler baked_asset_handler
 
   # Tell kemal to listen on the right port. That's it. The rest is done in [grafito.cr](grafito.cr.html)
