@@ -1,3 +1,4 @@
+# [markdown]
 # # Grafito
 #
 # Welcome to the Grafito source code! I will try to make this code have

@@ -47,9 +47,8 @@
 <style>
     html * {
         font-family: Chivo, sans-serif;
-        font-variant-ligatures: none;
         font-weight: 300;
-        overflow: visible !important;
+        overflow: visible;
     }
 
     html {
@@ -68,7 +67,7 @@
         background-color: #031a16;
         margin-top: auto;
     }
-    code {
+    code, div.code>pre>code {
         font-family: 'Chivo Mono', monospace !important;
         padding: .15rem;
         background-color: #0b342d !important;
@@ -78,12 +77,9 @@
         font-family: 'Chivo Mono', monospace !important;
     }
 
-    div.doc>pre>code  {
-        background-color: #184e45;
-        padding: 1em !important;
-        font-family: 'Chivo Mono', monospace !important;
+    div.doc>pre>code {
+        overflow-x: auto !important;
     }
-
     span.anchor {
         position: relative;
     }

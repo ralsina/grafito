@@ -47,9 +47,8 @@
 <style>
     html * {
         font-family: Chivo, sans-serif;
-        font-variant-ligatures: none;
         font-weight: 300;
-        overflow: visible !important;
+        overflow: visible;
     }
 
     html {
@@ -68,7 +67,7 @@
         background-color: #031a16;
         margin-top: auto;
     }
-    code {
+    code, div.code>pre>code {
         font-family: 'Chivo Mono', monospace !important;
         padding: .15rem;
         background-color: #0b342d !important;
@@ -78,12 +77,9 @@
         font-family: 'Chivo Mono', monospace !important;
     }
 
-    div.doc>pre>code  {
-        background-color: #184e45;
-        padding: 1em !important;
-        font-family: 'Chivo Mono', monospace !important;
+    div.doc>pre>code {
+        overflow-x: auto !important;
     }
-
     span.anchor {
         position: relative;
     }
@@ -700,14 +696,15 @@ This is a private helper method.</p>
     </div>
     <div class="code">
         <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">build_query_command</span><span class="t">(</span><span class="t">
-</span><span class="t">    </span><span class="t">since</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">unit</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">tag</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">query</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">since</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">unit</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">tag</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">query</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">lines</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">5000</span><span class="t">,</span><span class="t">
 </span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">
-</span><span class="t">    </span><span class="t">command</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-m</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-o</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">5000</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-r</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">
+</span><span class="t">    </span><span class="t">command</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-m</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-o</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">lines</span><span class="t">.</span><span class="t">to_s</span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-r</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">
 </span><span class="t">
 </span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">since</span><span class="t">
 </span><span class="t">      </span><span class="t">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-S</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">since</span><span class="t">
@@ -765,15 +762,7 @@ This is a private helper method.</p>
 </span><span class="t">      </span><span class="nk">end</span><span class="t">
 </span><span class="t">    </span><span class="nk">end</span><span class="t">
 </span><span class="t">
-</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">query</span><span class="t">
-</span><span class="t">      </span><span class="t">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-g</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">query</span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span><span class="t">
-</span><span class="t">
-</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">priority</span><span class="t">
-</span><span class="t">      </span><span class="t">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-p</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">priority</span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span><span class="t">
-</span><span class="t">
-</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">hostname</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">hostname</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span></code></pre>
+</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">query</span></code></pre>
     </div>
 </div>
 
@@ -781,6 +770,34 @@ This is a private helper method.</p>
     <div class="doc" id="section-33">
         <span class="anchor">
             <a href="#section-33" class="anchor">↦</a>
+        </span>
+        <p>Check if the query string matches the pattern for a direct field=value filter.
+Examples: _SYSTEMD_UNIT=foo.service, MESSAGE=bar, MY_VAR=baz
+Field names are typically uppercase and may start with an underscore.
+The regex checks for an optional leading underscore, then one or more uppercase alphanumeric characters (or underscore) for the field name,
+followed by an equals sign and any characters for the value.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">      </span><span class="k">if</span><span class="t"> </span><span class="n">query</span><span class="o">.</span><span class="n">matches?</span><span class="p">(</span><span class="lsr">/</span><span class="lsr">^_{0,1}[A-Z0-9_]+=.*$</span><span class="lsr">/</span><span class="p">)</span><span class="t">
+</span><span class="t">        </span><span class="n">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="n">query</span><span class="t"> </span><span class="cs"># Pass verbatim as a journalctl match</span><span class="t">
+</span><span class="t">      </span><span class="k">else</span><span class="t">
+</span><span class="t">        </span><span class="n">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">-g</span><span class="lsd">&quot;</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="n">query</span><span class="t"> </span><span class="cs"># Use as a general text search pattern with -g</span><span class="t">
+</span><span class="t">      </span><span class="k">end</span><span class="t">
+</span><span class="t">    </span><span class="k">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="k">if</span><span class="t"> </span><span class="n">priority</span><span class="t">
+</span><span class="t">      </span><span class="n">command</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">-p</span><span class="lsd">&quot;</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="n">priority</span><span class="t">
+</span><span class="t">    </span><span class="k">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">    </span><span class="k">if</span><span class="t"> </span><span class="n">hostname</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="n">hostname</span><span class="o">.</span><span class="n">strip</span><span class="o">.</span><span class="n">empty?</span></code></pre>
+    </div>
+</div>
+
+<div id="section-34" class="grid">
+    <div class="doc" id="section-34">
+        <span class="anchor">
+            <a href="#section-34" class="anchor">↦</a>
         </span>
         <p>Add as a match filter for the _HOSTNAME field</p>
 
@@ -793,18 +810,26 @@ This is a private helper method.</p>
     </div>
 </div>
 
-<div id="section-34" class="grid">
-    <div class="doc" id="section-34">
+<div id="section-35" class="grid">
+    <div class="doc" id="section-35">
         <span class="anchor">
-            <a href="#section-34" class="anchor">↦</a>
+            <a href="#section-35" class="anchor">↦</a>
         </span>
         <p>Queries the logs based on the provided criteria.</p>
-<p>Args:
-since: A time offset, like -15m or nil for no filter
-unit: The systemd unit to filter by (e.g., &quot;nginx.service&quot;).
-tag:  The syslog identifier (tag) to filter by.
-live: A boolean indicating if the logs should be streamed live (not implemented yet).
-query: A string to filter logs by a specific search term.</p>
+<p>Args:</p>
+<ul>
+<li>since: A time offset, like -15m or nil for no filter</li>
+<li>unit: The systemd unit to filter by (e.g., &quot;nginx.service&quot;).</li>
+<li>tag:  The syslog identifier (tag) to filter by.</li>
+<li>live: A boolean indicating if the logs should be streamed live (not implemented yet).</li>
+<li>query: A string to filter logs by a specific search term. If it's in the form of a
+<code>journalctl</code> field=value pair, it will be used as a direct match filter, otherwise
+will be passed with <code>-g</code>.</li>
+<li>priority: A string representing the log priority (0-7, e.g., &quot;3&quot; for errors).</li>
+<li>hostname: A string to filter logs by a specific hostname.</li>
+<li>sort_by: A string indicating the field to sort by (e.g., &quot;timestamp&quot;, &quot;priority&quot;, &quot;message&quot;, &quot;unit&quot;).</li>
+<li>sort_order: A string indicating the sort order, either &quot;asc&quot; for ascending or &quot;desc&quot; for descending.</li>
+</ul>
 <p>Returns:
 An array of LogEntry</p>
 
@@ -817,6 +842,7 @@ An array of LogEntry</p>
 </span><span class="t">    </span><span class="t">query</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
 </span><span class="t">    </span><span class="t">priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
 </span><span class="t">    </span><span class="t">hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
+</span><span class="t">    </span><span class="t">lines</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">5000</span><span class="t">,</span><span class="t">
 </span><span class="t">    </span><span class="t">sort_by</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
 </span><span class="t">    </span><span class="t">sort_order</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t">
 </span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="nc">Nil</span><span class="t">
@@ -827,15 +853,16 @@ An array of LogEntry</p>
 </span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  Query: </span><span class="lsi">#{</span><span class="t">query</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
 </span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  Priority: </span><span class="lsi">#{</span><span class="t">priority</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
 </span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  Hostname: </span><span class="lsi">#{</span><span class="t">hostname</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  Lines: </span><span class="lsi">#{</span><span class="t">lines</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
 </span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  SortBy: </span><span class="lsi">#{</span><span class="t">sort_by</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
 </span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  SortOrder: </span><span class="lsi">#{</span><span class="t">sort_order</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span></code></pre>
     </div>
 </div>
 
-<div id="section-35" class="grid">
-    <div class="doc" id="section-35">
+<div id="section-36" class="grid">
+    <div class="doc" id="section-36">
         <span class="anchor">
-            <a href="#section-35" class="anchor">↦</a>
+            <a href="#section-36" class="anchor">↦</a>
         </span>
         <p>Treat empty string parameters for unit and tag as nil</p>
 
@@ -846,15 +873,15 @@ An array of LogEntry</p>
 </span><span class="t">    </span><span class="t">query</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">query</span><span class="t">.</span><span class="nk">is_a?</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">query</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t">
 </span><span class="t">    </span><span class="t">priority</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">priority</span><span class="t">.</span><span class="nk">is_a?</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">priority</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t">
 </span><span class="t">    </span><span class="t">hostname_param</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">hostname</span><span class="t">.</span><span class="nk">is_a?</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">hostname</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="l">nil</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">hostname</span><span class="t">
-</span><span class="t">    </span><span class="t">command</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">build_query_command</span><span class="t">(</span><span class="t">since</span><span class="t">,</span><span class="t"> </span><span class="t">unit</span><span class="t">,</span><span class="t"> </span><span class="t">tag</span><span class="t">,</span><span class="t"> </span><span class="t">query</span><span class="t">,</span><span class="t"> </span><span class="t">priority</span><span class="t">,</span><span class="t"> </span><span class="t">hostname_param</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="t">command</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">build_query_command</span><span class="t">(</span><span class="t">since</span><span class="t">,</span><span class="t"> </span><span class="t">unit</span><span class="t">,</span><span class="t"> </span><span class="t">tag</span><span class="t">,</span><span class="t"> </span><span class="t">query</span><span class="t">,</span><span class="t"> </span><span class="t">priority</span><span class="t">,</span><span class="t"> </span><span class="t">hostname_param</span><span class="t">,</span><span class="t"> </span><span class="t">lines</span><span class="t">:</span><span class="t"> </span><span class="t">lines</span><span class="t">)</span><span class="t">
 </span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Generated journalctl command: </span><span class="lsi">#{</span><span class="t">command</span><span class="t">.</span><span class="t">inspect</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span></code></pre>
     </div>
 </div>
 
-<div id="section-36" class="grid">
-    <div class="doc" id="section-36">
+<div id="section-37" class="grid">
+    <div class="doc" id="section-37">
         <span class="anchor">
-            <a href="#section-36" class="anchor">↦</a>
+            <a href="#section-37" class="anchor">↦</a>
         </span>
         <p>Use the helper to run the command and parse entries</p>
 
@@ -864,10 +891,10 @@ An array of LogEntry</p>
     </div>
 </div>
 
-<div id="section-37" class="grid">
-    <div class="doc" id="section-37">
+<div id="section-38" class="grid">
+    <div class="doc" id="section-38">
         <span class="anchor">
-            <a href="#section-37" class="anchor">↦</a>
+            <a href="#section-38" class="anchor">↦</a>
         </span>
         <p>Sort the entries if sort_by is provided and log_entries is not empty</p>
 
@@ -881,10 +908,10 @@ An array of LogEntry</p>
     </div>
 </div>
 
-<div id="section-38" class="grid">
-    <div class="doc" id="section-38">
+<div id="section-39" class="grid">
+    <div class="doc" id="section-39">
         <span class="anchor">
-            <a href="#section-38" class="anchor">↦</a>
+            <a href="#section-39" class="anchor">↦</a>
         </span>
         <p>Primary comparison</p>
 
@@ -906,10 +933,10 @@ An array of LogEntry</p>
     </div>
 </div>
 
-<div id="section-39" class="grid">
-    <div class="doc" id="section-39">
+<div id="section-40" class="grid">
+    <div class="doc" id="section-40">
         <span class="anchor">
-            <a href="#section-39" class="anchor">↦</a>
+            <a href="#section-40" class="anchor">↦</a>
         </span>
         <p>If primary keys are different, use that comparison.
 Otherwise (if primary_cmp is 0), use timestamp as a secondary sort key,
@@ -923,10 +950,10 @@ unless we are already sorting by timestamp.</p>
     </div>
 </div>
 
-<div id="section-40" class="grid">
-    <div class="doc" id="section-40">
+<div id="section-41" class="grid">
+    <div class="doc" id="section-41">
         <span class="anchor">
-            <a href="#section-40" class="anchor">↦</a>
+            <a href="#section-41" class="anchor">↦</a>
         </span>
         <p>Primary keys are equal, and not sorting by timestamp, so use timestamp as secondary.</p>
 
@@ -937,10 +964,10 @@ unless we are already sorting by timestamp.</p>
     </div>
 </div>
 
-<div id="section-41" class="grid">
-    <div class="doc" id="section-41">
+<div id="section-42" class="grid">
+    <div class="doc" id="section-42">
         <span class="anchor">
-            <a href="#section-41" class="anchor">↦</a>
+            <a href="#section-42" class="anchor">↦</a>
         </span>
         <p>Apply sort order</p>
 
@@ -952,10 +979,10 @@ unless we are already sorting by timestamp.</p>
     </div>
 </div>
 
-<div id="section-42" class="grid">
-    <div class="doc" id="section-42">
+<div id="section-43" class="grid">
+    <div class="doc" id="section-43">
         <span class="anchor">
-            <a href="#section-42" class="anchor">↦</a>
+            <a href="#section-43" class="anchor">↦</a>
         </span>
         <p>If not sorting, journalctl -r already provides reverse chronological order (newest first)</p>
 
@@ -974,10 +1001,10 @@ unless we are already sorting by timestamp.</p>
     </div>
 </div>
 
-<div id="section-43" class="grid">
-    <div class="doc" id="section-43">
+<div id="section-44" class="grid">
+    <div class="doc" id="section-44">
         <span class="anchor">
-            <a href="#section-43" class="anchor">↦</a>
+            <a href="#section-44" class="anchor">↦</a>
         </span>
         <p>Retrieves a list of all known systemd service units using systemctl.</p>
 <p>Returns:
@@ -996,10 +1023,10 @@ An Array(String) containing unique service unit names, sorted, or nil if an erro
     </div>
 </div>
 
-<div id="section-44" class="grid">
-    <div class="doc" id="section-44">
+<div id="section-45" class="grid">
+    <div class="doc" id="section-45">
         <span class="anchor">
-            <a href="#section-44" class="anchor">↦</a>
+            <a href="#section-45" class="anchor">↦</a>
         </span>
         <p>Using systemctl to list service units.
 --type=service: Only list service units.
@@ -1027,10 +1054,10 @@ An Array(String) containing unique service unit names, sorted, or nil if an erro
     </div>
 </div>
 
-<div id="section-45" class="grid">
-    <div class="doc" id="section-45">
+<div id="section-46" class="grid">
+    <div class="doc" id="section-46">
         <span class="anchor">
-            <a href="#section-45" class="anchor">↦</a>
+            <a href="#section-46" class="anchor">↦</a>
         </span>
         <p>The first word on each line should be the unit name.</p>
 
@@ -1053,10 +1080,10 @@ An Array(String) containing unique service unit names, sorted, or nil if an erro
     </div>
 </div>
 
-<div id="section-46" class="grid">
-    <div class="doc" id="section-46">
+<div id="section-47" class="grid">
+    <div class="doc" id="section-47">
         <span class="anchor">
-            <a href="#section-46" class="anchor">↦</a>
+            <a href="#section-47" class="anchor">↦</a>
         </span>
         <p>Retrieves a single log entry by its cursor.</p>
 <p>Args:
@@ -1087,10 +1114,10 @@ A LogEntry object if found, or nil otherwise.</p>
     </div>
 </div>
 
-<div id="section-47" class="grid">
-    <div class="doc" id="section-47">
+<div id="section-48" class="grid">
+    <div class="doc" id="section-48">
         <span class="anchor">
-            <a href="#section-47" class="anchor">↦</a>
+            <a href="#section-48" class="anchor">↦</a>
         </span>
         <p>Helper method to run journalctl and parse JSON lines from its output.</p>
 <p>Args:
@@ -1108,10 +1135,10 @@ An Array(LogEntry) parsed from the command output, or an empty array on failure.
     </div>
 </div>
 
-<div id="section-48" class="grid">
-    <div class="doc" id="section-48">
+<div id="section-49" class="grid">
+    <div class="doc" id="section-49">
         <span class="anchor">
-            <a href="#section-48" class="anchor">↦</a>
+            <a href="#section-49" class="anchor">↦</a>
         </span>
         <p>The fake function's arguments are prefixed with '_' indicating they might not be fully used.
 It's designed to match the signature for easy swapping.</p>
@@ -1147,10 +1174,10 @@ It's designed to match the signature for easy swapping.</p>
     </div>
 </div>
 
-<div id="section-49" class="grid">
-    <div class="doc" id="section-49">
+<div id="section-50" class="grid">
+    <div class="doc" id="section-50">
         <span class="anchor">
-            <a href="#section-49" class="anchor">↦</a>
+            <a href="#section-50" class="anchor">↦</a>
         </span>
         <p>Retrieves log entries surrounding a specific entry identified by a cursor.</p>
 <p>Args:
@@ -1176,10 +1203,10 @@ all in chronological order. Returns nil if the target cursor is not found or cou
     </div>
 </div>
 
-<div id="section-50" class="grid">
-    <div class="doc" id="section-50">
+<div id="section-51" class="grid">
+    <div class="doc" id="section-51">
         <span class="anchor">
-            <a href="#section-50" class="anchor">↦</a>
+            <a href="#section-51" class="anchor">↦</a>
         </span>
         <p>Fetch 'before' entries: <code>journalctl -o json --cursor &lt;cursor&gt; -n &lt;count + 1&gt; --reverse</code>
 This outputs: [Target, B1, B2, ..., B_count] (Target is newest, B1 is just before Target, etc.)</p>
@@ -1193,10 +1220,10 @@ This outputs: [Target, B1, B2, ..., B_count] (Target is newest, B1 is just befor
     </div>
 </div>
 
-<div id="section-51" class="grid">
-    <div class="doc" id="section-51">
+<div id="section-52" class="grid">
+    <div class="doc" id="section-52">
         <span class="anchor">
-            <a href="#section-51" class="anchor">↦</a>
+            <a href="#section-52" class="anchor">↦</a>
         </span>
         <p>Fetch 'after' entries: <code>journalctl -o json --after-cursor &lt;cursor&gt; -n &lt;count&gt;</code>
 This outputs: [A1, A2, ..., A_count] (A1 is just after Target, in chronological order)</p>

@@ -174,14 +174,15 @@ class Journalctl
   # Builds the journalctl command array based on the provided filters.
   # This is a private helper method.
   def self.build_query_command(
-    since : String | Nil,
-    unit : String | Nil,
-    tag : String | Nil,
-    query : String | Nil,
-    priority : String | Nil,
-    hostname : String | Nil,
+    since : String | Nil = nil,
+    unit : String | Nil = nil,
+    tag : String | Nil = nil,
+    query : String | Nil = nil,
+    priority : String | Nil = nil,
+    hostname : String | Nil = nil,
+    lines : Int32 = 5000,
   ) : Array(String)
-    command = ["journalctl", "-m", "-o", "json", "-n", "5000", "-r"]
+    command = ["journalctl", "-m", "-o", "json", "-n", lines.to_s, "-r"]
 
     if since
       command << "-S" << since
@@ -207,7 +208,16 @@ class Journalctl
     end
 
     if query
-      command << "-g" << query
+      # Check if the query string matches the pattern for a direct field=value filter.
+      # Examples: _SYSTEMD_UNIT=foo.service, MESSAGE=bar, MY_VAR=baz
+      # Field names are typically uppercase and may start with an underscore.
+      # The regex checks for an optional leading underscore, then one or more uppercase alphanumeric characters (or underscore) for the field name,
+      # followed by an equals sign and any characters for the value.
+      if query.matches?(/^_{0,1}[A-Z0-9_]+=.*$/)
+        command << query # Pass verbatim as a journalctl match
+      else
+        command << "-g" << query # Use as a general text search pattern with -g
+      end
     end
 
     if priority
@@ -224,11 +234,18 @@ class Journalctl
   # Queries the logs based on the provided criteria.
   #
   # Args:
-  #   since: A time offset, like -15m or nil for no filter
-  #   unit: The systemd unit to filter by (e.g., "nginx.service").
-  #   tag:  The syslog identifier (tag) to filter by.
-  #   live: A boolean indicating if the logs should be streamed live (not implemented yet).
-  #   query: A string to filter logs by a specific search term.
+  #
+  # * since: A time offset, like -15m or nil for no filter
+  # * unit: The systemd unit to filter by (e.g., "nginx.service").
+  # * tag:  The syslog identifier (tag) to filter by.
+  # * live: A boolean indicating if the logs should be streamed live (not implemented yet).
+  # * query: A string to filter logs by a specific search term. If it's in the form of a
+  #   `journalctl` field=value pair, it will be used as a direct match filter, otherwise
+  #   will be passed with `-g`.
+  # * priority: A string representing the log priority (0-7, e.g., "3" for errors).
+  # * hostname: A string to filter logs by a specific hostname.
+  # * sort_by: A string indicating the field to sort by (e.g., "timestamp", "priority", "message", "unit").
+  # * sort_order: A string indicating the sort order, either "asc" for ascending or "desc" for descending.
   #
   # Returns:
   #   An array of LogEntry
@@ -239,6 +256,7 @@ class Journalctl
     query : String | Nil = nil,
     priority : String | Nil = nil,
     hostname : String | Nil = nil,
+    lines : Int32 = 5000,
     sort_by : String | Nil = nil,
     sort_order : String | Nil = nil,
   ) : Array(LogEntry) | Nil
@@ -249,6 +267,7 @@ class Journalctl
     Log.debug { "  Query: #{query.inspect}" }
     Log.debug { "  Priority: #{priority.inspect}" }
     Log.debug { "  Hostname: #{hostname.inspect}" }
+    Log.debug { "  Lines: #{lines.inspect}" }
     Log.debug { "  SortBy: #{sort_by.inspect}" }
     Log.debug { "  SortOrder: #{sort_order.inspect}" }
 
@@ -258,7 +277,7 @@ class Journalctl
     query = nil if query.is_a?(String) && query.strip.empty?
     priority = nil if priority.is_a?(String) && priority.strip.empty?
     hostname_param = hostname.is_a?(String) && hostname.strip.empty? ? nil : hostname
-    command = build_query_command(since, unit, tag, query, priority, hostname_param)
+    command = build_query_command(since, unit, tag, query, priority, hostname_param, lines: lines)
     Log.debug { "Generated journalctl command: #{command.inspect}" }
 
     # Use the helper to run the command and parse entries

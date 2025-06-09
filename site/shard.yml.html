@@ -47,9 +47,8 @@
 <style>
     html * {
         font-family: Chivo, sans-serif;
-        font-variant-ligatures: none;
         font-weight: 300;
-        overflow: visible !important;
+        overflow: visible;
     }
 
     html {
@@ -68,7 +67,7 @@
         background-color: #031a16;
         margin-top: auto;
     }
-    code {
+    code, div.code>pre>code {
         font-family: 'Chivo Mono', monospace !important;
         padding: .15rem;
         background-color: #0b342d !important;
@@ -78,12 +77,9 @@
         font-family: 'Chivo Mono', monospace !important;
     }
 
-    div.doc>pre>code  {
-        background-color: #184e45;
-        padding: 1em !important;
-        font-family: 'Chivo Mono', monospace !important;
+    div.doc>pre>code {
+        overflow-x: auto !important;
     }
-
     span.anchor {
         position: relative;
     }
@@ -237,9 +233,27 @@
 </span><span class="tw">
 </span><span class="tw"></span><span class="nt">targets</span><span class="p">:</span><span class="tw">
 </span><span class="tw"></span><span class="tw">  </span><span class="nt">grafito</span><span class="p">:</span><span class="tw">
-</span><span class="tw"></span><span class="tw">    </span><span class="nt">main</span><span class="p">:</span><span class="tw"> </span><span class="l">src/main.cr</span><span class="tw">
-</span><span class="tw">
-</span><span class="tw"></span><span class="nt">dependencies</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">    </span><span class="nt">main</span><span class="p">:</span><span class="tw"> </span><span class="l">src/main.cr</span></code></pre>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc" id="section-2">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>Trying to keep dependencies to a minimum.</p>
+<ul>
+<li><code>kemal</code> and <code>kemal-basic-auth</code> to make this a web app</li>
+<li><code>docopt</code> because I like it and it's small</li>
+<li><code>baked-file-system</code> because it <em>must</em> be a single binary</li>
+<li><code>html_builder</code> because generating complex HTML tables without it
+makes for horrible-looking code</li>
+</ul>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="nt">dependencies</span><span class="p">:</span><span class="tw">
 </span><span class="tw"></span><span class="tw">  </span><span class="nt">baked_file_system</span><span class="p">:</span><span class="tw">
 </span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/baked_file_system</span><span class="tw">
 </span><span class="tw">    </span><span class="nt">branch</span><span class="p">:</span><span class="tw"> </span><span class="l">master</span><span class="tw">
@@ -251,8 +265,22 @@
 </span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">kemalcr/kemal</span><span class="tw">
 </span><span class="tw">  </span><span class="nt">kemal-basic-auth</span><span class="p">:</span><span class="tw">
 </span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">kemalcr/kemal-basic-auth</span><span class="tw">
-</span><span class="tw">
-</span><span class="tw"></span><span class="nt">development_dependencies</span><span class="p">:</span><span class="tw">
+</span><span class="tw">  </span><span class="nt">baked_file_handler</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/baked_file_handler</span></code></pre>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc" id="section-3">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>Faker is used for the demo version which displays
+fake data.</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="nt">development_dependencies</span><span class="p">:</span><span class="tw">
 </span><span class="tw"></span><span class="tw">  </span><span class="nt">faker</span><span class="p">:</span><span class="tw">
 </span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">askn/faker</span><span class="tw">
 </span><span class="tw">

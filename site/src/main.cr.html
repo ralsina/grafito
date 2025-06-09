@@ -47,9 +47,8 @@
 <style>
     html * {
         font-family: Chivo, sans-serif;
-        font-variant-ligatures: none;
         font-weight: 300;
-        overflow: visible !important;
+        overflow: visible;
     }
 
     html {
@@ -68,7 +67,7 @@
         background-color: #031a16;
         margin-top: auto;
     }
-    code {
+    code, div.code>pre>code {
         font-family: 'Chivo Mono', monospace !important;
         padding: .15rem;
         background-color: #0b342d !important;
@@ -78,12 +77,9 @@
         font-family: 'Chivo Mono', monospace !important;
     }
 
-    div.doc>pre>code  {
-        background-color: #184e45;
-        padding: 1em !important;
-        font-family: 'Chivo Mono', monospace !important;
+    div.doc>pre>code {
+        overflow-x: auto !important;
     }
-
     span.anchor {
         position: relative;
     }
@@ -226,7 +222,8 @@
         <span class="anchor">
             <a href="#section-1" class="anchor">↦</a>
         </span>
-        <h1>Grafito</h1>
+        <p>[markdown]</p>
+<h1>Grafito</h1>
 <p>Welcome to the Grafito source code! I will try to make this code have
 comments in the literate programming style, so when passing it through
 a tool such as <a href="https://crycco.ralsina.me">crycco</a> it will turn into
@@ -264,8 +261,9 @@ and configuration and is performant. Easy, right?</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./baked_handler</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./grafito</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+        <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./grafito</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">baked_file_handler</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
+</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">baked_file_system</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
 </span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">docopt</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
 </span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal-basic-auth</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
 </span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span></code></pre>
@@ -477,7 +475,7 @@ into the application. In our case, the Assets class we defined above.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">baked_asset_handler</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">BakedFileHandler</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="nc">Assets</span><span class="t">)</span><span class="t">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="t">baked_asset_handler</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">BakedFileHandler</span><span class="nc">::</span><span class="nc">BakedFileHandler</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="nc">Assets</span><span class="t">)</span><span class="t">
 </span><span class="t">  </span><span class="t">add_handler</span><span class="t"> </span><span class="t">baked_asset_handler</span></code></pre>
     </div>
 </div>

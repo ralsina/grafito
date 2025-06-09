@@ -91,3 +91,92 @@ describe Journalctl::LogEntry do
     end
   end
 end
+
+describe Journalctl do
+  describe "#build_query_command" do
+    context "when processing the query parameter" do
+      it "passes queries like _FIELD=VALUE verbatim (e.g., _HOSTNAME=foobar)" do
+        query_string = "_HOSTNAME=foobar"
+        command = Journalctl.build_query_command(query: query_string)
+
+        command.should contain(query_string)
+        command.should_not contain("-g")
+      end
+
+      it "passes queries like FIELD=VALUE verbatim (e.g., FOOBAR=coocoo)" do
+        query_string = "FOOBAR=coocoo"
+        command = Journalctl.build_query_command(query: query_string)
+
+        command.should contain(query_string)
+        command.should_not contain("-g")
+      end
+
+      it "uses -g for general text queries" do
+        query_string = "some generic error"
+        command = Journalctl.build_query_command(query: query_string)
+
+        command.should contain("-g")
+        command.should contain(query_string)
+      end
+
+      it "uses -g for queries like field=value with lowercase field names" do
+        query_string = "hostname=foobar" # lowercase 'hostname'
+        command = Journalctl.build_query_command(query: query_string)
+
+        command.should contain("-g")
+        command.should contain(query_string)
+      end
+
+      it "handles queries with numbers and underscores in the FIELD name for verbatim pass" do
+        query_string = "_SYSTEMD_UNIT_123=my.service"
+        command = Journalctl.build_query_command(query: query_string)
+
+        command.should contain(query_string)
+        command.should_not contain("-g")
+      end
+
+      it "handles empty value in FIELD=VALUE query for verbatim pass" do
+        query_string = "MY_VAR="
+        command = Journalctl.build_query_command(query: query_string)
+
+        command.should contain(query_string)
+        command.should_not contain("-g")
+      end
+
+      it "returns a command without query parts if query is nil" do
+        command = Journalctl.build_query_command(query: nil)
+        command.should_not contain("-g")
+        # Ensure no accidental FIELD=VALUE strings are present
+        command.none? { |part| part.includes?("=") && part.matches?(/^_{0,1}[A-Z0-9_]+=.*$/) }.should be_true
+      end
+    end
+
+    context "when combining query with other parameters" do
+      it "correctly includes all parts for a verbatim query" do
+        query_string = "_SYSTEMD_UNIT=test.service"
+        command = Journalctl.build_query_command(
+          query: query_string,
+          lines: 100,
+          priority: "err"
+        )
+
+        command.should contain(query_string)
+        command.should_not contain("-g")
+        command.should contain("-n")
+        command.should contain("100")
+        command.should contain("-p")
+        command.should contain("err")
+      end
+
+      it "correctly includes all parts for a -g query" do
+        query_string = "a general search"
+        command = Journalctl.build_query_command(query: query_string, lines: 50)
+
+        command.should contain("-g")
+        command.should contain(query_string)
+        command.should contain("-n")
+        command.should contain("50")
+      end
+    end
+  end
+end
