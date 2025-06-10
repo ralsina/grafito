@@ -1,0 +1,50 @@
+name: grafito
+summary: Grafito is a simple, self-contained web-based log viewer for journalctl
+description: |
+  Grafito is a simple, self-contained web-based log viewer for journalctl.
+  It provides an intuitive interface to browse and filter system logs directly from your web browser.
+
+contact: jose.masson@gmail.com # FIXME: Should be Roberto's email after transfer the snap?
+license: MIT
+confinement: devmode # FIXME: The snap need to be classic
+
+base: core24
+adopt-info: grafito
+
+platforms:
+  amd64:
+    build-on: [amd64]
+    build-for: [amd64]
+  arm64:
+    build-on: [arm64]
+    build-for: [arm64]
+
+parts:
+  grafito:
+    plugin: nil
+    source: https://github.com/ralsina/grafito.git
+    source-type: git
+    build-snaps:
+      - crystal/latest/stable
+    build-packages:
+      - pkg-config
+      - libssl-dev
+      - libpcre2-dev
+      - zlib1g-dev
+    override-pull: |
+        snapcraftctl pull
+        last_committed_tag="$(git describe --tags $(git rev-list --tags --max-count=1))"
+        git fetch
+        git checkout "${last_committed_tag}"
+        [ -n "$(echo ${last_committed_tag} | grep "-")" ] && grade=devel || grade=stable
+        snapcraftctl set-version "${last_committed_tag}"
+        snapcraftctl set-grade "$grade"
+    override-build: |
+        make
+        install -D ${CRAFT_PART_BUILD}/bin/grafito ${CRAFT_PART_INSTALL}/bin/grafito
+
+apps:
+  grafito:
+    command: bin/grafito
+    plugs:
+    - log-observe
