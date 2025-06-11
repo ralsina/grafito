@@ -69,6 +69,20 @@ available for linux, both x86_64 and arm64 architectures. You can get an example
 
     This will create a single executable file named `bin/grafito`
 
+### Run using Docker
+
+It doesn't make much sense to run Grafito in a container, but if you want to:
+
+```bash
+docker run -p 3000:3000 -v/var/log/journal:/var/log/journal ghcr.io/ralsina/grafito:latest
+```
+
+Or if you are using ARM:
+
+```bash
+docker run -p 3000:3000 -v/var/log/journal:/var/log/journal ghcr.io/ralsina/grafito-arm64:latest
+```
+
 ## Usage
 
 Simply run the compiled binary:

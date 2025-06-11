@@ -16,3 +16,4 @@
 * ✅ Use minified assets automatically
 * ✅ Package for arch (with systemd service)
 * ✅ Create install script
+* Docker image (makes no sense to run this in a container, but why not)
