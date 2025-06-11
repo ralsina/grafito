@@ -142,8 +142,8 @@ describe FakeJournalData do
       it "generates between 50 and 250 entries if N is large" do
         args = ["-n", "10000"] # Large N
         entries = FakeJournalData.fake_run_journalctl_and_parse(args, dummy_context_message)
-        entries.size.should be > 50
-        entries.size.should be < 250
+        entries.size.should be >= 50
+        entries.size.should be <= 250
       end
     end
 
