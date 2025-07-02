@@ -2,11 +2,55 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.0] - 2025-07-02
+
+### 🚀 Features
+
+- Allow for generic queries like _RUNTIME_SCOPE=system
+
+### 💼 Other
+
+- Add docker labels
+
+### 📚 Documentation
+
+- Commenting in literate style (part 3)
+- Docker support
+
+### 🧪 Testing
+
+- Fix off-by-one in unit test
+
+## [0.9.2] - 2025-06-07
+
+### 🚜 Refactor
+
+- Implemented generic BakedFileHandler
+- Nicer method check
+- Reorg code a bit
+- Use standalone baked_file_handler
+
+### 📚 Documentation
+
+- Add AUR mention
+- Start publishing crycco output
+- Commenting in literate style (part 1)
+- Commenting in literate style (part 2)
+- More literate output
+- Commit site to repo
+- More installation instructions
+- Add curl|bash mechanism to install
+- More literate output
+
 ## [0.9.1] - 2025-06-02
 
 ### 🐛 Bug Fixes
 
 - Make fake server support hostname filtering
+
+### 💼 Other
+
+- Release v0.9.1
 
 ### 📚 Documentation
 
