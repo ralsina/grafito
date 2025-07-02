@@ -335,7 +335,11 @@ class Journalctl
   # Returns:
   #   An Array(String) containing unique service unit names, sorted, or nil if an error occurs.
   def self.known_service_units : Array(String) | Nil
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:no_systemctl) %}
+      Log.warn { "Journalctl.known_service_units: Systemctl is disabled by configuration." }
+      return nil
+    {% elsif flag?(:fake_journal) %}
+      asdfasdf
       Log.info { "Journalctl.known_service_units: Using FAKE service units." }
       fake_units = FakeJournalData::SAMPLE_UNIT_NAMES.compact.uniq.sort
       Log.debug { "Returning #{fake_units.size} fake service units." }
