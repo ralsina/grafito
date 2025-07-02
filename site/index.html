@@ -33,21 +33,47 @@
         font-size: 4rem;
         text-align: center;
         margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
       }
       .grafito-title a {
         text-decoration: none;
-        color: inherit;
+        color: white;
       }
       .subtitle {
         text-align: center;
         font-size: 1.2rem;
-        color: var(--pico-muted-color);
+        color: rgba(255, 255, 255, 0.9);
         margin-bottom: 2rem;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
       }
       .hero {
         text-align: center;
         padding: 0 1rem 3rem 1rem;
         margin-top: 0;
+        position: relative;
+        background: linear-gradient(135deg,
+          var(--pico-primary) 0%,
+          var(--pico-primary-hover) 100%);
+        border-radius: 0 0 2rem 2rem;
+        overflow: hidden;
+        color: white;
+      }
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+        pointer-events: none;
+      }
+      .hero-content {
+        position: relative;
+        z-index: 2;
       }
       .hero-content-grid {
         display: grid;
@@ -59,11 +85,17 @@
       }
       .hero-text-content {
         text-align: left; /* Override hero's center alignment */
+        color: rgba(255, 255, 255, 0.95);
+      }
+      .hero-text-content p {
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
       }
       .hero-testimonials h3 {
         text-align: center;
         margin-top: 0;
         margin-bottom: 1rem;
+        color: rgba(255, 255, 255, 0.95);
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
       }
 
       .hero img {
@@ -157,8 +189,17 @@
       .testimonial-slide p {
         font-size: 1.2rem;
         font-style: italic;
-        color: var(--pico-secondary);
+        color: rgba(255, 255, 255, 0.9);
         margin-bottom: 1rem;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+      }
+      .testimonial-slide footer {
+        color: rgba(255, 255, 255, 0.8);
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+      }
+      .testimonial-slide footer a {
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: underline;
       }
       /* Adjust carousel for hero section */
       .hero-testimonials .testimonial-carousel {
@@ -195,106 +236,180 @@
       .copy-button:hover, .copy-button:focus {
         color: var(--pico-primary-hover);
       }
+      /* Particle effects */
+      #particles-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+      /* Fancy horizontal separator */
+      .hero-separator {
+        position: relative;
+        height: 60px;
+        background: linear-gradient(90deg,
+          transparent 0%,
+          var(--pico-primary) 20%,
+          var(--pico-primary-hover) 50%,
+          var(--pico-primary) 80%,
+          transparent 100%);
+        margin: 0;
+        overflow: hidden;
+      }
+      .hero-separator::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.3) 50%,
+          transparent 100%);
+        animation: shine 3s ease-in-out infinite;
+      }
+      @keyframes shine {
+        0% { left: -100%; }
+        50% { left: 100%; }
+        100% { left: 100%; }
+      }
+      .hero-separator svg {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      /* Theme switcher in hero */
+      .hero-theme-switch {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 3;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 0.5rem;
+        border-radius: var(--pico-border-radius);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .hero-theme-switch label {
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        color: white;
+      }
     </style>
   </head>
   <body>
     <nav class="container-fluid">
       <ul></ul>
-      <ul>
-        <li>
-          <div class="theme-switch-wrapper-footer theme-switch-wrapper-nav">
-            <label for="theme-switch" title="Toggle light/dark mode">
-              <span class="emoji">🌞</span
-              ><input
-                type="checkbox"
-                id="theme-switch"
-                name="theme"
-                role="switch"
-              /><span class="emoji">🌒</span>
-            </label>
-          </div>
-        </li>
-      </ul>
+      <ul></ul>
     </nav>
 
     <main class="container">
       <section class="hero">
-        <h1 class="grafito-title">
-          <a href="https://github.com/ralsina/grafito" target="_blank"
-            >Grafito</a
-          >
-        </h1>
-        <p class="subtitle">
-          Your friendly, self-hosted Systemd Journal Log Viewer.
-        </p>
+        <canvas id="particles-canvas"></canvas>
+        <div class="hero-theme-switch">
+          <label for="theme-switch" title="Toggle light/dark mode">
+            <span class="emoji">🌞</span
+            ><input
+              type="checkbox"
+              id="theme-switch"
+              name="theme"
+              role="switch"
+            /><span class="emoji">🌒</span>
+          </label>
+        </div>
+        <div class="hero-content">
+          <h1 class="grafito-title">
+            <a href="https://github.com/ralsina/grafito" target="_blank"
+              >Grafito</a
+            >
+          </h1>
+          <p class="subtitle">
+            Your friendly, self-hosted Systemd Journal Log Viewer.
+          </p>
 
-        <div class="hero-content-grid">
-          <div class="hero-text-content">
-            <p>
-              Effortlessly navigate, filter, and understand your system logs
-              with a clean, web-based interface. <br />No more complex terminal
-              commands for everyday log viewing!
-            </p>
-            <div role="group">
-              <a
-                href="https://github.com/ralsina/grafito"
-                target="_blank"
-                role="button"
-                >Get Grafito on GitHub</a
-              >&nbsp;<a
-                href="https://grafito-demo.ralsina.me"
-                target="_blank"
-                role="button"
-                >View Demo Site</a
-              >
+          <div class="hero-content-grid">
+            <div class="hero-text-content">
+              <p>
+                Effortlessly navigate, filter, and understand your system logs
+                with a clean, web-based interface. <br />No more complex terminal
+                commands for everyday log viewing!
+              </p>
+              <div role="group">
+                <a
+                  href="https://github.com/ralsina/grafito"
+                  target="_blank"
+                  role="button"
+                  >Get Grafito on GitHub</a
+                >&nbsp;<a
+                  href="https://grafito-demo.ralsina.me"
+                  target="_blank"
+                  role="button"
+                  >View Demo Site</a
+                >
+              </div>
             </div>
-          </div>
-          <div class="hero-testimonials">
-            <h3>What People Are Saying <span class="emoji">💬</span></h3>
-            <div class="testimonial-carousel">
-              <blockquote class="testimonial-slide">
-                <p>
-                  "I gave it a whirl to see what it could do. The result
-                  impressed me."
-                </p>
-                <footer>
-                  —
-                  <a
-                    href="https://delightlylinux.wordpress.com/2025/06/03/grafito-a-clean-journalctl-log-viewer-in-your-browser/"
-                    target="_blank"
-                    >Delightly Linux</a
-                  >
-                </footer>
-              </blockquote>
-              <blockquote class="testimonial-slide">
-                <p>"Systemd log viewer with an awesome web interface"</p>
-                <footer>
-                  —
-                  <a
-                    href="https://www.edivaldobrito.com.br/grafito-visualizador-de-logs-do-systemd-com-uma-interface-web-incrivel/"
-                    target="_blank"
-                    >Edivaldo Brito</a
-                  >
-                </footer>
-              </blockquote>
-              <blockquote class="testimonial-slide">
-                <p>
-                  "If you're tired of having to dig through logs with the
-                  journalctl command every time, Grafito is for you."
-                </p>
-                <footer>
-                  —
-                  <a
-                    href="https://linuxmint.hu/hir/2025/06/grafito-letisztult-webes-naplonezegeto-a-systemd-szamara"
-                    target="_blank"
-                    >Balacy</a
-                  >
-                </footer>
-              </blockquote>
+            <div class="hero-testimonials">
+              <h3>What People Are Saying <span class="emoji">💬</span></h3>
+              <div class="testimonial-carousel">
+                <blockquote class="testimonial-slide">
+                  <p>
+                    "I gave it a whirl to see what it could do. The result
+                    impressed me."
+                  </p>
+                  <footer>
+                    —
+                    <a
+                      href="https://delightlylinux.wordpress.com/2025/06/03/grafito-a-clean-journalctl-log-viewer-in-your-browser/"
+                      target="_blank"
+                      >Delightly Linux</a
+                    >
+                  </footer>
+                </blockquote>
+                <blockquote class="testimonial-slide">
+                  <p>"Systemd log viewer with an awesome web interface"</p>
+                  <footer>
+                    —
+                    <a
+                      href="https://www.edivaldobrito.com.br/grafito-visualizador-de-logs-do-systemd-com-uma-interface-web-incrivel/"
+                      target="_blank"
+                      >Edivaldo Brito</a
+                    >
+                  </footer>
+                </blockquote>
+                <blockquote class="testimonial-slide">
+                  <p>
+                    "If you're tired of having to dig through logs with the
+                    journalctl command every time, Grafito is for you."
+                  </p>
+                  <footer>
+                    —
+                    <a
+                      href="https://linuxmint.hu/hir/2025/06/grafito-letisztult-webes-naplonezegeto-a-systemd-szamara"
+                      target="_blank"
+                      >Balacy</a
+                    >
+                  </footer>
+                </blockquote>
+              </div>
             </div>
           </div>
         </div>
       </section>
+
+      <div class="hero-separator">
+        <svg viewBox="0 0 1200 60" preserveAspectRatio="none">
+          <path d="M0,60 Q300,10 600,30 T1200,20 L1200,60 Z" fill="var(--pico-background-color)" opacity="0.8"/>
+          <path d="M0,60 Q300,15 600,25 T1200,15 L1200,60 Z" fill="var(--pico-background-color)" opacity="0.6"/>
+          <path d="M0,60 Q300,20 600,20 T1200,10 L1200,60 Z" fill="var(--pico-background-color)"/>
+        </svg>
+      </div>
 
       <section id="features">
         <!-- Quick Install Card - Full-width above the grid -->
@@ -441,8 +556,95 @@
     </footer>
 
     <script>
+      // --- PARTICLE EFFECTS ---
+      class ParticleSystem {
+        constructor(canvas) {
+          this.canvas = canvas;
+          this.ctx = canvas.getContext('2d');
+          this.particles = [];
+          this.maxParticles = 50;
+
+          this.resizeCanvas();
+          this.createParticles();
+          this.animate();
+
+          window.addEventListener('resize', () => this.resizeCanvas());
+        }
+
+        resizeCanvas() {
+          this.canvas.width = this.canvas.offsetWidth;
+          this.canvas.height = this.canvas.offsetHeight;
+        }
+
+        createParticles() {
+          for (let i = 0; i < this.maxParticles; i++) {
+            this.particles.push({
+              x: Math.random() * this.canvas.width,
+              y: Math.random() * this.canvas.height,
+              vx: (Math.random() - 0.5) * 0.5,
+              vy: (Math.random() - 0.5) * 0.5,
+              size: Math.random() * 3 + 1,
+              opacity: Math.random() * 0.5 + 0.1,
+              hue: Math.random() * 60 + 200 // Blue-ish hues
+            });
+          }
+        }
+
+        animate() {
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+          this.particles.forEach(particle => {
+            // Update position
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+
+            // Wrap around edges
+            if (particle.x < 0) particle.x = this.canvas.width;
+            if (particle.x > this.canvas.width) particle.x = 0;
+            if (particle.y < 0) particle.y = this.canvas.height;
+            if (particle.y > this.canvas.height) particle.y = 0;
+
+            // Draw particle
+            this.ctx.beginPath();
+            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            this.ctx.fillStyle = `hsla(${particle.hue}, 70%, 70%, ${particle.opacity})`;
+            this.ctx.fill();
+
+            // Add a subtle glow
+            this.ctx.shadowColor = `hsla(${particle.hue}, 70%, 70%, 0.5)`;
+            this.ctx.shadowBlur = 10;
+            this.ctx.fill();
+            this.ctx.shadowBlur = 0;
+          });
+
+          // Draw connections between nearby particles
+          this.particles.forEach((particle, i) => {
+            this.particles.slice(i + 1).forEach(otherParticle => {
+              const dx = particle.x - otherParticle.x;
+              const dy = particle.y - otherParticle.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance < 100) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(particle.x, particle.y);
+                this.ctx.lineTo(otherParticle.x, otherParticle.y);
+                this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - distance / 100)})`;
+                this.ctx.stroke();
+              }
+            });
+          });
+
+          requestAnimationFrame(() => this.animate());
+        }
+      }
+
       // --- THEME SWITCHER LOGIC ---
       document.addEventListener("DOMContentLoaded", function () {
+        // Initialize particle system
+        const particlesCanvas = document.getElementById('particles-canvas');
+        if (particlesCanvas) {
+          new ParticleSystem(particlesCanvas);
+        }
         const themeSwitch = document.getElementById("theme-switch");
         const htmlElement = document.documentElement;
 
