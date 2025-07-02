@@ -14,7 +14,10 @@
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Noto+Emoji&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chivo&family=Noto+Emoji&display=swap"
+      rel="stylesheet"
+    />
 
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <title>Grafito - Friendly Systemd Journal Log Viewer</title>
@@ -46,6 +49,23 @@
         padding: 0 1rem 3rem 1rem;
         margin-top: 0;
       }
+      .hero-content-grid {
+        display: grid;
+        /* On larger screens, create two columns. On smaller, it wraps to one. */
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2.5rem;
+        align-items: center;
+        margin-top: 2rem;
+      }
+      .hero-text-content {
+        text-align: left; /* Override hero's center alignment */
+      }
+      .hero-testimonials h3 {
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 1rem;
+      }
+
       .hero img {
         max-width: 150px;
         margin-bottom: 1rem;
@@ -113,6 +133,68 @@
         margin: 2rem auto; /* Centered with top/bottom margin */
         border-radius: var(--pico-border-radius);
       }
+      /* Testimonial Carousel */
+      .testimonial-carousel {
+        position: relative;
+        min-height: 150px; /* Adjust as needed based on quote length */
+        margin: 2rem auto;
+        max-width: 800px;
+        text-align: center;
+      }
+      .testimonial-slide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        opacity: 0;
+        transition: opacity 0.7s ease-in-out;
+        margin: 0; /* Reset blockquote margin */
+      }
+      .testimonial-slide.active {
+        opacity: 1;
+        position: relative; /* Allows container to have height */
+      }
+      .testimonial-slide p {
+        font-size: 1.2rem;
+        font-style: italic;
+        color: var(--pico-secondary);
+        margin-bottom: 1rem;
+      }
+      /* Adjust carousel for hero section */
+      .hero-testimonials .testimonial-carousel {
+        max-width: 100%;
+        margin: 0 auto;
+      }
+      /* Code block with copy button */
+      .code-block-wrapper {
+        position: relative;
+        margin-top: 0.5rem;
+      }
+      .code-block {
+        background-color: var(--pico-form-element-background-color);
+        border: 1px solid var(--pico-form-element-border-color);
+        padding: 0.75em 1em;
+        border-radius: var(--pico-border-radius);
+        overflow-x: auto;
+        font-size: 0.85em;
+        margin: 0;
+        padding-right: 3.5rem; /* Space for the button */
+      }
+      .copy-button {
+        position: absolute;
+        top: 50%;
+        right: 0.25rem;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        padding: 0.5rem;
+        cursor: pointer;
+        color: var(--pico-secondary);
+        border-radius: var(--pico-border-radius);
+      }
+      .copy-button:hover, .copy-button:focus {
+        color: var(--pico-primary-hover);
+      }
     </style>
   </head>
   <body>
@@ -145,27 +227,97 @@
         <p class="subtitle">
           Your friendly, self-hosted Systemd Journal Log Viewer.
         </p>
-        <p>
-          Effortlessly navigate, filter, and understand your system logs with a
-          clean, web-based interface. <br />No more complex terminal commands
-          for everyday log viewing!
-        </p>
-        <div role="group">
-          <a
-            href="https://github.com/ralsina/grafito"
-            target="_blank"
-            role="button"
-            >Get Grafito on GitHub</a
-          >&nbsp;<a
-            href="https://grafito-demo.ralsina.me"
-            target="_blank"
-            role="button"
-            >View Demo Site</a
-          >
+
+        <div class="hero-content-grid">
+          <div class="hero-text-content">
+            <p>
+              Effortlessly navigate, filter, and understand your system logs
+              with a clean, web-based interface. <br />No more complex terminal
+              commands for everyday log viewing!
+            </p>
+            <div role="group">
+              <a
+                href="https://github.com/ralsina/grafito"
+                target="_blank"
+                role="button"
+                >Get Grafito on GitHub</a
+              >&nbsp;<a
+                href="https://grafito-demo.ralsina.me"
+                target="_blank"
+                role="button"
+                >View Demo Site</a
+              >
+            </div>
+          </div>
+          <div class="hero-testimonials">
+            <h3>What People Are Saying <span class="emoji">💬</span></h3>
+            <div class="testimonial-carousel">
+              <blockquote class="testimonial-slide">
+                <p>
+                  "I gave it a whirl to see what it could do. The result
+                  impressed me."
+                </p>
+                <footer>
+                  —
+                  <a
+                    href="https://delightlylinux.wordpress.com/2025/06/03/grafito-a-clean-journalctl-log-viewer-in-your-browser/"
+                    target="_blank"
+                    >Delightly Linux</a
+                  >
+                </footer>
+              </blockquote>
+              <blockquote class="testimonial-slide">
+                <p>"Systemd log viewer with an awesome web interface"</p>
+                <footer>
+                  —
+                  <a
+                    href="https://www.edivaldobrito.com.br/grafito-visualizador-de-logs-do-systemd-com-uma-interface-web-incrivel/"
+                    target="_blank"
+                    >Edivaldo Brito</a
+                  >
+                </footer>
+              </blockquote>
+              <blockquote class="testimonial-slide">
+                <p>
+                  "If you're tired of having to dig through logs with the
+                  journalctl command every time, Grafito is for you."
+                </p>
+                <footer>
+                  —
+                  <a
+                    href="https://linuxmint.hu/hir/2025/06/grafito-letisztult-webes-naplonezegeto-a-systemd-szamara"
+                    target="_blank"
+                    >Balacy</a
+                  >
+                </footer>
+              </blockquote>
+            </div>
+          </div>
         </div>
       </section>
 
       <section id="features">
+        <!-- Quick Install Card - Full-width above the grid -->
+        <article class="feature-card" style="margin-bottom: 2rem">
+          <!-- Added margin-bottom for spacing -->
+          <h2><span class="feature-icon emoji">🚀</span>Quick Install</h2>
+          <p>
+            Get started quickly on Linux (with systemd). Use our simple install
+            script to download the correct binary, place it in
+            <code>/usr/local/bin</code>, and set up a systemd service (or follow
+            any of the possible
+            <a href="https://github.com/ralsina/grafito"
+              >installation instructions</a
+            >).
+          </p>
+          <div class="code-block-wrapper">
+            <pre class="code-block"><code id="install-command-text">curl -sSL https://grafito.ralsina.me/install.sh | sudo bash</code></pre>
+            <button class="copy-button" id="copy-install-command" title="Copy to clipboard">
+              <span class="emoji">📋</span>
+            </button>
+          </div>
+        </article>
+
         <div class="features-grid">
           <article class="feature-card">
             <h2>
@@ -256,41 +408,15 @@
           </article>
         </div>
 
-        <!-- Quick Install Card - Moved outside the grid to be full-width -->
-        <article class="feature-card" style="margin-top: 2rem;"> <!-- Added margin-top for spacing -->
-            <h2>
-              <span class="feature-icon emoji">🚀</span>Quick Install
-            </h2>
-            <p>
-              Get started quickly on Linux (with systemd). Use our simple
-              install script to download the correct binary, place it in
-              <code>/usr/local/bin</code>, and set up a systemd service (or follow any of the possible
-              <a href="https://github.com/ralsina/grafito">installation instructions</a>).
-            </p>
-            <pre
-              style="
-                background-color: var(--pico-form-element-background-color);
-                border: 1px solid var(--pico-form-element-border-color);
-                padding: 0.5em; /* Slightly smaller padding for card */
-                border-radius: var(--pico-border-radius);
-                overflow-x: auto; margin-top: 0.5rem; font-size: 0.85em;
-              "
-            ><code>curl -sSL https://grafito.ralsina.me/install.sh | sudo bash</code></pre>
-          </article>
-
-          <!-- End Quick Install Card -->
-
-        <div class="features-grid">
-
-        </div>
       </section>
 
       <section class="cta-section">
         <h2>Ready to Simplify Your Log Viewing?</h2>
         <p>
-          Grafito is open-source and easy to set up.
-          Explore the full source code and other installation methods on GitHub:
-        </p><a
+          Grafito is open-source and easy to set up. Explore the full source
+          code and other installation methods on GitHub:
+        </p>
+        <a
           href="https://github.com/ralsina/grafito"
           target="_blank"
           role="button"
@@ -346,6 +472,43 @@
         if (themeSwitch) {
           themeSwitch.addEventListener("change", function () {
             applyTheme(this.checked ? "dark" : "light");
+          });
+        }
+
+        // --- TESTIMONIAL CAROUSEL LOGIC ---
+        const slides = document.querySelectorAll(".testimonial-slide");
+        if (slides.length > 1) {
+          // Only run if there's more than one slide
+          let currentSlide = 0;
+          slides[0].classList.add("active");
+
+          setInterval(() => {
+            slides[currentSlide].classList.remove("active");
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add("active");
+          }, 20000); // 20 seconds
+        } else if (slides.length === 1) {
+          slides[0].classList.add("active"); // Show the single slide
+        }
+
+        // --- COPY TO CLIPBOARD LOGIC ---
+        const copyButton = document.getElementById("copy-install-command");
+        const commandTextElement = document.getElementById("install-command-text");
+
+        if (copyButton && commandTextElement) {
+          copyButton.addEventListener("click", () => {
+            navigator.clipboard.writeText(commandTextElement.textContent).then(() => {
+              const originalContent = copyButton.innerHTML;
+              copyButton.innerHTML = '<span class="emoji">✅</span>';
+              copyButton.setAttribute("title", "Copied!");
+              setTimeout(() => {
+                copyButton.innerHTML = originalContent;
+                copyButton.setAttribute("title", "Copy to clipboard");
+              }, 2000);
+            }).catch(err => {
+              console.error("Could not copy text: ", err);
+              copyButton.setAttribute("title", "Failed to copy!");
+            });
           });
         }
       });

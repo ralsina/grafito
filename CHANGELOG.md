@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### 💼 Other
 
 - Add docker labels
+- Release v0.10.0
 
 ### 📚 Documentation
 
