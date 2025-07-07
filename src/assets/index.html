@@ -647,15 +647,31 @@
 
         // Constants for button and sidebar interaction
         const BUTTON_TITLE_EXPAND = "Show Filters Sidebar";
-        const BUTTON_TITLE_COLLAPSE = "Hide Filters Sidebar"; // BUTTON_FIXED_LEFT_OFFSET was unused
+        const BUTTON_TITLE_COLLAPSE = "Hide Filters Sidebar";
+
+        function updateToggleButtonPosition() {
+          if (!toggleButton || !sidebar) return;
+
+          // Update CSS custom property for sidebar width
+          const sidebarWidth = sidebar.classList.contains('collapsed') ? '0rem' : '18.75rem';
+          document.documentElement.style.setProperty('--sidebar-width', sidebarWidth);
+
+          // Fallback for browsers that don't support :has() selector
+          if (!CSS.supports('selector(:has(*))')) {
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            const leftPosition = isCollapsed
+              ? 'calc(var(--spacing, 1rem) + 0.5rem)'
+              : 'calc(18.75rem + var(--spacing, 1rem) + 0.5rem)';
+            toggleButton.style.left = leftPosition;
+          }
+        }
+
         function setSidebarState(isCollapsed) {
           // Ensure all necessary elements exist
           if (!sidebar || !toggleButton || !mainContent) {
             console.error("Required elements for sidebar toggle not found.");
             return;
           }
-
-          const sidebarWidth = sidebar.offsetWidth;
 
           if (isCollapsed) {
             sidebar.classList.add("collapsed");
@@ -666,6 +682,9 @@
             toggleButton.setAttribute("aria-expanded", "true");
             toggleButton.setAttribute("title", BUTTON_TITLE_COLLAPSE);
           }
+
+          // Update button position after state change
+          updateToggleButtonPosition();
         }
 
         if (toggleButton && sidebar) {
@@ -708,6 +727,9 @@
           } else {
             setSidebarState(false); // Default to expanded if no saved state
           }
+
+          // Ensure button position is correct on initial load
+          updateToggleButtonPosition();
 
           // Trigger the initial load for #results after filters are set from URL
           htmx.trigger(document.body, "initial-load-event", {});

@@ -22,17 +22,17 @@ main {
     display: flex;
     gap: var(--spacing, 1rem);
     padding: var(--spacing);
+    position: relative;
     /* Use consistent spacing unit */
 }
 
 /* Sidebar */
 /* In /home/ralsina/code/grafito/src/style.css */
 #toggle-sidebar-btn {
-    position: fixed;
-    opacity: 0.7;
-    top: var(--spacing, 2.5rem);
-    left: 1rem;
-    /* Adjust this value to increase/decrease left margin */
+    position: absolute;
+    opacity: 0.8;
+    top: var(--spacing, 1rem);
+    left: calc(var(--sidebar-width, 18.75rem) + var(--spacing, 1rem) + 0.5rem);
     z-index: 1050;
     /* Ensure it's above sidebar but potentially below modals */
     font-size: 0.7em;
@@ -42,12 +42,17 @@ main {
     line-height: 1;
     border: none;
     cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: left 0.3s ease, background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+#toggle-sidebar-btn:hover {
+    opacity: 1;
 }
 
 #filters-sidebar {
     /* Base styles (some are overridden by .collapsed state) */
-    width: 18.75rem;
+    --sidebar-width: 18.75rem;
+    width: var(--sidebar-width);
     flex-shrink: 0;
     padding-right: var(--spacing, 1rem);
     padding-left: var(--spacing-small, 0.5rem);
@@ -58,16 +63,22 @@ main {
     /* Set height to 100% of viewport height */
     overflow-y: auto;
     z-index: 5;
+    transition: width 0.3s ease, padding 0.3s ease;
 }
 
 #filters-sidebar.collapsed {
+    --sidebar-width: 0rem;
     width: 0 !important;
     /* Override inline style */
     padding-left: 0 !important;
     padding-right: 0 !important;
     border-right: none !important;
     overflow: hidden;
-    transition: width 0.3s ease, padding 0.3s ease;
+}
+
+/* Update the toggle button position when sidebar is collapsed */
+#page-content-layout:has(#filters-sidebar.collapsed) #toggle-sidebar-btn {
+    left: calc(var(--spacing, 1rem) + 0.5rem);
 }
 
 #loading-spinner {
