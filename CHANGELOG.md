@@ -2,7 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.2] - 2025-07-07
+
+### 📚 Documentation
+
+- Updated website
+- Updated site
+
+### 🎨 Styling
+
+- UI fix
+
 ## [0.10.1] - 2025-07-02
+
+### 💼 Other
+
+- Release v0.10.1
 
 ### 📚 Documentation
 
