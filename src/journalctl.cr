@@ -515,7 +515,7 @@ class Journalctl
 
         entries
       else
-        Log.warn { "#{log_context_message}: journalctl command failed with exit code: #{process_result.system_exit_status}. Stdout: #{stdout.to_s[0..100]}" }
+        Log.warn { "#{log_context_message}: journalctl command failed with exit code: #{process_result.exit_status}. Stdout: #{stdout.to_s[0..100]}" }
         [] of LogEntry
       end
     {% end %}
