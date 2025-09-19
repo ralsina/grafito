@@ -62,6 +62,7 @@ Usage:
 Options:
   -p PORT, --port=PORT          Port to listen on [default: 3000].
   -b ADDRESS, --bind=ADDRESS    Address to bind to [default: 127.0.0.1].
+  -U UNITS, --units=UNITS       Comma-separated list of systemd units to show (restricts access).
   -h --help                     Show this screen.
   --version                     Show version.
 DOCOPT
@@ -101,6 +102,13 @@ def main
   port = args["--port"].as(String).to_i32
   bind_address = args["--bind"].as(String)
 
+  # Parse units restriction if provided
+  if args["--units"]?
+    units = args["--units"].as(String).split(",").map(&.strip)
+    Grafito.allowed_units = units
+    Grafito::Log.info { "Restricting to units: #{units.join(", ")}" }
+  end
+
   # Log at debug level. Probably worth making it configurable.
 
   Log.setup(:debug) # Or use Log.setup_from_env for more flexibility
@@ -135,6 +143,8 @@ def main
 
   # Tell kemal to listen on the right port. That's it. The rest is done in [grafito.cr](grafito.cr.html)
   # where the kemal endpoints are defined.
+  # Clear ARGV so Kemal doesn't try to parse command line arguments
+  ARGV.clear
   Kemal.run(port: port)
 end
 

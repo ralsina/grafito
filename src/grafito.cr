@@ -24,6 +24,9 @@ module Grafito
   # Obtain the version number automatically at compile time from [shard.yml](../shard.yml.html)
   VERSION = {{ `shards version #{__DIR__}/../`.chomp.stringify }} # Adjusted path for shards version
 
+  # Global unit restriction - when set, only logs from these units will be shown
+  class_property allowed_units : Array(String)? = nil
+
   # ## The `/logs` endpoint
   #
   # Exposes the Journalctl wrapper via a REST API.

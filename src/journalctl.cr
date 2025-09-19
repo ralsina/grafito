@@ -370,7 +370,32 @@ class Journalctl
           known_units.add(unit_name) if unit_name
         end
         Log.debug { "Found #{known_units.size} unique service units." }
-        known_units.to_a.sort
+
+        # Filter by allowed units if set
+        if Grafito.allowed_units
+          allowed_set = Grafito.allowed_units.not_nil!.to_set
+          filtered_units = known_units.select do |unit|
+            # Check both the raw unit name and cleaned version
+            unit_match = allowed_set.includes?(unit)
+            unless unit_match
+              # Try with .service suffix removed
+              cleaned_unit = unit.gsub(/\.service$/, "")
+              unit_match = allowed_set.includes?(cleaned_unit)
+
+              # Check for substring matches as fallback
+              unless unit_match
+                unit_match = allowed_set.any? do |allowed|
+                  unit.includes?(allowed) || cleaned_unit.includes?(allowed)
+                end
+              end
+            end
+            unit_match
+          end
+          Log.info { "Filtered service units from #{known_units.size} to #{filtered_units.size} based on restrictions" }
+          filtered_units.sort
+        else
+          known_units.to_a.sort
+        end
       else
         Log.error { "systemctl command failed with exit code: #{result}. Stdout: #{stdout.to_s[0..100]}" }
         nil
@@ -429,7 +454,7 @@ class Journalctl
       process_result = Process.run(command[0], args: command[1..], output: stdout)
 
       if process_result.normal_exit?
-        stdout.to_s.split("\n").compact_map do |line|
+        entries = stdout.to_s.split("\n").compact_map do |line|
           next if line.strip.empty?
           begin
             LogEntry.from_json(line)
@@ -438,6 +463,57 @@ class Journalctl
             nil
           end
         end
+
+        # Apply server-side unit filtering if allowed_units is set
+        if Grafito.allowed_units
+          allowed_set = Grafito.allowed_units.not_nil!.to_set
+          Log.debug { "Unit filtering enabled. Allowed units: #{allowed_set.to_a}" }
+          filtered_count = entries.size
+          first_entry_unit = entries.first?.try { |e| e.internal_unit_name || e.unit } if entries.size > 0
+          Log.debug { "First entry unit before filtering: #{first_entry_unit}" if first_entry_unit }
+
+          entries = entries.select do |entry|
+            # Check both the raw unit name and the cleaned version
+            unit_match = false
+            entry_unit = entry.internal_unit_name || entry.unit
+
+            # Check internal_unit_name (with .service suffix)
+            if entry.internal_unit_name
+              unit_match ||= allowed_set.includes?(entry.internal_unit_name)
+              Log.debug { "Unit filter: '#{entry.internal_unit_name}' exact match -> #{unit_match}" }
+            end
+
+            # Check cleaned unit name (without .service suffix)
+            cleaned_unit = entry.unit
+            unless unit_match
+              unit_match ||= allowed_set.includes?(cleaned_unit)
+              Log.debug { "Unit filter: '#{cleaned_unit}' cleaned match -> #{unit_match}" }
+            end
+
+            # Also check if the allowed units contain patterns that match (case-insensitive)
+            unless unit_match
+              unit_match = allowed_set.any? do |allowed|
+                # Case-insensitive pattern matching
+                entry.internal_unit_name.try { |u| u.downcase.includes?(allowed.downcase) } ||
+                  cleaned_unit.downcase.includes?(allowed.downcase) ||
+                  allowed.downcase.includes?(cleaned_unit.downcase)
+              end
+              Log.debug { "Unit filter: '#{entry_unit}' pattern match -> #{unit_match}" }
+            end
+
+            # Log if entry is filtered out
+            unless unit_match
+              Log.debug { "Filtered out entry from unit '#{entry_unit}' (allowed: #{allowed_set.to_a})" }
+            end
+
+            unit_match
+          end
+          filtered_count -= entries.size
+          Log.info { "Filtered out #{filtered_count} log entries due to unit restrictions" } if filtered_count > 0
+          Log.debug { "Remaining entries after filtering: #{entries.size}" }
+        end
+
+        entries
       else
         Log.warn { "#{log_context_message}: journalctl command failed with exit code: #{process_result.system_exit_status}. Stdout: #{stdout.to_s[0..100]}" }
         [] of LogEntry
