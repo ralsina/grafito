@@ -7,7 +7,7 @@ INSTALL_DIR="/usr/local/bin"
 SERVICE_DIR="/etc/systemd/system"
 SERVICE_NAME="grafito.service"
 BINARY_NAME="grafito"
-VERSION="0.10.2" # Hardcoded version
+VERSION="0.11.0" # Hardcoded version
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "${TEMP_DIR}"' EXIT ERR INT TERM # Ensure cleanup
 

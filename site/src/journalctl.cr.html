@@ -1069,8 +1069,75 @@ An Array(String) containing unique service unit names, sorted, or nil if an erro
         <pre class="b" ><code class="b"><span class="t">          </span><span class="t">unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls"> </span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">first?</span><span class="t">
 </span><span class="t">          </span><span class="t">known_units</span><span class="t">.</span><span class="t">add</span><span class="t">(</span><span class="t">unit_name</span><span class="t">)</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">unit_name</span><span class="t">
 </span><span class="t">        </span><span class="nk">end</span><span class="t">
-</span><span class="t">        </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Found </span><span class="lsi">#{</span><span class="t">known_units</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> unique service units.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
-</span><span class="t">        </span><span class="t">known_units</span><span class="t">.</span><span class="t">to_a</span><span class="t">.</span><span class="t">sort</span><span class="t">
+</span><span class="t">        </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Found </span><span class="lsi">#{</span><span class="t">known_units</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> unique service units.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span></code></pre>
+    </div>
+</div>
+
+<div id="section-47" class="grid">
+    <div class="doc" id="section-47">
+        <span class="anchor">
+            <a href="#section-47" class="anchor">↦</a>
+        </span>
+        <p>Filter by allowed units if set</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">allowed_units</span><span class="t">
+</span><span class="t">          </span><span class="t">allowed_set</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">allowed_units</span><span class="t">.</span><span class="t">not_nil!</span><span class="t">.</span><span class="t">to_set</span><span class="t">
+</span><span class="t">          </span><span class="t">filtered_units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">known_units</span><span class="t">.</span><span class="nk">select</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">unit</span><span class="o">|</span></code></pre>
+    </div>
+</div>
+
+<div id="section-48" class="grid">
+    <div class="doc" id="section-48">
+        <span class="anchor">
+            <a href="#section-48" class="anchor">↦</a>
+        </span>
+        <p>Check both the raw unit name and cleaned version</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">            </span><span class="t">unit_match</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">allowed_set</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">unit</span><span class="t">)</span><span class="t">
+</span><span class="t">            </span><span class="nk">unless</span><span class="t"> </span><span class="t">unit_match</span></code></pre>
+    </div>
+</div>
+
+<div id="section-49" class="grid">
+    <div class="doc" id="section-49">
+        <span class="anchor">
+            <a href="#section-49" class="anchor">↦</a>
+        </span>
+        <p>Try with .service suffix removed</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">              </span><span class="n">cleaned_unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">unit</span><span class="o">.</span><span class="n">gsub</span><span class="p">(</span><span class="lsr">/</span><span class="lsr">\</span><span class="lsr">.service$</span><span class="lsr">/</span><span class="p">,</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">&quot;</span><span class="p">)</span><span class="t">
+</span><span class="t">              </span><span class="n">unit_match</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">allowed_set</span><span class="o">.</span><span class="n">includes?</span><span class="p">(</span><span class="n">cleaned_unit</span><span class="p">)</span></code></pre>
+    </div>
+</div>
+
+<div id="section-50" class="grid">
+    <div class="doc" id="section-50">
+        <span class="anchor">
+            <a href="#section-50" class="anchor">↦</a>
+        </span>
+        <p>Check for substring matches as fallback</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">              </span><span class="nk">unless</span><span class="t"> </span><span class="t">unit_match</span><span class="t">
+</span><span class="t">                </span><span class="t">unit_match</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">allowed_set</span><span class="t">.</span><span class="t">any?</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">allowed</span><span class="o">|</span><span class="t">
+</span><span class="t">                  </span><span class="t">unit</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">allowed</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">cleaned_unit</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">allowed</span><span class="t">)</span><span class="t">
+</span><span class="t">                </span><span class="nk">end</span><span class="t">
+</span><span class="t">              </span><span class="nk">end</span><span class="t">
+</span><span class="t">            </span><span class="nk">end</span><span class="t">
+</span><span class="t">            </span><span class="t">unit_match</span><span class="t">
+</span><span class="t">          </span><span class="nk">end</span><span class="t">
+</span><span class="t">          </span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Filtered service units from </span><span class="lsi">#{</span><span class="t">known_units</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> to </span><span class="lsi">#{</span><span class="t">filtered_units</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> based on restrictions</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">          </span><span class="t">filtered_units</span><span class="t">.</span><span class="t">sort</span><span class="t">
+</span><span class="t">        </span><span class="nk">else</span><span class="t">
+</span><span class="t">          </span><span class="t">known_units</span><span class="t">.</span><span class="t">to_a</span><span class="t">.</span><span class="t">sort</span><span class="t">
+</span><span class="t">        </span><span class="nk">end</span><span class="t">
 </span><span class="t">      </span><span class="nk">else</span><span class="t">
 </span><span class="t">        </span><span class="nc">Log</span><span class="t">.</span><span class="t">error</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">systemctl command failed with exit code: </span><span class="lsi">#{</span><span class="t">result</span><span class="t"></span><span class="lsi">}</span><span class="ls">. Stdout: </span><span class="lsi">#{</span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t">[</span><span class="ln">0</span><span class="t">..</span><span class="ln">100</span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
 </span><span class="t">        </span><span class="l">nil</span><span class="t">
@@ -1083,10 +1150,10 @@ An Array(String) containing unique service unit names, sorted, or nil if an erro
     </div>
 </div>
 
-<div id="section-47" class="grid">
-    <div class="doc" id="section-47">
+<div id="section-51" class="grid">
+    <div class="doc" id="section-51">
         <span class="anchor">
-            <a href="#section-47" class="anchor">↦</a>
+            <a href="#section-51" class="anchor">↦</a>
         </span>
         <p>Retrieves a single log entry by its cursor.</p>
 <p>Args:
@@ -1117,10 +1184,10 @@ A LogEntry object if found, or nil otherwise.</p>
     </div>
 </div>
 
-<div id="section-48" class="grid">
-    <div class="doc" id="section-48">
+<div id="section-52" class="grid">
+    <div class="doc" id="section-52">
         <span class="anchor">
-            <a href="#section-48" class="anchor">↦</a>
+            <a href="#section-52" class="anchor">↦</a>
         </span>
         <p>Helper method to run journalctl and parse JSON lines from its output.</p>
 <p>Args:
@@ -1138,10 +1205,10 @@ An Array(LogEntry) parsed from the command output, or an empty array on failure.
     </div>
 </div>
 
-<div id="section-49" class="grid">
-    <div class="doc" id="section-49">
+<div id="section-53" class="grid">
+    <div class="doc" id="section-53">
         <span class="anchor">
-            <a href="#section-49" class="anchor">↦</a>
+            <a href="#section-53" class="anchor">↦</a>
         </span>
         <p>The fake function's arguments are prefixed with '_' indicating they might not be fully used.
 It's designed to match the signature for easy swapping.</p>
@@ -1156,7 +1223,7 @@ It's designed to match the signature for easy swapping.</p>
 </span><span class="t">      </span><span class="t">process_result</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Process</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">command</span><span class="t">[</span><span class="ln">0</span><span class="t">]</span><span class="t">,</span><span class="t"> </span><span class="t">args</span><span class="t">:</span><span class="t"> </span><span class="t">command</span><span class="t">[</span><span class="ln">1</span><span class="t">..</span><span class="t">]</span><span class="t">,</span><span class="t"> </span><span class="t">output</span><span class="t">:</span><span class="t"> </span><span class="t">stdout</span><span class="t">)</span><span class="t">
 </span><span class="t">
 </span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">process_result</span><span class="t">.</span><span class="t">normal_exit?</span><span class="t">
-</span><span class="t">        </span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">\n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">compact_map</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t">
+</span><span class="t">        </span><span class="t">entries</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">\n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">compact_map</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t">
 </span><span class="t">          </span><span class="nk">next</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t">
 </span><span class="t">          </span><span class="nk">begin</span><span class="t">
 </span><span class="t">            </span><span class="nc">LogEntry</span><span class="t">.</span><span class="t">from_json</span><span class="t">(</span><span class="t">line</span><span class="t">)</span><span class="t">
@@ -1164,7 +1231,130 @@ It's designed to match the signature for easy swapping.</p>
 </span><span class="t">            </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="lsi">#{</span><span class="t">log_context_message</span><span class="t"></span><span class="lsi">}</span><span class="ls">: Failed to parse log line: </span><span class="lsi">#{</span><span class="t">line</span><span class="t">.</span><span class="t">inspect</span><span class="t">[</span><span class="t">..</span><span class="ln">100</span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
 </span><span class="t">            </span><span class="l">nil</span><span class="t">
 </span><span class="t">          </span><span class="nk">end</span><span class="t">
+</span><span class="t">        </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-54" class="grid">
+    <div class="doc" id="section-54">
+        <span class="anchor">
+            <a href="#section-54" class="anchor">↦</a>
+        </span>
+        <p>Apply server-side unit filtering if allowed_units is set</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">allowed_units</span><span class="t">
+</span><span class="t">          </span><span class="t">allowed_set</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">allowed_units</span><span class="t">.</span><span class="t">not_nil!</span><span class="t">.</span><span class="t">to_set</span><span class="t">
+</span><span class="t">          </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Unit filtering enabled. Allowed units: </span><span class="lsi">#{</span><span class="t">allowed_set</span><span class="t">.</span><span class="t">to_a</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">          </span><span class="t">filtered_count</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t">
+</span><span class="t">          </span><span class="t">first_entry_unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entries</span><span class="t">.</span><span class="t">first?</span><span class="t">.</span><span class="t">try</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">e</span><span class="o">|</span><span class="t"> </span><span class="t">e</span><span class="t">.</span><span class="t">internal_unit_name</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">e</span><span class="t">.</span><span class="t">unit</span><span class="t"> </span><span class="t">}</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="ln">0</span><span class="t">
+</span><span class="t">          </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">First entry unit before filtering: </span><span class="lsi">#{</span><span class="t">first_entry_unit</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">first_entry_unit</span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">
+</span><span class="t">          </span><span class="t">entries</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entries</span><span class="t">.</span><span class="nk">select</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span></code></pre>
+    </div>
+</div>
+
+<div id="section-55" class="grid">
+    <div class="doc" id="section-55">
+        <span class="anchor">
+            <a href="#section-55" class="anchor">↦</a>
+        </span>
+        <p>Check both the raw unit name and the cleaned version</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">            </span><span class="t">unit_match</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">false</span><span class="t">
+</span><span class="t">            </span><span class="t">entry_unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">internal_unit_name</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span></code></pre>
+    </div>
+</div>
+
+<div id="section-56" class="grid">
+    <div class="doc" id="section-56">
+        <span class="anchor">
+            <a href="#section-56" class="anchor">↦</a>
+        </span>
+        <p>Check internal_unit_name (with .service suffix)</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">            </span><span class="nk">if</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">internal_unit_name</span><span class="t">
+</span><span class="t">              </span><span class="t">unit_match</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">allowed_set</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">internal_unit_name</span><span class="t">)</span><span class="t">
+</span><span class="t">              </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Unit filter: &#39;</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">internal_unit_name</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; exact match -&gt; </span><span class="lsi">#{</span><span class="t">unit_match</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">            </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-57" class="grid">
+    <div class="doc" id="section-57">
+        <span class="anchor">
+            <a href="#section-57" class="anchor">↦</a>
+        </span>
+        <p>Check cleaned unit name (without .service suffix)</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">            </span><span class="t">cleaned_unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t">
+</span><span class="t">            </span><span class="nk">unless</span><span class="t"> </span><span class="t">unit_match</span><span class="t">
+</span><span class="t">              </span><span class="t">unit_match</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">allowed_set</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">cleaned_unit</span><span class="t">)</span><span class="t">
+</span><span class="t">              </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Unit filter: &#39;</span><span class="lsi">#{</span><span class="t">cleaned_unit</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; cleaned match -&gt; </span><span class="lsi">#{</span><span class="t">unit_match</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">            </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-58" class="grid">
+    <div class="doc" id="section-58">
+        <span class="anchor">
+            <a href="#section-58" class="anchor">↦</a>
+        </span>
+        <p>Also check if the allowed units contain patterns that match (case-insensitive)</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">            </span><span class="nk">unless</span><span class="t"> </span><span class="t">unit_match</span><span class="t">
+</span><span class="t">              </span><span class="t">unit_match</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">allowed_set</span><span class="t">.</span><span class="t">any?</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">allowed</span><span class="o">|</span></code></pre>
+    </div>
+</div>
+
+<div id="section-59" class="grid">
+    <div class="doc" id="section-59">
+        <span class="anchor">
+            <a href="#section-59" class="anchor">↦</a>
+        </span>
+        <p>Case-insensitive pattern matching</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">                </span><span class="t">entry</span><span class="t">.</span><span class="t">internal_unit_name</span><span class="t">.</span><span class="t">try</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">u</span><span class="o">|</span><span class="t"> </span><span class="t">u</span><span class="t">.</span><span class="t">downcase</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">allowed</span><span class="t">.</span><span class="t">downcase</span><span class="t">)</span><span class="t"> </span><span class="t">}</span><span class="t"> </span><span class="o">||</span><span class="t">
+</span><span class="t">                  </span><span class="t">cleaned_unit</span><span class="t">.</span><span class="t">downcase</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">allowed</span><span class="t">.</span><span class="t">downcase</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t">
+</span><span class="t">                  </span><span class="t">allowed</span><span class="t">.</span><span class="t">downcase</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">cleaned_unit</span><span class="t">.</span><span class="t">downcase</span><span class="t">)</span><span class="t">
+</span><span class="t">              </span><span class="nk">end</span><span class="t">
+</span><span class="t">              </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Unit filter: &#39;</span><span class="lsi">#{</span><span class="t">entry_unit</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; pattern match -&gt; </span><span class="lsi">#{</span><span class="t">unit_match</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">            </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-60" class="grid">
+    <div class="doc" id="section-60">
+        <span class="anchor">
+            <a href="#section-60" class="anchor">↦</a>
+        </span>
+        <p>Log if entry is filtered out</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">            </span><span class="nk">unless</span><span class="t"> </span><span class="t">unit_match</span><span class="t">
+</span><span class="t">              </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Filtered out entry from unit &#39;</span><span class="lsi">#{</span><span class="t">entry_unit</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; (allowed: </span><span class="lsi">#{</span><span class="t">allowed_set</span><span class="t">.</span><span class="t">to_a</span><span class="t"></span><span class="lsi">}</span><span class="ls">)</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">            </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">            </span><span class="t">unit_match</span><span class="t">
+</span><span class="t">          </span><span class="nk">end</span><span class="t">
+</span><span class="t">          </span><span class="t">filtered_count</span><span class="t"> </span><span class="o">-=</span><span class="t"> </span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t">
+</span><span class="t">          </span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Filtered out </span><span class="lsi">#{</span><span class="t">filtered_count</span><span class="t"></span><span class="lsi">}</span><span class="ls"> log entries due to unit restrictions</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">filtered_count</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="ln">0</span><span class="t">
+</span><span class="t">          </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Remaining entries after filtering: </span><span class="lsi">#{</span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
 </span><span class="t">        </span><span class="nk">end</span><span class="t">
+</span><span class="t">
+</span><span class="t">        </span><span class="t">entries</span><span class="t">
 </span><span class="t">      </span><span class="nk">else</span><span class="t">
 </span><span class="t">        </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="lsi">#{</span><span class="t">log_context_message</span><span class="t"></span><span class="lsi">}</span><span class="ls">: journalctl command failed with exit code: </span><span class="lsi">#{</span><span class="t">process_result</span><span class="t">.</span><span class="t">system_exit_status</span><span class="t"></span><span class="lsi">}</span><span class="ls">. Stdout: </span><span class="lsi">#{</span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t">[</span><span class="ln">0</span><span class="t">..</span><span class="ln">100</span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
 </span><span class="t">        </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">LogEntry</span><span class="t">
@@ -1177,10 +1367,10 @@ It's designed to match the signature for easy swapping.</p>
     </div>
 </div>
 
-<div id="section-50" class="grid">
-    <div class="doc" id="section-50">
+<div id="section-61" class="grid">
+    <div class="doc" id="section-61">
         <span class="anchor">
-            <a href="#section-50" class="anchor">↦</a>
+            <a href="#section-61" class="anchor">↦</a>
         </span>
         <p>Retrieves log entries surrounding a specific entry identified by a cursor.</p>
 <p>Args:
@@ -1206,10 +1396,10 @@ all in chronological order. Returns nil if the target cursor is not found or cou
     </div>
 </div>
 
-<div id="section-51" class="grid">
-    <div class="doc" id="section-51">
+<div id="section-62" class="grid">
+    <div class="doc" id="section-62">
         <span class="anchor">
-            <a href="#section-51" class="anchor">↦</a>
+            <a href="#section-62" class="anchor">↦</a>
         </span>
         <p>Fetch 'before' entries: <code>journalctl -o json --cursor &lt;cursor&gt; -n &lt;count + 1&gt; --reverse</code>
 This outputs: [Target, B1, B2, ..., B_count] (Target is newest, B1 is just before Target, etc.)</p>
@@ -1223,10 +1413,10 @@ This outputs: [Target, B1, B2, ..., B_count] (Target is newest, B1 is just befor
     </div>
 </div>
 
-<div id="section-52" class="grid">
-    <div class="doc" id="section-52">
+<div id="section-63" class="grid">
+    <div class="doc" id="section-63">
         <span class="anchor">
-            <a href="#section-52" class="anchor">↦</a>
+            <a href="#section-63" class="anchor">↦</a>
         </span>
         <p>Fetch 'after' entries: <code>journalctl -o json --after-cursor &lt;cursor&gt; -n &lt;count&gt;</code>
 This outputs: [A1, A2, ..., A_count] (A1 is just after Target, in chronological order)</p>

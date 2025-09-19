@@ -37,6 +37,7 @@ require "baked_file_system"
 require "docopt"
 require "kemal-basic-auth"
 require "kemal"
+require "log"
 
 # This file [main.cr](main.cr.html) is the starting point for grafito. We get the instructions from the
 # user about how to start via the command line, using [docopt](https://docopt.org)
@@ -63,8 +64,14 @@ Options:
   -p PORT, --port=PORT          Port to listen on [default: 3000].
   -b ADDRESS, --bind=ADDRESS    Address to bind to [default: 127.0.0.1].
   -U UNITS, --units=UNITS       Comma-separated list of systemd units to show (restricts access).
+  --log-level=LEVEL             Set log level (debug, info, warn, error, fatal) [default: info].
   -h --help                     Show this screen.
   --version                     Show version.
+
+Environment variables:
+  GRAFITO_AUTH_USER             Username for basic authentication (if set, GRAFITO_AUTH_PASS must also be set).
+  GRAFITO_AUTH_PASS             Password for basic authentication (if set, GRAFITO_AUTH_USER must also be set).
+  LOG_LEVEL                     Log level (debug, info, warn, error, fatal) [default: info].
 DOCOPT
 
 # ## The Assets class
@@ -97,6 +104,11 @@ def main
   # We parse the command line (`ARGV`) using the help we described above.
 
   args = Docopt.docopt(DOC, ARGV, version: Grafito::VERSION)
+
+  # Set log level from command line argument
+  log_level = args["--log-level"].as(String).upcase
+  ENV["LOG_LEVEL"] = log_level
+  Log.setup_from_env
 
   # Port and binding address are important
   port = args["--port"].as(String).to_i32

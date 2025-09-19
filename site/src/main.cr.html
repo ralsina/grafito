@@ -300,6 +300,7 @@ Usage:</span><span class="ls">
 Options:</span><span class="ls">
   -p PORT, --port=PORT          Port to listen on [default: 3000].</span><span class="ls">
   -b ADDRESS, --bind=ADDRESS    Address to bind to [default: 127.0.0.1].</span><span class="ls">
+  -U UNITS, --units=UNITS       Comma-separated list of systemd units to show (restricts access).</span><span class="ls">
   -h --help                     Show this screen.</span><span class="ls">
   --version                     Show version.</span><span class="ls">
 DOCOPT</span><span class="ls"></span></code></pre>
@@ -382,6 +383,23 @@ always gets executed.</p>
         <span class="anchor">
             <a href="#section-8" class="anchor">↦</a>
         </span>
+        <p>Parse units restriction if provided</p>
+
+    </div>
+    <div class="code">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--units</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">
+</span><span class="t">    </span><span class="t">units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--units</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">,</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">strip</span><span class="t">)</span><span class="t">
+</span><span class="t">    </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">allowed_units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">units</span><span class="t">
+</span><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Restricting to units: </span><span class="lsi">#{</span><span class="t">units</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">, </span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
+</span><span class="t">  </span><span class="nk">end</span></code></pre>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc" id="section-9">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
         <p>Log at debug level. Probably worth making it configurable.</p>
 
     </div>
@@ -391,10 +409,10 @@ always gets executed.</p>
     </div>
 </div>
 
-<div id="section-9" class="grid">
-    <div class="doc" id="section-9">
+<div id="section-10" class="grid">
+    <div class="doc" id="section-10">
         <span class="anchor">
-            <a href="#section-9" class="anchor">↦</a>
+            <a href="#section-10" class="anchor">↦</a>
         </span>
         <p>Start kemal listening on the right address</p>
 
@@ -404,10 +422,10 @@ always gets executed.</p>
     </div>
 </div>
 
-<div id="section-10" class="grid">
-    <div class="doc" id="section-10">
+<div id="section-11" class="grid">
+    <div class="doc" id="section-11">
         <span class="anchor">
-            <a href="#section-10" class="anchor">↦</a>
+            <a href="#section-11" class="anchor">↦</a>
         </span>
         <p>Read credentials and realm from environment variables</p>
 
@@ -418,10 +436,10 @@ always gets executed.</p>
     </div>
 </div>
 
-<div id="section-11" class="grid">
-    <div class="doc" id="section-11">
+<div id="section-12" class="grid">
+    <div class="doc" id="section-12">
         <span class="anchor">
-            <a href="#section-11" class="anchor">↦</a>
+            <a href="#section-12" class="anchor">↦</a>
         </span>
         <p>Both username and password are set, enable basic authentication</p>
 
@@ -434,10 +452,10 @@ always gets executed.</p>
     </div>
 </div>
 
-<div id="section-12" class="grid">
-    <div class="doc" id="section-12">
+<div id="section-13" class="grid">
+    <div class="doc" id="section-13">
         <span class="anchor">
-            <a href="#section-12" class="anchor">↦</a>
+            <a href="#section-13" class="anchor">↦</a>
         </span>
         <p>Only one of the credentials was set - this is a misconfiguration.
 Exit with an error code to prevent running in an insecure state.</p>
@@ -450,10 +468,10 @@ Exit with an error code to prevent running in an insecure state.</p>
     </div>
 </div>
 
-<div id="section-13" class="grid">
-    <div class="doc" id="section-13">
+<div id="section-14" class="grid">
+    <div class="doc" id="section-14">
         <span class="anchor">
-            <a href="#section-13" class="anchor">↦</a>
+            <a href="#section-14" class="anchor">↦</a>
         </span>
         <p>Neither username nor password are set, run without authentication.</p>
 
@@ -464,10 +482,10 @@ Exit with an error code to prevent running in an insecure state.</p>
     </div>
 </div>
 
-<div id="section-14" class="grid">
-    <div class="doc" id="section-14">
+<div id="section-15" class="grid">
+    <div class="doc" id="section-15">
         <span class="anchor">
-            <a href="#section-14" class="anchor">↦</a>
+            <a href="#section-15" class="anchor">↦</a>
         </span>
         <p>The <code>BakedFileHandler</code> is a custom handler that serves files that are baked
 into the application. In our case, the Assets class we defined above.</p>
@@ -480,17 +498,19 @@ into the application. In our case, the Assets class we defined above.</p>
     </div>
 </div>
 
-<div id="section-15" class="grid">
-    <div class="doc" id="section-15">
+<div id="section-16" class="grid">
+    <div class="doc" id="section-16">
         <span class="anchor">
-            <a href="#section-15" class="anchor">↦</a>
+            <a href="#section-16" class="anchor">↦</a>
         </span>
         <p>Tell kemal to listen on the right port. That's it. The rest is done in <a href="grafito.cr.html">grafito.cr</a>
-where the kemal endpoints are defined.</p>
+where the kemal endpoints are defined.
+Clear ARGV so Kemal doesn't try to parse command line arguments</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nc">Kemal</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="t">port</span><span class="t">)</span><span class="t">
+        <pre class="b" ><code class="b"><span class="t">  </span><span class="nc">ARGV</span><span class="t">.</span><span class="t">clear</span><span class="t">
+</span><span class="t">  </span><span class="nc">Kemal</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="t">port</span><span class="t">)</span><span class="t">
 </span><span class="nk">end</span><span class="t">
 </span><span class="t">
 </span><span class="t">main</span><span class="t">(</span><span class="t">)</span></code></pre>
