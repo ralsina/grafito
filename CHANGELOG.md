@@ -2,7 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.0] - 2025-09-19
+
+### 🚀 Features
+
+- Add command line option to restrict access to specific systemd units
+
 ## [0.10.2] - 2025-07-07
+
+### 💼 Other
+
+- Release v0.10.2
 
 ### 📚 Documentation
 
