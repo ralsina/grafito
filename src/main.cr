@@ -60,11 +60,13 @@ Usage:
   grafito --version
 
 Options:
-  -p PORT, --port=PORT          Port to listen on [default: 3000].
-  -b ADDRESS, --bind=ADDRESS    Address to bind to [default: 127.0.0.1].
-  -U UNITS, --units=UNITS       Comma-separated list of systemd units to show (restricts access).
-  -h --help                     Show this screen.
-  --version                     Show version.
+  -p PORT, --port=PORT                Port to listen on [default: 3000].
+  -b ADDRESS, --bind=ADDRESS          Address to bind to [default: 127.0.0.1].
+  -U UNITS, --units=UNITS             Comma-separated list of systemd units to show (restricts access).
+  --log-level=LEVEL                   Set logging level: TRACE, DEBUG, INFO, NOTICE, WARN, ERROR, FATAL.
+                                      Can also be set via GRAFITO_LOG_LEVEL environment variable.
+  -h --help                           Show this screen.
+  --version                           Show version.
 DOCOPT
 
 # ## The Assets class
@@ -109,9 +111,32 @@ def main
     Grafito::Log.info { "Restricting to units: #{units.join(", ")}" }
   end
 
-  # Log at debug level. Probably worth making it configurable.
+  # Parse log level from command line or environment variable
+  log_level_str = args["--log-level"]?.as(String?) || ENV["GRAFITO_LOG_LEVEL"]? || "DEBUG"
+  log_level_str = log_level_str.upcase
 
-  Log.setup(:debug) # Or use Log.setup_from_env for more flexibility
+  # Parse log level string to Log::Severity
+  log_level = case log_level_str
+  when "TRACE"
+    Log::Severity::Trace
+  when "DEBUG"
+    Log::Severity::Debug
+  when "INFO"
+    Log::Severity::Info
+  when "NOTICE"
+    Log::Severity::Notice
+  when "WARN", "WARNING"
+    Log::Severity::Warn
+  when "ERROR"
+    Log::Severity::Error
+  when "FATAL"
+    Log::Severity::Fatal
+  else
+    Log::Severity::Debug # Default fallback
+  end
+
+  # Setup logging with the specified level
+  Log.setup(log_level)
   Grafito::Log.info { "Starting Grafito server on #{bind_address}:#{port}" }
   # Start kemal listening on the right address
   Kemal.config.host_binding = bind_address
