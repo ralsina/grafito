@@ -1,5 +1,8 @@
 # Things To Do
 
+* Formalize API
+* Write MCP
+* Maybe add z.ai integration
 * ✅ Handle configurable URLs
 * ✅ Authentication
 * ✅ Better error handling (client side!)
