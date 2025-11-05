@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.12.1] - 2025-11-05
+## [0.13.0] - 2025-11-05
+
+### 🚀 Features
+
+- AI-powered log analysis
+
+## [0.12.1] - 2025-10-27
 
 ### 📚 Documentation
 
