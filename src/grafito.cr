@@ -27,6 +27,9 @@ module Grafito
   # Global unit restriction - when set, only logs from these units will be shown
   class_property allowed_units : Array(String)? = nil
 
+  # AI feature flag - when true, AI features are enabled
+  class_property? ai_enabled : Bool = false
+
   # ## The `/logs` endpoint
   #
   # Exposes the Journalctl wrapper via a REST API.
@@ -274,6 +277,110 @@ module Grafito
       # Journalctl.context might return nil if the original cursor was not found
       # or if the count was invalid (though we check count above).
       env.response.print "<p class=\"error\">Could not retrieve context for cursor: #{HTML.escape(cursor)}. The entry might not exist or an error occurred.</p>"
+    end
+  end
+
+  # ## The `/ask-ai` endpoint
+  #
+  # Sends log context to z.ai for AI-powered explanation.
+  # Example usage:
+  # ```text
+  # POST /ask-ai
+  # Content-Type: application/json
+  # {"cursor": "<CURSOR_STRING>"}
+  # ```
+  #
+  # Returns JSON with AI explanation or error message.
+  post "/ask-ai" do |env|
+    Log.debug { "Received /ask-ai request" }
+
+    # Check if AI is enabled
+    unless ai_enabled?
+      env.response.content_type = "application/json"
+      env.response.status_code = 503
+      next {error: "AI features are disabled. Configure Z_AI_API_KEY environment variable to enable."}.to_json
+    end
+
+    # Parse JSON request body
+    body = env.request.body.try(&.gets_to_end) || ""
+    if body.empty?
+      env.response.content_type = "application/json"
+      env.response.status_code = 400
+      next {error: "Request body is empty."}.to_json
+    end
+
+    begin
+      json_body = JSON.parse(body)
+      cursor = json_body["cursor"]?.try(&.as_s)
+
+      unless cursor
+        env.response.content_type = "application/json"
+        env.response.status_code = 400
+        next {error: "Missing 'cursor' parameter in request body."}.to_json
+      end
+
+      # Get context entries (5 before and after)
+      context_entries = Journalctl.context(cursor, 5)
+      unless context_entries
+        env.response.content_type = "application/json"
+        env.response.status_code = 404
+        next {error: "Could not retrieve context for cursor: #{cursor}"}.to_json
+      end
+
+      # Find the target entry (the one at position 5, assuming 5 entries before)
+      target_entry = context_entries[5]?
+      unless target_entry
+        env.response.content_type = "application/json"
+        env.response.status_code = 404
+        next {error: "Target log entry not found in context"}.to_json
+      end
+
+      # Build context text for AI
+      context_lines = context_entries.map_with_index do |entry, index|
+        marker = index == 5 ? ">>> LINE 6 (TARGET): " : "    "
+        "#{marker}[#{entry.timestamp}] [#{entry.formatted_priority}] [#{entry.unit || "N/A"}] #{entry.message}"
+      end.join("\n")
+
+      prompt = "Please explain the error in the highlighted log entry of this context. Focus on what the error means, potential causes, and suggested solutions. Be concise and helpful."
+
+      # Call z.ai API
+      api_key = ENV["Z_AI_API_KEY"]?
+      unless api_key
+        env.response.content_type = "application/json"
+        env.response.status_code = 500
+        next {error: "Z_AI_API_KEY environment variable not set."}.to_json
+      end
+
+      headers = HTTP::Headers{
+        "Authorization"   => "Bearer #{api_key}",
+        "Content-Type"    => "application/json",
+        "Accept-Language" => "en-US,en",
+      }
+
+      z_ai_body = {
+        "model"    => "glm-4.5-flash",
+        "messages" => [
+          {"role" => "system", "content" => "You are a helpful AI assistant specializing in system log analysis. Provide clear, concise explanations of log errors with practical solutions."},
+          {"role" => "user", "content" => "#{prompt}\n\nLog Context:\n#{context_lines}"},
+        ],
+      }
+
+      uri = URI.parse("https://api.z.ai/api/paas/v4/chat/completions")
+      client = HTTP::Client.new(uri)
+      response = client.post(uri.path, headers, z_ai_body.to_json)
+
+      env.response.content_type = "application/json"
+      env.response.status_code = response.status_code
+      response.body
+    rescue ex : JSON::ParseException
+      env.response.content_type = "application/json"
+      env.response.status_code = 400
+      {error: "Invalid JSON in request body: #{ex.message}"}.to_json
+    rescue ex : Exception
+      env.response.content_type = "application/json"
+      env.response.status_code = 500
+      Log.error(exception: ex) { "Error calling z.ai API: #{ex.message}" }
+      {error: "Error processing AI request: #{ex.message}"}.to_json
     end
   end
 end

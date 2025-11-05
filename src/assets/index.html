@@ -68,6 +68,17 @@
             >
           </h1>
           <span>A simple log viewer</span>
+          <details style="margin-top: 0.5rem; font-size: 0.85em;">
+            <summary style="cursor: pointer; color: var(--pico-muted-color);">🤖 AI Features</summary>
+            <div style="text-align: left; margin-top: 0.5rem; padding: 0.5rem; background: var(--pico-background-color, #fff); border: 1px solid var(--pico-muted-border-color); border-radius: var(--border-radius);">
+              <p style="margin: 0; font-size: 0.9em;">
+                Get AI-powered log explanations with <a href="https://z.ai" target="_blank" style="color: var(--pico-primary);">z.ai</a> API.
+              </p>
+              <p style="margin: 0.5rem 0 0 0; font-size: 0.85em; color: var(--pico-muted-color);">
+                Set <code>Z_AI_API_KEY</code> environment variable to enable.
+              </p>
+            </div>
+          </details>
         </hgroup>
         <hr />
         <div class="search-container-wrapper">
@@ -472,6 +483,51 @@
         </footer>
       </article>
     </dialog>
+
+    <!-- AI Explanation Dialog -->
+    <dialog id="ai-explanation-dialog">
+      <article>
+        <header>
+          <a
+            href="#close"
+            aria-label="Close"
+            class="close"
+            onclick="this.closest('dialog').close(); return false;"
+          ></a>
+          AI Log Explanation
+        </header>
+        <!-- Target Log Entry Section -->
+        <div id="target-log-entry" style="margin: 1rem 0; padding: 1rem; background-color: var(--pico-background-color, #fff); border: 1px solid var(--pico-muted-border-color, #e1e1e1); border-radius: var(--border-radius); font-family: 'Chivo Mono', monospace; font-size: 0.9em; word-break: break-word;">
+          <!-- Target log entry will be shown here -->
+        </div>
+        <div
+          id="ai-explanation-dialog-content"
+          style="max-height: 60vh; overflow-y: auto"
+        >
+          <!-- Content will be loaded here by JavaScript -->
+        </div>
+        <template id="ai-explanation-loading-template">
+          <div style="text-align: center; padding: 2em">
+            <span aria-busy="true">Getting AI explanation...</span>
+          </div>
+        </template>
+        <footer style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+          <button
+            id="copy-ai-explanation-btn"
+            class="secondary"
+            onclick="copyAIExplanation()"
+            title="Copy AI explanation to clipboard"
+          >
+            <span class="material-icons" style="vertical-align: middle">content_copy</span>
+            Copy
+          </button>
+          <form method="dialog" style="margin-bottom: 0">
+            <button type="submit" class="secondary">Close</button>
+          </form>
+        </footer>
+      </article>
+    </dialog>
+
     <script>
       // --- Shared Configuration for Filters ---
       const SHARED_FILTER_CONFIGS = [
@@ -846,6 +902,145 @@
           htmx.trigger(hostnameFilterInput, "immediateHostnameFilterUpdate");
         }
         return false; // Prevent default anchor link behavior
+      }
+
+      // --- AI Explanation Functions ---
+      let currentAIExplanation = "";
+      let currentTargetLogEntry = "";
+
+      // Simple markdown-to-HTML converter
+      function markdownToHTML(text) {
+        if (!text) return '';
+        return text
+          // Headers
+          .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+          .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+          .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+          // Bold
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          // Italic
+          .replace(/\*(.+?)\*/g, '<em>$1</em>')
+          // Code blocks
+          .replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>')
+          // Inline code
+          .replace(/`([^`]+)`/g, '<code>$1</code>')
+          // Lists
+          .replace(/^\* (.+)$/gim, '<li>$1</li>')
+          .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+          // Line breaks - do this last to avoid breaking other markup
+          .replace(/\n\n/g, '</p><p>')
+          .replace(/\n/g, '<br>')
+          // Wrap in paragraphs if not already wrapped
+          .replace(/^(?!<h[1-6]|<pre|<ul|<p)/, '<p>')
+          .replace(/(?<!<\/[h1-6p]|pre|ul>)$/, '</p>');
+      }
+
+      function askAIExplanation(cursor) {
+        const dialog = document.getElementById("ai-explanation-dialog");
+        const content = document.getElementById("ai-explanation-dialog-content");
+        const targetEntryDiv = document.getElementById("target-log-entry");
+        const loadingTemplate = document.getElementById("ai-explanation-loading-template");
+
+        // Show loading state
+        content.innerHTML = loadingTemplate.innerHTML;
+        targetEntryDiv.innerHTML = "Loading log entry...";
+        dialog.showModal();
+
+        // First, get the target log entry details
+        fetch(`/details?${new URLSearchParams({cursor: cursor})}`)
+          .then((response) => response.text())
+          .then((html) => {
+            // Extract the message from the details page
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            // Look for the message content in the details
+            const messageElement = tempDiv.querySelector('pre');
+            if (messageElement && messageElement.textContent.trim()) {
+              try {
+                // Parse the JSON and extract just the MESSAGE field
+                const logData = JSON.parse(messageElement.textContent.trim());
+                const message = logData.MESSAGE || messageElement.textContent.trim(); // Fallback to full text if no MESSAGE field
+
+                currentTargetLogEntry = message;
+                // Truncate very long messages
+                const truncatedMessage = currentTargetLogEntry.length > 300
+                  ? currentTargetLogEntry.substring(0, 300) + "..."
+                  : currentTargetLogEntry;
+                targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem; word-break: break-word; line-height: 1.4;">${truncatedMessage}</div>`;
+              } catch (e) {
+                // If JSON parsing fails, use the full text as fallback
+                currentTargetLogEntry = messageElement.textContent.trim();
+                const truncatedMessage = currentTargetLogEntry.length > 300
+                  ? currentTargetLogEntry.substring(0, 300) + "..."
+                  : currentTargetLogEntry;
+                targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem; word-break: break-word; line-height: 1.4;">${truncatedMessage}</div>`;
+              }
+            } else {
+              // No log entry found or empty content
+              currentTargetLogEntry = "";
+              targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem; color: #666;">Unable to load log message</div>`;
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching log details:", error);
+            currentTargetLogEntry = "";
+            targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem; color: #666;">Error loading log message</div>`;
+          });
+
+        // Call the AI endpoint
+        fetch("/ask-ai", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ cursor: cursor }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.error) {
+              content.innerHTML = `<p class="error" style="padding: 1em;">Error: ${data.error}</p>`;
+            } else if (data.choices && data.choices[0] && data.choices[0].message) {
+              currentAIExplanation = data.choices[0].message.content;
+              console.log("AI Response:", currentAIExplanation); // Debug log
+              // Convert markdown to HTML
+              const htmlContent = markdownToHTML(currentAIExplanation);
+              console.log("HTML Content:", htmlContent); // Debug log
+              content.innerHTML = `<div style="line-height: 1.6;">${htmlContent}</div>`;
+            } else {
+              content.innerHTML = `<p class="error" style="padding: 1em;">Unexpected response format from AI service.</p>`;
+            }
+          })
+          .catch((error) => {
+            console.error("Error calling AI:", error);
+            content.innerHTML = `<p class="error" style="padding: 1em;">Failed to get AI explanation: ${error.message}</p>`;
+          });
+      }
+
+      function copyAIExplanation() {
+        if (!currentAIExplanation) {
+          alert("No AI explanation to copy.");
+          return;
+        }
+
+        if (window.isSecureContext && navigator.clipboard) {
+          navigator.clipboard
+            .writeText(currentAIExplanation)
+            .then(() => {
+              // Show brief success feedback
+              const copyBtn = document.getElementById("copy-ai-explanation-btn");
+              const originalText = copyBtn.innerHTML;
+              copyBtn.innerHTML = '<span class="material-icons" style="vertical-align: middle">check</span> Copied!';
+              setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+              }, 2000);
+            })
+            .catch((err) => {
+              alert("Failed to copy AI explanation: " + err.message);
+            });
+        } else {
+          // Fallback for non-secure contexts
+          alert("AI Explanation (copy manually):\n\n" + currentAIExplanation);
+        }
       }
     </script>
   </body>

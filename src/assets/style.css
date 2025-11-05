@@ -310,3 +310,51 @@ h1 {
     border-left: solid 5px greenyellow !important;
     font-weight: bold;
 }
+
+/* AI Explanation Dialog Styles */
+#ai-explanation-dialog {
+    max-width: 800px;
+    width: 90vw;
+}
+
+#ai-explanation-dialog-content {
+    padding: 1em;
+    line-height: 1.6;
+}
+
+#copy-ai-explanation-btn {
+    transition: background-color 0.2s ease;
+    height: 2.125rem; /* Match PicoCSS secondary button height */
+    padding: 0 1rem;
+    min-width: auto;
+}
+
+#copy-ai-explanation-btn:hover {
+    background-color: var(--pico-primary-hover-background);
+}
+
+/* Ensure consistent height for all buttons in AI dialog footer */
+#ai-explanation-dialog footer button {
+    height: 2.125rem; /* Match PicoCSS button height */
+    padding: 0 1rem;
+    min-width: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+/* Specific fix for Copy button with icon - don't use !important to avoid breaking layout */
+#copy-ai-explanation-btn {
+    line-height: 1; /* Prevent icon from affecting height */
+}
+
+#copy-ai-explanation-btn .material-icons {
+    font-size: 1rem; /* Control icon size */
+    line-height: 1;
+}
+
+/* AI-specific loading spinner */
+#ai-explanation-dialog-content span[aria-busy="true"] {
+    color: var(--pico-primary);
+}

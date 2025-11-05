@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(crystal:*)",
+      "Bash(shards:*)",
+      "Bash(ameba:*)",
+      "Bash(make:*)",
+      "Bash(./bin/grafito:*)",
+      "Bash(timeout:*)",
+      "Bash(pkill:*)",
+      "Bash(journalctl:*)",
+      "Bash(systemctl:*)",
+      "Bash(curl:*)",
+      "Read(//tmp/**)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Read(//usr/lib/crystal/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

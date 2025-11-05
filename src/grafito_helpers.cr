@@ -239,6 +239,20 @@ module Grafito
                       end
                     end
                   end
+                  # AI Explanation button (only shown if AI is enabled)
+                  if Grafito.ai_enabled?
+                    td(class: "hover-action-cell", style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
+                      button({
+                        "class"   => "round-button",
+                        "title"   => "Ask AI to explain this log entry",
+                        "onclick" => "askAIExplanation('#{entry_cursor}')",
+                      }) do
+                        span(class: "material-icons", style: "vertical-align: middle;") do
+                          text "psychology"
+                        end
+                      end
+                    end
+                  end
                 end
               end
             end

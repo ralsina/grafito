@@ -132,6 +132,16 @@ def main
   auth_user = ENV["GRAFITO_AUTH_USER"]?
   auth_pass = ENV["GRAFITO_AUTH_PASS"]?
 
+  # Check if Z.AI API key is available for AI features
+  z_ai_api_key = ENV["Z_AI_API_KEY"]?
+  if z_ai_api_key
+    Grafito::Log.info { "Z.AI API key configured - AI features enabled" }
+    Grafito.ai_enabled = true
+  else
+    Grafito::Log.info { "Z.AI API key not configured - AI features disabled" }
+    Grafito.ai_enabled = false
+  end
+
   # Both username and password are set, enable basic authentication
   if auth_user && auth_pass
     Grafito::Log.info { "Basic Authentication enabled. User: #{auth_user}" }

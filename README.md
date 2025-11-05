@@ -10,9 +10,29 @@ Key features include:
 
 * Real-time log viewing (with an optional auto-refresh).
 * Filtering by unit, tag, time range, and a general search query.
+* **AI-powered log explanations** - Get intelligent analysis of log errors using LLMs (requires API key).
 * A dynamic user interface powered by HTMX for a smooth experience.
 * Embedded assets (HTML, favicon) for easy deployment as a single binary.
 * Built with the Crystal programming language and the Kemal web framework.
+
+### AI Log Analysis
+
+Grafito includes an optional AI feature that provides intelligent explanations for log entries. When configured, you'll see a psychology icon (🧠) next to each log entry that allows you to get AI-powered analysis.
+
+**To enable AI features:**
+
+1. **Get an API key** from [z.ai](https://z.ai) - they offer affordable LLM access with low costs.
+2. **Set the environment variable** before running Grafito:
+   ```bash
+   export Z_AI_API_KEY="your_api_key_here"
+   ./bin/grafito
+   ```
+3. **Or add it to your systemd service**:
+   ```ini
+   Environment="Z_AI_API_KEY=your_api_key_here"
+   ```
+
+The AI feature sends ±5 lines of log context around the selected entry to analyze patterns, suggest solutions, and explain complex errors. The feature is completely optional - Grafito works perfectly without it, and the AI button only appears when the API key is configured.
 
 
 ![image](https://github.com/user-attachments/assets/1042269f-3c34-46d3-ad45-c9a0ee250c82)

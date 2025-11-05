@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.1] - 2025-11-05
+
+### 📚 Documentation
+
+- Site
+
 ## [0.12.0] - 2025-09-19
 
 ### 🚀 Features
 
 - Configurable log level
+
+### 💼 Other
+
+- Release v0.12.0
 
 ## [0.11.0] - 2025-09-19
 
