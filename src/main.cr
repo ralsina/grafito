@@ -65,6 +65,7 @@ Options:
   -b ADDRESS, --bind=ADDRESS    Address to bind to [default: 127.0.0.1].
   -U UNITS, --units=UNITS       Comma-separated list of systemd units to show (restricts access).
   --log-level=LEVEL             Set log level (debug, info, warn, error, fatal) [default: info].
+  -t TIMEZONE, --timezone=TIMEZONE  Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
   -h --help                     Show this screen.
   --version                     Show version.
 
@@ -72,6 +73,7 @@ Environment variables:
   GRAFITO_AUTH_USER             Username for basic authentication (if set, GRAFITO_AUTH_PASS must also be set).
   GRAFITO_AUTH_PASS             Password for basic authentication (if set, GRAFITO_AUTH_USER must also be set).
   LOG_LEVEL                     Log level (debug, info, warn, error, fatal) [default: info].
+  GRAFITO_TIMEZONE              Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
 DOCOPT
 
 # ## The Assets class
@@ -120,6 +122,11 @@ def main
     Grafito.allowed_units = units
     Grafito::Log.info { "Restricting to units: #{units.join(", ")}" }
   end
+
+  # Parse timezone configuration
+  timezone = args["--timezone"]?.as(String?) || ENV["GRAFITO_TIMEZONE"]? || "local"
+  Grafito.timezone = timezone
+  Grafito::Log.info { "Using timezone: #{timezone}" }
 
   # Log at debug level. Probably worth making it configurable.
 

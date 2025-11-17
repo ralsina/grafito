@@ -163,8 +163,8 @@ module Grafito
               tr(class: row_classes.join(" ")) do
                 if show_timestamp
                   td(style: "white-space: nowrap; min-width: 14ch;") do
-                    # Using a more compact timestamp format: MM-DD HH:MM:SS
-                    text entry.timestamp.to_s("%m-%d %H:%M:%S")
+                    # Using timezone-aware timestamp format: MM-DD HH:MM:SS
+                    text entry.formatted_timestamp_with_timezone("%m-%d %H:%M:%S")
                   end
                 end
                 if show_hostname

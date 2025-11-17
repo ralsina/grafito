@@ -152,6 +152,46 @@ class Journalctl
       @timestamp.to_s(format) # @timestamp is now a Time object
     end
 
+    # Converts the timestamp to a formatted string using the configured timezone
+    def formatted_timestamp_with_timezone(format = "%m-%d %H:%M:%S") : String
+      time_in_timezone = convert_to_timezone(@timestamp)
+      time_in_timezone.to_s(format)
+    end
+
+    # Converts a Time object to the configured timezone
+    private def convert_to_timezone(time : Time) : Time
+      timezone_config = Grafito.timezone
+
+      case timezone_config.downcase
+      when "local"
+        time.to_local
+      when "utc"
+        time.to_utc
+      else
+        # Try to parse as timezone name (IANA) or GMT offset
+        begin
+          # Try IANA timezone name first
+          Time.local(time.year, time.month, time.day, time.hour, time.minute, time.second, nanosecond: time.nanosecond, location: Time::Location.load(timezone_config))
+        rescue ex
+          # Try GMT offset format (e.g., GMT+5, GMT-3:30)
+          if timezone_config.match(/^GMT([+-]\d+)(?::(\d+))?$/i)
+            sign = $1[0]
+            hours = $1[1..].to_i
+            minutes = $2?.try(&.to_i) || 0
+
+            offset_seconds = (hours * 3600 + minutes * 60)
+            offset_seconds = -offset_seconds if sign == '-'
+
+            time + offset_seconds.seconds
+          else
+            # Fallback to local time if timezone is invalid
+            Grafito::Log.warn { "Invalid timezone '#{timezone_config}', falling back to local time" }
+            time.to_local
+          end
+        end
+      end
+    end
+
     # Converts the numeric priority string to its textual representation.
     def formatted_priority : String
       case self.priority # Use the getter to ensure defaulting/cleaning

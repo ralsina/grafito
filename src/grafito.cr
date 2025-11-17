@@ -30,6 +30,9 @@ module Grafito
   # AI feature flag - when true, AI features are enabled
   class_property? ai_enabled : Bool = false
 
+  # Timezone configuration for timestamp display
+  class_property timezone : String = "local"
+
   # ## The `/logs` endpoint
   #
   # Exposes the Journalctl wrapper via a REST API.

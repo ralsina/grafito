@@ -14,7 +14,8 @@
       "Read(//tmp/**)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Read(//usr/lib/crystal/**)"
+      "Read(//usr/lib/crystal/**)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []
