@@ -10,6 +10,7 @@ Key features include:
 
 * Real-time log viewing (with an optional auto-refresh).
 * Filtering by unit, tag, time range, and a general search query.
+* **Configurable timezone support** - Display timestamps in your local timezone or any timezone you prefer.
 * **AI-powered log explanations** - Get intelligent analysis of log errors using LLMs (requires API key).
 * A dynamic user interface powered by HTMX for a smooth experience.
 * Embedded assets (HTML, favicon) for easy deployment as a single binary.
@@ -34,6 +35,37 @@ Grafito includes an optional AI feature that provides intelligent explanations f
 
 The AI feature sends ±5 lines of log context around the selected entry to analyze patterns, suggest solutions, and explain complex errors. The feature is completely optional - Grafito works perfectly without it, and the AI button only appears when the API key is configured.
 
+### Timezone Configuration
+
+Grafito displays timestamps in your local timezone by default, but you can configure it to use any timezone you prefer. This solves the issue of having to mentally convert UTC timestamps to your local time.
+
+**To configure timezone:**
+
+1. **Command line option**:
+   ```bash
+   ./bin/grafito --timezone America/New_York
+   ./bin/grafito --timezone Europe/London
+   ./bin/grafito --timezone GMT+5
+   ./bin/grafito --timezone local  # Default behavior
+   ```
+
+2. **Environment variable**:
+   ```bash
+   export GRAFITO_TIMEZONE="America/New_York"
+   ./bin/grafito
+   ```
+
+3. **In systemd service**:
+   ```ini
+   Environment="GRAFITO_TIMEZONE=America/New_York"
+   ```
+
+**Supported timezone formats:**
+- **IANA timezone names**: `America/New_York`, `Europe/London`, `Asia/Tokyo`, etc.
+- **GMT offsets**: `GMT+5`, `GMT-3`, `GMT+5:30` (supports hours and minutes)
+- **Special values**: `local` (system timezone), `utc` (UTC timezone)
+
+By default, Grafito uses your system's local timezone, so most users won't need to configure anything unless they want to use a different timezone.
 
 ![image](https://github.com/user-attachments/assets/1042269f-3c34-46d3-ad45-c9a0ee250c82)
 
