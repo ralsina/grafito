@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.0] - 2025-11-17
+
+### 🚀 Features
+
+- Add configurable timezone support
+
 ## [0.13.0] - 2025-11-05
 
 ### 🚀 Features
 
 - AI-powered log analysis
+
+### 💼 Other
+
+- Release v0.13.0
 
 ## [0.12.1] - 2025-10-27
 
