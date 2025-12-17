@@ -2,15 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.14.0] - 2025-11-17
+## [0.14.0] - 2025-12-17
 
 ### 🚀 Features
 
 - Add configurable timezone support
 
-### 💼 Other
+### 🐛 Bug Fixes
 
-- Release v0.14.0
+- Crash on startup because of timezone
+
+### 📚 Documentation
+
+- Fix doc build
 
 ## [0.13.0] - 2025-11-05
 
