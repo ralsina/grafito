@@ -52,7 +52,8 @@
     }
 
     html {
-        background: linear-gradient(to right, var(--pico-background-color) 50%, #0b342d 50%);
+        background: linear-gradient(to right, var(--pico-background-color) 2.5%, #0b342d 2.5%);
+        background-size: 2000% 100%;
     }
 
     body {
@@ -217,132 +218,132 @@
 
 </div>
 
-<div id="section-1" class="grid">
-    <div class="doc" id="section-1">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-1" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">time</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># To access Journalctl::LogEntry</span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">faker</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">        </span><span class="c"># Add faker for dynamic message generation</span><span class="t">
-</span><span class="t">
-</span><span class="nk">module</span><span class="t"> </span><span class="nc">FakeJournalData</span><span class="t">
-</span><span class="t">  </span><span class="nc">Log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="nk">for</span><span class="t">(</span><span class="nk">self</span><span class="t">)</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">time</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-2"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># To access Journalctl::LogEntry</span><span class="t"></span>
+<span id="line-3"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">faker</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">        </span><span class="c"># Add faker for dynamic message generation</span><span class="t"></span>
+<span id="line-4"></span><span class="t"></span>
+<span id="line-5"></span><span class="nk">module</span><span class="t"> </span><span class="nc">FakeJournalData</span><span class="t"></span>
+<span id="line-6"></span><span class="t">  </span><span class="nc">Log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="nk">for</span><span class="t">(</span><span class="nk">self</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-2" class="grid">
-    <div class="doc" id="section-2">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-2" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>A list of sample unit names for generating fake data.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nc">SAMPLE_UNIT_NAMES</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t">
-</span><span class="t">    </span><span class="ls">&quot;</span><span class="ls">sshd.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">nginx.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">systemd-journald.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="ls">&quot;</span><span class="ls">cron.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">myapp.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">postgresql.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="ls">&quot;</span><span class="ls">redis-server.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">docker.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"> </span><span class="c"># nil to simulate entries without a unit</span><span class="t">
-</span><span class="t">  </span><span class="t">]</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nc">SAMPLE_UNIT_NAMES</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="ls">&quot;</span><span class="ls">sshd.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">nginx.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">systemd-journald.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="ls">&quot;</span><span class="ls">cron.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">myapp.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">postgresql.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="ls">&quot;</span><span class="ls">redis-server.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">docker.service</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"> </span><span class="c"># nil to simulate entries without a unit</span><span class="t"></span>
+<span id="line-5"></span><span class="t">  </span><span class="t">]</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-3" class="grid">
-    <div class="doc" id="section-3">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-3" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>A list of sample container names.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nc">SAMPLE_CONTAINER_NAMES</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t">
-</span><span class="t">    </span><span class="ls">&quot;</span><span class="ls">webapp_prod_1</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">api_gateway_alpha</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">worker_beta_3</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"> </span><span class="c"># nil for non-containerized logs</span><span class="t">
-</span><span class="t">  </span><span class="t">]</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nc">SAMPLE_CONTAINER_NAMES</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="ls">&quot;</span><span class="ls">webapp_prod_1</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">api_gateway_alpha</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">worker_beta_3</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"> </span><span class="c"># nil for non-containerized logs</span><span class="t"></span>
+<span id="line-3"></span><span class="t">  </span><span class="t">]</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-4" class="grid">
-    <div class="doc" id="section-4">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-4" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>A list of sample hostnames.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nc">SAMPLE_HOSTNAMES</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t">
-</span><span class="t">    </span><span class="ls">&quot;</span><span class="ls">server-alpha</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">server-beta</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">server-gamma</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">  </span><span class="t">]</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nc">SAMPLE_HOSTNAMES</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="ls">&quot;</span><span class="ls">server-alpha</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">server-beta</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">server-gamma</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-3"></span><span class="t">  </span><span class="t">]</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-5" class="grid">
-    <div class="doc" id="section-5">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-5" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Parses a time string similar to how journalctl might interpret it.
 Handles just what we need.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">parse_time_option</span><span class="t">(</span><span class="t">time_str</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="t">relative_to</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Time</span><span class="t">.</span><span class="t">utc</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Time</span><span class="t">?</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">parse_time_option</span><span class="t">(</span><span class="t">time_str</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="t">relative_to</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Time</span><span class="t">.</span><span class="t">utc</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Time</span><span class="t">?</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-6" class="grid">
-    <div class="doc" id="section-6">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-6" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Handle relative offsets: -Xm, -Xd, -Xh, -XM, -Xy
 m: minutes, d: days, h: hours, M: months, y: years</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="k">if</span><span class="t"> </span><span class="n">match</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">time_str</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="lsr">/</span><span class="lsr">^([+-]?)(</span><span class="lsr">\</span><span class="lsr">d+)(m|d|h|M|y)$</span><span class="lsr">/</span><span class="p">)</span><span class="t"> </span><span class="cs"># Specific units and cases</span><span class="t">
-</span><span class="t">      </span><span class="n">sign_char</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">match</span><span class="o">[</span><span class="lni">1</span><span class="o">]</span><span class="t">
-</span><span class="t">      </span><span class="n">value</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">match</span><span class="o">[</span><span class="lni">2</span><span class="o">]</span><span class="o">.</span><span class="n">to_i</span><span class="t">
-</span><span class="t">      </span><span class="n">unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">match</span><span class="o">[</span><span class="lni">3</span><span class="o">]</span><span class="t">
-</span><span class="t">      </span><span class="n">span</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="k">case</span><span class="t"> </span><span class="n">unit</span><span class="t">
-</span><span class="t">             </span><span class="k">when</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">m</span><span class="lsd">&quot;</span><span class="t"> </span><span class="k">then</span><span class="t"> </span><span class="nc">Time</span><span class="o">::</span><span class="nc">Span</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="lss">minutes</span><span class="p">:</span><span class="t"> </span><span class="n">value</span><span class="p">)</span><span class="t">
-</span><span class="t">             </span><span class="k">when</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">h</span><span class="lsd">&quot;</span><span class="t"> </span><span class="k">then</span><span class="t"> </span><span class="nc">Time</span><span class="o">::</span><span class="nc">Span</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="lss">hours</span><span class="p">:</span><span class="t"> </span><span class="n">value</span><span class="p">)</span><span class="t">
-</span><span class="t">             </span><span class="k">when</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">d</span><span class="lsd">&quot;</span><span class="t"> </span><span class="k">then</span><span class="t"> </span><span class="nc">Time</span><span class="o">::</span><span class="nc">Span</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="lss">days</span><span class="p">:</span><span class="t"> </span><span class="n">value</span><span class="p">)</span><span class="t">
-</span><span class="t">             </span><span class="k">when</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">M</span><span class="lsd">&quot;</span><span class="t"> </span><span class="k">then</span><span class="t"> </span><span class="nc">Time</span><span class="o">::</span><span class="nc">Span</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="lss">days</span><span class="p">:</span><span class="t"> </span><span class="n">value</span><span class="o">*</span><span class="lni">30</span><span class="p">)</span><span class="t">  </span><span class="cs"># Uppercase M for months</span><span class="t">
-</span><span class="t">             </span><span class="k">when</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">y</span><span class="lsd">&quot;</span><span class="t"> </span><span class="k">then</span><span class="t"> </span><span class="nc">Time</span><span class="o">::</span><span class="nc">Span</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="lss">days</span><span class="p">:</span><span class="t"> </span><span class="n">value</span><span class="o">*</span><span class="lni">365</span><span class="p">)</span><span class="t"> </span><span class="cs"># y for years</span><span class="t">
-</span><span class="t">             </span><span class="k">else</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="k">if</span><span class="t"> </span><span class="n">match</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">time_str</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="lsr">/</span><span class="lsr">^([+-]?)(</span><span class="lsr">\</span><span class="lsr">d+)(m|d|h|M|y)$</span><span class="lsr">/</span><span class="p">)</span><span class="t"> </span><span class="cs"># Specific units and cases</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="n">sign_char</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">match</span><span class="o">[</span><span class="lni">1</span><span class="o">]</span><span class="t"></span>
+<span id="line-3"></span><span class="t">      </span><span class="n">value</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">match</span><span class="o">[</span><span class="lni">2</span><span class="o">]</span><span class="o">.</span><span class="n">to_i</span><span class="t"></span>
+<span id="line-4"></span><span class="t">      </span><span class="n">unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">match</span><span class="o">[</span><span class="lni">3</span><span class="o">]</span><span class="t"></span>
+<span id="line-5"></span><span class="t">      </span><span class="n">span</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="k">case</span><span class="t"> </span><span class="n">unit</span><span class="t"></span>
+<span id="line-6"></span><span class="t">             </span><span class="k">when</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">m</span><span class="lsd">&quot;</span><span class="t"> </span><span class="k">then</span><span class="t"> </span><span class="nc">Time</span><span class="o">::</span><span class="nc">Span</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="lss">minutes</span><span class="p">:</span><span class="t"> </span><span class="n">value</span><span class="p">)</span><span class="t"></span>
+<span id="line-7"></span><span class="t">             </span><span class="k">when</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">h</span><span class="lsd">&quot;</span><span class="t"> </span><span class="k">then</span><span class="t"> </span><span class="nc">Time</span><span class="o">::</span><span class="nc">Span</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="lss">hours</span><span class="p">:</span><span class="t"> </span><span class="n">value</span><span class="p">)</span><span class="t"></span>
+<span id="line-8"></span><span class="t">             </span><span class="k">when</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">d</span><span class="lsd">&quot;</span><span class="t"> </span><span class="k">then</span><span class="t"> </span><span class="nc">Time</span><span class="o">::</span><span class="nc">Span</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="lss">days</span><span class="p">:</span><span class="t"> </span><span class="n">value</span><span class="p">)</span><span class="t"></span>
+<span id="line-9"></span><span class="t">             </span><span class="k">when</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">M</span><span class="lsd">&quot;</span><span class="t"> </span><span class="k">then</span><span class="t"> </span><span class="nc">Time</span><span class="o">::</span><span class="nc">Span</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="lss">days</span><span class="p">:</span><span class="t"> </span><span class="n">value</span><span class="o">*</span><span class="lni">30</span><span class="p">)</span><span class="t">  </span><span class="cs"># Uppercase M for months</span><span class="t"></span>
+<span id="line-10"></span><span class="t">             </span><span class="k">when</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">y</span><span class="lsd">&quot;</span><span class="t"> </span><span class="k">then</span><span class="t"> </span><span class="nc">Time</span><span class="o">::</span><span class="nc">Span</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="lss">days</span><span class="p">:</span><span class="t"> </span><span class="n">value</span><span class="o">*</span><span class="lni">365</span><span class="p">)</span><span class="t"> </span><span class="cs"># y for years</span><span class="t"></span>
+<span id="line-11"></span><span class="t">             </span><span class="k">else</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-7" class="grid">
-    <div class="doc" id="section-7">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-7" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>This case should ideally not be reached if the regex is correct</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">               </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Unmatched unit &#39;</span><span class="lsi">#{</span><span class="t">unit</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; in relative time offset despite regex match.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
-</span><span class="t">               </span><span class="nk">return</span><span class="t"> </span><span class="l">nil</span><span class="t">
-</span><span class="t">             </span><span class="nk">end</span><span class="t">
-</span><span class="t">      </span><span class="t">(</span><span class="t">sign_char</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">(</span><span class="t">relative_to</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">span</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">(</span><span class="t">relative_to</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">span</span><span class="t">)</span><span class="t">
-</span><span class="t">    </span><span class="nk">else</span><span class="t">
-</span><span class="t">      </span><span class="l">nil</span><span class="t"> </span><span class="c"># Unparseable</span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span><span class="t">
-</span><span class="t">  </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">               </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Unmatched unit &#39;</span><span class="lsi">#{</span><span class="t">unit</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; in relative time offset despite regex match.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-2"></span><span class="t">               </span><span class="nk">return</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-3"></span><span class="t">             </span><span class="nk">end</span><span class="t"></span>
+<span id="line-4"></span><span class="t">      </span><span class="t">(</span><span class="t">sign_char</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">(</span><span class="t">relative_to</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">span</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">(</span><span class="t">relative_to</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">span</span><span class="t">)</span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-6"></span><span class="t">      </span><span class="l">nil</span><span class="t"> </span><span class="c"># Unparseable</span><span class="t"></span>
+<span id="line-7"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-8"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-8" class="grid">
-    <div class="doc" id="section-8">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-8" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Mimics the behavior of Journalctl.run_journalctl_and_parse by returning
 a fake list of log entries.</p>
@@ -354,190 +355,190 @@ An Array of Journalctl::LogEntry, filtered and sized according to parsed args.</
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fake_run_journalctl_and_parse</span><span class="t">(</span><span class="t">
-</span><span class="t">    </span><span class="t">journalctl_args</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">_log_context_message</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t">
-</span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t">
-</span><span class="t">    </span><span class="t">entries</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t">
-</span><span class="t">    </span><span class="t">current_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Time</span><span class="t">.</span><span class="t">local</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fake_run_journalctl_and_parse</span><span class="t">(</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">journalctl_args</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="t">_log_context_message</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-4"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="t">entries</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t"></span>
+<span id="line-6"></span><span class="t">    </span><span class="t">current_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Time</span><span class="t">.</span><span class="t">local</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-9" class="grid">
-    <div class="doc" id="section-9">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-9" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Parse relevant arguments</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">
-</span><span class="t">    </span><span class="t">target_unit</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">
-</span><span class="t">    </span><span class="t">target_n_entries</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">200</span><span class="t"> </span><span class="c"># Default, might be overridden by -n</span><span class="t">
-</span><span class="t">    </span><span class="t">reverse</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">false</span><span class="t">
-</span><span class="t">    </span><span class="t">include_tags</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="c"># For -t SYSLOG_IDENTIFIER</span><span class="t">
-</span><span class="t">    </span><span class="t">exclude_tags</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="c"># For -T SYSLOG_IDENTIFIER to exclude</span><span class="t">
-</span><span class="t">    </span><span class="t">cursor</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">      </span><span class="c"># For --cursor</span><span class="t">
-</span><span class="t">    </span><span class="t">since_time</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">
-</span><span class="t">    </span><span class="t">until_time</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">
-</span><span class="t">    </span><span class="t">query</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">           </span><span class="c"># For -g</span><span class="t">
-</span><span class="t">    </span><span class="t">target_hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"> </span><span class="c"># For --host</span><span class="t">
-</span><span class="t">
-</span><span class="t">    </span><span class="t">i</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">0</span><span class="t">
-</span><span class="t">    </span><span class="nk">while</span><span class="t"> </span><span class="t">i</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">.</span><span class="t">size</span><span class="t">
-</span><span class="t">      </span><span class="t">arg</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t">]</span><span class="t">
-</span><span class="t">      </span><span class="nk">case</span><span class="t"> </span><span class="t">arg</span><span class="t">
-</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-p</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">        </span><span class="t">priority</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t">.</span><span class="t">to_i?</span><span class="t">
-</span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t">
-</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-u</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--unit</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">        </span><span class="t">target_unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t">
-</span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t">
-</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">        </span><span class="t">target_n_entries</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t">rand</span><span class="t">(</span><span class="ln">50</span><span class="t">..</span><span class="ln">250</span><span class="t">)</span><span class="t">,</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t">.</span><span class="t">to_i</span><span class="t">]</span><span class="t">.</span><span class="t">min</span><span class="t">
-</span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t">
-</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-t</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># SYSLOG_IDENTIFIER to include</span><span class="t">
-</span><span class="t">        </span><span class="t">include_tags</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t">
-</span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t">
-</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-T</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># SYSLOG_IDENTIFIER to exclude</span><span class="t">
-</span><span class="t">        </span><span class="t">exclude_tags</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t">
-</span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t">
-</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">        </span><span class="t">cursor</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t">
-</span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t">
-</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-S</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--since</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">        </span><span class="t">since_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t">
-</span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t">
-</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--until</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">        </span><span class="t">until_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t">
-</span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t">
-</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-g</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Grep query</span><span class="t">
-</span><span class="t">        </span><span class="t">query</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t">
-</span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t">
-</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-r</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--reverse</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">        </span><span class="t">reverse</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">
-</span><span class="t">      </span><span class="nk">else</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">target_unit</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="t">target_n_entries</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">200</span><span class="t"> </span><span class="c"># Default, might be overridden by -n</span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="t">reverse</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">false</span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="t">include_tags</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="c"># For -t SYSLOG_IDENTIFIER</span><span class="t"></span>
+<span id="line-6"></span><span class="t">    </span><span class="t">exclude_tags</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="c"># For -T SYSLOG_IDENTIFIER to exclude</span><span class="t"></span>
+<span id="line-7"></span><span class="t">    </span><span class="t">cursor</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">      </span><span class="c"># For --cursor</span><span class="t"></span>
+<span id="line-8"></span><span class="t">    </span><span class="t">since_time</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-9"></span><span class="t">    </span><span class="t">until_time</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-10"></span><span class="t">    </span><span class="t">query</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">           </span><span class="c"># For -g</span><span class="t"></span>
+<span id="line-11"></span><span class="t">    </span><span class="t">target_hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"> </span><span class="c"># For --host</span><span class="t"></span>
+<span id="line-12"></span><span class="t"></span>
+<span id="line-13"></span><span class="t">    </span><span class="t">i</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">0</span><span class="t"></span>
+<span id="line-14"></span><span class="t">    </span><span class="nk">while</span><span class="t"> </span><span class="t">i</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">.</span><span class="t">size</span><span class="t"></span>
+<span id="line-15"></span><span class="t">      </span><span class="t">arg</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t">]</span><span class="t"></span>
+<span id="line-16"></span><span class="t">      </span><span class="nk">case</span><span class="t"> </span><span class="t">arg</span><span class="t"></span>
+<span id="line-17"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-p</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-18"></span><span class="t">        </span><span class="t">priority</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t">.</span><span class="t">to_i?</span><span class="t"></span>
+<span id="line-19"></span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t"></span>
+<span id="line-20"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-u</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--unit</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-21"></span><span class="t">        </span><span class="t">target_unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t"></span>
+<span id="line-22"></span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t"></span>
+<span id="line-23"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-24"></span><span class="t">        </span><span class="t">target_n_entries</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t">rand</span><span class="t">(</span><span class="ln">50</span><span class="t">..</span><span class="ln">250</span><span class="t">)</span><span class="t">,</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t">.</span><span class="t">to_i</span><span class="t">]</span><span class="t">.</span><span class="t">min</span><span class="t"></span>
+<span id="line-25"></span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t"></span>
+<span id="line-26"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-t</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># SYSLOG_IDENTIFIER to include</span><span class="t"></span>
+<span id="line-27"></span><span class="t">        </span><span class="t">include_tags</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t"></span>
+<span id="line-28"></span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t"></span>
+<span id="line-29"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-T</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># SYSLOG_IDENTIFIER to exclude</span><span class="t"></span>
+<span id="line-30"></span><span class="t">        </span><span class="t">exclude_tags</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t"></span>
+<span id="line-31"></span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t"></span>
+<span id="line-32"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-33"></span><span class="t">        </span><span class="t">cursor</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t"></span>
+<span id="line-34"></span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t"></span>
+<span id="line-35"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-S</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--since</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-36"></span><span class="t">        </span><span class="t">since_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t"></span>
+<span id="line-37"></span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t"></span>
+<span id="line-38"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--until</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-39"></span><span class="t">        </span><span class="t">until_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t"></span>
+<span id="line-40"></span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t"></span>
+<span id="line-41"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-g</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Grep query</span><span class="t"></span>
+<span id="line-42"></span><span class="t">        </span><span class="t">query</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">journalctl_args</span><span class="t">[</span><span class="t">i</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">1</span><span class="t">]</span><span class="t"></span>
+<span id="line-43"></span><span class="t">        </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t"></span>
+<span id="line-44"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">-r</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">--reverse</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-45"></span><span class="t">        </span><span class="t">reverse</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t"></span>
+<span id="line-46"></span><span class="t">      </span><span class="nk">else</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-10" class="grid">
-    <div class="doc" id="section-10">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-10" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>This argument was not a recognized flag. Check if it's a _HOSTNAME filter.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">arg</span><span class="t">.</span><span class="t">starts_with?</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">_HOSTNAME=</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
-</span><span class="t">          </span><span class="t">parts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">arg</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="lsc">&#39;=&#39;</span><span class="t">,</span><span class="t"> </span><span class="ln">2</span><span class="t">)</span><span class="t">
-</span><span class="t">          </span><span class="nk">if</span><span class="t"> </span><span class="t">parts</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ln">2</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">parts</span><span class="t">[</span><span class="ln">1</span><span class="t">]</span><span class="t">.</span><span class="t">empty?</span><span class="t">
-</span><span class="t">            </span><span class="t">target_hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parts</span><span class="t">[</span><span class="ln">1</span><span class="t">]</span><span class="t">
-</span><span class="t">          </span><span class="nk">end</span><span class="t">
-</span><span class="t">        </span><span class="nk">end</span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span><span class="t">
-</span><span class="t">      </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">arg</span><span class="t">.</span><span class="t">starts_with?</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">_HOSTNAME=</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"></span>
+<span id="line-2"></span><span class="t">          </span><span class="t">parts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">arg</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="lsc">&#39;=&#39;</span><span class="t">,</span><span class="t"> </span><span class="ln">2</span><span class="t">)</span><span class="t"></span>
+<span id="line-3"></span><span class="t">          </span><span class="nk">if</span><span class="t"> </span><span class="t">parts</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ln">2</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">parts</span><span class="t">[</span><span class="ln">1</span><span class="t">]</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-4"></span><span class="t">            </span><span class="t">target_hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parts</span><span class="t">[</span><span class="ln">1</span><span class="t">]</span><span class="t"></span>
+<span id="line-5"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-6"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-7"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-8"></span><span class="t">      </span><span class="t">i</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t"></span>
+<span id="line-9"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-11" class="grid">
-    <div class="doc" id="section-11">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-11" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Determine time window for log generation
 Default end_time is current_time (now)</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">end_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">until_time</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">parse_time_option</span><span class="t">(</span><span class="t">until_time</span><span class="t">,</span><span class="t"> </span><span class="t">current_time</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">current_time</span><span class="t">
-</span><span class="t">    </span><span class="t">end_time</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">current_time</span><span class="t"> </span><span class="c"># Ensure end_time is not nil</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">end_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">until_time</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">parse_time_option</span><span class="t">(</span><span class="t">until_time</span><span class="t">,</span><span class="t"> </span><span class="t">current_time</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">current_time</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">end_time</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">current_time</span><span class="t"> </span><span class="c"># Ensure end_time is not nil</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-12" class="grid">
-    <div class="doc" id="section-12">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-12" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Default start_time is 2 hours before end_time</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">default_start_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">end_time</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="ln">2</span><span class="t">.</span><span class="t">hours</span><span class="t">
-</span><span class="t">    </span><span class="t">start_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">since_time</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">parse_time_option</span><span class="t">(</span><span class="t">since_time</span><span class="t">,</span><span class="t"> </span><span class="t">current_time</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">default_start_time</span><span class="t">
-</span><span class="t">    </span><span class="t">start_time</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">default_start_time</span><span class="t"> </span><span class="c"># Ensure start_time is not nil</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">default_start_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">end_time</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="ln">2</span><span class="t">.</span><span class="t">hours</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">start_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">since_time</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">parse_time_option</span><span class="t">(</span><span class="t">since_time</span><span class="t">,</span><span class="t"> </span><span class="t">current_time</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">default_start_time</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="t">start_time</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">default_start_time</span><span class="t"> </span><span class="c"># Ensure start_time is not nil</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-13" class="grid">
-    <div class="doc" id="section-13">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-13" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Ensure start_time is not after end_time</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">start_time</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="t">end_time</span><span class="t">
-</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Since time &#39;</span><span class="lsi">#{</span><span class="t">since_time</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; is after until time &#39;</span><span class="lsi">#{</span><span class="t">until_time</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39;. Using until_time as both start and end.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
-</span><span class="t">      </span><span class="t">start_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">end_time</span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">start_time</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="t">end_time</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Since time &#39;</span><span class="lsi">#{</span><span class="t">since_time</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39; is after until time &#39;</span><span class="lsi">#{</span><span class="t">until_time</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39;. Using until_time as both start and end.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-3"></span><span class="t">      </span><span class="t">start_time</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">end_time</span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-14" class="grid">
-    <div class="doc" id="section-14">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-14" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>We make a number of attempts to create entries that match what we want so the UI
 is coherent with what we provide.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">max_attempts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">target_n_entries</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="ln">10</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">50</span><span class="t"> </span><span class="c"># Safety break for the generation loop</span><span class="t">
-</span><span class="t">    </span><span class="t">attempts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">0</span><span class="t">
-</span><span class="t">
-</span><span class="t">    </span><span class="nk">while</span><span class="t"> </span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="t">target_n_entries</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">attempts</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="t">max_attempts</span><span class="t">
-</span><span class="t">      </span><span class="t">attempts</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">max_attempts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">target_n_entries</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="ln">10</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ln">50</span><span class="t"> </span><span class="c"># Safety break for the generation loop</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">attempts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">0</span><span class="t"></span>
+<span id="line-3"></span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="nk">while</span><span class="t"> </span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="t">target_n_entries</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">attempts</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="t">max_attempts</span><span class="t"></span>
+<span id="line-5"></span><span class="t">      </span><span class="t">attempts</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-15" class="grid">
-    <div class="doc" id="section-15">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-15" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Generate timestamp within the determined range</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">start_unix_ms</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">start_time</span><span class="t">.</span><span class="t">to_unix_ms</span><span class="t">
-</span><span class="t">      </span><span class="t">end_unix_ms</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">end_time</span><span class="t">.</span><span class="t">to_unix_ms</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">start_unix_ms</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">start_time</span><span class="t">.</span><span class="t">to_unix_ms</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="t">end_unix_ms</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">end_time</span><span class="t">.</span><span class="t">to_unix_ms</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-16" class="grid">
-    <div class="doc" id="section-16">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-16" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Ensure range is valid for rand</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">random_unix_ms</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">start_unix_ms</span><span class="t"> </span><span class="o">&lt;=</span><span class="t"> </span><span class="t">end_unix_ms</span><span class="t">)</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="t">start_unix_ms</span><span class="t">..</span><span class="t">end_unix_ms</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">start_unix_ms</span><span class="t">
-</span><span class="t">      </span><span class="t">timestamp</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Time</span><span class="t">.</span><span class="t">unix_ms</span><span class="t">(</span><span class="t">random_unix_ms</span><span class="t">)</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">random_unix_ms</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">start_unix_ms</span><span class="t"> </span><span class="o">&lt;=</span><span class="t"> </span><span class="t">end_unix_ms</span><span class="t">)</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="t">start_unix_ms</span><span class="t">..</span><span class="t">end_unix_ms</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">start_unix_ms</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="t">timestamp</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Time</span><span class="t">.</span><span class="t">unix_ms</span><span class="t">(</span><span class="t">random_unix_ms</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-17" class="grid">
-    <div class="doc" id="section-17">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-17" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Determine hostname for this entry
 If a target_hostname is specified, all generated entries must match it.
@@ -545,121 +546,121 @@ Otherwise, pick a random one from the sample list.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="n">current_hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">target_hostname</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="nc">SAMPLE_HOSTNAMES</span><span class="o">.</span><span class="n">sample</span><span class="t">
-</span><span class="t">
-</span><span class="t">      </span><span class="n">raw_priority_val</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">priority</span><span class="t"> </span><span class="p">?</span><span class="t"> </span><span class="nb">rand</span><span class="p">(</span><span class="lni">0</span><span class="o">..</span><span class="n">priority</span><span class="p">)</span><span class="o">.</span><span class="n">to_s</span><span class="t"> </span><span class="p">:</span><span class="t"> </span><span class="nb">rand</span><span class="p">(</span><span class="lni">0</span><span class="o">..</span><span class="lni">7</span><span class="p">)</span><span class="o">.</span><span class="n">to_s</span><span class="t">
-</span><span class="t">
-</span><span class="t">      </span><span class="n">current_internal_unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">target_unit</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="nc">SAMPLE_UNIT_NAMES</span><span class="o">.</span><span class="n">sample</span><span class="t">                                                                                                </span><span class="cs"># Corrected: Use SAMPLE_UNIT_NAMES</span><span class="t">
-</span><span class="t">      </span><span class="n">syslog_identifier</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">current_internal_unit_name</span><span class="o">.</span><span class="n">nil?</span><span class="t"> </span><span class="p">?</span><span class="t"> </span><span class="p">(</span><span class="n">current_hostname</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">kernel_host</span><span class="lsd">&quot;</span><span class="t"> </span><span class="p">?</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">kernel</span><span class="lsd">&quot;</span><span class="t"> </span><span class="p">:</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">system</span><span class="lsd">&quot;</span><span class="p">)</span><span class="t"> </span><span class="p">:</span><span class="t"> </span><span class="n">current_internal_unit_name</span><span class="o">.</span><span class="n">gsub</span><span class="p">(</span><span class="lsr">/</span><span class="lsr">\</span><span class="lsr">.service$</span><span class="lsr">/</span><span class="p">,</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">&quot;</span><span class="p">)</span><span class="t"> </span><span class="cs"># A bit more variety</span><span class="t">
-</span><span class="t">      </span><span class="n">message_raw</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Faker</span><span class="o">::</span><span class="nc">Hacker</span><span class="o">.</span><span class="n">say_something_smart</span><span class="t">
-</span><span class="t">      </span><span class="n">container_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">SAMPLE_CONTAINER_NAMES</span><span class="o">.</span><span class="n">sample</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="n">current_hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">target_hostname</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="nc">SAMPLE_HOSTNAMES</span><span class="o">.</span><span class="n">sample</span><span class="t"></span>
+<span id="line-2"></span><span class="t"></span>
+<span id="line-3"></span><span class="t">      </span><span class="n">raw_priority_val</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">priority</span><span class="t"> </span><span class="p">?</span><span class="t"> </span><span class="nb">rand</span><span class="p">(</span><span class="lni">0</span><span class="o">..</span><span class="n">priority</span><span class="p">)</span><span class="o">.</span><span class="n">to_s</span><span class="t"> </span><span class="p">:</span><span class="t"> </span><span class="nb">rand</span><span class="p">(</span><span class="lni">0</span><span class="o">..</span><span class="lni">7</span><span class="p">)</span><span class="o">.</span><span class="n">to_s</span><span class="t"></span>
+<span id="line-4"></span><span class="t"></span>
+<span id="line-5"></span><span class="t">      </span><span class="n">current_internal_unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">target_unit</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="nc">SAMPLE_UNIT_NAMES</span><span class="o">.</span><span class="n">sample</span><span class="t">                                                                                                </span><span class="cs"># Corrected: Use SAMPLE_UNIT_NAMES</span><span class="t"></span>
+<span id="line-6"></span><span class="t">      </span><span class="n">syslog_identifier</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="n">current_internal_unit_name</span><span class="o">.</span><span class="n">nil?</span><span class="t"> </span><span class="p">?</span><span class="t"> </span><span class="p">(</span><span class="n">current_hostname</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">kernel_host</span><span class="lsd">&quot;</span><span class="t"> </span><span class="p">?</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">kernel</span><span class="lsd">&quot;</span><span class="t"> </span><span class="p">:</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">system</span><span class="lsd">&quot;</span><span class="p">)</span><span class="t"> </span><span class="p">:</span><span class="t"> </span><span class="n">current_internal_unit_name</span><span class="o">.</span><span class="n">gsub</span><span class="p">(</span><span class="lsr">/</span><span class="lsr">\</span><span class="lsr">.service$</span><span class="lsr">/</span><span class="p">,</span><span class="t"> </span><span class="lsd">&quot;</span><span class="lsd">&quot;</span><span class="p">)</span><span class="t"> </span><span class="cs"># A bit more variety</span><span class="t"></span>
+<span id="line-7"></span><span class="t">      </span><span class="n">message_raw</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Faker</span><span class="o">::</span><span class="nc">Hacker</span><span class="o">.</span><span class="n">say_something_smart</span><span class="t"></span>
+<span id="line-8"></span><span class="t">      </span><span class="n">container_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">SAMPLE_CONTAINER_NAMES</span><span class="o">.</span><span class="n">sample</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-18" class="grid">
-    <div class="doc" id="section-18">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-18" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Filter by tags</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="o">!</span><span class="t">include_tags</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">include_tags</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">syslog_identifier</span><span class="t">)</span><span class="t"> </span><span class="c"># Corrected: Filter on syslog_identifier</span><span class="t">
-</span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="o">!</span><span class="t">exclude_tags</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">exclude_tags</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">syslog_identifier</span><span class="t">)</span><span class="t">  </span><span class="c"># Corrected: Filter on syslog_identifier</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="o">!</span><span class="t">include_tags</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">include_tags</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">syslog_identifier</span><span class="t">)</span><span class="t"> </span><span class="c"># Corrected: Filter on syslog_identifier</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="o">!</span><span class="t">exclude_tags</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">exclude_tags</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">syslog_identifier</span><span class="t">)</span><span class="t">  </span><span class="c"># Corrected: Filter on syslog_identifier</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-19" class="grid">
-    <div class="doc" id="section-19">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-19" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Filter by grep_query (if provided)</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">q</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">query</span><span class="t">
-</span><span class="t">        </span><span class="nk">next</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">message_raw</span><span class="t">.</span><span class="t">downcase</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">q</span><span class="t">.</span><span class="t">downcase</span><span class="t">)</span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">q</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">query</span><span class="t"></span>
+<span id="line-2"></span><span class="t">        </span><span class="nk">next</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">message_raw</span><span class="t">.</span><span class="t">downcase</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">q</span><span class="t">.</span><span class="t">downcase</span><span class="t">)</span><span class="t"></span>
+<span id="line-3"></span><span class="t">      </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-20" class="grid">
-    <div class="doc" id="section-20">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-20" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Populate the data hash, simulating journalctl -o json output</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">data</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Hash</span><span class="t">(</span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">__REALTIME_TIMESTAMP</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">timestamp</span><span class="t">.</span><span class="t">to_unix_ms</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="c"># Microseconds string</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">__MONOTONIC_TIMESTAMP</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="ln">1_000_000</span><span class="t">..</span><span class="ln">1_000_000_000</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">__CURSOR</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">cursor</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">fakecursor_</span><span class="lsi">#{</span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls">_</span><span class="lsi">#{</span><span class="t">timestamp</span><span class="t">.</span><span class="t">to_unix_ms</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_BOOT_ID</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">fakebootid1234567890abcdef12345678</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_TRANSPORT</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">journal</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">stdout</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kernel</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="t">sample</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_MACHINE_ID</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">fake_machine_id_for_</span><span class="lsi">#{</span><span class="t">current_hostname</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Make machine ID somewhat related to hostname</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_HOSTNAME</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">current_hostname</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">PRIORITY</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">raw_priority_val</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">SYSLOG_FACILITY</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="ln">0</span><span class="t">..</span><span class="ln">23</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">SYSLOG_IDENTIFIER</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">syslog_identifier</span><span class="t"> </span><span class="c"># Use the derived and filtered identifier</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_PID</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="ln">100</span><span class="t">..</span><span class="ln">65535</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_UID</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="ln">0</span><span class="t">..</span><span class="ln">1000</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="c"># Could be 0 for root, or other UIDs</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_GID</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="ln">0</span><span class="t">..</span><span class="ln">1000</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_COMM</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">syslog_identifier</span><span class="t"> </span><span class="c"># Often the same as syslog identifier</span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_EXE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/usr/bin/</span><span class="lsi">#{</span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_COMM</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_CMDLINE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="lsi">#{</span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_EXE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="ls"> --fake-option</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">MESSAGE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">message_raw</span><span class="t">
-</span><span class="t">
-</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">current_internal_unit_name</span><span class="t">
-</span><span class="t">        </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_SYSTEMD_UNIT</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">current_internal_unit_name</span><span class="t">
-</span><span class="t">        </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_SYSTEMD_CGROUP</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/system.slice/</span><span class="lsi">#{</span><span class="t">current_internal_unit_name</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">        </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_SYSTEMD_SLICE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">system.slice</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span><span class="t">
-</span><span class="t">
-</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">container_name</span><span class="t">
-</span><span class="t">        </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">CONTAINER_NAME</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">container_name</span><span class="t">
-</span><span class="t">        </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">CONTAINER_ID_FULL</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">fakecontainerid</span><span class="lsi">#{</span><span class="t">rand</span><span class="t">(</span><span class="ln">100000</span><span class="t">..</span><span class="ln">999999</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">        </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">CONTAINER_TAG</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span><span class="t">
-</span><span class="t">
-</span><span class="t">      </span><span class="t">entry</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">
-</span><span class="t">        </span><span class="t">timestamp</span><span class="t">:</span><span class="t"> </span><span class="t">timestamp</span><span class="t">,</span><span class="t">
-</span><span class="t">        </span><span class="t">message_raw</span><span class="t">:</span><span class="t"> </span><span class="t">message_raw</span><span class="t">,</span><span class="t">
-</span><span class="t">        </span><span class="t">raw_priority_val</span><span class="t">:</span><span class="t"> </span><span class="t">raw_priority_val</span><span class="t">,</span><span class="t">
-</span><span class="t">        </span><span class="t">internal_unit_name</span><span class="t">:</span><span class="t"> </span><span class="t">current_internal_unit_name</span><span class="t">,</span><span class="t">
-</span><span class="t">        </span><span class="t">hostname</span><span class="t">:</span><span class="t"> </span><span class="t">current_hostname</span><span class="t">,</span><span class="t">
-</span><span class="t">        </span><span class="t">data</span><span class="t">:</span><span class="t"> </span><span class="t">data</span><span class="t">
-</span><span class="t">      </span><span class="t">)</span><span class="t">
-</span><span class="t">      </span><span class="t">entries</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span><span class="t">
-</span><span class="t">
-</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">attempts</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="t">max_attempts</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="t">target_n_entries</span><span class="t">
-</span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Fake data generation: Reached max attempts (</span><span class="lsi">#{</span><span class="t">max_attempts</span><span class="t"></span><span class="lsi">}</span><span class="ls">) but only generated </span><span class="lsi">#{</span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls">/</span><span class="lsi">#{</span><span class="t">target_n_entries</span><span class="t"></span><span class="lsi">}</span><span class="ls"> entries due to restrictive filters (priority, unit, tags, or hostname).</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">data</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Hash</span><span class="t">(</span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">__REALTIME_TIMESTAMP</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">timestamp</span><span class="t">.</span><span class="t">to_unix_ms</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="c"># Microseconds string</span><span class="t"></span>
+<span id="line-3"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">__MONOTONIC_TIMESTAMP</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="ln">1_000_000</span><span class="t">..</span><span class="ln">1_000_000_000</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-4"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">__CURSOR</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">cursor</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">fakecursor_</span><span class="lsi">#{</span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls">_</span><span class="lsi">#{</span><span class="t">timestamp</span><span class="t">.</span><span class="t">to_unix_ms</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-5"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_BOOT_ID</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">fakebootid1234567890abcdef12345678</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-6"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_TRANSPORT</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">journal</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">stdout</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kernel</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="t">sample</span><span class="t"></span>
+<span id="line-7"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_MACHINE_ID</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">fake_machine_id_for_</span><span class="lsi">#{</span><span class="t">current_hostname</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Make machine ID somewhat related to hostname</span><span class="t"></span>
+<span id="line-8"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_HOSTNAME</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">current_hostname</span><span class="t"></span>
+<span id="line-9"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">PRIORITY</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">raw_priority_val</span><span class="t"></span>
+<span id="line-10"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">SYSLOG_FACILITY</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="ln">0</span><span class="t">..</span><span class="ln">23</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-11"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">SYSLOG_IDENTIFIER</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">syslog_identifier</span><span class="t"> </span><span class="c"># Use the derived and filtered identifier</span><span class="t"></span>
+<span id="line-12"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_PID</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="ln">100</span><span class="t">..</span><span class="ln">65535</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-13"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_UID</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="ln">0</span><span class="t">..</span><span class="ln">1000</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="c"># Could be 0 for root, or other UIDs</span><span class="t"></span>
+<span id="line-14"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_GID</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="ln">0</span><span class="t">..</span><span class="ln">1000</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-15"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_COMM</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">syslog_identifier</span><span class="t"> </span><span class="c"># Often the same as syslog identifier</span><span class="t"></span>
+<span id="line-16"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_EXE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/usr/bin/</span><span class="lsi">#{</span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_COMM</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-17"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_CMDLINE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="lsi">#{</span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_EXE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="ls"> --fake-option</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-18"></span><span class="t">      </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">MESSAGE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">message_raw</span><span class="t"></span>
+<span id="line-19"></span><span class="t"></span>
+<span id="line-20"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">current_internal_unit_name</span><span class="t"></span>
+<span id="line-21"></span><span class="t">        </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_SYSTEMD_UNIT</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">current_internal_unit_name</span><span class="t"></span>
+<span id="line-22"></span><span class="t">        </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_SYSTEMD_CGROUP</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/system.slice/</span><span class="lsi">#{</span><span class="t">current_internal_unit_name</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-23"></span><span class="t">        </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">_SYSTEMD_SLICE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">system.slice</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-24"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-25"></span><span class="t"></span>
+<span id="line-26"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">container_name</span><span class="t"></span>
+<span id="line-27"></span><span class="t">        </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">CONTAINER_NAME</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">container_name</span><span class="t"></span>
+<span id="line-28"></span><span class="t">        </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">CONTAINER_ID_FULL</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">fakecontainerid</span><span class="lsi">#{</span><span class="t">rand</span><span class="t">(</span><span class="ln">100000</span><span class="t">..</span><span class="ln">999999</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-29"></span><span class="t">        </span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">CONTAINER_TAG</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-30"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-31"></span><span class="t"></span>
+<span id="line-32"></span><span class="t">      </span><span class="t">entry</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-33"></span><span class="t">        </span><span class="t">timestamp</span><span class="t">:</span><span class="t"> </span><span class="t">timestamp</span><span class="t">,</span><span class="t"></span>
+<span id="line-34"></span><span class="t">        </span><span class="t">message_raw</span><span class="t">:</span><span class="t"> </span><span class="t">message_raw</span><span class="t">,</span><span class="t"></span>
+<span id="line-35"></span><span class="t">        </span><span class="t">raw_priority_val</span><span class="t">:</span><span class="t"> </span><span class="t">raw_priority_val</span><span class="t">,</span><span class="t"></span>
+<span id="line-36"></span><span class="t">        </span><span class="t">internal_unit_name</span><span class="t">:</span><span class="t"> </span><span class="t">current_internal_unit_name</span><span class="t">,</span><span class="t"></span>
+<span id="line-37"></span><span class="t">        </span><span class="t">hostname</span><span class="t">:</span><span class="t"> </span><span class="t">current_hostname</span><span class="t">,</span><span class="t"></span>
+<span id="line-38"></span><span class="t">        </span><span class="t">data</span><span class="t">:</span><span class="t"> </span><span class="t">data</span><span class="t"></span>
+<span id="line-39"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-40"></span><span class="t">      </span><span class="t">entries</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t"></span>
+<span id="line-41"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-42"></span><span class="t"></span>
+<span id="line-43"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">attempts</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="t">max_attempts</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="t">target_n_entries</span><span class="t"></span>
+<span id="line-44"></span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Fake data generation: Reached max attempts (</span><span class="lsi">#{</span><span class="t">max_attempts</span><span class="t"></span><span class="lsi">}</span><span class="ls">) but only generated </span><span class="lsi">#{</span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls">/</span><span class="lsi">#{</span><span class="t">target_n_entries</span><span class="t"></span><span class="lsi">}</span><span class="ls"> entries due to restrictive filters (priority, unit, tags, or hostname).</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-45"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-21" class="grid">
-    <div class="doc" id="section-21">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-21" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Sort entries based on whether a reverse flag was present</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">reverse</span><span class="t">
-</span><span class="t">      </span><span class="t">entries</span><span class="t">.</span><span class="t">sort_by!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">timestamp</span><span class="t">)</span><span class="t">.</span><span class="t">reverse!</span><span class="t"> </span><span class="c"># Newest first</span><span class="t">
-</span><span class="t">    </span><span class="nk">else</span><span class="t">
-</span><span class="t">      </span><span class="t">entries</span><span class="t">.</span><span class="t">sort_by!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">timestamp</span><span class="t">)</span><span class="t"> </span><span class="c"># Chronological order</span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span><span class="t">
-</span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Generated </span><span class="lsi">#{</span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> fake log entries. Time window: </span><span class="lsi">#{</span><span class="t">start_time</span><span class="t"></span><span class="lsi">}</span><span class="ls"> to </span><span class="lsi">#{</span><span class="t">end_time</span><span class="t"></span><span class="lsi">}</span><span class="ls">. Order: </span><span class="lsi">#{</span><span class="t">reverse</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">reverse chronological</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">chronological</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t">
-</span><span class="t">    </span><span class="t">entries</span><span class="t">
-</span><span class="t">  </span><span class="nk">end</span><span class="t">
-</span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">reverse</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="t">entries</span><span class="t">.</span><span class="t">sort_by!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">timestamp</span><span class="t">)</span><span class="t">.</span><span class="t">reverse!</span><span class="t"> </span><span class="c"># Newest first</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-4"></span><span class="t">      </span><span class="t">entries</span><span class="t">.</span><span class="t">sort_by!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">timestamp</span><span class="t">)</span><span class="t"> </span><span class="c"># Chronological order</span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-6"></span><span class="t">    </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Generated </span><span class="lsi">#{</span><span class="t">entries</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> fake log entries. Time window: </span><span class="lsi">#{</span><span class="t">start_time</span><span class="t"></span><span class="lsi">}</span><span class="ls"> to </span><span class="lsi">#{</span><span class="t">end_time</span><span class="t"></span><span class="lsi">}</span><span class="ls">. Order: </span><span class="lsi">#{</span><span class="t">reverse</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">reverse chronological</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">chronological</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-7"></span><span class="t">    </span><span class="t">entries</span><span class="t"></span>
+<span id="line-8"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-9"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 

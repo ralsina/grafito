@@ -52,7 +52,8 @@
     }
 
     html {
-        background: linear-gradient(to right, var(--pico-background-color) 50%, #0b342d 50%);
+        background: linear-gradient(to right, var(--pico-background-color) 2.5%, #0b342d 2.5%);
+        background-size: 2000% 100%;
     }
 
     body {
@@ -217,10 +218,10 @@
 
 </div>
 
-<div id="section-1" class="grid">
-    <div class="doc" id="section-1">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-1" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <h1>timeline.cr</h1>
 <p>At work we use DataDog and I always liked how it showed a histogram of
@@ -230,32 +231,32 @@ same thing, except not interactive (for now)</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">time</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">         </span><span class="c"># For HTML.escape</span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># For Journalctl::LogEntry type</span><span class="t">
-</span><span class="t">
-</span><span class="nk">module</span><span class="t"> </span><span class="nc">Timeline</span><span class="t">
-</span><span class="t">  </span><span class="nk">extend</span><span class="t"> </span><span class="nk">self</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">time</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-2"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">html</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">         </span><span class="c"># For HTML.escape</span><span class="t"></span>
+<span id="line-3"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># For Journalctl::LogEntry type</span><span class="t"></span>
+<span id="line-4"></span><span class="t"></span>
+<span id="line-5"></span><span class="nk">module</span><span class="t"> </span><span class="nc">Timeline</span><span class="t"></span>
+<span id="line-6"></span><span class="t">  </span><span class="nk">extend</span><span class="t"> </span><span class="nk">self</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-2" class="grid">
-    <div class="doc" id="section-2">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-2" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>The data structure representing a point in the frequency timeline.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">alias</span><span class="t"> </span><span class="nc">TimelinePoint</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">NamedTuple</span><span class="t">(</span><span class="t">start_time</span><span class="t">:</span><span class="t"> </span><span class="nc">Time</span><span class="t">,</span><span class="t"> </span><span class="t">count</span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t">)</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">alias</span><span class="t"> </span><span class="nc">TimelinePoint</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">NamedTuple</span><span class="t">(</span><span class="t">start_time</span><span class="t">:</span><span class="t"> </span><span class="nc">Time</span><span class="t">,</span><span class="t"> </span><span class="t">count</span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-3" class="grid">
-    <div class="doc" id="section-3">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-3" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Generates a timeline of log entry frequencies.</p>
 <p>This function takes an array of log entries and groups them into time buckets
@@ -273,87 +274,87 @@ of log entries within that bucket.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">generate_frequency_timeline</span><span class="t">(</span><span class="t">
-</span><span class="t">    </span><span class="t">logs</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t">,</span><span class="t">
-</span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">TimelinePoint</span><span class="t">)</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">generate_frequency_timeline</span><span class="t">(</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">logs</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-3"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">TimelinePoint</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-4" class="grid">
-    <div class="doc" id="section-4">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-4" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Returns an empty array if the input <code>logs</code> array is empty.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">TimelinePoint</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">empty?</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">TimelinePoint</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">empty?</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-5" class="grid">
-    <div class="doc" id="section-5">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-5" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Initialize with default value 0 for counts</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">counts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Hash</span><span class="t">(</span><span class="nc">Time</span><span class="t">,</span><span class="t"> </span><span class="nc">Int32</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="ln">0</span><span class="t">)</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">counts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Hash</span><span class="t">(</span><span class="nc">Time</span><span class="t">,</span><span class="t"> </span><span class="nc">Int32</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="ln">0</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-6" class="grid">
-    <div class="doc" id="section-6">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-6" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Count the number of entries in hourly buckets.
 Yes, it should be more flexible. Who cares.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">logs</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t">
-</span><span class="t">      </span><span class="t">ts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">timestamp</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">logs</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="t">ts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">timestamp</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-7" class="grid">
-    <div class="doc" id="section-7">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-7" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Truncate to the hour</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">truncated_ts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">ts</span><span class="t">.</span><span class="t">at_beginning_of_hour</span><span class="t">
-</span><span class="t">      </span><span class="t">counts</span><span class="t">[</span><span class="t">truncated_ts</span><span class="t">]</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">truncated_ts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">ts</span><span class="t">.</span><span class="t">at_beginning_of_hour</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="t">counts</span><span class="t">[</span><span class="t">truncated_ts</span><span class="t">]</span><span class="t"> </span><span class="o">+=</span><span class="t"> </span><span class="ln">1</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-8" class="grid">
-    <div class="doc" id="section-8">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-8" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>And that's the timeline!</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">timeline</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">counts</span><span class="t">.</span><span class="t">map</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">start_time</span><span class="t">,</span><span class="t"> </span><span class="t">count</span><span class="o">|</span><span class="t"> </span><span class="t">{</span><span class="t">start_time</span><span class="t">:</span><span class="t"> </span><span class="t">start_time</span><span class="t">,</span><span class="t"> </span><span class="t">count</span><span class="t">:</span><span class="t"> </span><span class="t">count</span><span class="t">}</span><span class="t"> </span><span class="t">}</span><span class="t">
-</span><span class="t">    </span><span class="t">timeline</span><span class="t">.</span><span class="t">sort_by!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">[</span><span class="lss">:start_time</span><span class="t">]</span><span class="t">)</span><span class="t">
-</span><span class="t">  </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">timeline</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">counts</span><span class="t">.</span><span class="t">map</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">start_time</span><span class="t">,</span><span class="t"> </span><span class="t">count</span><span class="o">|</span><span class="t"> </span><span class="t">{</span><span class="t">start_time</span><span class="t">:</span><span class="t"> </span><span class="t">start_time</span><span class="t">,</span><span class="t"> </span><span class="t">count</span><span class="t">:</span><span class="t"> </span><span class="t">count</span><span class="t">}</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">timeline</span><span class="t">.</span><span class="t">sort_by!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">[</span><span class="lss">:start_time</span><span class="t">]</span><span class="t">)</span><span class="t"></span>
+<span id="line-3"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-9" class="grid">
-    <div class="doc" id="section-9">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-9" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Generates an SVG representation of a timeline.</p>
 <p>Arguments:</p>
@@ -372,183 +373,183 @@ Yes, it should be more flexible. Who cares.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">generate_svg_timeline</span><span class="t">(</span><span class="t">
-</span><span class="t">    </span><span class="t">timeline_data</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">TimelinePoint</span><span class="t">)</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">width</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">800</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">height</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">100</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">padding</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">10</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">bar_color</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">steelblue</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">font_family</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Arial, sans-serif</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="c"># Parameter kept for potential future use, but not currently applied</span><span class="t">
-</span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">
-</span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">IO</span><span class="nc">::</span><span class="nc">Memory</span><span class="t">.</span><span class="t">new</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">generate_svg_timeline</span><span class="t">(</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">timeline_data</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">TimelinePoint</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="t">width</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">800</span><span class="t">,</span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="t">height</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">100</span><span class="t">,</span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="t">padding</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">10</span><span class="t">,</span><span class="t"></span>
+<span id="line-6"></span><span class="t">    </span><span class="t">bar_color</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">steelblue</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-7"></span><span class="t">    </span><span class="t">font_family</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Arial, sans-serif</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="c"># Parameter kept for potential future use, but not currently applied</span><span class="t"></span>
+<span id="line-8"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"></span>
+<span id="line-9"></span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">IO</span><span class="nc">::</span><span class="nc">Memory</span><span class="t">.</span><span class="t">new</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-10" class="grid">
-    <div class="doc" id="section-10">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-10" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Handle empty data case by returning a simple SVG</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">timeline_data</span><span class="t">.</span><span class="t">empty?</span><span class="t">
-</span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">&lt;svg width=&quot;</span><span class="lsi">#{</span><span class="t">width</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; height=&quot;</span><span class="lsi">#{</span><span class="t">height</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;text x=&quot;</span><span class="lsi">#{</span><span class="t">width</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="ln">2</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; y=&quot;</span><span class="lsi">#{</span><span class="t">height</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="ln">2</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; class=&quot;no-data-text&quot;&gt;No data available&lt;/text&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">&lt;/svg&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">svg</span><span class="t">.</span><span class="t">to_s</span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">timeline_data</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">&lt;svg width=&quot;</span><span class="lsi">#{</span><span class="t">width</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; height=&quot;</span><span class="lsi">#{</span><span class="t">height</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-3"></span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;text x=&quot;</span><span class="lsi">#{</span><span class="t">width</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="ln">2</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; y=&quot;</span><span class="lsi">#{</span><span class="t">height</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="ln">2</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; class=&quot;no-data-text&quot;&gt;No data available&lt;/text&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-4"></span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">&lt;/svg&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-5"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">svg</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-6"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-11" class="grid">
-    <div class="doc" id="section-11">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-11" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Calculate actual chart dimensions</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">chart_width</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">width</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">(</span><span class="ln">2</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">padding</span><span class="t">)</span><span class="t">
-</span><span class="t">    </span><span class="t">chart_height</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">height</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">(</span><span class="ln">2</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">padding</span><span class="t">)</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">chart_width</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">width</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">(</span><span class="ln">2</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">padding</span><span class="t">)</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">chart_height</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">height</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">(</span><span class="ln">2</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">padding</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-12" class="grid">
-    <div class="doc" id="section-12">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-12" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Determine max count for Y-axis scaling</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">max_val</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">timeline_data</span><span class="t">.</span><span class="t">max_of</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">[</span><span class="lss">:count</span><span class="t">]</span><span class="t">)</span><span class="t">
-</span><span class="t">    </span><span class="t">max_count</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">max_val</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ln">0</span><span class="t">)</span><span class="t">.</span><span class="t">to_f</span><span class="t">
-</span><span class="t">    </span><span class="t">max_count</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">1.0</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">max_count</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ln">0.0</span><span class="t"> </span><span class="c"># Avoid division by zero if all counts are 0</span><span class="t">
-</span><span class="t">
-</span><span class="t">    </span><span class="t">num_points</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">timeline_data</span><span class="t">.</span><span class="t">size</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">max_val</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">timeline_data</span><span class="t">.</span><span class="t">max_of</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">[</span><span class="lss">:count</span><span class="t">]</span><span class="t">)</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">max_count</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">max_val</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ln">0</span><span class="t">)</span><span class="t">.</span><span class="t">to_f</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="t">max_count</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">1.0</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">max_count</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ln">0.0</span><span class="t"> </span><span class="c"># Avoid division by zero if all counts are 0</span><span class="t"></span>
+<span id="line-4"></span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="t">num_points</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">timeline_data</span><span class="t">.</span><span class="t">size</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-13" class="grid">
-    <div class="doc" id="section-13">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-13" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Width for each bar + its spacing</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">slot_width</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">chart_width</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">num_points</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">slot_width</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">chart_width</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">num_points</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-14" class="grid">
-    <div class="doc" id="section-14">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-14" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Bar takes 80% of the slot</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">actual_bar_width</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">slot_width</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="ln">0.8</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">actual_bar_width</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">slot_width</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="ln">0.8</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-15" class="grid">
-    <div class="doc" id="section-15">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-15" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Margin on each side of the bar within its slot</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">bar_margin</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">slot_width</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">actual_bar_width</span><span class="t">)</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="ln">2</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">bar_margin</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">slot_width</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">actual_bar_width</span><span class="t">)</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="ln">2</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-16" class="grid">
-    <div class="doc" id="section-16">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-16" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>SVG header and styles</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">&lt;svg width=&quot;100%&quot; height=&quot;</span><span class="lsi">#{</span><span class="t">height</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; viewBox=&quot;0 0 </span><span class="lsi">#{</span><span class="t">width</span><span class="t"></span><span class="lsi">}</span><span class="ls"> </span><span class="lsi">#{</span><span class="t">height</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;style&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">    .bar { fill: </span><span class="lsi">#{</span><span class="t">bar_color</span><span class="t"></span><span class="lsi">}</span><span class="ls">; }&quot;</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">    .bar:hover { opacity: 0.8; }&quot;</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;/style&gt;</span><span class="ls">)</span><span class="ls"></span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">&lt;svg width=&quot;100%&quot; height=&quot;</span><span class="lsi">#{</span><span class="t">height</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; viewBox=&quot;0 0 </span><span class="lsi">#{</span><span class="t">width</span><span class="t"></span><span class="lsi">}</span><span class="ls"> </span><span class="lsi">#{</span><span class="t">height</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;style&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">    .bar { fill: </span><span class="lsi">#{</span><span class="t">bar_color</span><span class="t"></span><span class="lsi">}</span><span class="ls">; }&quot;</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">    .bar:hover { opacity: 0.8; }&quot;</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;/style&gt;</span><span class="ls">)</span><span class="ls"></span></code></pre></span>
     </div>
 </div>
 
-<div id="section-17" class="grid">
-    <div class="doc" id="section-17">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-17" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Bars</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">timeline_data</span><span class="t">.</span><span class="t">each_with_index</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">point</span><span class="t">,</span><span class="t"> </span><span class="t">index</span><span class="o">|</span><span class="t">
-</span><span class="t">      </span><span class="t">bar_h</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">point</span><span class="t">[</span><span class="lss">:count</span><span class="t">]</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">max_count</span><span class="t">)</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">chart_height</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">timeline_data</span><span class="t">.</span><span class="t">each_with_index</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">point</span><span class="t">,</span><span class="t"> </span><span class="t">index</span><span class="o">|</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="t">bar_h</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">point</span><span class="t">[</span><span class="lss">:count</span><span class="t">]</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">max_count</span><span class="t">)</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">chart_height</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-18" class="grid">
-    <div class="doc" id="section-18">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-18" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Ensure non-negative height, though counts should be &gt;= 0</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">bar_h</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">0.0</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">bar_h</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="ln">0</span><span class="t">
-</span><span class="t">
-</span><span class="t">      </span><span class="t">bar_x</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">padding</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">index</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">slot_width</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">bar_margin</span><span class="t">
-</span><span class="t">      </span><span class="t">bar_y</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">height</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">padding</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">bar_h</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">bar_h</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">0.0</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">bar_h</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="ln">0</span><span class="t"></span>
+<span id="line-2"></span><span class="t"></span>
+<span id="line-3"></span><span class="t">      </span><span class="t">bar_x</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">padding</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">index</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">slot_width</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">bar_margin</span><span class="t"></span>
+<span id="line-4"></span><span class="t">      </span><span class="t">bar_y</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">height</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">padding</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">bar_h</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-19" class="grid">
-    <div class="doc" id="section-19">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-19" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Draw a bar</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;rect x=&quot;</span><span class="lsi">#{</span><span class="t">bar_x</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="ln">2</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; y=&quot;</span><span class="lsi">#{</span><span class="t">bar_y</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="ln">2</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; width=&quot;</span><span class="lsi">#{</span><span class="t">actual_bar_width</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="ln">2</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; height=&quot;</span><span class="lsi">#{</span><span class="t">bar_h</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="ln">2</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; class=&quot;bar&quot;&gt;</span><span class="ls">)</span><span class="ls"></span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;rect x=&quot;</span><span class="lsi">#{</span><span class="t">bar_x</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="ln">2</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; y=&quot;</span><span class="lsi">#{</span><span class="t">bar_y</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="ln">2</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; width=&quot;</span><span class="lsi">#{</span><span class="t">actual_bar_width</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="ln">2</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; height=&quot;</span><span class="lsi">#{</span><span class="t">bar_h</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="ln">2</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot; class=&quot;bar&quot;&gt;</span><span class="ls">)</span><span class="ls"></span></code></pre></span>
     </div>
 </div>
 
-<div id="section-20" class="grid">
-    <div class="doc" id="section-20">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-20" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Tooltip for the bar</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">    &lt;title&gt;</span><span class="lsi">#{</span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">point</span><span class="t">[</span><span class="lss">:start_time</span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">%Y-%m-%d %H:%M</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">: </span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">point</span><span class="t">[</span><span class="lss">:count</span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&lt;/title&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"> </span><span class="c"># Tooltip</span><span class="t">
-</span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;/rect&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span><span class="t">
-</span><span class="t">
-</span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">&lt;/svg&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">    </span><span class="t">svg</span><span class="t">.</span><span class="t">to_s</span><span class="t">
-</span><span class="t">  </span><span class="nk">end</span><span class="t">
-</span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">    &lt;title&gt;</span><span class="lsi">#{</span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">point</span><span class="t">[</span><span class="lss">:start_time</span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">%Y-%m-%d %H:%M</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">: </span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">point</span><span class="t">[</span><span class="lss">:count</span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&lt;/title&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"> </span><span class="c"># Tooltip</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">  &lt;/rect&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-4"></span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="t">svg</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">%(</span><span class="ls">&lt;/svg&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-6"></span><span class="t">    </span><span class="t">svg</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-7"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-8"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 

@@ -52,7 +52,8 @@
     }
 
     html {
-        background: linear-gradient(to right, var(--pico-background-color) 50%, #0b342d 50%);
+        background: linear-gradient(to right, var(--pico-background-color) 2.5%, #0b342d 2.5%);
+        background-size: 2000% 100%;
     }
 
     body {
@@ -217,455 +218,480 @@
 
 </div>
 
-<div id="section-1" class="grid">
-    <div class="doc" id="section-1">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-1" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># For HTTP::Server::Context and HTML</span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./timeline</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">html_builder</span><span class="ls">&quot;</span><span class="ls"></span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># For HTTP::Server::Context and HTML</span><span class="t"></span>
+<span id="line-2"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-3"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-4"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./timeline</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-5"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">html_builder</span><span class="ls">&quot;</span><span class="ls"></span></code></pre></span>
     </div>
 </div>
 
-<div id="section-2" class="grid">
-    <div class="doc" id="section-2">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-2" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Regex is part of Crystal core, no explicit require needed for it.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="nk">module</span><span class="t"> </span><span class="nc">Grafito</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="nk">module</span><span class="t"> </span><span class="nc">Grafito</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-3" class="grid">
-    <div class="doc" id="section-3">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-3" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Helper to get an optional query parameter, treating empty strings as nil.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">HTTP</span><span class="nc">::</span><span class="nc">Server</span><span class="nc">::</span><span class="nc">Context</span><span class="t">,</span><span class="t"> </span><span class="t">key</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">
-</span><span class="t">    </span><span class="t">param</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">query</span><span class="t">[</span><span class="t">key</span><span class="t">]</span><span class="t">?</span><span class="t">
-</span><span class="t">    </span><span class="t">param</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">param</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="l">nil</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">param</span><span class="t">
-</span><span class="t">  </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">optional_query_param</span><span class="t">(</span><span class="t">env</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">HTTP</span><span class="nc">::</span><span class="nc">Server</span><span class="nc">::</span><span class="nc">Context</span><span class="t">,</span><span class="t"> </span><span class="t">key</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">param</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">query</span><span class="t">[</span><span class="t">key</span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="t">param</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">param</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="l">nil</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">param</span><span class="t"></span>
+<span id="line-4"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-4" class="grid">
-    <div class="doc" id="section-4">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-4" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Generates attributes for sortable table headers.
 Returns a NamedTuple with text, hx_vals (JSON string), and key_name.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">_generate_header_attributes</span><span class="t">(</span><span class="t">
-</span><span class="t">    </span><span class="t">column_key_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">display_text</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">current_sort_by</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">current_sort_order</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">,</span><span class="t">
-</span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">NamedTuple</span><span class="t">(</span><span class="t">text</span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="t">hx_vals</span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="t">key_name</span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t">
-</span><span class="t">    </span><span class="t">sort_indicator</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">    </span><span class="t">next_sort_order_for_click</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">asc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Default next sort is ascending</span><span class="t">
-</span><span class="t">
-</span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="t">column_key_name</span><span class="t"> </span><span class="c"># This column is currently being sorted</span><span class="t">
-</span><span class="t">      </span><span class="nk">case</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">
-</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">asc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Up arrow for ascending</span><span class="t">
-</span><span class="t">        </span><span class="t">sort_indicator</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">%q(</span><span class="ls"> &lt;span class=&quot;material-icons&quot; aria-hidden=&quot;true&quot; style=&quot;font-size: inherit; vertical-align: middle;&quot;&gt;arrow_upward&lt;/span&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">        </span><span class="t">next_sort_order_for_click</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">desc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Next click will be descending</span><span class="t">
-</span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">desc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                          </span><span class="c"># Down arrow for descending</span><span class="t">
-</span><span class="t">        </span><span class="t">sort_indicator</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">%q(</span><span class="ls"> &lt;span class=&quot;material-icons&quot; aria-hidden=&quot;true&quot; style=&quot;font-size: inherit; vertical-align: middle;&quot;&gt;arrow_downward&lt;/span&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">        </span><span class="t">next_sort_order_for_click</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">asc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Next click will be ascending</span><span class="t">
-</span><span class="t">      </span><span class="nk">else</span><span class="t">                                </span><span class="c"># current_sort_order is nil or unexpected, default to ascending for next click</span><span class="t">
-</span><span class="t">        </span><span class="t">next_sort_order_for_click</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">asc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span><span class="t">
-</span><span class="t">    </span><span class="nk">elsif</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">column_key_name</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">timestamp</span><span class="ls">&quot;</span><span class="ls"></span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">_generate_header_attributes</span><span class="t">(</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">column_key_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="t">display_text</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="t">current_sort_by</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">,</span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="t">current_sort_order</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">,</span><span class="t"></span>
+<span id="line-6"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">NamedTuple</span><span class="t">(</span><span class="t">text</span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="t">hx_vals</span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="t">key_name</span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t"></span>
+<span id="line-7"></span><span class="t">    </span><span class="t">sort_indicator</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-8"></span><span class="t">    </span><span class="t">next_sort_order_for_click</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">asc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Default next sort is ascending</span><span class="t"></span>
+<span id="line-9"></span><span class="t"></span>
+<span id="line-10"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="t">column_key_name</span><span class="t"> </span><span class="c"># This column is currently being sorted</span><span class="t"></span>
+<span id="line-11"></span><span class="t">      </span><span class="nk">case</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t"></span>
+<span id="line-12"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">asc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Up arrow for ascending</span><span class="t"></span>
+<span id="line-13"></span><span class="t">        </span><span class="t">sort_indicator</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">%q(</span><span class="ls"> &lt;span class=&quot;material-icons&quot; aria-hidden=&quot;true&quot; style=&quot;font-size: inherit; vertical-align: middle;&quot;&gt;arrow_upward&lt;/span&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-14"></span><span class="t">        </span><span class="t">next_sort_order_for_click</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">desc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Next click will be descending</span><span class="t"></span>
+<span id="line-15"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">desc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                          </span><span class="c"># Down arrow for descending</span><span class="t"></span>
+<span id="line-16"></span><span class="t">        </span><span class="t">sort_indicator</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">%q(</span><span class="ls"> &lt;span class=&quot;material-icons&quot; aria-hidden=&quot;true&quot; style=&quot;font-size: inherit; vertical-align: middle;&quot;&gt;arrow_downward&lt;/span&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-17"></span><span class="t">        </span><span class="t">next_sort_order_for_click</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">asc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Next click will be ascending</span><span class="t"></span>
+<span id="line-18"></span><span class="t">      </span><span class="nk">else</span><span class="t">                                </span><span class="c"># current_sort_order is nil or unexpected, default to ascending for next click</span><span class="t"></span>
+<span id="line-19"></span><span class="t">        </span><span class="t">next_sort_order_for_click</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">asc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-20"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-21"></span><span class="t">    </span><span class="nk">elsif</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">column_key_name</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">timestamp</span><span class="ls">&quot;</span><span class="ls"></span></code></pre></span>
     </div>
 </div>
 
-<div id="section-5" class="grid">
-    <div class="doc" id="section-5">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-5" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>No specific sort requested by user, and this is the timestamp column.
 Default sort is by timestamp, descending.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">sort_indicator</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">%q(</span><span class="ls"> &lt;span class=&quot;material-icons&quot; aria-hidden=&quot;true&quot; style=&quot;font-size: inherit; vertical-align: middle;&quot;&gt;arrow_downward&lt;/span&gt;</span><span class="ls">)</span><span class="ls"></span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">sort_indicator</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">%q(</span><span class="ls"> &lt;span class=&quot;material-icons&quot; aria-hidden=&quot;true&quot; style=&quot;font-size: inherit; vertical-align: middle;&quot;&gt;arrow_downward&lt;/span&gt;</span><span class="ls">)</span><span class="ls"></span></code></pre></span>
     </div>
 </div>
 
-<div id="section-6" class="grid">
-    <div class="doc" id="section-6">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-6" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>If user clicks on timestamp, the next sort should be ascending.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">next_sort_order_for_click</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">asc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span><span class="t">
-</span><span class="t">
-</span><span class="t">    </span><span class="t">vals_json</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">%(</span><span class="ls">{&quot;sort_by&quot;: &quot;</span><span class="lsi">#{</span><span class="t">column_key_name</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;, &quot;sort_order&quot;: &quot;</span><span class="lsi">#{</span><span class="t">next_sort_order_for_click</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;}</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">
-</span><span class="t">    </span><span class="t">{</span><span class="t">
-</span><span class="t">      </span><span class="t">text</span><span class="t">:</span><span class="t">     </span><span class="t">display_text</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">sort_indicator</span><span class="t">,</span><span class="t">
-</span><span class="t">      </span><span class="t">hx_vals</span><span class="t">:</span><span class="t">  </span><span class="t">vals_json</span><span class="t">,</span><span class="t">
-</span><span class="t">      </span><span class="t">key_name</span><span class="t">:</span><span class="t"> </span><span class="t">column_key_name</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">}</span><span class="t">
-</span><span class="t">  </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">next_sort_order_for_click</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">asc</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-3"></span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="t">vals_json</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">%(</span><span class="ls">{&quot;sort_by&quot;: &quot;</span><span class="lsi">#{</span><span class="t">column_key_name</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;, &quot;sort_order&quot;: &quot;</span><span class="lsi">#{</span><span class="t">next_sort_order_for_click</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;}</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-5"></span><span class="t"></span>
+<span id="line-6"></span><span class="t">    </span><span class="t">{</span><span class="t"></span>
+<span id="line-7"></span><span class="t">      </span><span class="t">text</span><span class="t">:</span><span class="t">     </span><span class="t">display_text</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">sort_indicator</span><span class="t">,</span><span class="t"></span>
+<span id="line-8"></span><span class="t">      </span><span class="t">hx_vals</span><span class="t">:</span><span class="t">  </span><span class="t">vals_json</span><span class="t">,</span><span class="t"></span>
+<span id="line-9"></span><span class="t">      </span><span class="t">key_name</span><span class="t">:</span><span class="t"> </span><span class="t">column_key_name</span><span class="t">,</span><span class="t"></span>
+<span id="line-10"></span><span class="t">    </span><span class="t">}</span><span class="t"></span>
+<span id="line-11"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-7" class="grid">
-    <div class="doc" id="section-7">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-7" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Generates a plain text representation of log entries.</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">_generate_text_log_output</span><span class="t">(</span><span class="t">logs</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">
-</span><span class="t">    </span><span class="nc">String</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">str</span><span class="o">|</span><span class="t">
-</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">empty?</span><span class="t">
-</span><span class="t">        </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">No log entries found.</span><span class="ls">\n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">      </span><span class="nk">else</span><span class="t">
-</span><span class="t">        </span><span class="t">logs</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t">
-</span><span class="t">          </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_timestamp</span><span class="t">
-</span><span class="t">          </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls"> [</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">hostname</span><span class="t"></span><span class="lsi">}</span><span class="ls">]</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Add hostname to text output</span><span class="t">
-</span><span class="t">          </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls"> [</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t"></span><span class="lsi">}</span><span class="ls">]</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">     </span><span class="c"># Always include unit in text output</span><span class="t">
-</span><span class="t">          </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls"> (</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_priority</span><span class="t"></span><span class="lsi">}</span><span class="ls">) </span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">          </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">message</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="lsc">&#39;\n&#39;</span><span class="t">
-</span><span class="t">        </span><span class="nk">end</span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span><span class="t">
-</span><span class="t">  </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">_generate_text_log_output</span><span class="t">(</span><span class="t">logs</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="nc">String</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">str</span><span class="o">|</span><span class="t"></span>
+<span id="line-3"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-4"></span><span class="t">        </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">No log entries found.</span><span class="ls">\n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-5"></span><span class="t">      </span><span class="nk">else</span><span class="t"></span>
+<span id="line-6"></span><span class="t">        </span><span class="t">logs</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t"></span>
+<span id="line-7"></span><span class="t">          </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_timestamp</span><span class="t"></span>
+<span id="line-8"></span><span class="t">          </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls"> [</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">hostname</span><span class="t"></span><span class="lsi">}</span><span class="ls">]</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Add hostname to text output</span><span class="t"></span>
+<span id="line-9"></span><span class="t">          </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls"> [</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t"></span><span class="lsi">}</span><span class="ls">]</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">     </span><span class="c"># Always include unit in text output</span><span class="t"></span>
+<span id="line-10"></span><span class="t">          </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls"> (</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_priority</span><span class="t"></span><span class="lsi">}</span><span class="ls">) </span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-11"></span><span class="t">          </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">message</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="lsc">&#39;\n&#39;</span><span class="t"></span>
+<span id="line-12"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-13"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-14"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-15"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-8" class="grid">
-    <div class="doc" id="section-8">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-8" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Generates an HTML representation of log entries.
 ameba:disable Metrics/CyclomaticComplexity</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">html_log_output</span><span class="t">(</span><span class="t">
-</span><span class="t">    </span><span class="t">logs</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">current_sort_by</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">current_sort_order</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">search_query</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">chart</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">highlight_cursor</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">html_log_output</span><span class="t">(</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">logs</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Array</span><span class="t">(</span><span class="nc">Journalctl</span><span class="nc">::</span><span class="nc">LogEntry</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="t">current_sort_by</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">,</span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="t">current_sort_order</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">,</span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="t">search_query</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t">,</span><span class="t"></span>
+<span id="line-6"></span><span class="t">    </span><span class="t">chart</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
+<span id="line-7"></span><span class="t">    </span><span class="t">highlight_cursor</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-9" class="grid">
-    <div class="doc" id="section-9">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-9" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Column visibility flags - determined by the route handler from query parameters</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">    </span><span class="t">show_timestamp</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">show_hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">show_unit</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">show_priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t">
-</span><span class="t">    </span><span class="t">show_message</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t">
-</span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">
-</span><span class="t">    </span><span class="nc">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">chart</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">show_timestamp</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">show_hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="t">show_unit</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="t">show_priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="t">show_message</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
+<span id="line-6"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t"></span>
+<span id="line-7"></span><span class="t">    </span><span class="nc">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-8"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">chart</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-10" class="grid">
-    <div class="doc" id="section-10">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-10" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Generate and add the timeline SVG only if there are logs</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="o">!</span><span class="t">logs</span><span class="t">.</span><span class="t">empty?</span><span class="t">
-</span><span class="t">          </span><span class="t">timeline_data</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Timeline</span><span class="t">.</span><span class="t">generate_frequency_timeline</span><span class="t">(</span><span class="t">logs</span><span class="t">)</span><span class="t">
-</span><span class="t">          </span><span class="t">svg_timeline_html</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Timeline</span><span class="t">.</span><span class="t">generate_svg_timeline</span><span class="t">(</span><span class="t">timeline_data</span><span class="t">)</span><span class="t">
-</span><span class="t">          </span><span class="t">div</span><span class="t">(</span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">margin-bottom: 1em;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">            </span><span class="t">html</span><span class="t"> </span><span class="t">svg_timeline_html</span><span class="t">
-</span><span class="t">          </span><span class="nk">end</span><span class="t">
-</span><span class="t">        </span><span class="nk">end</span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="o">!</span><span class="t">logs</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-2"></span><span class="t">          </span><span class="t">timeline_data</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Timeline</span><span class="t">.</span><span class="t">generate_frequency_timeline</span><span class="t">(</span><span class="t">logs</span><span class="t">)</span><span class="t"></span>
+<span id="line-3"></span><span class="t">          </span><span class="t">svg_timeline_html</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Timeline</span><span class="t">.</span><span class="t">generate_svg_timeline</span><span class="t">(</span><span class="t">timeline_data</span><span class="t">)</span><span class="t"></span>
+<span id="line-4"></span><span class="t">          </span><span class="t">div</span><span class="t">(</span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">margin-bottom: 1em;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-5"></span><span class="t">            </span><span class="t">html</span><span class="t"> </span><span class="t">svg_timeline_html</span><span class="t"></span>
+<span id="line-6"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-7"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-8"></span><span class="t">      </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-11" class="grid">
-    <div class="doc" id="section-11">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-11" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Display results count</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">count_message_inner_text</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ln">5000</span><span class="t">
-</span><span class="t">                                   </span><span class="ls">&quot;</span><span class="ls">showing first 5000 entries</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">                                 </span><span class="nk">elsif</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ln">1</span><span class="t">
-</span><span class="t">                                   </span><span class="ls">&quot;</span><span class="ls">showing 1 entry</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">                                 </span><span class="nk">else</span><span class="t">
-</span><span class="t">                                   </span><span class="ls">&quot;</span><span class="ls">showing </span><span class="lsi">#{</span><span class="t">logs</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> entries</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Handles 0 and other counts</span><span class="t">
-</span><span class="t">                                 </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">count_message_inner_text</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ln">5000</span><span class="t"></span>
+<span id="line-2"></span><span class="t">                                   </span><span class="ls">&quot;</span><span class="ls">showing first 5000 entries</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-3"></span><span class="t">                                 </span><span class="nk">elsif</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ln">1</span><span class="t"></span>
+<span id="line-4"></span><span class="t">                                   </span><span class="ls">&quot;</span><span class="ls">showing 1 entry</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-5"></span><span class="t">                                 </span><span class="nk">else</span><span class="t"></span>
+<span id="line-6"></span><span class="t">                                   </span><span class="ls">&quot;</span><span class="ls">showing </span><span class="lsi">#{</span><span class="t">logs</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> entries</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="c"># Handles 0 and other counts</span><span class="t"></span>
+<span id="line-7"></span><span class="t">                                 </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-12" class="grid">
-    <div class="doc" id="section-12">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-12" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Prepare the styled count message for the header</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">      </span><span class="t">styled_count_span</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">%Q(</span><span class="ls">&lt;span style=&quot;font-style: italic; font-size: 0.9em; color: var</span><span class="ls">(</span><span class="ls">--pico-muted-color</span><span class="ls">)</span><span class="ls">; margin-left: 0.5em;&quot;&gt;</span><span class="ls">(</span><span class="lsi">#{</span><span class="t">count_message_inner_text</span><span class="t"></span><span class="lsi">}</span><span class="ls">)</span><span class="ls">&lt;/span&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t">
-</span><span class="t">      </span><span class="t">message_header_text</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Message </span><span class="lsi">#{</span><span class="t">styled_count_span</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">
-</span><span class="t">      </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">NamedTuple</span><span class="t">(</span><span class="t">text</span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="t">hx_vals</span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="t">key_name</span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t">
-</span><span class="t">
-</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_timestamp</span><span class="t">
-</span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">timestamp</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Timestamp</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span><span class="t">
-</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_hostname</span><span class="t">
-</span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">hostname</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Hostname</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span><span class="t">
-</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_unit</span><span class="t">
-</span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">unit</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Unit</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span><span class="t">
-</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_priority</span><span class="t">
-</span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">priority</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Priority</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span><span class="t">
-</span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_message</span><span class="t">
-</span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">message</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">message_header_text</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span><span class="t">
-</span><span class="t">
-</span><span class="t">      </span><span class="t">table</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">striped</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">        </span><span class="t">thead</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">          </span><span class="t">tr</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">            </span><span class="t">headers_to_display</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">header</span><span class="o">|</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">styled_count_span</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">%Q(</span><span class="ls">&lt;span style=&quot;font-style: italic; font-size: 0.9em; color: var</span><span class="ls">(</span><span class="ls">--pico-muted-color</span><span class="ls">)</span><span class="ls">; margin-left: 0.5em;&quot;&gt;</span><span class="ls">(</span><span class="lsi">#{</span><span class="t">count_message_inner_text</span><span class="t"></span><span class="lsi">}</span><span class="ls">)</span><span class="ls">&lt;/span&gt;</span><span class="ls">)</span><span class="ls"></span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="t">message_header_text</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Message </span><span class="lsi">#{</span><span class="t">styled_count_span</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-3"></span><span class="t"></span>
+<span id="line-4"></span><span class="t">      </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="nc">NamedTuple</span><span class="t">(</span><span class="t">text</span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="t">hx_vals</span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">,</span><span class="t"> </span><span class="t">key_name</span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">)</span><span class="t"></span>
+<span id="line-5"></span><span class="t"></span>
+<span id="line-6"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_timestamp</span><span class="t"></span>
+<span id="line-7"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">timestamp</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Timestamp</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
+<span id="line-8"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-9"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_hostname</span><span class="t"></span>
+<span id="line-10"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">hostname</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Hostname</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
+<span id="line-11"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-12"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_unit</span><span class="t"></span>
+<span id="line-13"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">unit</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Unit</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
+<span id="line-14"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-15"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_priority</span><span class="t"></span>
+<span id="line-16"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">priority</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Priority</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
+<span id="line-17"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-18"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_message</span><span class="t"></span>
+<span id="line-19"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">message</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">message_header_text</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
+<span id="line-20"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-21"></span><span class="t"></span>
+<span id="line-22"></span><span class="t">      </span><span class="t">table</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">striped</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-23"></span><span class="t">        </span><span class="t">thead</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-24"></span><span class="t">          </span><span class="t">tr</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-25"></span><span class="t">            </span><span class="t">headers_to_display</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">header</span><span class="o">|</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-13" class="grid">
-    <div class="doc" id="section-13">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-13" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>All remaining headers are sortable and will use this block</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">              </span><span class="t">th</span><span class="t">(</span><span class="t">{</span><span class="t">
-</span><span class="t">                </span><span class="ls">&quot;</span><span class="ls">style</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">        </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">cursor: pointer; vertical-align: middle;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                </span><span class="ls">&quot;</span><span class="ls">hx-get</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">       </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/logs</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                </span><span class="ls">&quot;</span><span class="ls">hx-vals</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">      </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">header</span><span class="t">[</span><span class="lss">:hx_vals</span><span class="t">]</span><span class="t">,</span><span class="t">
-</span><span class="t">                </span><span class="ls">&quot;</span><span class="ls">hx-include</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">search-box, </span><span class="ls">#</span><span class="ls">unit-filter, </span><span class="ls">#</span><span class="ls">tag-filter, </span><span class="ls">#</span><span class="ls">priority-filter, </span><span class="ls">#</span><span class="ls">time-range-filter, </span><span class="ls">#</span><span class="ls">live-view</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                </span><span class="ls">&quot;</span><span class="ls">hx-target</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">    </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">results</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                </span><span class="ls">&quot;</span><span class="ls">hx-indicator</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">loading-spinner</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">              </span><span class="t">}</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                </span><span class="t">html</span><span class="t"> </span><span class="t">header</span><span class="t">[</span><span class="lss">:text</span><span class="t">]</span><span class="t">
-</span><span class="t">              </span><span class="nk">end</span><span class="t">
-</span><span class="t">            </span><span class="nk">end</span><span class="t">
-</span><span class="t">          </span><span class="nk">end</span><span class="t">
-</span><span class="t">        </span><span class="nk">end</span><span class="t">
-</span><span class="t">        </span><span class="t">tbody</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">          </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">empty?</span><span class="t">
-</span><span class="t">            </span><span class="t">tr</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">              </span><span class="t">td</span><span class="t">(</span><span class="t">colspan</span><span class="t">:</span><span class="t"> </span><span class="nc">Math</span><span class="t">.</span><span class="t">max</span><span class="t">(</span><span class="ln">1</span><span class="t">,</span><span class="t"> </span><span class="t">headers_to_display</span><span class="t">.</span><span class="t">size</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text-align: center; padding: 1em;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                </span><span class="t">text</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">No log entries found.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">              </span><span class="nk">end</span><span class="t">
-</span><span class="t">            </span><span class="nk">end</span><span class="t">
-</span><span class="t">          </span><span class="nk">else</span><span class="t">
-</span><span class="t">            </span><span class="t">logs</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t">
-</span><span class="t">              </span><span class="t">row_classes</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">log-row-hover-actions</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">priority-</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">priority</span><span class="t">.</span><span class="t">to_i</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">
-</span><span class="t">              </span><span class="t">entry_cursor</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">__CURSOR</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">
-</span><span class="t">              </span><span class="nk">if</span><span class="t"> </span><span class="t">highlight_cursor</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="t">highlight_cursor</span><span class="t">
-</span><span class="t">                </span><span class="t">row_classes</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">highlighted-row</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">              </span><span class="nk">end</span><span class="t">
-</span><span class="t">              </span><span class="t">tr</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="t">row_classes</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls"> </span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                </span><span class="nk">if</span><span class="t"> </span><span class="t">show_timestamp</span><span class="t">
-</span><span class="t">                  </span><span class="t">td</span><span class="t">(</span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">white-space: nowrap; min-width: 14ch;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">              </span><span class="t">th</span><span class="t">(</span><span class="t">{</span><span class="t"></span>
+<span id="line-2"></span><span class="t">                </span><span class="ls">&quot;</span><span class="ls">style</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">        </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">cursor: pointer; vertical-align: middle;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-3"></span><span class="t">                </span><span class="ls">&quot;</span><span class="ls">hx-get</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">       </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/logs</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-4"></span><span class="t">                </span><span class="ls">&quot;</span><span class="ls">hx-vals</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">      </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">header</span><span class="t">[</span><span class="lss">:hx_vals</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-5"></span><span class="t">                </span><span class="ls">&quot;</span><span class="ls">hx-include</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">search-box, </span><span class="ls">#</span><span class="ls">unit-filter, </span><span class="ls">#</span><span class="ls">tag-filter, </span><span class="ls">#</span><span class="ls">priority-filter, </span><span class="ls">#</span><span class="ls">time-range-filter, </span><span class="ls">#</span><span class="ls">live-view</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-6"></span><span class="t">                </span><span class="ls">&quot;</span><span class="ls">hx-target</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">    </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">results</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-7"></span><span class="t">                </span><span class="ls">&quot;</span><span class="ls">hx-indicator</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">loading-spinner</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-8"></span><span class="t">              </span><span class="t">}</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-9"></span><span class="t">                </span><span class="t">html</span><span class="t"> </span><span class="t">header</span><span class="t">[</span><span class="lss">:text</span><span class="t">]</span><span class="t"></span>
+<span id="line-10"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-11"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-12"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-13"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-14"></span><span class="t">        </span><span class="t">tbody</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-15"></span><span class="t">          </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-16"></span><span class="t">            </span><span class="t">tr</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-17"></span><span class="t">              </span><span class="t">td</span><span class="t">(</span><span class="t">colspan</span><span class="t">:</span><span class="t"> </span><span class="nc">Math</span><span class="t">.</span><span class="t">max</span><span class="t">(</span><span class="ln">1</span><span class="t">,</span><span class="t"> </span><span class="t">headers_to_display</span><span class="t">.</span><span class="t">size</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">text-align: center; padding: 1em;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-18"></span><span class="t">                </span><span class="t">text</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">No log entries found.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-19"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-20"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-21"></span><span class="t">          </span><span class="nk">else</span><span class="t"></span>
+<span id="line-22"></span><span class="t">            </span><span class="t">logs</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t"></span>
+<span id="line-23"></span><span class="t">              </span><span class="t">row_classes</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">log-row-hover-actions</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">priority-</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">priority</span><span class="t">.</span><span class="t">to_i</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"></span>
+<span id="line-24"></span><span class="t">              </span><span class="t">entry_cursor</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">data</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">__CURSOR</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-25"></span><span class="t">              </span><span class="nk">if</span><span class="t"> </span><span class="t">highlight_cursor</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="t">highlight_cursor</span><span class="t"></span>
+<span id="line-26"></span><span class="t">                </span><span class="t">row_classes</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">highlighted-row</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-27"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-28"></span><span class="t">              </span><span class="t">tr</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="t">row_classes</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls"> </span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-29"></span><span class="t">                </span><span class="nk">if</span><span class="t"> </span><span class="t">show_timestamp</span><span class="t"></span>
+<span id="line-30"></span><span class="t">                  </span><span class="t">td</span><span class="t">(</span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">white-space: nowrap; min-width: 14ch;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-14" class="grid">
-    <div class="doc" id="section-14">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-14" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
-        <p>Using a more compact timestamp format: MM-DD HH:MM:SS</p>
+        <p>Using timezone-aware timestamp format: MM-DD HH:MM:SS</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">                    </span><span class="t">text</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">timestamp</span><span class="t">.</span><span class="t">to_s</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">%m-%d %H:%M:%S</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">
-</span><span class="t">                  </span><span class="nk">end</span><span class="t">
-</span><span class="t">                </span><span class="nk">end</span><span class="t">
-</span><span class="t">                </span><span class="nk">if</span><span class="t"> </span><span class="t">show_hostname</span><span class="t">
-</span><span class="t">                  </span><span class="t">td</span><span class="t"> </span><span class="nk">do</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">                    </span><span class="t">text</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_timestamp_with_timezone</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">%m-%d %H:%M:%S</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"></span>
+<span id="line-2"></span><span class="t">                  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-3"></span><span class="t">                </span><span class="nk">end</span><span class="t"></span>
+<span id="line-4"></span><span class="t">                </span><span class="nk">if</span><span class="t"> </span><span class="t">show_hostname</span><span class="t"></span>
+<span id="line-5"></span><span class="t">                  </span><span class="t">td</span><span class="t"> </span><span class="nk">do</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-15" class="grid">
-    <div class="doc" id="section-15">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-15" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Make the hostname clickable to set the filter</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">                    </span><span class="t">display_hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">hostname</span><span class="t">)</span><span class="t">
-</span><span class="t">                    </span><span class="t">js_arg_hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">hostname</span><span class="t">.</span><span class="t">to_json</span><span class="t"> </span><span class="c"># Ensures proper JS string escaping</span><span class="t">
-</span><span class="t">                    </span><span class="t">a</span><span class="t">(</span><span class="t">href</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">return setHostnameFilterAndTrigger(</span><span class="lsi">#{</span><span class="t">js_arg_hostname</span><span class="t"></span><span class="lsi">}</span><span class="ls">);</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                      </span><span class="t">text</span><span class="t"> </span><span class="t">display_hostname</span><span class="t">
-</span><span class="t">                    </span><span class="nk">end</span><span class="t">
-</span><span class="t">                  </span><span class="nk">end</span><span class="t">
-</span><span class="t">                </span><span class="nk">end</span><span class="t">
-</span><span class="t">                </span><span class="nk">if</span><span class="t"> </span><span class="t">show_unit</span><span class="t">
-</span><span class="t">                  </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">log-unit-cell</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">                    </span><span class="t">display_hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">hostname</span><span class="t">)</span><span class="t"></span>
+<span id="line-2"></span><span class="t">                    </span><span class="t">js_arg_hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">hostname</span><span class="t">.</span><span class="t">to_json</span><span class="t"> </span><span class="c"># Ensures proper JS string escaping</span><span class="t"></span>
+<span id="line-3"></span><span class="t">                    </span><span class="t">a</span><span class="t">(</span><span class="t">href</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">return setHostnameFilterAndTrigger(</span><span class="lsi">#{</span><span class="t">js_arg_hostname</span><span class="t"></span><span class="lsi">}</span><span class="ls">);</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-4"></span><span class="t">                      </span><span class="t">text</span><span class="t"> </span><span class="t">display_hostname</span><span class="t"></span>
+<span id="line-5"></span><span class="t">                    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-6"></span><span class="t">                  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-7"></span><span class="t">                </span><span class="nk">end</span><span class="t"></span>
+<span id="line-8"></span><span class="t">                </span><span class="nk">if</span><span class="t"> </span><span class="t">show_unit</span><span class="t"></span>
+<span id="line-9"></span><span class="t">                  </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">log-unit-cell</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-16" class="grid">
-    <div class="doc" id="section-16">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-16" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Make the unit name clickable to set the filter</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">                    </span><span class="t">display_unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t">)</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">                    </span><span class="t">display_unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-17" class="grid">
-    <div class="doc" id="section-17">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-17" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>JSON.generate creates a valid JavaScript string literal, e.g., &quot;&quot;my-unit&quot;&quot;</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">                    </span><span class="t">js_arg_unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t">.</span><span class="t">to_json</span><span class="t">
-</span><span class="t">                    </span><span class="t">a</span><span class="t">(</span><span class="t">href</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">return setUnitFilterAndTrigger(</span><span class="lsi">#{</span><span class="t">js_arg_unit_name</span><span class="t"></span><span class="lsi">}</span><span class="ls">);</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                      </span><span class="t">text</span><span class="t"> </span><span class="t">display_unit_name</span><span class="t">
-</span><span class="t">                    </span><span class="nk">end</span><span class="t">
-</span><span class="t">                  </span><span class="nk">end</span><span class="t">
-</span><span class="t">                </span><span class="nk">end</span><span class="t">
-</span><span class="t">                </span><span class="nk">if</span><span class="t"> </span><span class="t">show_priority</span><span class="t">
-</span><span class="t">                  </span><span class="t">td</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                    </span><span class="t">text</span><span class="t"> </span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_priority</span><span class="t">)</span><span class="t">
-</span><span class="t">                  </span><span class="nk">end</span><span class="t">
-</span><span class="t">                </span><span class="nk">end</span><span class="t">
-</span><span class="t">                </span><span class="nk">if</span><span class="t"> </span><span class="t">show_message</span><span class="t">
-</span><span class="t">                  </span><span class="t">escaped_message</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">message</span><span class="t">)</span><span class="t">
-</span><span class="t">                  </span><span class="t">highlighted_message</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">search_query</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">search_query</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t">
-</span><span class="t">                                          </span><span class="t">pattern</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Regex</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">search_query</span><span class="t">)</span><span class="t">
-</span><span class="t">                                          </span><span class="t">escaped_message</span><span class="t">.</span><span class="t">gsub</span><span class="t">(</span><span class="o">/</span><span class="c">#{pattern}/i, &quot;&lt;mark&gt;\\0&lt;/mark&gt;&quot;)</span><span class="t">
-</span><span class="t">                                        </span><span class="nk">else</span><span class="t">
-</span><span class="t">                                          </span><span class="t">escaped_message</span><span class="t">
-</span><span class="t">                                        </span><span class="nk">end</span><span class="t">
-</span><span class="t">                  </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">log-message-cell</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                    </span><span class="t">html</span><span class="t"> </span><span class="t">highlighted_message</span><span class="t">
-</span><span class="t">                  </span><span class="nk">end</span><span class="t">
-</span><span class="t">                </span><span class="nk">end</span><span class="t">
-</span><span class="t">
-</span><span class="t">                </span><span class="nk">if</span><span class="t"> </span><span class="t">entry_cursor</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">                    </span><span class="t">js_arg_unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-2"></span><span class="t">                    </span><span class="t">a</span><span class="t">(</span><span class="t">href</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">return setUnitFilterAndTrigger(</span><span class="lsi">#{</span><span class="t">js_arg_unit_name</span><span class="t"></span><span class="lsi">}</span><span class="ls">);</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-3"></span><span class="t">                      </span><span class="t">text</span><span class="t"> </span><span class="t">display_unit_name</span><span class="t"></span>
+<span id="line-4"></span><span class="t">                    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-5"></span><span class="t">                  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-6"></span><span class="t">                </span><span class="nk">end</span><span class="t"></span>
+<span id="line-7"></span><span class="t">                </span><span class="nk">if</span><span class="t"> </span><span class="t">show_priority</span><span class="t"></span>
+<span id="line-8"></span><span class="t">                  </span><span class="t">td</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-9"></span><span class="t">                    </span><span class="t">text</span><span class="t"> </span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_priority</span><span class="t">)</span><span class="t"></span>
+<span id="line-10"></span><span class="t">                  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-11"></span><span class="t">                </span><span class="nk">end</span><span class="t"></span>
+<span id="line-12"></span><span class="t">                </span><span class="nk">if</span><span class="t"> </span><span class="t">show_message</span><span class="t"></span>
+<span id="line-13"></span><span class="t">                  </span><span class="t">escaped_message</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">message</span><span class="t">)</span><span class="t"></span>
+<span id="line-14"></span><span class="t">                  </span><span class="t">highlighted_message</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">search_query</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">search_query</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-15"></span><span class="t">                                          </span><span class="t">pattern</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Regex</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">search_query</span><span class="t">)</span><span class="t"></span>
+<span id="line-16"></span><span class="t">                                          </span><span class="t">escaped_message</span><span class="t">.</span><span class="t">gsub</span><span class="t">(</span><span class="o">/</span><span class="c">#{pattern}/i, &quot;&lt;mark&gt;\\0&lt;/mark&gt;&quot;)</span><span class="t"></span>
+<span id="line-17"></span><span class="t">                                        </span><span class="nk">else</span><span class="t"></span>
+<span id="line-18"></span><span class="t">                                          </span><span class="t">escaped_message</span><span class="t"></span>
+<span id="line-19"></span><span class="t">                                        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-20"></span><span class="t">                  </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">log-message-cell</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-21"></span><span class="t">                    </span><span class="t">html</span><span class="t"> </span><span class="t">highlighted_message</span><span class="t"></span>
+<span id="line-22"></span><span class="t">                  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-23"></span><span class="t">                </span><span class="nk">end</span><span class="t"></span>
+<span id="line-24"></span><span class="t"></span>
+<span id="line-25"></span><span class="t">                </span><span class="nk">if</span><span class="t"> </span><span class="t">entry_cursor</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-18" class="grid">
-    <div class="doc" id="section-18">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-18" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Details button</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">                  </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">hover-action-cell</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                    </span><span class="t">button</span><span class="t">(</span><span class="t">{</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">class</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                     </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">round-button</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">title</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                     </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">View full details for this log entry</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-get</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                    </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">details?</span><span class="lsi">#{</span><span class="nc">URI</span><span class="nc">::</span><span class="nc">Params</span><span class="t">.</span><span class="t">encode</span><span class="t">(</span><span class="t">{</span><span class="ls">&quot;</span><span class="ls">cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">)}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-target</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                 </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">details-dialog-content</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="c"># Target the content area within the modal</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-swap</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                   </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">innerHTML</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-on:htmx:before-request</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">document.getElementById(&#39;details-dialog-content&#39;).innerHTML = document.getElementById(&#39;details-dialog-loading-spinner-template&#39;).innerHTML;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-on:htmx:after-request</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">  </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">if(event.detail.successful) { document.getElementById(&#39;details-dialog&#39;).showModal(); } else { document.getElementById(&#39;details-dialog-content&#39;).innerHTML = &#39;&lt;p class=</span><span class="ls">\\</span><span class="ls">&#39;error</span><span class="ls">\\</span><span class="ls">&#39;&gt;Failed to load details. Status: &#39; + event.detail.xhr.status + &#39; &#39; + event.detail.xhr.statusText + &#39;&lt;/p&gt;&#39;; document.getElementById(&#39;details-dialog&#39;).showModal(); }</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                    </span><span class="t">}</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                      </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">material-icons</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">vertical-align: middle;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                        </span><span class="t">text</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">search</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">                      </span><span class="nk">end</span><span class="t">
-</span><span class="t">                    </span><span class="nk">end</span><span class="t">
-</span><span class="t">                  </span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">                  </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">hover-action-cell</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-2"></span><span class="t">                    </span><span class="t">button</span><span class="t">(</span><span class="t">{</span><span class="t"></span>
+<span id="line-3"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">class</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                     </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">round-button</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-4"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">title</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                     </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">View full details for this log entry</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-5"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-get</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                    </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">details?</span><span class="lsi">#{</span><span class="nc">URI</span><span class="nc">::</span><span class="nc">Params</span><span class="t">.</span><span class="t">encode</span><span class="t">(</span><span class="t">{</span><span class="ls">&quot;</span><span class="ls">cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">)}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-6"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-target</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                 </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">details-dialog-content</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="c"># Target the content area within the modal</span><span class="t"></span>
+<span id="line-7"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-swap</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                   </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">innerHTML</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-8"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-on:htmx:before-request</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">document.getElementById(&#39;details-dialog-content&#39;).innerHTML = document.getElementById(&#39;details-dialog-loading-spinner-template&#39;).innerHTML;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-9"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-on:htmx:after-request</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">  </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">if(event.detail.successful) { document.getElementById(&#39;details-dialog&#39;).showModal(); } else { document.getElementById(&#39;details-dialog-content&#39;).innerHTML = &#39;&lt;p class=</span><span class="ls">\\</span><span class="ls">&#39;error</span><span class="ls">\\</span><span class="ls">&#39;&gt;Failed to load details. Status: &#39; + event.detail.xhr.status + &#39; &#39; + event.detail.xhr.statusText + &#39;&lt;/p&gt;&#39;; document.getElementById(&#39;details-dialog&#39;).showModal(); }</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-10"></span><span class="t">                    </span><span class="t">}</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-11"></span><span class="t">                      </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">material-icons</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">vertical-align: middle;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-12"></span><span class="t">                        </span><span class="t">text</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">search</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-13"></span><span class="t">                      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-14"></span><span class="t">                    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-15"></span><span class="t">                  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section-19" class="grid">
-    <div class="doc" id="section-19">
+<div id="section" class="grid">
+    <div class="doc" id="section">
         <span class="anchor">
-            <a href="#section-19" class="anchor">↦</a>
+            <a href="#section" class="anchor">↦</a>
         </span>
         <p>Context button</p>
 
     </div>
     <div class="code">
-        <pre class="b" ><code class="b"><span class="t">                  </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">hover-action-cell</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                    </span><span class="t">button</span><span class="t">(</span><span class="t">{</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">class</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                     </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">round-button</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">title</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                     </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">View context for this log entry (e.g., 5 before &amp; 5 after)</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-get</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                    </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">context?</span><span class="lsi">#{</span><span class="nc">URI</span><span class="nc">::</span><span class="nc">Params</span><span class="t">.</span><span class="t">encode</span><span class="t">(</span><span class="t">{</span><span class="ls">&quot;</span><span class="ls">cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">)}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-target</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                 </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">details-dialog-content</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="c"># Target the content area within the modal</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-swap</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                   </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">innerHTML</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-on:htmx:before-request</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">document.getElementById(&#39;details-dialog-content&#39;).innerHTML = document.getElementById(&#39;details-dialog-loading-spinner-template&#39;).innerHTML;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-on:htmx:after-request</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">  </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">if(event.detail.successful) { document.getElementById(&#39;details-dialog&#39;).showModal(); } else { document.getElementById(&#39;details-dialog-content&#39;).innerHTML = &#39;&lt;p class=</span><span class="ls">\\</span><span class="ls">&#39;error</span><span class="ls">\\</span><span class="ls">&#39;&gt;Failed to load details. Status: &#39; + event.detail.xhr.status + &#39; &#39; + event.detail.xhr.statusText + &#39;&lt;/p&gt;&#39;; document.getElementById(&#39;details-dialog&#39;).showModal(); }</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t">
-</span><span class="t">                    </span><span class="t">}</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                      </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">material-icons</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">vertical-align: middle;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t">
-</span><span class="t">                        </span><span class="t">text</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">history</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">
-</span><span class="t">                      </span><span class="nk">end</span><span class="t">
-</span><span class="t">                    </span><span class="nk">end</span><span class="t">
-</span><span class="t">                  </span><span class="nk">end</span><span class="t">
-</span><span class="t">                </span><span class="nk">end</span><span class="t">
-</span><span class="t">              </span><span class="nk">end</span><span class="t">
-</span><span class="t">            </span><span class="nk">end</span><span class="t">
-</span><span class="t">          </span><span class="nk">end</span><span class="t">
-</span><span class="t">        </span><span class="nk">end</span><span class="t">
-</span><span class="t">      </span><span class="nk">end</span><span class="t">
-</span><span class="t">    </span><span class="nk">end</span><span class="t">
-</span><span class="t">  </span><span class="nk">end</span><span class="t">
-</span><span class="nk">end</span></code></pre>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">                  </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">hover-action-cell</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-2"></span><span class="t">                    </span><span class="t">button</span><span class="t">(</span><span class="t">{</span><span class="t"></span>
+<span id="line-3"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">class</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                     </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">round-button</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-4"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">title</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                     </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">View context for this log entry (e.g., 5 before &amp; 5 after)</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-5"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-get</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                    </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">context?</span><span class="lsi">#{</span><span class="nc">URI</span><span class="nc">::</span><span class="nc">Params</span><span class="t">.</span><span class="t">encode</span><span class="t">(</span><span class="t">{</span><span class="ls">&quot;</span><span class="ls">cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">)}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-6"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-target</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                 </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">#</span><span class="ls">details-dialog-content</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="c"># Target the content area within the modal</span><span class="t"></span>
+<span id="line-7"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-swap</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">                   </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">innerHTML</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-8"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-on:htmx:before-request</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">document.getElementById(&#39;details-dialog-content&#39;).innerHTML = document.getElementById(&#39;details-dialog-loading-spinner-template&#39;).innerHTML;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-9"></span><span class="t">                      </span><span class="ls">&quot;</span><span class="ls">hx-on:htmx:after-request</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">  </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">if(event.detail.successful) { document.getElementById(&#39;details-dialog&#39;).showModal(); } else { document.getElementById(&#39;details-dialog-content&#39;).innerHTML = &#39;&lt;p class=</span><span class="ls">\\</span><span class="ls">&#39;error</span><span class="ls">\\</span><span class="ls">&#39;&gt;Failed to load details. Status: &#39; + event.detail.xhr.status + &#39; &#39; + event.detail.xhr.statusText + &#39;&lt;/p&gt;&#39;; document.getElementById(&#39;details-dialog&#39;).showModal(); }</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-10"></span><span class="t">                    </span><span class="t">}</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-11"></span><span class="t">                      </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">material-icons</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">vertical-align: middle;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-12"></span><span class="t">                        </span><span class="t">text</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">history</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-13"></span><span class="t">                      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-14"></span><span class="t">                    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-15"></span><span class="t">                  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section" class="grid">
+    <div class="doc" id="section">
+        <span class="anchor">
+            <a href="#section" class="anchor">↦</a>
+        </span>
+        <p>AI Explanation button (only shown if AI is enabled)</p>
+
+    </div>
+    <div class="code">
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">                  </span><span class="nk">if</span><span class="t"> </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">ai_enabled?</span><span class="t"></span>
+<span id="line-2"></span><span class="t">                    </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">hover-action-cell</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-3"></span><span class="t">                      </span><span class="t">button</span><span class="t">(</span><span class="t">{</span><span class="t"></span>
+<span id="line-4"></span><span class="t">                        </span><span class="ls">&quot;</span><span class="ls">class</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">round-button</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-5"></span><span class="t">                        </span><span class="ls">&quot;</span><span class="ls">title</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Ask AI to explain this log entry</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-6"></span><span class="t">                        </span><span class="ls">&quot;</span><span class="ls">onclick</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">askAIExplanation(&#39;</span><span class="lsi">#{</span><span class="t">entry_cursor</span><span class="t"></span><span class="lsi">}</span><span class="ls">&#39;)</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-7"></span><span class="t">                      </span><span class="t">}</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-8"></span><span class="t">                        </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">material-icons</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">vertical-align: middle;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-9"></span><span class="t">                          </span><span class="t">text</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">psychology</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-10"></span><span class="t">                        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-11"></span><span class="t">                      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-12"></span><span class="t">                    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-13"></span><span class="t">                  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-14"></span><span class="t">                </span><span class="nk">end</span><span class="t"></span>
+<span id="line-15"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-16"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-17"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-18"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-19"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-20"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-21"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-22"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
