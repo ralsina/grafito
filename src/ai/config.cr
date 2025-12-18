@@ -50,43 +50,65 @@ module Grafito::AI
         Providers::Anthropic.new if Providers::Anthropic.available?
       when .open_ai_compatible?
         Providers::OpenAICompatible.new if Providers::OpenAICompatible.available?
+      end
+    end
+
+    # Provider IDs that map to Anthropic
+    ANTHROPIC_PROVIDERS = {"anthropic", "claude"}
+
+    # Provider IDs that map to OpenAI-compatible
+    OPENAI_COMPATIBLE_PROVIDERS = {"openai", "z_ai", "zai", "groq", "ollama", "together", "openai_compatible"}
+
+    # API key environment variables for OpenAI-compatible providers
+    OPENAI_COMPATIBLE_API_KEYS = {"Z_AI_API_KEY", "OPENAI_API_KEY", "GROQ_API_KEY", "TOGETHER_API_KEY", "GRAFITO_AI_API_KEY"}
+
+    # Determine which provider type to use
+    def provider_type : ProviderType
+      # Check for explicit provider selection first
+      if result = parse_explicit_provider
+        return result
+      end
+
+      # Fall back to auto-detection
+      auto_detect_provider
+    end
+
+    # Parse explicit provider from GRAFITO_AI_PROVIDER env var
+    private def parse_explicit_provider : ProviderType?
+      return unless explicit = ENV["GRAFITO_AI_PROVIDER"]?
+
+      normalized = explicit.downcase.strip
+      if ANTHROPIC_PROVIDERS.includes?(normalized)
+        Log.debug { "Explicit provider selection: Anthropic" }
+        ProviderType::Anthropic
+      elsif OPENAI_COMPATIBLE_PROVIDERS.includes?(normalized)
+        Log.debug { "Explicit provider selection: OpenAI-Compatible" }
+        ProviderType::OpenAICompatible
       else
+        Log.warn { "Unknown provider '#{explicit}', falling back to auto-detection" }
         nil
       end
     end
 
-    # Determine which provider type to use
-    def provider_type : ProviderType
-      # Check for explicit provider selection
-      if explicit = ENV["GRAFITO_AI_PROVIDER"]?
-        case explicit.downcase.strip
-        when "anthropic", "claude"
-          Log.debug { "Explicit provider selection: Anthropic" }
-          return ProviderType::Anthropic
-        when "openai", "z_ai", "zai", "groq", "ollama", "together", "openai_compatible"
-          Log.debug { "Explicit provider selection: OpenAI-Compatible" }
-          return ProviderType::OpenAICompatible
-        else
-          Log.warn { "Unknown provider '#{explicit}', falling back to auto-detection" }
-        end
-      end
-
-      # Auto-detect based on available API keys (priority order)
+    # Auto-detect provider based on available API keys
+    private def auto_detect_provider : ProviderType
       if ENV["ANTHROPIC_API_KEY"]?
         Log.debug { "Auto-detected provider: Anthropic (ANTHROPIC_API_KEY present)" }
-        ProviderType::Anthropic
-      elsif ENV["Z_AI_API_KEY"]? || ENV["OPENAI_API_KEY"]? || ENV["GROQ_API_KEY"]? ||
-            ENV["TOGETHER_API_KEY"]? || ENV["GRAFITO_AI_API_KEY"]?
-        Log.debug { "Auto-detected provider: OpenAI-Compatible" }
-        ProviderType::OpenAICompatible
-      elsif ENV["GRAFITO_AI_ENDPOINT"]?
-        # Custom endpoint (like Ollama) without API key
-        Log.debug { "Auto-detected provider: OpenAI-Compatible (custom endpoint)" }
-        ProviderType::OpenAICompatible
-      else
-        Log.debug { "No AI provider detected" }
-        ProviderType::None
+        return ProviderType::Anthropic
       end
+
+      if OPENAI_COMPATIBLE_API_KEYS.any? { |key| ENV[key]? }
+        Log.debug { "Auto-detected provider: OpenAI-Compatible" }
+        return ProviderType::OpenAICompatible
+      end
+
+      if ENV["GRAFITO_AI_ENDPOINT"]?
+        Log.debug { "Auto-detected provider: OpenAI-Compatible (custom endpoint)" }
+        return ProviderType::OpenAICompatible
+      end
+
+      Log.debug { "No AI provider detected" }
+      ProviderType::None
     end
 
     # Check if any AI provider is available
@@ -143,14 +165,12 @@ module Grafito::AI
 
     # Get a specific provider by ID
     def provider_by_id(id : String) : Provider?
-      case id.downcase.strip
-      when "anthropic", "claude"
+      normalized_id = id.downcase.strip
+
+      if ANTHROPIC_PROVIDERS.includes?(normalized_id)
         Providers::Anthropic.new if Providers::Anthropic.available?
-      when "z_ai", "zai", "openai", "groq", "together", "ollama", "openai_compatible"
-        # For OpenAI-compatible, we need to temporarily set the detection
-        Providers::OpenAICompatible.new(id) if Providers::OpenAICompatible.available?
-      else
-        nil
+      elsif OPENAI_COMPATIBLE_PROVIDERS.includes?(normalized_id)
+        Providers::OpenAICompatible.new(normalized_id) if Providers::OpenAICompatible.available?
       end
     end
 

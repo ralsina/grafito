@@ -2,6 +2,44 @@ require "../spec_helper"
 require "../../src/ai/request"
 
 describe Grafito::AI::Request do
+  describe "PRIORITY_MAP constant" do
+    it "maps emergency priority names to 0" do
+      Grafito::AI::Request::PRIORITY_MAP["emerg"].should eq("0")
+      Grafito::AI::Request::PRIORITY_MAP["emergency"].should eq("0")
+    end
+
+    it "maps alert priority name to 1" do
+      Grafito::AI::Request::PRIORITY_MAP["alert"].should eq("1")
+    end
+
+    it "maps critical priority names to 2" do
+      Grafito::AI::Request::PRIORITY_MAP["crit"].should eq("2")
+      Grafito::AI::Request::PRIORITY_MAP["critical"].should eq("2")
+    end
+
+    it "maps error priority names to 3" do
+      Grafito::AI::Request::PRIORITY_MAP["err"].should eq("3")
+      Grafito::AI::Request::PRIORITY_MAP["error"].should eq("3")
+    end
+
+    it "maps warning priority names to 4" do
+      Grafito::AI::Request::PRIORITY_MAP["warning"].should eq("4")
+      Grafito::AI::Request::PRIORITY_MAP["warn"].should eq("4")
+    end
+
+    it "maps notice priority name to 5" do
+      Grafito::AI::Request::PRIORITY_MAP["notice"].should eq("5")
+    end
+
+    it "maps info priority name to 6" do
+      Grafito::AI::Request::PRIORITY_MAP["info"].should eq("6")
+    end
+
+    it "maps debug priority name to 7" do
+      Grafito::AI::Request::PRIORITY_MAP["debug"].should eq("7")
+    end
+  end
+
   describe "#initialize" do
     it "creates a request with all parameters" do
       request = Grafito::AI::Request.new(
