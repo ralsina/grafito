@@ -194,7 +194,7 @@ class Journalctl
 
     # Converts the numeric priority string to its textual representation.
     def formatted_priority : String
-      case self.priority # Use the getter to ensure defaulting/cleaning
+      case priority # Use the getter to ensure defaulting/cleaning
       when "0" then "Emergency"
       when "1" then "Alert"
       when "2" then "Critical"
@@ -205,8 +205,8 @@ class Journalctl
       when "7" then "Debug"
       else
         # If priority is unknown or not a standard number, return the original value
-        Journalctl::Log.debug { "Unknown priority value: '#{self.priority}'" }
-        self.priority
+        Journalctl::Log.debug { "Unknown priority value: '#{priority}'" }
+        priority
       end
     end
   end
@@ -461,7 +461,7 @@ class Journalctl
 
     if entries.empty?
       Log.debug { "No entry found for cursor '#{cursor}' or command failed." }
-      return nil
+      return
     end
 
     entries.first # Should be only one entry if found
@@ -576,13 +576,13 @@ class Journalctl
   def self.context(cursor : String, count : Int32) : Array(LogEntry)?
     if count <= 0
       Log.warn { "Context requested for cursor '#{cursor}' with non-positive count: #{count}. Returning nil." }
-      return nil
+      return
     end
 
     target_entry = get_entry_by_cursor(cursor)
     unless target_entry
       Log.warn { "Context: Target entry for cursor '#{cursor}' not found. Returning nil." }
-      return nil
+      return
     end
 
     # Fetch 'before' entries: `journalctl -o json --cursor <cursor> -n <count + 1> --reverse`

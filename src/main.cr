@@ -32,6 +32,7 @@
 # ## main.cr
 
 require "./grafito"
+require "./ai/config"
 require "baked_file_handler"
 require "baked_file_system"
 require "docopt"
@@ -139,14 +140,17 @@ def main
   auth_user = ENV["GRAFITO_AUTH_USER"]?
   auth_pass = ENV["GRAFITO_AUTH_PASS"]?
 
-  # Check if Z.AI API key is available for AI features
-  z_ai_api_key = ENV["Z_AI_API_KEY"]?
-  if z_ai_api_key
-    Grafito::Log.info { "Z.AI API key configured - AI features enabled" }
-    Grafito.ai_enabled = true
+  # Initialize AI provider using the abstraction layer
+  # Supports: Anthropic (ANTHROPIC_API_KEY), Z.AI (Z_AI_API_KEY),
+  # OpenAI (OPENAI_API_KEY), Groq (GROQ_API_KEY), Ollama (GRAFITO_AI_ENDPOINT)
+  ai_provider = Grafito::AI::Config.provider
+  if ai_provider
+    Grafito::Log.info { "AI features enabled: #{ai_provider.name}" }
+    Grafito.ai_provider = ai_provider
   else
-    Grafito::Log.info { "Z.AI API key not configured - AI features disabled" }
-    Grafito.ai_enabled = false
+    Grafito::Log.info { "AI features disabled - no provider configured" }
+    Grafito::Log.info { "  Set ANTHROPIC_API_KEY or Z_AI_API_KEY to enable" }
+    Grafito.ai_provider = nil
   end
 
   # Both username and password are set, enable basic authentication

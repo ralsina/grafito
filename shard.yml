@@ -30,6 +30,9 @@ dependencies:
     github: kemalcr/kemal-basic-auth
   baked_file_handler:
     github: ralsina/baked_file_handler
+  # Anthropic/Claude AI provider
+  anthropic:
+    github: jgaskins/anthropic
 
 # Faker is used for the demo version which displays
 # fake data.

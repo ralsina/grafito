@@ -358,3 +358,47 @@ h1 {
 #ai-explanation-dialog-content span[aria-busy="true"] {
     color: var(--pico-primary);
 }
+
+/* AI Markdown Content Styling */
+.ai-markdown-content h1,
+.ai-markdown-content h2,
+.ai-markdown-content h3 {
+    margin: 0.75rem 0 0.25rem 0;
+}
+
+.ai-markdown-content h1 {
+    font-size: 1.25rem;
+}
+
+.ai-markdown-content h2 {
+    font-size: 1.1rem;
+}
+
+.ai-markdown-content h3 {
+    font-size: 1rem;
+}
+
+.ai-markdown-content p {
+    margin: 0.25rem 0 0.5rem 0;
+}
+
+.ai-markdown-content ul,
+.ai-markdown-content ol {
+    margin: 0.25rem 0 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.ai-markdown-content li {
+    margin: 0.15rem 0;
+}
+
+.ai-markdown-content pre {
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+    overflow-x: auto;
+}
+
+.ai-markdown-content code {
+    font-family: "Chivo Mono", monospace;
+    font-size: 0.9em;
+}
