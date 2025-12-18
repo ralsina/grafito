@@ -30,7 +30,7 @@ module Grafito::AI::Providers
     # Default model if not overridden
     DEFAULT_MODEL = "claude-sonnet-4-5-20250929"
 
-    def initialize
+    def initialize : Nil
       # The client automatically reads ANTHROPIC_API_KEY
       @client = ::Anthropic::Client.new
       @model = ENV["GRAFITO_AI_MODEL"]? || DEFAULT_MODEL
@@ -90,7 +90,7 @@ module Grafito::AI::Providers
     private def extract_content(response) : String
       # The response contains an array of content blocks
       # We join all text blocks together
-      content_parts = [] of String
+      content_parts = Array(String).new
 
       response.content.each do |block|
         case block

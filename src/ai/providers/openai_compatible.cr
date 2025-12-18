@@ -74,7 +74,7 @@ module Grafito::AI::Providers
     @provider_name : String
     @timeout : Time::Span
 
-    def initialize(force_provider : String? = nil)
+    def initialize(force_provider : String? = nil) : Nil
       provider_id = force_provider || detect_provider
       config = PROVIDERS[provider_id]? || PROVIDERS["z_ai"]
 

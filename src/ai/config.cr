@@ -128,7 +128,7 @@ module Grafito::AI
 
     # List all available providers with their status
     def available_providers : Array(ProviderInfo)
-      providers = [] of ProviderInfo
+      providers = Array(ProviderInfo).new
 
       # Check Anthropic
       if ENV["ANTHROPIC_API_KEY"]?
@@ -175,7 +175,7 @@ module Grafito::AI
     end
 
     # Log current configuration (for debugging)
-    def log_config
+    def log_config : Nil
       Log.info { "AI Provider Configuration:" }
       Log.info { "  Provider Type: #{provider_type}" }
       Log.info { "  Provider Name: #{provider_name}" }

@@ -13,7 +13,7 @@ module Grafito::AI
     getter input_tokens : Int32
     getter output_tokens : Int32
 
-    def initialize(@input_tokens : Int32, @output_tokens : Int32)
+    def initialize(@input_tokens : Int32, @output_tokens : Int32) : Nil
     end
 
     def total_tokens : Int32
@@ -48,7 +48,7 @@ module Grafito::AI
       @provider : String,
       @usage : Usage? = nil,
       @raw : String? = nil,
-    )
+    ) : Nil
     end
 
     # Check if this response contains meaningful content

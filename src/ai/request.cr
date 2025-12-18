@@ -39,7 +39,7 @@ module Grafito::AI
       @user_prompt : String,
       @max_tokens : Int32 = 1024,
       @temperature : Float64 = 0.7,
-    )
+    ) : Nil
     end
 
     # Convenience constructor for log analysis use case.
@@ -89,7 +89,8 @@ module Grafito::AI
 
       priority_context = case normalize_priority(priority)
                          when "0", "1", "2" # emerg, alert, crit
-                           "This is a CRITICAL system event requiring immediate attention. Focus on impact assessment, immediate remediation steps, and escalation recommendations."
+                           "This is a CRITICAL system event requiring immediate attention. " \
+                           "Focus on impact assessment, immediate remediation steps, and escalation recommendations."
                          when "3" # err
                            "Provide clear explanations of errors with practical solutions and prevention strategies."
                          when "4" # warning
