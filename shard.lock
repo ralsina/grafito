@@ -52,3 +52,7 @@ shards:
     git: https://github.com/luislavena/radix.git
     version: 0.4.1
 
+  webmock:
+    git: https://github.com/manastech/webmock.cr.git
+    version: 0.14.0
+
