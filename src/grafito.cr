@@ -315,6 +315,31 @@ module Grafito
     }.to_json
   end
 
+  # ## The `/ai-models` endpoint
+  #
+  # Returns list of available models for a specific provider.
+  # Models are fetched dynamically from the provider's API when possible.
+  #
+  # Example usage:
+  # ```text
+  # GET /ai-models?provider=openai
+  # ```
+  #
+  # Returns JSON array of models with id, name, and default flag.
+  get "/ai-models" do |env|
+    env.response.content_type = "application/json"
+
+    provider_id = env.params.query["provider"]?
+
+    unless provider_id
+      env.response.status_code = 400
+      next {error: "Missing 'provider' query parameter"}.to_json
+    end
+
+    models = AI::Config.models_for_provider(provider_id)
+    {models: models}.to_json
+  end
+
   # ## The `/ask-ai` endpoint
   #
   # Sends log context to the configured AI provider for explanation.
@@ -331,9 +356,10 @@ module Grafito
   post "/ask-ai" do |env|
     Log.debug { "Received /ask-ai request" }
 
-    # Parse JSON to check for provider override
+    # Parse JSON to check for provider/model override
     body = env.request.body.try(&.gets_to_end) || ""
     provider_id : String? = nil
+    model_id : String? = nil
     cursor : String? = nil
 
     unless body.empty?
@@ -341,14 +367,15 @@ module Grafito
         json_body = JSON.parse(body)
         cursor = json_body["cursor"]?.try(&.as_s)
         provider_id = json_body["provider"]?.try(&.as_s)
+        model_id = json_body["model"]?.try(&.as_s)
       rescue
         # Will be handled below
       end
     end
 
-    # Get provider (either specified or default)
+    # Get provider (either specified or default), with optional model
     provider = if pid = provider_id
-                 AI::Config.provider_by_id(pid) || Grafito.ai_provider
+                 AI::Config.provider_by_id(pid, model_id) || Grafito.ai_provider
                else
                  Grafito.ai_provider
                end

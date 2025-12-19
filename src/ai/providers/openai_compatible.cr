@@ -31,6 +31,7 @@ module Grafito::AI::Providers
     # Known provider configurations
     record ProviderConfig,
       endpoint : String,
+      models_endpoint : String?,
       default_model : String,
       env_key : String?,
       name : String
@@ -38,51 +39,111 @@ module Grafito::AI::Providers
     PROVIDERS = {
       "z_ai" => ProviderConfig.new(
         endpoint: "https://api.z.ai/api/paas/v4/chat/completions",
+        models_endpoint: nil, # Z.AI doesn't expose models list
         default_model: "glm-4.5-flash",
         env_key: "Z_AI_API_KEY",
         name: "Z.AI"
       ),
       "openai" => ProviderConfig.new(
         endpoint: "https://api.openai.com/v1/chat/completions",
+        models_endpoint: "https://api.openai.com/v1/models",
         default_model: "gpt-4o-mini",
         env_key: "OPENAI_API_KEY",
         name: "OpenAI"
       ),
       "groq" => ProviderConfig.new(
         endpoint: "https://api.groq.com/openai/v1/chat/completions",
+        models_endpoint: "https://api.groq.com/openai/v1/models",
         default_model: "llama-3.1-70b-versatile",
         env_key: "GROQ_API_KEY",
         name: "Groq"
       ),
       "together" => ProviderConfig.new(
         endpoint: "https://api.together.xyz/v1/chat/completions",
+        models_endpoint: "https://api.together.xyz/v1/models",
         default_model: "meta-llama/Llama-3-70b-chat-hf",
         env_key: "TOGETHER_API_KEY",
         name: "Together.ai"
       ),
       "ollama" => ProviderConfig.new(
         endpoint: "http://localhost:11434/v1/chat/completions",
+        models_endpoint: "http://localhost:11434/api/tags",
         default_model: "llama3",
-        env_key: nil, # Ollama doesn't require API key
+        env_key: nil,
         name: "Ollama"
       ),
+    }
+
+    # Curated list of popular, known-working chat models per provider
+    KNOWN_MODELS = {
+      "z_ai" => {
+        "glm-4.5-flash" => "GLM 4.5 Flash",
+        "glm-4-plus"    => "GLM 4 Plus",
+      },
+      "openai" => {
+        # GPT-5 series (chat-compatible)
+        "gpt-5.2"           => "GPT-5.2",
+        "gpt-5.1"           => "GPT-5.1",
+        "gpt-5"             => "GPT-5",
+        "gpt-5-mini"        => "GPT-5 Mini",
+        "gpt-5-nano"        => "GPT-5 Nano",
+        # O1 reasoning models
+        "o1"                => "O1",
+        # GPT-4.1 series
+        "gpt-4.1"           => "GPT-4.1",
+        "gpt-4.1-mini"      => "GPT-4.1 Mini",
+        "gpt-4.1-nano"      => "GPT-4.1 Nano",
+        # GPT-4o series
+        "gpt-4o"            => "GPT-4o",
+        "gpt-4o-mini"       => "GPT-4o Mini",
+        "chatgpt-4o-latest" => "ChatGPT-4o Latest",
+        # GPT-4 series
+        "gpt-4-turbo"       => "GPT-4 Turbo",
+        "gpt-4"             => "GPT-4",
+        # GPT-3.5 series
+        "gpt-3.5-turbo"     => "GPT-3.5 Turbo",
+        "gpt-3.5-turbo-16k" => "GPT-3.5 Turbo 16K",
+      },
+      "groq" => {
+        "llama-3.3-70b-versatile" => "Llama 3.3 70B",
+        "llama-3.1-8b-instant"    => "Llama 3.1 8B",
+        "mixtral-8x7b-32768"      => "Mixtral 8x7B",
+        "gemma2-9b-it"            => "Gemma 2 9B",
+      },
+      "together" => {
+        "meta-llama/Llama-3.3-70B-Instruct-Turbo" => "Llama 3.3 70B",
+        "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo" => "Llama 3.2 11B Vision",
+        "mistralai/Mixtral-8x7B-Instruct-v0.1"    => "Mixtral 8x7B",
+      },
+      "ollama" => {
+        "llama3.2" => "Llama 3.2",
+        "llama3.1" => "Llama 3.1",
+        "mistral"  => "Mistral",
+        "codellama" => "Code Llama",
+        "qwen2.5"  => "Qwen 2.5",
+      },
     }
 
     @api_key : String
     @endpoint : URI
     @model : String
     @provider_name : String
+    @provider_id : String
+    @models_endpoint : String?
     @timeout : Time::Span
+    @cached_models : Array(ModelInfo)?
 
-    def initialize(force_provider : String? = nil) : Nil
-      provider_id = force_provider || detect_provider
-      config = PROVIDERS[provider_id]? || PROVIDERS["z_ai"]
+    def initialize(force_provider : String? = nil, model : String? = nil) : Nil
+      @provider_id = force_provider || detect_provider
+      config = PROVIDERS[@provider_id]? || PROVIDERS["z_ai"]
 
       @provider_name = config.name
       @api_key = resolve_api_key(config)
       @endpoint = URI.parse(ENV["GRAFITO_AI_ENDPOINT"]? || config.endpoint)
-      @model = ENV["GRAFITO_AI_MODEL"]? || config.default_model
+      @models_endpoint = config.models_endpoint
+      @model = model || ENV["GRAFITO_AI_MODEL"]? || config.default_model
       @timeout = Time::Span.new(seconds: 30)
+      @cached_models = nil
 
       Log.info { "Initialized OpenAI-compatible provider: #{@provider_name}" }
       Log.info { "  Endpoint: #{@endpoint}" }
@@ -101,6 +162,15 @@ module Grafito::AI::Providers
 
     def available? : Bool
       self.class.available?
+    end
+
+    def current_model : String
+      @model
+    end
+
+    # Fetch available models from API or return fallback list
+    def models : Array(ModelInfo)
+      @cached_models ||= fetch_models
     end
 
     def complete(request : Request) : Response
@@ -179,15 +249,32 @@ module Grafito::AI::Providers
 
     # Build the request body in OpenAI format
     private def build_request_body(request : Request) : String
-      {
-        model:       @model,
-        max_tokens:  request.max_tokens,
-        temperature: request.temperature,
-        messages:    [
-          {role: "system", content: request.system_prompt},
-          {role: "user", content: request.user_prompt},
-        ],
-      }.to_json
+      # Newer models (gpt-5, o1) use max_completion_tokens instead of max_tokens
+      if uses_completion_tokens?
+        {
+          model:                 @model,
+          max_completion_tokens: request.max_tokens,
+          messages:              [
+            {role: "system", content: request.system_prompt},
+            {role: "user", content: request.user_prompt},
+          ],
+        }.to_json
+      else
+        {
+          model:       @model,
+          max_tokens:  request.max_tokens,
+          temperature: request.temperature,
+          messages:    [
+            {role: "system", content: request.system_prompt},
+            {role: "user", content: request.user_prompt},
+          ],
+        }.to_json
+      end
+    end
+
+    # Check if model uses max_completion_tokens instead of max_tokens
+    private def uses_completion_tokens? : Bool
+      @model.starts_with?("gpt-5") || @model.starts_with?("o1")
     end
 
     # Parse the HTTP response into our Response type
@@ -254,6 +341,51 @@ module Grafito::AI::Providers
       json.dig?("error", "message").try(&.as_s)
     rescue
       nil
+    end
+
+    # Get models list - use curated list for cloud providers, dynamic for Ollama
+    private def fetch_models : Array(ModelInfo)
+      # For Ollama, try to fetch installed models dynamically
+      if @provider_id == "ollama" && (models_url = @models_endpoint)
+        models = fetch_ollama_models(URI.parse(models_url))
+        return models unless models.empty?
+      end
+
+      # Use curated list for all other providers (or Ollama fallback)
+      known_models
+    rescue ex
+      Log.warn { "Failed to fetch models: #{ex.message}, using curated list" }
+      known_models
+    end
+
+    # Fetch locally installed models from Ollama's /api/tags endpoint
+    private def fetch_ollama_models(endpoint : URI) : Array(ModelInfo)
+      client = HTTP::Client.new(endpoint)
+      client.read_timeout = Time::Span.new(seconds: 5)
+
+      response = client.get(endpoint.request_target)
+      return [] of ModelInfo unless response.success?
+
+      json = JSON.parse(response.body)
+      models = json["models"]?.try(&.as_a) || return [] of ModelInfo
+
+      models.compact_map do |item|
+        name = item["name"]?.try(&.as_s) || next
+        # Strip :latest tag for cleaner display
+        id = name.sub(/:latest$/, "")
+        ModelInfo.new(id: id, name: format_model_name(id), default: id == @model)
+      end.sort_by!(&.name)
+    end
+
+    # Format model ID into human-readable name
+    private def format_model_name(id : String) : String
+      id.gsub("-", " ").gsub("_", " ").split.map(&.capitalize).join(" ")
+    end
+
+    # Return curated models for this provider
+    private def known_models : Array(ModelInfo)
+      models = KNOWN_MODELS[@provider_id]? || {} of String => String
+      models.map { |id, name| ModelInfo.new(id: id, name: name, default: id == @model) }
     end
   end
 end

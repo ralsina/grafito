@@ -21,19 +21,30 @@ module Grafito::AI::Providers
   class Anthropic < Provider
     Log = ::Log.for(self)
 
+    # Default model if not overridden
+    DEFAULT_MODEL = "claude-sonnet-4-5-20250929"
+
+    # Known Claude models (Anthropic has no public models API)
+    # Ordered by capability/recency
+    KNOWN_MODELS = {
+      "claude-sonnet-4-5-20250929" => "Claude Sonnet 4.5",
+      "claude-opus-4-20250514"     => "Claude Opus 4",
+      "claude-sonnet-4-20250514"   => "Claude Sonnet 4",
+      "claude-3-5-sonnet-20241022" => "Claude 3.5 Sonnet",
+      "claude-3-5-haiku-20241022"  => "Claude 3.5 Haiku",
+      "claude-3-opus-20240229"     => "Claude 3 Opus",
+      "claude-3-haiku-20240307"    => "Claude 3 Haiku",
+    }
+
     # Anthropic client from jgaskins/anthropic shard
     @client : ::Anthropic::Client
 
     # Model to use for completions
     @model : String
 
-    # Default model if not overridden
-    DEFAULT_MODEL = "claude-sonnet-4-5-20250929"
-
-    def initialize : Nil
-      # The client automatically reads ANTHROPIC_API_KEY
+    def initialize(model : String? = nil) : Nil
       @client = ::Anthropic::Client.new
-      @model = ENV["GRAFITO_AI_MODEL"]? || DEFAULT_MODEL
+      @model = model || ENV["GRAFITO_AI_MODEL"]? || DEFAULT_MODEL
       Log.info { "Initialized Anthropic provider with model: #{@model}" }
     end
 
@@ -47,6 +58,17 @@ module Grafito::AI::Providers
 
     def available? : Bool
       self.class.available?
+    end
+
+    # Returns known Claude models (Anthropic has no public models API)
+    def models : Array(ModelInfo)
+      KNOWN_MODELS.map do |id, name|
+        ModelInfo.new(id: id, name: name, default: id == @model)
+      end
+    end
+
+    def current_model : String
+      @model
     end
 
     def complete(request : Request) : Response

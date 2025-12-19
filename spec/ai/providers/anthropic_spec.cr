@@ -16,20 +16,65 @@ describe Grafito::AI::Providers::Anthropic do
   end
 
   describe "#name" do
-    it "returns provider name with default model" do
+    before_each do
       ENV["ANTHROPIC_API_KEY"] = "test-key-for-spec"
       ENV["GRAFITO_AI_MODEL"] = nil
+    end
 
+    it "returns provider name with default model" do
       provider = Grafito::AI::Providers::Anthropic.new
       provider.name.should eq("Anthropic Claude (#{Grafito::AI::Providers::Anthropic::DEFAULT_MODEL})")
     end
 
     it "uses custom model when GRAFITO_AI_MODEL is set" do
-      ENV["ANTHROPIC_API_KEY"] = "test-key-for-spec"
       ENV["GRAFITO_AI_MODEL"] = "claude-3-haiku-20240307"
-
       provider = Grafito::AI::Providers::Anthropic.new
       provider.name.should eq("Anthropic Claude (claude-3-haiku-20240307)")
+    end
+
+    it "uses model passed to constructor" do
+      provider = Grafito::AI::Providers::Anthropic.new("claude-3-opus-20240229")
+      provider.name.should eq("Anthropic Claude (claude-3-opus-20240229)")
+    end
+  end
+
+  describe "#models" do
+    before_each do
+      ENV["ANTHROPIC_API_KEY"] = "test-key"
+      ENV["GRAFITO_AI_MODEL"] = nil
+    end
+
+    it "returns list of known Claude models" do
+      provider = Grafito::AI::Providers::Anthropic.new
+      models = provider.models
+      models.should_not be_empty
+      models.map(&.id).should contain("claude-sonnet-4-5-20250929")
+      models.map(&.id).should contain("claude-3-haiku-20240307")
+    end
+
+    it "marks current model as default" do
+      provider = Grafito::AI::Providers::Anthropic.new("claude-3-opus-20240229")
+      models = provider.models
+      default_model = models.find(&.default)
+      default_model.should_not be_nil
+      default_model.try(&.id).should eq("claude-3-opus-20240229")
+    end
+  end
+
+  describe "#current_model" do
+    before_each do
+      ENV["ANTHROPIC_API_KEY"] = "test-key"
+      ENV["GRAFITO_AI_MODEL"] = nil
+    end
+
+    it "returns the currently selected model" do
+      provider = Grafito::AI::Providers::Anthropic.new("claude-3-haiku-20240307")
+      provider.current_model.should eq("claude-3-haiku-20240307")
+    end
+
+    it "returns default model when none specified" do
+      provider = Grafito::AI::Providers::Anthropic.new
+      provider.current_model.should eq(Grafito::AI::Providers::Anthropic::DEFAULT_MODEL)
     end
   end
 

@@ -109,6 +109,95 @@ describe Grafito::AI::Providers::OpenAICompatible do
       provider = Grafito::AI::Providers::OpenAICompatible.new
       provider.name.should eq("Z.AI (custom-model)")
     end
+
+    it "uses model passed to constructor" do
+      ENV["Z_AI_API_KEY"] = "test-key"
+      provider = Grafito::AI::Providers::OpenAICompatible.new(nil, "gpt-4-turbo")
+      provider.name.should eq("Z.AI (gpt-4-turbo)")
+    end
+
+    it "uses force_provider and model together" do
+      ENV["OPENAI_API_KEY"] = "test-key"
+      provider = Grafito::AI::Providers::OpenAICompatible.new("openai", "gpt-4o")
+      provider.name.should eq("OpenAI (gpt-4o)")
+    end
+  end
+
+  describe "#models" do
+    before_each do
+      ENV["Z_AI_API_KEY"] = nil
+      ENV["OPENAI_API_KEY"] = nil
+      ENV["GROQ_API_KEY"] = nil
+      ENV["TOGETHER_API_KEY"] = nil
+      ENV["GRAFITO_AI_API_KEY"] = nil
+      ENV["GRAFITO_AI_ENDPOINT"] = nil
+      ENV["GRAFITO_AI_MODEL"] = nil
+    end
+
+    it "returns curated models for Z.AI" do
+      ENV["Z_AI_API_KEY"] = "test-key"
+      provider = Grafito::AI::Providers::OpenAICompatible.new
+      models = provider.models
+      models.should_not be_empty
+      models.map(&.id).should contain("glm-4.5-flash")
+    end
+
+    it "returns curated models for OpenAI" do
+      ENV["OPENAI_API_KEY"] = "test-key"
+      provider = Grafito::AI::Providers::OpenAICompatible.new
+      models = provider.models
+      models.should_not be_empty
+      models.map(&.id).should contain("gpt-4o")
+      models.map(&.id).should contain("gpt-4o-mini")
+    end
+
+    it "returns curated models for Groq" do
+      ENV["GROQ_API_KEY"] = "test-key"
+      provider = Grafito::AI::Providers::OpenAICompatible.new
+      models = provider.models
+      models.should_not be_empty
+      models.map(&.id).should contain("llama-3.3-70b-versatile")
+    end
+
+    it "marks current model as default" do
+      ENV["OPENAI_API_KEY"] = "test-key"
+      provider = Grafito::AI::Providers::OpenAICompatible.new("openai", "gpt-4o")
+      models = provider.models
+      default_model = models.find(&.default)
+      default_model.should_not be_nil
+      default_model.try(&.id).should eq("gpt-4o")
+    end
+  end
+
+  describe "#current_model" do
+    before_each do
+      ENV["Z_AI_API_KEY"] = nil
+      ENV["OPENAI_API_KEY"] = nil
+      ENV["GROQ_API_KEY"] = nil
+      ENV["TOGETHER_API_KEY"] = nil
+      ENV["GRAFITO_AI_API_KEY"] = nil
+      ENV["GRAFITO_AI_ENDPOINT"] = nil
+      ENV["GRAFITO_AI_MODEL"] = nil
+    end
+
+    it "returns the currently selected model" do
+      ENV["OPENAI_API_KEY"] = "test-key"
+      provider = Grafito::AI::Providers::OpenAICompatible.new("openai", "gpt-4-turbo")
+      provider.current_model.should eq("gpt-4-turbo")
+    end
+
+    it "returns default model when none specified" do
+      ENV["Z_AI_API_KEY"] = "test-key"
+      provider = Grafito::AI::Providers::OpenAICompatible.new
+      provider.current_model.should eq("glm-4.5-flash")
+    end
+
+    it "respects GRAFITO_AI_MODEL environment variable" do
+      ENV["Z_AI_API_KEY"] = "test-key"
+      ENV["GRAFITO_AI_MODEL"] = "custom-env-model"
+      provider = Grafito::AI::Providers::OpenAICompatible.new
+      provider.current_model.should eq("custom-env-model")
+    end
   end
 
   describe "#available?" do

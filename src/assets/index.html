@@ -114,6 +114,11 @@
                 <select id="ai-provider-select" title="Select AI provider for log explanations">
                 </select>
               </div>
+              <div style="margin-top: 0.5rem;">
+                <select id="ai-model-select" title="Select AI model">
+                  <option value="">Loading models...</option>
+                </select>
+              </div>
             </div>
           </div>
         </details>
@@ -672,6 +677,58 @@
         // --- AI PROVIDER SECTION ---
         // Use window scope so askAIExplanation can access it
         window.selectedAIProvider = localStorage.getItem('grafito-ai-provider') || null;
+        window.selectedAIModel = localStorage.getItem('grafito-ai-model') || null;
+
+        // Load models for a specific provider
+        function loadAIModels(providerId) {
+          const modelSelect = document.getElementById('ai-model-select');
+          if (!modelSelect || !providerId) return;
+
+          modelSelect.innerHTML = '<option value="">Loading models...</option>';
+          modelSelect.disabled = true;
+
+          fetch(`/ai-models?provider=${encodeURIComponent(providerId)}`)
+            .then(response => response.json())
+            .then(data => {
+              modelSelect.innerHTML = '';
+              modelSelect.disabled = false;
+
+              if (!data.models || data.models.length === 0) {
+                modelSelect.innerHTML = '<option value="">No models available</option>';
+                return;
+              }
+
+              // Find saved model or default
+              const savedModel = localStorage.getItem(`grafito-ai-model-${providerId}`);
+              let foundSaved = false;
+
+              data.models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = model.name;
+                if (savedModel === model.id) {
+                  option.selected = true;
+                  foundSaved = true;
+                  window.selectedAIModel = model.id;
+                } else if (!savedModel && model.default) {
+                  option.selected = true;
+                  window.selectedAIModel = model.id;
+                }
+                modelSelect.appendChild(option);
+              });
+
+              // If no saved or default found, select first
+              if (!foundSaved && !window.selectedAIModel && data.models.length > 0) {
+                window.selectedAIModel = data.models[0].id;
+                modelSelect.value = window.selectedAIModel;
+              }
+            })
+            .catch(error => {
+              console.error('Failed to load AI models:', error);
+              modelSelect.innerHTML = '<option value="">Failed to load</option>';
+              modelSelect.disabled = false;
+            });
+        }
 
         function loadAIProviders() {
           fetch('/ai-providers')
@@ -681,6 +738,7 @@
               const disabledEl = document.getElementById('ai-disabled');
               const enabledEl = document.getElementById('ai-enabled');
               const selectEl = document.getElementById('ai-provider-select');
+              const modelSelect = document.getElementById('ai-model-select');
 
               if (loadingEl) loadingEl.style.display = 'none';
 
@@ -691,7 +749,7 @@
 
               if (enabledEl) enabledEl.style.display = 'block';
 
-              // Populate select dropdown
+              // Populate provider dropdown
               if (selectEl) {
                 selectEl.innerHTML = '';
                 data.providers.forEach(provider => {
@@ -711,9 +769,25 @@
                   selectEl.value = window.selectedAIProvider;
                 }
 
+                // Load models for selected provider
+                loadAIModels(window.selectedAIProvider);
+
+                // Handle provider change
                 selectEl.addEventListener('change', function() {
                   window.selectedAIProvider = this.value;
                   localStorage.setItem('grafito-ai-provider', window.selectedAIProvider);
+                  window.selectedAIModel = null; // Reset model on provider change
+                  loadAIModels(window.selectedAIProvider);
+                });
+              }
+
+              // Handle model change
+              if (modelSelect) {
+                modelSelect.addEventListener('change', function() {
+                  window.selectedAIModel = this.value;
+                  if (window.selectedAIProvider) {
+                    localStorage.setItem(`grafito-ai-model-${window.selectedAIProvider}`, window.selectedAIModel);
+                  }
                 });
               }
             })
@@ -1051,10 +1125,13 @@
             targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem; color: #666;">Error loading log message</div>`;
           });
 
-        // Call the AI endpoint with selected provider
+        // Call the AI endpoint with selected provider and model
         const aiRequestBody = { cursor: cursor };
         if (window.selectedAIProvider) {
           aiRequestBody.provider = window.selectedAIProvider;
+        }
+        if (window.selectedAIModel) {
+          aiRequestBody.model = window.selectedAIModel;
         }
         fetch("/ask-ai", {
           method: "POST",

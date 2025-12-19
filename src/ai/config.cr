@@ -163,15 +163,21 @@ module Grafito::AI
       providers
     end
 
-    # Get a specific provider by ID
-    def provider_by_id(id : String) : Provider?
+    # Get a specific provider by ID, optionally with a specific model
+    def provider_by_id(id : String, model : String? = nil) : Provider?
       normalized_id = id.downcase.strip
 
       if ANTHROPIC_PROVIDERS.includes?(normalized_id)
-        Providers::Anthropic.new if Providers::Anthropic.available?
+        Providers::Anthropic.new(model) if Providers::Anthropic.available?
       elsif OPENAI_COMPATIBLE_PROVIDERS.includes?(normalized_id)
-        Providers::OpenAICompatible.new(normalized_id) if Providers::OpenAICompatible.available?
+        Providers::OpenAICompatible.new(normalized_id, model) if Providers::OpenAICompatible.available?
       end
+    end
+
+    # Get available models for a specific provider
+    def models_for_provider(id : String) : Array(ModelInfo)
+      provider = provider_by_id(id)
+      provider.try(&.models) || [] of ModelInfo
     end
 
     # Log current configuration (for debugging)
