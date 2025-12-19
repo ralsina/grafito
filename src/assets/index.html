@@ -989,6 +989,15 @@
       let currentAIExplanation = "";
       let currentTargetLogEntry = "";
 
+      // Helper to display error messages safely (prevents XSS)
+      function showError(container, message) {
+        const p = document.createElement('p');
+        p.className = 'error';
+        p.style.padding = '1em';
+        p.textContent = message;
+        container.innerHTML = '';
+        container.appendChild(p);
+      }
 
       function askAIExplanation(cursor) {
         const dialog = document.getElementById("ai-explanation-dialog");
@@ -1057,27 +1066,29 @@
           .then((response) => response.json())
           .then((data) => {
             if (data.error) {
-              content.innerHTML = `<p class="error" style="padding: 1em;">Error: ${data.error}</p>`;
+              showError(content, `Error: ${data.error}`);
             } else if (data.content) {
               // New normalized response format
               currentAIExplanation = data.content;
               // Convert markdown to HTML using marked.js
               const htmlContent = marked.parse(currentAIExplanation);
-              // Build response with provider info if available
-              let providerInfo = '';
+              content.innerHTML = htmlContent;
+              // Append provider info safely using textContent (prevents XSS)
               if (data.provider || data.model) {
+                const providerDiv = document.createElement('div');
+                providerDiv.style.cssText = 'font-size: 0.75rem; color: var(--pico-muted-color); margin-top: 1rem; text-align: right;';
                 const provider = data.provider || 'AI';
                 const model = data.model || '';
-                providerInfo = `<div style="font-size: 0.75rem; color: var(--pico-muted-color); margin-top: 1rem; text-align: right;">🤖 Powered by ${provider}${model ? ` (${model})` : ''}</div>`;
+                providerDiv.textContent = `🤖 Powered by ${provider}${model ? ` (${model})` : ''}`;
+                content.appendChild(providerDiv);
               }
-              content.innerHTML = htmlContent + providerInfo;
             } else {
-              content.innerHTML = `<p class="error" style="padding: 1em;">Unexpected response format from AI service.</p>`;
+              showError(content, 'Unexpected response format from AI service.');
             }
           })
           .catch((error) => {
             console.error("Error calling AI:", error);
-            content.innerHTML = `<p class="error" style="padding: 1em;">Failed to get AI explanation: ${error.message}</p>`;
+            showError(content, `Failed to get AI explanation: ${error.message}`);
           });
       }
 
