@@ -95,11 +95,18 @@ module Grafito::AI::Providers
       response.content.each do |block|
         case block
         when ::Anthropic::Text
-          content_parts << block.text
+          content_parts << block.text unless block.text.empty?
         end
       end
 
-      content_parts.join("\n")
+      content = content_parts.join("\n")
+
+      if content.empty?
+        Log.warn { "Anthropic API returned empty content" }
+        raise Exception.new("API returned empty response")
+      end
+
+      content
     end
 
     # Extract usage statistics from Anthropic response

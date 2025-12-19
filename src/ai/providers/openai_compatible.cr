@@ -199,19 +199,30 @@ module Grafito::AI::Providers
         raise Exception.new("API error: #{error_message}")
       end
 
-      json = JSON.parse(body)
+      json = begin
+        JSON.parse(body)
+      rescue ex : JSON::ParseException
+        Log.error { "Failed to parse API response as JSON: #{ex.message}" }
+        raise Exception.new("Invalid response from API: malformed JSON")
+      end
 
-      # Extract content from OpenAI format
-      content = json.dig("choices", 0, "message", "content").as_s
+      # Extract content from OpenAI format with validation
+      content = json.dig?("choices", 0, "message", "content").try(&.as_s?)
+      unless content
+        Log.error { "Malformed API response: missing choices[0].message.content" }
+        Log.debug { "Response body: #{body}" }
+        raise Exception.new("Invalid response from API: missing content field")
+      end
+
+      if content.empty?
+        Log.warn { "API returned empty content" }
+        raise Exception.new("API returned empty response")
+      end
+
       model = json["model"]?.try(&.as_s) || @model
 
-      # Extract usage if available
-      usage = if u = json["usage"]?
-                Usage.new(
-                  input_tokens: u["prompt_tokens"].as_i.to_i32,
-                  output_tokens: u["completion_tokens"].as_i.to_i32
-                )
-              end
+      # Extract usage if available (non-critical, don't fail on missing)
+      usage = extract_usage(json)
 
       Response.new(
         content: content,
@@ -219,6 +230,21 @@ module Grafito::AI::Providers
         provider: @provider_name,
         usage: usage,
         raw: body
+      )
+    end
+
+    # Extract integer from JSON::Any safely
+    private def json_int(value : JSON::Any?) : Int32
+      value.try(&.as_i?.try(&.to_i32)) || 0
+    end
+
+    # Extract usage statistics from response (returns nil if unavailable)
+    private def extract_usage(json : JSON::Any) : Usage?
+      return unless u = json["usage"]?
+
+      Usage.new(
+        input_tokens: json_int(u["prompt_tokens"]?),
+        output_tokens: json_int(u["completion_tokens"]?)
       )
     end
 

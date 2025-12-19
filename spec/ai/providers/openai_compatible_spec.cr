@@ -237,5 +237,81 @@ describe Grafito::AI::Providers::OpenAICompatible do
       response = provider.complete(request)
       response.content.should eq("OK")
     end
+
+    it "raises an error on malformed JSON response" do
+      ENV["Z_AI_API_KEY"] = "test-key"
+
+      WebMock.stub(:post, "https://api.z.ai/api/paas/v4/chat/completions")
+        .to_return(status: 200, body: "not valid json{{{")
+
+      provider = Grafito::AI::Providers::OpenAICompatible.new
+      request = Grafito::AI::Request.new(
+        system_prompt: "System",
+        user_prompt: "User"
+      )
+
+      expect_raises(Exception, /malformed JSON/) do
+        provider.complete(request)
+      end
+    end
+
+    it "raises an error when content field is missing" do
+      ENV["Z_AI_API_KEY"] = "test-key"
+
+      WebMock.stub(:post, "https://api.z.ai/api/paas/v4/chat/completions")
+        .to_return(status: 200, body: {
+          choices: [{message: {role: "assistant"}}],
+          model:   "glm-4.5-flash",
+        }.to_json)
+
+      provider = Grafito::AI::Providers::OpenAICompatible.new
+      request = Grafito::AI::Request.new(
+        system_prompt: "System",
+        user_prompt: "User"
+      )
+
+      expect_raises(Exception, /missing content/) do
+        provider.complete(request)
+      end
+    end
+
+    it "raises an error when content is empty" do
+      ENV["Z_AI_API_KEY"] = "test-key"
+
+      WebMock.stub(:post, "https://api.z.ai/api/paas/v4/chat/completions")
+        .to_return(status: 200, body: {
+          choices: [{message: {content: ""}}],
+          model:   "glm-4.5-flash",
+        }.to_json)
+
+      provider = Grafito::AI::Providers::OpenAICompatible.new
+      request = Grafito::AI::Request.new(
+        system_prompt: "System",
+        user_prompt: "User"
+      )
+
+      expect_raises(Exception, /empty response/) do
+        provider.complete(request)
+      end
+    end
+
+    it "raises an error when choices array is missing" do
+      ENV["Z_AI_API_KEY"] = "test-key"
+
+      WebMock.stub(:post, "https://api.z.ai/api/paas/v4/chat/completions")
+        .to_return(status: 200, body: {
+          model: "glm-4.5-flash",
+        }.to_json)
+
+      provider = Grafito::AI::Providers::OpenAICompatible.new
+      request = Grafito::AI::Request.new(
+        system_prompt: "System",
+        user_prompt: "User"
+      )
+
+      expect_raises(Exception, /missing content/) do
+        provider.complete(request)
+      end
+    end
   end
 end
