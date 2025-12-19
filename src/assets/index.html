@@ -681,7 +681,6 @@
               const disabledEl = document.getElementById('ai-disabled');
               const enabledEl = document.getElementById('ai-enabled');
               const selectEl = document.getElementById('ai-provider-select');
-              const currentEl = document.getElementById('ai-current-provider');
 
               if (loadingEl) loadingEl.style.display = 'none';
 
@@ -715,19 +714,8 @@
                 selectEl.addEventListener('change', function() {
                   window.selectedAIProvider = this.value;
                   localStorage.setItem('grafito-ai-provider', window.selectedAIProvider);
-                  updateCurrentProviderDisplay();
                 });
               }
-
-              function updateCurrentProviderDisplay() {
-                if (currentEl && window.selectedAIProvider) {
-                  const provider = data.providers.find(p => p.id === window.selectedAIProvider);
-                  if (provider) {
-                    currentEl.textContent = `Using: ${provider.name}`;
-                  }
-                }
-              }
-              updateCurrentProviderDisplay();
             })
             .catch(error => {
               console.error('Failed to load AI providers:', error);
