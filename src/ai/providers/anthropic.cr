@@ -42,7 +42,7 @@ module Grafito::AI::Providers
     end
 
     def self.available? : Bool
-      !ENV["ANTHROPIC_API_KEY"]?.nil?
+      !!ENV["ANTHROPIC_API_KEY"]?
     end
 
     def available? : Bool

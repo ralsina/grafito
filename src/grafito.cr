@@ -12,6 +12,7 @@
 require "./grafito_helpers"
 require "./journalctl"
 require "./timeline"
+require "./ai/config"
 require "./ai/provider"
 require "./ai/request"
 require "./ai/response"
