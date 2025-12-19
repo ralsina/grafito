@@ -362,13 +362,6 @@ module Grafito
       }.to_json
     end
 
-    # Validate we have a cursor
-    if body.empty?
-      env.response.content_type = "application/json"
-      env.response.status_code = 400
-      next {error: "Request body is empty."}.to_json
-    end
-
     begin
       unless cursor
         env.response.content_type = "application/json"
