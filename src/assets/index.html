@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="style.min.css" />
     <title>Grafito Log Viewer</title>
     <script src="htmx.org@1.9.10.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   </head>
   <body
     hx-get="services"
@@ -68,17 +69,6 @@
             >
           </h1>
           <span>A simple log viewer</span>
-          <details style="margin-top: 0.5rem; font-size: 0.85em;">
-            <summary style="cursor: pointer; color: var(--pico-muted-color);">🤖 AI Features</summary>
-            <div style="text-align: left; margin-top: 0.5rem; padding: 0.5rem; background: var(--pico-background-color, #fff); border: 1px solid var(--pico-muted-border-color); border-radius: var(--border-radius);">
-              <p style="margin: 0; font-size: 0.9em;">
-                Get AI-powered log explanations with <a href="https://z.ai" target="_blank" style="color: var(--pico-primary);">z.ai</a> API.
-              </p>
-              <p style="margin: 0.5rem 0 0 0; font-size: 0.85em; color: var(--pico-muted-color);">
-                Set <code>Z_AI_API_KEY</code> environment variable to enable.
-              </p>
-            </div>
-          </details>
         </hgroup>
         <hr />
         <div class="search-container-wrapper">
@@ -96,6 +86,43 @@
             hx-include=".log-filter"
           />
         </div>
+
+        <!-- AI Provider Section -->
+        <details id="ai-section" class="filter-group-controls">
+          <summary
+            role="button"
+            class="secondary outline"
+            style="font-weight: bold; margin-bottom: var(--pico-form-element-spacing-vertical);"
+          >
+            🤖 AI Provider
+          </summary>
+          <div id="ai-provider-content" style="padding: 0.5rem;">
+            <div id="ai-loading" style="color: var(--pico-muted-color); font-size: 0.85em;">
+              Loading providers...
+            </div>
+            <div id="ai-disabled" style="display: none; color: var(--pico-muted-color); font-size: 0.85em;">
+              <p style="margin: 0;">AI features disabled.</p>
+              <p style="margin: 0.5rem 0 0 0; font-size: 0.9em;">Set an API key to enable:</p>
+              <ul style="margin: 0.25rem 0; padding-left: 1rem; font-size: 0.8em;">
+                <li><code>ANTHROPIC_API_KEY</code></li>
+                <li><code>OPENAI_API_KEY</code></li>
+                <li><code>GROQ_API_KEY</code></li>
+              </ul>
+            </div>
+            <div id="ai-enabled" style="display: none;">
+              <div>
+                <select id="ai-provider-select" title="Select AI provider for log explanations">
+                </select>
+              </div>
+              <div style="margin-top: 0.5rem;">
+                <select id="ai-model-select" title="Select AI model">
+                  <option value="">Loading models...</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </details>
+
         <details class="filter-group-controls" open>
           <summary
             role="button"
@@ -502,6 +529,7 @@
         </div>
         <div
           id="ai-explanation-dialog-content"
+          class="ai-markdown-content"
           style="max-height: 60vh; overflow-y: auto"
         >
           <!-- Content will be loaded here by JavaScript -->
@@ -645,6 +673,133 @@
           });
         }
         // --- END THEME SWITCHER LOGIC ---
+
+        // --- AI PROVIDER SECTION ---
+        // Use window scope so askAIExplanation can access it
+        window.selectedAIProvider = localStorage.getItem('grafito-ai-provider') || null;
+        window.selectedAIModel = localStorage.getItem('grafito-ai-model') || null;
+
+        // Load models for a specific provider
+        function loadAIModels(providerId) {
+          const modelSelect = document.getElementById('ai-model-select');
+          if (!modelSelect || !providerId) return;
+
+          modelSelect.innerHTML = '<option value="">Loading models...</option>';
+          modelSelect.disabled = true;
+
+          fetch(`/ai-models?provider=${encodeURIComponent(providerId)}`)
+            .then(response => response.json())
+            .then(data => {
+              modelSelect.innerHTML = '';
+              modelSelect.disabled = false;
+
+              if (!data.models || data.models.length === 0) {
+                modelSelect.innerHTML = '<option value="">No models available</option>';
+                return;
+              }
+
+              // Find saved model or default
+              const savedModel = localStorage.getItem(`grafito-ai-model-${providerId}`);
+              let foundSaved = false;
+
+              data.models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = model.name;
+                if (savedModel === model.id) {
+                  option.selected = true;
+                  foundSaved = true;
+                  window.selectedAIModel = model.id;
+                } else if (!savedModel && model.default) {
+                  option.selected = true;
+                  window.selectedAIModel = model.id;
+                }
+                modelSelect.appendChild(option);
+              });
+
+              // If no saved or default found, select first
+              if (!foundSaved && !window.selectedAIModel && data.models.length > 0) {
+                window.selectedAIModel = data.models[0].id;
+                modelSelect.value = window.selectedAIModel;
+              }
+            })
+            .catch(error => {
+              console.error('Failed to load AI models:', error);
+              modelSelect.innerHTML = '<option value="">Failed to load</option>';
+              modelSelect.disabled = false;
+            });
+        }
+
+        function loadAIProviders() {
+          fetch('/ai-providers')
+            .then(response => response.json())
+            .then(data => {
+              const loadingEl = document.getElementById('ai-loading');
+              const disabledEl = document.getElementById('ai-disabled');
+              const enabledEl = document.getElementById('ai-enabled');
+              const selectEl = document.getElementById('ai-provider-select');
+              const modelSelect = document.getElementById('ai-model-select');
+
+              if (loadingEl) loadingEl.style.display = 'none';
+
+              if (!data.enabled || data.providers.length === 0) {
+                if (disabledEl) disabledEl.style.display = 'block';
+                return;
+              }
+
+              if (enabledEl) enabledEl.style.display = 'block';
+
+              // Populate provider dropdown
+              if (selectEl) {
+                selectEl.innerHTML = '';
+                data.providers.forEach(provider => {
+                  const option = document.createElement('option');
+                  option.value = provider.id;
+                  option.textContent = provider.name;
+                  if (window.selectedAIProvider === provider.id || (!window.selectedAIProvider && data.current && data.current.includes(provider.name))) {
+                    option.selected = true;
+                    window.selectedAIProvider = provider.id;
+                  }
+                  selectEl.appendChild(option);
+                });
+
+                // If no selection yet, use first provider
+                if (!window.selectedAIProvider && data.providers.length > 0) {
+                  window.selectedAIProvider = data.providers[0].id;
+                  selectEl.value = window.selectedAIProvider;
+                }
+
+                // Load models for selected provider
+                loadAIModels(window.selectedAIProvider);
+
+                // Handle provider change
+                selectEl.addEventListener('change', function() {
+                  window.selectedAIProvider = this.value;
+                  localStorage.setItem('grafito-ai-provider', window.selectedAIProvider);
+                  window.selectedAIModel = null; // Reset model on provider change
+                  loadAIModels(window.selectedAIProvider);
+                });
+              }
+
+              // Handle model change
+              if (modelSelect) {
+                modelSelect.addEventListener('change', function() {
+                  window.selectedAIModel = this.value;
+                  if (window.selectedAIProvider) {
+                    localStorage.setItem(`grafito-ai-model-${window.selectedAIProvider}`, window.selectedAIModel);
+                  }
+                });
+              }
+            })
+            .catch(error => {
+              console.error('Failed to load AI providers:', error);
+              const loadingEl = document.getElementById('ai-loading');
+              if (loadingEl) loadingEl.textContent = 'Failed to load providers';
+            });
+        }
+
+        loadAIProviders();
+        // --- END AI PROVIDER SECTION ---
 
         // --- COLUMN VISIBILITY PERSISTENCE ---
         const COLUMN_VISIBILITY_CHECKBOX_IDS = [
@@ -908,31 +1063,14 @@
       let currentAIExplanation = "";
       let currentTargetLogEntry = "";
 
-      // Simple markdown-to-HTML converter
-      function markdownToHTML(text) {
-        if (!text) return '';
-        return text
-          // Headers
-          .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-          .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-          .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-          // Bold
-          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-          // Italic
-          .replace(/\*(.+?)\*/g, '<em>$1</em>')
-          // Code blocks
-          .replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>')
-          // Inline code
-          .replace(/`([^`]+)`/g, '<code>$1</code>')
-          // Lists
-          .replace(/^\* (.+)$/gim, '<li>$1</li>')
-          .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
-          // Line breaks - do this last to avoid breaking other markup
-          .replace(/\n\n/g, '</p><p>')
-          .replace(/\n/g, '<br>')
-          // Wrap in paragraphs if not already wrapped
-          .replace(/^(?!<h[1-6]|<pre|<ul|<p)/, '<p>')
-          .replace(/(?<!<\/[h1-6p]|pre|ul>)$/, '</p>');
+      // Helper to display error messages safely (prevents XSS)
+      function showError(container, message) {
+        const p = document.createElement('p');
+        p.className = 'error';
+        p.style.padding = '1em';
+        p.textContent = message;
+        container.innerHTML = '';
+        container.appendChild(p);
       }
 
       function askAIExplanation(cursor) {
@@ -987,32 +1125,47 @@
             targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem; color: #666;">Error loading log message</div>`;
           });
 
-        // Call the AI endpoint
+        // Call the AI endpoint with selected provider and model
+        const aiRequestBody = { cursor: cursor };
+        if (window.selectedAIProvider) {
+          aiRequestBody.provider = window.selectedAIProvider;
+        }
+        if (window.selectedAIModel) {
+          aiRequestBody.model = window.selectedAIModel;
+        }
         fetch("/ask-ai", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ cursor: cursor }),
+          body: JSON.stringify(aiRequestBody),
         })
           .then((response) => response.json())
           .then((data) => {
             if (data.error) {
-              content.innerHTML = `<p class="error" style="padding: 1em;">Error: ${data.error}</p>`;
-            } else if (data.choices && data.choices[0] && data.choices[0].message) {
-              currentAIExplanation = data.choices[0].message.content;
-              console.log("AI Response:", currentAIExplanation); // Debug log
-              // Convert markdown to HTML
-              const htmlContent = markdownToHTML(currentAIExplanation);
-              console.log("HTML Content:", htmlContent); // Debug log
-              content.innerHTML = `<div style="line-height: 1.6;">${htmlContent}</div>`;
+              showError(content, `Error: ${data.error}`);
+            } else if (data.content) {
+              // New normalized response format
+              currentAIExplanation = data.content;
+              // Convert markdown to HTML using marked.js
+              const htmlContent = marked.parse(currentAIExplanation);
+              content.innerHTML = htmlContent;
+              // Append provider info safely using textContent (prevents XSS)
+              if (data.provider || data.model) {
+                const providerDiv = document.createElement('div');
+                providerDiv.style.cssText = 'font-size: 0.75rem; color: var(--pico-muted-color); margin-top: 1rem; text-align: right;';
+                const provider = data.provider || 'AI';
+                const model = data.model || '';
+                providerDiv.textContent = `🤖 Powered by ${provider}${model ? ` (${model})` : ''}`;
+                content.appendChild(providerDiv);
+              }
             } else {
-              content.innerHTML = `<p class="error" style="padding: 1em;">Unexpected response format from AI service.</p>`;
+              showError(content, 'Unexpected response format from AI service.');
             }
           })
           .catch((error) => {
             console.error("Error calling AI:", error);
-            content.innerHTML = `<p class="error" style="padding: 1em;">Failed to get AI explanation: ${error.message}</p>`;
+            showError(content, `Failed to get AI explanation: ${error.message}`);
           });
       }
 
