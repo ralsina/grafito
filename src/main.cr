@@ -170,7 +170,7 @@ def main
   # The `BakedFileHandler` is a custom handler that serves files that are baked
   # into the application. In our case, the Assets class we defined above.
   #
-  # You can see how it's implemented in the [baked_handler.cr](baked_handler.cr.html) file.
+  # Uses the external ralsina/baked_file_handler library.
   baked_asset_handler = BakedFileHandler::BakedFileHandler.new(Assets)
   add_handler baked_asset_handler
 

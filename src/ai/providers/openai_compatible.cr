@@ -82,24 +82,24 @@ module Grafito::AI::Providers
       },
       "openai" => {
         # GPT-5 series (chat-compatible)
-        "gpt-5.2"           => "GPT-5.2",
-        "gpt-5.1"           => "GPT-5.1",
-        "gpt-5"             => "GPT-5",
-        "gpt-5-mini"        => "GPT-5 Mini",
-        "gpt-5-nano"        => "GPT-5 Nano",
+        "gpt-5.2"    => "GPT-5.2",
+        "gpt-5.1"    => "GPT-5.1",
+        "gpt-5"      => "GPT-5",
+        "gpt-5-mini" => "GPT-5 Mini",
+        "gpt-5-nano" => "GPT-5 Nano",
         # O1 reasoning models
-        "o1"                => "O1",
+        "o1" => "O1",
         # GPT-4.1 series
-        "gpt-4.1"           => "GPT-4.1",
-        "gpt-4.1-mini"      => "GPT-4.1 Mini",
-        "gpt-4.1-nano"      => "GPT-4.1 Nano",
+        "gpt-4.1"      => "GPT-4.1",
+        "gpt-4.1-mini" => "GPT-4.1 Mini",
+        "gpt-4.1-nano" => "GPT-4.1 Nano",
         # GPT-4o series
         "gpt-4o"            => "GPT-4o",
         "gpt-4o-mini"       => "GPT-4o Mini",
         "chatgpt-4o-latest" => "ChatGPT-4o Latest",
         # GPT-4 series
-        "gpt-4-turbo"       => "GPT-4 Turbo",
-        "gpt-4"             => "GPT-4",
+        "gpt-4-turbo" => "GPT-4 Turbo",
+        "gpt-4"       => "GPT-4",
         # GPT-3.5 series
         "gpt-3.5-turbo"     => "GPT-3.5 Turbo",
         "gpt-3.5-turbo-16k" => "GPT-3.5 Turbo 16K",
@@ -111,16 +111,16 @@ module Grafito::AI::Providers
         "gemma2-9b-it"            => "Gemma 2 9B",
       },
       "together" => {
-        "meta-llama/Llama-3.3-70B-Instruct-Turbo" => "Llama 3.3 70B",
+        "meta-llama/Llama-3.3-70B-Instruct-Turbo"        => "Llama 3.3 70B",
         "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo" => "Llama 3.2 11B Vision",
-        "mistralai/Mixtral-8x7B-Instruct-v0.1"    => "Mixtral 8x7B",
+        "mistralai/Mixtral-8x7B-Instruct-v0.1"           => "Mixtral 8x7B",
       },
       "ollama" => {
-        "llama3.2" => "Llama 3.2",
-        "llama3.1" => "Llama 3.1",
-        "mistral"  => "Mistral",
+        "llama3.2"  => "Llama 3.2",
+        "llama3.1"  => "Llama 3.1",
+        "mistral"   => "Mistral",
         "codellama" => "Code Llama",
-        "qwen2.5"  => "Qwen 2.5",
+        "qwen2.5"   => "Qwen 2.5",
       },
     }
 
