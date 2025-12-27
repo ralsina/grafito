@@ -160,12 +160,15 @@ class Journalctl
 
     # Converts a Time object to the configured timezone
     private def convert_to_timezone(time : Time) : Time
-      timezone_config = Grafito.timezone.strip
+      # Normalize timezone string: strip whitespace and leading slashes
+      # This handles cases where /etc/timezone contains "Etc/UTC" but gets read as "/UTC"
+      timezone_config = Grafito.timezone.strip.lstrip('/')
 
       case timezone_config.downcase
       when "local"
         time.in(Time::Location.local)
-      when "utc"
+      when "utc", "etc/utc"
+        # Handle both "UTC" and "Etc/UTC" (timezone database name)
         time.in(Time::Location::UTC)
       else
         # Try to parse as timezone name (IANA) or GMT offset
@@ -185,7 +188,7 @@ class Journalctl
             time + offset_seconds.seconds
           else
             # Fallback to local time if timezone is invalid
-            Grafito::Log.warn(exception: ex) { "Invalid timezone '#{timezone_config}', falling back to local time" }
+            Grafito::Log.warn(exception: ex) { "Invalid timezone '#{Grafito.timezone}', falling back to local time" }
             time.in(Time::Location.local)
           end
         end
