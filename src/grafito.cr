@@ -12,6 +12,10 @@
 require "./grafito_helpers"
 require "./journalctl"
 require "./timeline"
+require "./ai/config"
+require "./ai/provider"
+require "./ai/request"
+require "./ai/response"
 require "json"
 require "kemal"
 require "mime"
@@ -27,8 +31,13 @@ module Grafito
   # Global unit restriction - when set, only logs from these units will be shown
   class_property allowed_units : Array(String)? = nil
 
-  # AI feature flag - when true, AI features are enabled
-  class_property? ai_enabled : Bool = false
+  # AI provider instance - nil if no provider is configured
+  class_property ai_provider : AI::Provider? = nil
+
+  # Convenience method for checking if AI is available (backward compatible)
+  def self.ai_enabled? : Bool
+    !ai_provider.nil?
+  end
 
   # Timezone configuration for timestamp display
   class_property timezone : String = "local"
@@ -283,39 +292,104 @@ module Grafito
     end
   end
 
+  # ## The `/ai-providers` endpoint
+  #
+  # Returns list of available AI providers that the user can switch between.
+  #
+  # Example usage:
+  # ```text
+  # GET /ai-providers
+  # ```
+  #
+  # Returns JSON array of providers with id, name, and availability.
+  get "/ai-providers" do |env|
+    env.response.content_type = "application/json"
+
+    providers = AI::Config.available_providers
+    current = Grafito.ai_provider.try(&.name)
+
+    {
+      providers: providers,
+      current:   current,
+      enabled:   AI::Config.enabled?,
+    }.to_json
+  end
+
+  # ## The `/ai-models` endpoint
+  #
+  # Returns list of available models for a specific provider.
+  # Models are fetched dynamically from the provider's API when possible.
+  #
+  # Example usage:
+  # ```text
+  # GET /ai-models?provider=openai
+  # ```
+  #
+  # Returns JSON array of models with id, name, and default flag.
+  get "/ai-models" do |env|
+    env.response.content_type = "application/json"
+
+    provider_id = env.params.query["provider"]?
+
+    unless provider_id
+      env.response.status_code = 400
+      next {error: "Missing 'provider' query parameter"}.to_json
+    end
+
+    models = AI::Config.models_for_provider(provider_id)
+    {models: models}.to_json
+  end
+
   # ## The `/ask-ai` endpoint
   #
-  # Sends log context to z.ai for AI-powered explanation.
+  # Sends log context to the configured AI provider for explanation.
+  # Supports multiple providers (Anthropic, OpenAI-compatible APIs).
+  #
   # Example usage:
   # ```text
   # POST /ask-ai
   # Content-Type: application/json
-  # {"cursor": "<CURSOR_STRING>"}
+  # {"cursor": "<CURSOR_STRING>", "provider": "anthropic"}
   # ```
   #
   # Returns JSON with AI explanation or error message.
   post "/ask-ai" do |env|
     Log.debug { "Received /ask-ai request" }
 
-    # Check if AI is enabled
-    unless ai_enabled?
-      env.response.content_type = "application/json"
-      env.response.status_code = 503
-      next {error: "AI features are disabled. Configure Z_AI_API_KEY environment variable to enable."}.to_json
+    # Parse JSON to check for provider/model override
+    body = env.request.body.try(&.gets_to_end) || ""
+    provider_id : String? = nil
+    model_id : String? = nil
+    cursor : String? = nil
+
+    unless body.empty?
+      begin
+        json_body = JSON.parse(body)
+        cursor = json_body["cursor"]?.try(&.as_s)
+        provider_id = json_body["provider"]?.try(&.as_s)
+        model_id = json_body["model"]?.try(&.as_s)
+      rescue
+        # Will be handled below
+      end
     end
 
-    # Parse JSON request body
-    body = env.request.body.try(&.gets_to_end) || ""
-    if body.empty?
+    # Get provider (either specified or default), with optional model
+    provider = if pid = provider_id
+                 AI::Config.provider_by_id(pid, model_id) || Grafito.ai_provider
+               else
+                 Grafito.ai_provider
+               end
+
+    unless provider
       env.response.content_type = "application/json"
-      env.response.status_code = 400
-      next {error: "Request body is empty."}.to_json
+      env.response.status_code = 503
+      next {
+        error: "AI features are disabled. Configure ANTHROPIC_API_KEY or Z_AI_API_KEY environment variable to enable.",
+        hint:  "See documentation for supported providers.",
+      }.to_json
     end
 
     begin
-      json_body = JSON.parse(body)
-      cursor = json_body["cursor"]?.try(&.as_s)
-
       unless cursor
         env.response.content_type = "application/json"
         env.response.status_code = 400
@@ -344,37 +418,22 @@ module Grafito
         "#{marker}[#{entry.timestamp}] [#{entry.formatted_priority}] [#{entry.unit || "N/A"}] #{entry.message}"
       end.join("\n")
 
-      prompt = "Please explain the error in the highlighted log entry of this context. Focus on what the error means, potential causes, and suggested solutions. Be concise and helpful."
+      # Create normalized AI request with priority-aware prompts
+      request = AI::Request.for_log_analysis(context_lines, target_entry.priority)
 
-      # Call z.ai API
-      api_key = ENV["Z_AI_API_KEY"]?
-      unless api_key
-        env.response.content_type = "application/json"
-        env.response.status_code = 500
-        next {error: "Z_AI_API_KEY environment variable not set."}.to_json
-      end
+      # Execute completion via the provider abstraction
+      Log.debug { "Calling AI provider: #{provider.name}" }
+      response = provider.complete(request)
+      Log.debug { "AI response received (#{response.content.size} chars)" }
 
-      headers = HTTP::Headers{
-        "Authorization"   => "Bearer #{api_key}",
-        "Content-Type"    => "application/json",
-        "Accept-Language" => "en-US,en",
-      }
-
-      z_ai_body = {
-        "model"    => "glm-4.5-flash",
-        "messages" => [
-          {"role" => "system", "content" => "You are a helpful AI assistant specializing in system log analysis. Provide clear, concise explanations of log errors with practical solutions."},
-          {"role" => "user", "content" => "#{prompt}\n\nLog Context:\n#{context_lines}"},
-        ],
-      }
-
-      uri = URI.parse("https://api.z.ai/api/paas/v4/chat/completions")
-      client = HTTP::Client.new(uri)
-      response = client.post(uri.path, headers, z_ai_body.to_json)
-
+      # Return normalized response
       env.response.content_type = "application/json"
-      env.response.status_code = response.status_code
-      response.body
+      {
+        content:  response.content,
+        model:    response.model,
+        provider: response.provider,
+        usage:    response.usage,
+      }.to_json
     rescue ex : JSON::ParseException
       env.response.content_type = "application/json"
       env.response.status_code = 400
@@ -382,8 +441,8 @@ module Grafito
     rescue ex : Exception
       env.response.content_type = "application/json"
       env.response.status_code = 500
-      Log.error(exception: ex) { "Error calling z.ai API: #{ex.message}" }
-      {error: "Error processing AI request: #{ex.message}"}.to_json
+      Log.error(exception: ex) { "AI provider error: #{ex.message}" }
+      {error: "AI request failed: #{ex.message}"}.to_json
     end
   end
 end
