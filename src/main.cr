@@ -117,24 +117,24 @@ def main
   )
 
   # Set log level from command line argument
-  log_level = args["--log-level"].as(String).upcase
+  log_level = args["--log-level"].to_s.upcase
   ENV["LOG_LEVEL"] = log_level
   Log.setup_from_env
 
   # Port and binding address are important
-  port = args["--port"].as(Int32)
-  bind_address = args["--bind"].as(String)
+  port = args["--port"].to_s.to_i32
+  bind_address = args["--bind"].to_s
 
   # Parse units restriction if provided
   if args["--units"]?
-    units = args["--units"].as(String).split(",").map(&.strip)
+    units = args["--units"].to_s.split(",").map(&.strip)
     Grafito.allowed_units = units
     Grafito::Log.info { "Restricting to units: #{units.join(", ")}" }
   end
 
   # Parse timezone configuration
   # docopt-config handles the fallback automatically: CLI > env var > config > default
-  timezone = args["--timezone"].as(String)
+  timezone = args["--timezone"].to_s
   Grafito.timezone = timezone
   Grafito::Log.info { "Using timezone: #{timezone}" }
 
