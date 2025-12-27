@@ -22,6 +22,8 @@ dependencies:
     branch: master
   docopt:
     github: ralsina/docopt.cr
+  docopt-config:
+    github: ralsina/docopt-config
   html_builder:
     github: crystal-lang/html_builder
   kemal:

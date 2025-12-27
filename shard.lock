@@ -24,6 +24,10 @@ shards:
     git: https://github.com/ralsina/docopt.cr.git
     version: 0.2.1
 
+  docopt-config:
+    git: https://github.com/ralsina/docopt-config.git
+    version: 0.1.0+git.commit.5421c74745d0212c2d2ab28c72a4a73d8c87adee
+
   exception_page:
     git: https://github.com/crystal-loot/exception_page.git
     version: 0.5.0
@@ -55,4 +59,3 @@ shards:
   webmock:
     git: https://github.com/manastech/webmock.cr.git
     version: 0.14.0
-

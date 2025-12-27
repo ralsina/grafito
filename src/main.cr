@@ -35,7 +35,7 @@ require "./grafito"
 require "./ai/config"
 require "baked_file_handler"
 require "baked_file_system"
-require "docopt"
+require "docopt-config"
 require "kemal-basic-auth"
 require "kemal"
 require "log"
@@ -105,8 +105,16 @@ end
 
 def main
   # We parse the command line (`ARGV`) using the help we described above.
+  # docopt-config automatically handles environment variables with GRAFITO_ prefix
+  # and optional config files.
 
-  args = Docopt.docopt(DOC, ARGV, version: Grafito::VERSION)
+  args = Docopt.docopt_config(
+    DOC,
+    argv: ARGV,
+    version: Grafito::VERSION,
+    env_prefix: "GRAFITO",
+    config_file_path: ENV["GRAFITO_CONFIG"]?
+  )
 
   # Set log level from command line argument
   log_level = args["--log-level"].as(String).upcase
@@ -114,7 +122,7 @@ def main
   Log.setup_from_env
 
   # Port and binding address are important
-  port = args["--port"].as(String).to_i32
+  port = args["--port"].as(Int32)
   bind_address = args["--bind"].as(String)
 
   # Parse units restriction if provided
@@ -125,7 +133,8 @@ def main
   end
 
   # Parse timezone configuration
-  timezone = args["--timezone"]?.as(String?) || ENV["GRAFITO_TIMEZONE"]? || "local"
+  # docopt-config handles the fallback automatically: CLI > env var > config > default
+  timezone = args["--timezone"].as(String)
   Grafito.timezone = timezone
   Grafito::Log.info { "Using timezone: #{timezone}" }
 
