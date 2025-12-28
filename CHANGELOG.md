@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.16.0] - 2025-12-28
+
+### 🚀 Features
+
+- Add configurable base path for flexible deployment
+
 ## [0.15.0] - 2025-12-28
 
 ### 🚀 Features
@@ -19,6 +25,10 @@ All notable changes to this project will be documented in this file.
 - Use to_s instead of as(String) for type flexibility
 - Handle timezone edge cases (/UTC, Etc/UTC) in Docker
 - Properly configure timezone in Docker image
+
+### 💼 Other
+
+- Release v0.15.0
 
 ### 🚜 Refactor
 
