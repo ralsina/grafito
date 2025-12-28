@@ -67,6 +67,7 @@ Options:
   -U UNITS, --units=UNITS       Comma-separated list of systemd units to show (restricts access).
   --log-level=LEVEL             Set log level (debug, info, warn, error, fatal) [default: info].
   -t TIMEZONE, --timezone=TIMEZONE  Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
+  --base-path=PATH              Base path for deployment (e.g., /, /grafito) [default: /].
   -h --help                     Show this screen.
   --version                     Show version.
 
@@ -75,6 +76,7 @@ Environment variables:
   GRAFITO_AUTH_PASS             Password for basic authentication (if set, GRAFITO_AUTH_USER must also be set).
   LOG_LEVEL                     Log level (debug, info, warn, error, fatal) [default: info].
   GRAFITO_TIMEZONE              Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
+  GRAFITO_BASE_PATH             Base path for deployment (e.g., /, /grafito) [default: /].
 DOCOPT
 
 # ## The Assets class
@@ -138,6 +140,15 @@ def main
   Grafito.timezone = timezone
   Grafito::Log.info { "Using timezone: #{timezone}" }
 
+  # Parse base path configuration
+  # docopt-config handles the fallback automatically: CLI > env var > config > default
+  base_path = args["--base-path"].to_s
+  Grafito.base_path = base_path
+  Grafito::Log.info { "Using base path: #{base_path}" }
+
+  # Register all Kemal routes (must be done after base_path is set)
+  Grafito.register_routes
+
   # Log at debug level. Probably worth making it configurable.
 
   Log.setup(:debug) # Or use Log.setup_from_env for more flexibility
@@ -180,7 +191,7 @@ def main
   # into the application. In our case, the Assets class we defined above.
   #
   # Uses the external ralsina/baked_file_handler library.
-  baked_asset_handler = BakedFileHandler::BakedFileHandler.new(Assets)
+  baked_asset_handler = BakedFileHandler::BakedFileHandler.new(Assets, base_path: Grafito.base_path)
   add_handler baked_asset_handler
 
   # Tell kemal to listen on the right port. That's it. The rest is done in [grafito.cr](grafito.cr.html)

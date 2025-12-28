@@ -170,12 +170,6 @@
 
             <li>
 
-                <a href="src/baked_handler.cr.html"><span>src/baked_handler.cr</span></a>
-
-            </li>
-
-            <li>
-
                 <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
 
             </li>
@@ -263,12 +257,13 @@ and configuration and is performant. Easy, right?</p>
     </div>
     <div class="code">
         <span id="line-1"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./grafito</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-2"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">baked_file_handler</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-3"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">baked_file_system</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-4"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">docopt</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-5"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal-basic-auth</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-6"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-7"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">log</span><span class="ls">&quot;</span><span class="ls"></span></code></pre></span>
+<span id="line-2"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./ai/config</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-3"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">baked_file_handler</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-4"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">baked_file_system</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-5"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">docopt-config</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-6"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal-basic-auth</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-7"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-8"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">log</span><span class="ls">&quot;</span><span class="ls"></span></code></pre></span>
     </div>
 </div>
 
@@ -366,11 +361,19 @@ always gets executed.</p>
         <span class="anchor">
             <a href="#section" class="anchor">↦</a>
         </span>
-        <p>We parse the command line (<code>ARGV</code>) using the help we described above.</p>
+        <p>We parse the command line (<code>ARGV</code>) using the help we described above.
+docopt-config automatically handles environment variables with GRAFITO_ prefix
+and optional config files.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">args</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Docopt</span><span class="t">.</span><span class="t">docopt</span><span class="t">(</span><span class="nc">DOC</span><span class="t">,</span><span class="t"> </span><span class="nc">ARGV</span><span class="t">,</span><span class="t"> </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">VERSION</span><span class="t">)</span></code></pre></span>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">args</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Docopt</span><span class="t">.</span><span class="t">docopt_config</span><span class="t">(</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="nc">DOC</span><span class="t">,</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="t">argv</span><span class="t">:</span><span class="t"> </span><span class="nc">ARGV</span><span class="t">,</span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">VERSION</span><span class="t">,</span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="t">env_prefix</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">GRAFITO</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-6"></span><span class="t">    </span><span class="t">config_file_path</span><span class="t">:</span><span class="t"> </span><span class="nc">ENV</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">GRAFITO_CONFIG</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-7"></span><span class="t">  </span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
@@ -383,7 +386,7 @@ always gets executed.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">log_level</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--log-level</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">.</span><span class="t">upcase</span><span class="t"></span>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">log_level</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--log-level</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">upcase</span><span class="t"></span>
 <span id="line-2"></span><span class="t">  </span><span class="nc">ENV</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">LOG_LEVEL</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">log_level</span><span class="t"></span>
 <span id="line-3"></span><span class="t">  </span><span class="nc">Log</span><span class="t">.</span><span class="t">setup_from_env</span></code></pre></span>
     </div>
@@ -398,8 +401,8 @@ always gets executed.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--port</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">.</span><span class="t">to_i32</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="t">bind_address</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--bind</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span></code></pre></span>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--port</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">to_i32</span><span class="t"></span>
+<span id="line-2"></span><span class="t">  </span><span class="t">bind_address</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--bind</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span></code></pre></span>
     </div>
 </div>
 
@@ -413,7 +416,7 @@ always gets executed.</p>
     </div>
     <div class="code">
         <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--units</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
-<span id="line-2"></span><span class="t">    </span><span class="t">units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--units</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">)</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">,</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">strip</span><span class="t">)</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--units</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">,</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">strip</span><span class="t">)</span><span class="t"></span>
 <span id="line-3"></span><span class="t">    </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">allowed_units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">units</span><span class="t"></span>
 <span id="line-4"></span><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Restricting to units: </span><span class="lsi">#{</span><span class="t">units</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">, </span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
 <span id="line-5"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
@@ -425,11 +428,12 @@ always gets executed.</p>
         <span class="anchor">
             <a href="#section" class="anchor">↦</a>
         </span>
-        <p>Parse timezone configuration</p>
+        <p>Parse timezone configuration
+docopt-config handles the fallback automatically: CLI &gt; env var &gt; config &gt; default</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">timezone</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--timezone</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="nc">String</span><span class="t">?</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="nc">ENV</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">GRAFITO_TIMEZONE</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">local</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">timezone</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--timezone</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
 <span id="line-2"></span><span class="t">  </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">timezone</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">timezone</span><span class="t"></span>
 <span id="line-3"></span><span class="t">  </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Using timezone: </span><span class="lsi">#{</span><span class="t">timezone</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
     </div>
@@ -481,18 +485,21 @@ always gets executed.</p>
         <span class="anchor">
             <a href="#section" class="anchor">↦</a>
         </span>
-        <p>Check if Z.AI API key is available for AI features</p>
+        <p>Initialize AI provider using the abstraction layer
+Supports: Anthropic (ANTHROPIC_API_KEY), Z.AI (Z_AI_API_KEY),
+OpenAI (OPENAI_API_KEY), Groq (GROQ_API_KEY), Ollama (GRAFITO_AI_ENDPOINT)</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">z_ai_api_key</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">ENV</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">Z_AI_API_KEY</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">z_ai_api_key</span><span class="t"></span>
-<span id="line-3"></span><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Z.AI API key configured - AI features enabled</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-4"></span><span class="t">    </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">ai_enabled</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t"></span>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">AI</span><span class="nc">::</span><span class="nc">Config</span><span class="t">.</span><span class="t">provider</span><span class="t"></span>
+<span id="line-2"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">ai_provider</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">AI features enabled: </span><span class="lsi">#{</span><span class="t">ai_provider</span><span class="t">.</span><span class="t">name</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">ai_provider</span><span class="t"></span>
 <span id="line-5"></span><span class="t">  </span><span class="nk">else</span><span class="t"></span>
-<span id="line-6"></span><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Z.AI API key not configured - AI features disabled</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-7"></span><span class="t">    </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">ai_enabled</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">false</span><span class="t"></span>
-<span id="line-8"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+<span id="line-6"></span><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">AI features disabled - no provider configured</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-7"></span><span class="t">    </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">  Set ANTHROPIC_API_KEY or Z_AI_API_KEY to enable</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-8"></span><span class="t">    </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-9"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -549,7 +556,7 @@ Exit with an error code to prevent running in an insecure state.</p>
         </span>
         <p>The <code>BakedFileHandler</code> is a custom handler that serves files that are baked
 into the application. In our case, the Assets class we defined above.</p>
-<p>You can see how it's implemented in the <a href="baked_handler.cr.html">baked_handler.cr</a> file.</p>
+<p>Uses the external ralsina/baked_file_handler library.</p>
 
     </div>
     <div class="code">

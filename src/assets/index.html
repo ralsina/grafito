@@ -557,6 +557,9 @@
     </dialog>
 
     <script>
+      // Get base path from data attribute (set by BakedFileHandler for deployment flexibility)
+      const basePath = document.body.dataset.basePath || "/";
+
       // --- Shared Configuration for Filters ---
       const SHARED_FILTER_CONFIGS = [
         { id: "search-box", param: "q", type: "value" },
@@ -687,7 +690,7 @@
           modelSelect.innerHTML = '<option value="">Loading models...</option>';
           modelSelect.disabled = true;
 
-          fetch(`/ai-models?provider=${encodeURIComponent(providerId)}`)
+          fetch(`${basePath}/ai-models?provider=${encodeURIComponent(providerId)}`)
             .then(response => response.json())
             .then(data => {
               modelSelect.innerHTML = '';
@@ -731,7 +734,7 @@
         }
 
         function loadAIProviders() {
-          fetch('/ai-providers')
+          fetch(`${basePath}/ai-providers`)
             .then(response => response.json())
             .then(data => {
               const loadingEl = document.getElementById('ai-loading');
@@ -1085,7 +1088,7 @@
         dialog.showModal();
 
         // First, get the target log entry details
-        fetch(`/details?${new URLSearchParams({cursor: cursor})}`)
+        fetch(`${basePath}/details?${new URLSearchParams({cursor: cursor})}`)
           .then((response) => response.text())
           .then((html) => {
             // Extract the message from the details page
@@ -1133,7 +1136,7 @@
         if (window.selectedAIModel) {
           aiRequestBody.model = window.selectedAIModel;
         }
-        fetch("/ask-ai", {
+        fetch(`${basePath}/ask-ai`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

@@ -135,7 +135,7 @@ module Grafito
               # All remaining headers are sortable and will use this block
               th({
                 "style"        => "cursor: pointer; vertical-align: middle;",
-                "hx-get"       => "/logs",
+                "hx-get"       => "#{Grafito.base_path}/logs",
                 "hx-vals"      => header[:hx_vals],
                 "hx-include"   => "#search-box, #unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view",
                 "hx-target"    => "#results",
@@ -212,7 +212,7 @@ module Grafito
                     button({
                       "class"                     => "round-button",
                       "title"                     => "View full details for this log entry",
-                      "hx-get"                    => "details?#{URI::Params.encode({"cursor" => entry_cursor})}",
+                      "hx-get"                    => "#{Grafito.base_path}/details?#{URI::Params.encode({"cursor" => entry_cursor})}",
                       "hx-target"                 => "#details-dialog-content", # Target the content area within the modal
                       "hx-swap"                   => "innerHTML",
                       "hx-on:htmx:before-request" => "document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;",
@@ -228,7 +228,7 @@ module Grafito
                     button({
                       "class"                     => "round-button",
                       "title"                     => "View context for this log entry (e.g., 5 before & 5 after)",
-                      "hx-get"                    => "context?#{URI::Params.encode({"cursor" => entry_cursor})}",
+                      "hx-get"                    => "#{Grafito.base_path}/context?#{URI::Params.encode({"cursor" => entry_cursor})}",
                       "hx-target"                 => "#details-dialog-content", # Target the content area within the modal
                       "hx-swap"                   => "innerHTML",
                       "hx-on:htmx:before-request" => "document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;",

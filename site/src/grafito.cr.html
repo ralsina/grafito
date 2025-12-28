@@ -170,12 +170,6 @@
 
             <li>
 
-                <a href="src/baked_handler.cr.html"><span>src/baked_handler.cr</span></a>
-
-            </li>
-
-            <li>
-
                 <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
 
             </li>
@@ -236,12 +230,16 @@ and could use some refactoring.</p>
         <span id="line-1"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./grafito_helpers</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
 <span id="line-2"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./journalctl</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
 <span id="line-3"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./timeline</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-4"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-5"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-6"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">mime</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-7"></span><span class="t"></span>
-<span id="line-8"></span><span class="nk">module</span><span class="t"> </span><span class="nc">Grafito</span><span class="t"></span>
-<span id="line-9"></span><span class="t">  </span><span class="nk">extend</span><span class="t"> </span><span class="nk">self</span></code></pre></span>
+<span id="line-4"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./ai/config</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-5"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./ai/provider</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-6"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./ai/request</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-7"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">./ai/response</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-8"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-9"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">kemal</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-10"></span><span class="nk">require</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">mime</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-11"></span><span class="t"></span>
+<span id="line-12"></span><span class="nk">module</span><span class="t"> </span><span class="nc">Grafito</span><span class="t"></span>
+<span id="line-13"></span><span class="t">  </span><span class="nk">extend</span><span class="t"> </span><span class="nk">self</span></code></pre></span>
     </div>
 </div>
 
@@ -289,11 +287,26 @@ and could use some refactoring.</p>
         <span class="anchor">
             <a href="#section" class="anchor">↦</a>
         </span>
-        <p>AI feature flag - when true, AI features are enabled</p>
+        <p>AI provider instance - nil if no provider is configured</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">class_property?</span><span class="t"> </span><span class="t">ai_enabled</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">false</span></code></pre></span>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">class_property</span><span class="t"> </span><span class="t">ai_provider</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">AI</span><span class="nc">::</span><span class="nc">Provider</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section" class="grid">
+    <div class="doc" id="section">
+        <span class="anchor">
+            <a href="#section" class="anchor">↦</a>
+        </span>
+        <p>Convenience method for checking if AI is available (backward compatible)</p>
+
+    </div>
+    <div class="code">
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">ai_enabled?</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Bool</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="o">!</span><span class="t">ai_provider</span><span class="t">.</span><span class="nk">nil?</span><span class="t"></span>
+<span id="line-3"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -875,17 +888,74 @@ or if the count was invalid (though we check count above).</p>
     </div>
 </div>
 
+<div id="the-ai-providers-endpoint" class="grid">
+    <div class="doc" id="the-ai-providers-endpoint">
+        <span class="anchor">
+            <a href="#the-ai-providers-endpoint" class="anchor">↦</a>
+        </span>
+        <h2>The <code>/ai-providers</code> endpoint</h2>
+<p>Returns list of available AI providers that the user can switch between.</p>
+<p>Example usage:</p>
+<pre class="b" ><code class="b"><span class="t">GET /ai-providers</span></code></pre><p>Returns JSON array of providers with id, name, and availability.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/ai-providers</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-3"></span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="t">providers</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">AI</span><span class="nc">::</span><span class="nc">Config</span><span class="t">.</span><span class="t">available_providers</span><span class="t"></span>
+<span id="line-5"></span><span class="t">    </span><span class="t">current</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">name</span><span class="t">)</span><span class="t"></span>
+<span id="line-6"></span><span class="t"></span>
+<span id="line-7"></span><span class="t">    </span><span class="t">{</span><span class="t"></span>
+<span id="line-8"></span><span class="t">      </span><span class="t">providers</span><span class="t">:</span><span class="t"> </span><span class="t">providers</span><span class="t">,</span><span class="t"></span>
+<span id="line-9"></span><span class="t">      </span><span class="t">current</span><span class="t">:</span><span class="t">   </span><span class="t">current</span><span class="t">,</span><span class="t"></span>
+<span id="line-10"></span><span class="t">      </span><span class="t">enabled</span><span class="t">:</span><span class="t">   </span><span class="nc">AI</span><span class="nc">::</span><span class="nc">Config</span><span class="t">.</span><span class="t">enabled?</span><span class="t">,</span><span class="t"></span>
+<span id="line-11"></span><span class="t">    </span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-12"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="the-ai-models-endpoint" class="grid">
+    <div class="doc" id="the-ai-models-endpoint">
+        <span class="anchor">
+            <a href="#the-ai-models-endpoint" class="anchor">↦</a>
+        </span>
+        <h2>The <code>/ai-models</code> endpoint</h2>
+<p>Returns list of available models for a specific provider.
+Models are fetched dynamically from the provider's API when possible.</p>
+<p>Example usage:</p>
+<pre class="b" ><code class="b"><span class="t">GET /ai-models?provider=openai</span></code></pre><p>Returns JSON array of models with id, name, and default flag.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">get</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">/ai-models</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-3"></span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="t">provider_id</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">params</span><span class="t">.</span><span class="t">query</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">provider</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-5"></span><span class="t"></span>
+<span id="line-6"></span><span class="t">    </span><span class="nk">unless</span><span class="t"> </span><span class="t">provider_id</span><span class="t"></span>
+<span id="line-7"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">400</span><span class="t"></span>
+<span id="line-8"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Missing &#39;provider&#39; query parameter</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-9"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-10"></span><span class="t"></span>
+<span id="line-11"></span><span class="t">    </span><span class="t">models</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">AI</span><span class="nc">::</span><span class="nc">Config</span><span class="t">.</span><span class="t">models_for_provider</span><span class="t">(</span><span class="t">provider_id</span><span class="t">)</span><span class="t"></span>
+<span id="line-12"></span><span class="t">    </span><span class="t">{</span><span class="t">models</span><span class="t">:</span><span class="t"> </span><span class="t">models</span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-13"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
 <div id="the-ask-ai-endpoint" class="grid">
     <div class="doc" id="the-ask-ai-endpoint">
         <span class="anchor">
             <a href="#the-ask-ai-endpoint" class="anchor">↦</a>
         </span>
         <h2>The <code>/ask-ai</code> endpoint</h2>
-<p>Sends log context to z.ai for AI-powered explanation.
-Example usage:</p>
+<p>Sends log context to the configured AI provider for explanation.
+Supports multiple providers (Anthropic, OpenAI-compatible APIs).</p>
+<p>Example usage:</p>
 <pre class="b" ><code class="b"><span class="t">POST /ask-ai</span><span class="t">
 </span><span class="t"></span><span class="t">Content-Type: application/json</span><span class="t">
-</span><span class="t"></span><span class="t">{&quot;cursor&quot;: &quot;&lt;CURSOR_STRING&gt;&quot;}</span></code></pre><p>Returns JSON with AI explanation or error message.</p>
+</span><span class="t"></span><span class="t">{&quot;cursor&quot;: &quot;&lt;CURSOR_STRING&gt;&quot;, &quot;provider&quot;: &quot;anthropic&quot;}</span></code></pre><p>Returns JSON with AI explanation or error message.</p>
 
     </div>
     <div class="code">
@@ -899,15 +969,22 @@ Example usage:</p>
         <span class="anchor">
             <a href="#section" class="anchor">↦</a>
         </span>
-        <p>Check if AI is enabled</p>
+        <p>Parse JSON to check for provider/model override</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">unless</span><span class="t"> </span><span class="t">ai_enabled?</span><span class="t"></span>
-<span id="line-2"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-3"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">503</span><span class="t"></span>
-<span id="line-4"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">AI features are disabled. Configure Z_AI_API_KEY environment variable to enable.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
-<span id="line-5"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">body</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">request</span><span class="t">.</span><span class="t">body</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">gets_to_end</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="t">provider_id</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-3"></span><span class="t">    </span><span class="t">model_id</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-4"></span><span class="t">    </span><span class="t">cursor</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-5"></span><span class="t"></span>
+<span id="line-6"></span><span class="t">    </span><span class="nk">unless</span><span class="t"> </span><span class="t">body</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-7"></span><span class="t">      </span><span class="nk">begin</span><span class="t"></span>
+<span id="line-8"></span><span class="t">        </span><span class="t">json_body</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">JSON</span><span class="t">.</span><span class="t">parse</span><span class="t">(</span><span class="t">body</span><span class="t">)</span><span class="t"></span>
+<span id="line-9"></span><span class="t">        </span><span class="t">cursor</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">json_body</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">as_s</span><span class="t">)</span><span class="t"></span>
+<span id="line-10"></span><span class="t">        </span><span class="t">provider_id</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">json_body</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">provider</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">as_s</span><span class="t">)</span><span class="t"></span>
+<span id="line-11"></span><span class="t">        </span><span class="t">model_id</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">json_body</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">model</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">as_s</span><span class="t">)</span><span class="t"></span>
+<span id="line-12"></span><span class="t">      </span><span class="nk">rescue</span></code></pre></span>
     </div>
 </div>
 
@@ -916,26 +993,45 @@ Example usage:</p>
         <span class="anchor">
             <a href="#section" class="anchor">↦</a>
         </span>
-        <p>Parse JSON request body</p>
+        <p>Will be handled below</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">body</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">env</span><span class="t">.</span><span class="t">request</span><span class="t">.</span><span class="t">body</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">gets_to_end</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-2"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">body</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
-<span id="line-3"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-4"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">400</span><span class="t"></span>
-<span id="line-5"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Request body is empty.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
-<span id="line-6"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-7"></span><span class="t"></span>
-<span id="line-8"></span><span class="t">    </span><span class="nk">begin</span><span class="t"></span>
-<span id="line-9"></span><span class="t">      </span><span class="t">json_body</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">JSON</span><span class="t">.</span><span class="t">parse</span><span class="t">(</span><span class="t">body</span><span class="t">)</span><span class="t"></span>
-<span id="line-10"></span><span class="t">      </span><span class="t">cursor</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">json_body</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">cursor</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">as_s</span><span class="t">)</span><span class="t"></span>
-<span id="line-11"></span><span class="t"></span>
-<span id="line-12"></span><span class="t">      </span><span class="nk">unless</span><span class="t"> </span><span class="t">cursor</span><span class="t"></span>
-<span id="line-13"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-14"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">400</span><span class="t"></span>
-<span id="line-15"></span><span class="t">        </span><span class="nk">next</span><span class="t"> </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Missing &#39;cursor&#39; parameter in request body.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
-<span id="line-16"></span><span class="t">      </span><span class="nk">end</span></code></pre></span>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-2"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section" class="grid">
+    <div class="doc" id="section">
+        <span class="anchor">
+            <a href="#section" class="anchor">↦</a>
+        </span>
+        <p>Get provider (either specified or default), with optional model</p>
+
+    </div>
+    <div class="code">
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">pid</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">provider_id</span><span class="t"></span>
+<span id="line-2"></span><span class="t">                 </span><span class="nc">AI</span><span class="nc">::</span><span class="nc">Config</span><span class="t">.</span><span class="t">provider_by_id</span><span class="t">(</span><span class="t">pid</span><span class="t">,</span><span class="t"> </span><span class="t">model_id</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t"></span>
+<span id="line-3"></span><span class="t">               </span><span class="nk">else</span><span class="t"></span>
+<span id="line-4"></span><span class="t">                 </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t"></span>
+<span id="line-5"></span><span class="t">               </span><span class="nk">end</span><span class="t"></span>
+<span id="line-6"></span><span class="t"></span>
+<span id="line-7"></span><span class="t">    </span><span class="nk">unless</span><span class="t"> </span><span class="t">provider</span><span class="t"></span>
+<span id="line-8"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-9"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">503</span><span class="t"></span>
+<span id="line-10"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="t">{</span><span class="t"></span>
+<span id="line-11"></span><span class="t">        </span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">AI features are disabled. Configure ANTHROPIC_API_KEY or Z_AI_API_KEY environment variable to enable.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-12"></span><span class="t">        </span><span class="t">hint</span><span class="t">:</span><span class="t">  </span><span class="ls">&quot;</span><span class="ls">See documentation for supported providers.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
+<span id="line-13"></span><span class="t">      </span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-14"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-15"></span><span class="t"></span>
+<span id="line-16"></span><span class="t">    </span><span class="nk">begin</span><span class="t"></span>
+<span id="line-17"></span><span class="t">      </span><span class="nk">unless</span><span class="t"> </span><span class="t">cursor</span><span class="t"></span>
+<span id="line-18"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-19"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">400</span><span class="t"></span>
+<span id="line-20"></span><span class="t">        </span><span class="nk">next</span><span class="t"> </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Missing &#39;cursor&#39; parameter in request body.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-21"></span><span class="t">      </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -987,9 +1083,7 @@ Example usage:</p>
         <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">context_lines</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">context_entries</span><span class="t">.</span><span class="t">map_with_index</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="t">,</span><span class="t"> </span><span class="t">index</span><span class="o">|</span><span class="t"></span>
 <span id="line-2"></span><span class="t">        </span><span class="t">marker</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">index</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="ln">5</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">&gt;&gt;&gt; LINE 6 (TARGET): </span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">    </span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
 <span id="line-3"></span><span class="t">        </span><span class="ls">&quot;</span><span class="lsi">#{</span><span class="t">marker</span><span class="t"></span><span class="lsi">}</span><span class="ls">[</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">timestamp</span><span class="t"></span><span class="lsi">}</span><span class="ls">] [</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_priority</span><span class="t"></span><span class="lsi">}</span><span class="ls">] [</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">N/A</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span><span class="lsi">}</span><span class="ls">] </span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-4"></span><span class="t">      </span><span class="nk">end</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">\n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"></span>
-<span id="line-5"></span><span class="t"></span>
-<span id="line-6"></span><span class="t">      </span><span class="t">prompt</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Please explain the error in the highlighted log entry of this context. Focus on what the error means, potential causes, and suggested solutions. Be concise and helpful.</span><span class="ls">&quot;</span><span class="ls"></span></code></pre></span>
+<span id="line-4"></span><span class="t">      </span><span class="nk">end</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">\n</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
@@ -998,50 +1092,57 @@ Example usage:</p>
         <span class="anchor">
             <a href="#section" class="anchor">↦</a>
         </span>
-        <p>Call z.ai API</p>
+        <p>Create normalized AI request with priority-aware prompts</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">api_key</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">ENV</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">Z_AI_API_KEY</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
-<span id="line-2"></span><span class="t">      </span><span class="nk">unless</span><span class="t"> </span><span class="t">api_key</span><span class="t"></span>
-<span id="line-3"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-4"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">500</span><span class="t"></span>
-<span id="line-5"></span><span class="t">        </span><span class="nk">next</span><span class="t"> </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Z_AI_API_KEY environment variable not set.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
-<span id="line-6"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-7"></span><span class="t"></span>
-<span id="line-8"></span><span class="t">      </span><span class="t">headers</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">HTTP</span><span class="nc">::</span><span class="nc">Headers</span><span class="t">{</span><span class="t"></span>
-<span id="line-9"></span><span class="t">        </span><span class="ls">&quot;</span><span class="ls">Authorization</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Bearer </span><span class="lsi">#{</span><span class="t">api_key</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
-<span id="line-10"></span><span class="t">        </span><span class="ls">&quot;</span><span class="ls">Content-Type</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">    </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
-<span id="line-11"></span><span class="t">        </span><span class="ls">&quot;</span><span class="ls">Accept-Language</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">en-US,en</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
-<span id="line-12"></span><span class="t">      </span><span class="t">}</span><span class="t"></span>
-<span id="line-13"></span><span class="t"></span>
-<span id="line-14"></span><span class="t">      </span><span class="t">z_ai_body</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">{</span><span class="t"></span>
-<span id="line-15"></span><span class="t">        </span><span class="ls">&quot;</span><span class="ls">model</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">    </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">glm-4.5-flash</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"></span>
-<span id="line-16"></span><span class="t">        </span><span class="ls">&quot;</span><span class="ls">messages</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
-<span id="line-17"></span><span class="t">          </span><span class="t">{</span><span class="ls">&quot;</span><span class="ls">role</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">system</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">content</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">You are a helpful AI assistant specializing in system log analysis. Provide clear, concise explanations of log errors with practical solutions.</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
-<span id="line-18"></span><span class="t">          </span><span class="t">{</span><span class="ls">&quot;</span><span class="ls">role</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">user</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">,</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">content</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="ls">&quot;</span><span class="lsi">#{</span><span class="t">prompt</span><span class="t"></span><span class="lsi">}</span><span class="ls">\n</span><span class="ls">\n</span><span class="ls">Log Context:</span><span class="ls">\n</span><span class="lsi">#{</span><span class="t">context_lines</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
-<span id="line-19"></span><span class="t">        </span><span class="t">]</span><span class="t">,</span><span class="t"></span>
-<span id="line-20"></span><span class="t">      </span><span class="t">}</span><span class="t"></span>
-<span id="line-21"></span><span class="t"></span>
-<span id="line-22"></span><span class="t">      </span><span class="t">uri</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">URI</span><span class="t">.</span><span class="t">parse</span><span class="t">(</span><span class="ls">&quot;</span><span class="ls">https://api.z.ai/api/paas/v4/chat/completions</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">)</span><span class="t"></span>
-<span id="line-23"></span><span class="t">      </span><span class="t">client</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">HTTP</span><span class="nc">::</span><span class="nc">Client</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">uri</span><span class="t">)</span><span class="t"></span>
-<span id="line-24"></span><span class="t">      </span><span class="t">response</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">client</span><span class="t">.</span><span class="t">post</span><span class="t">(</span><span class="t">uri</span><span class="t">.</span><span class="t">path</span><span class="t">,</span><span class="t"> </span><span class="t">headers</span><span class="t">,</span><span class="t"> </span><span class="t">z_ai_body</span><span class="t">.</span><span class="t">to_json</span><span class="t">)</span><span class="t"></span>
-<span id="line-25"></span><span class="t"></span>
-<span id="line-26"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-27"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"></span>
-<span id="line-28"></span><span class="t">      </span><span class="t">response</span><span class="t">.</span><span class="t">body</span><span class="t"></span>
-<span id="line-29"></span><span class="t">    </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">JSON</span><span class="nc">::</span><span class="nc">ParseException</span><span class="t"></span>
-<span id="line-30"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-31"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">400</span><span class="t"></span>
-<span id="line-32"></span><span class="t">      </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Invalid JSON in request body: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
-<span id="line-33"></span><span class="t">    </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Exception</span><span class="t"></span>
-<span id="line-34"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
-<span id="line-35"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">500</span><span class="t"></span>
-<span id="line-36"></span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Error calling z.ai API: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-37"></span><span class="t">      </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Error processing AI request: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
-<span id="line-38"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-39"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-40"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">request</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">AI</span><span class="nc">::</span><span class="nc">Request</span><span class="t">.</span><span class="t">for_log_analysis</span><span class="t">(</span><span class="t">context_lines</span><span class="t">,</span><span class="t"> </span><span class="t">target_entry</span><span class="t">.</span><span class="t">priority</span><span class="t">)</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section" class="grid">
+    <div class="doc" id="section">
+        <span class="anchor">
+            <a href="#section" class="anchor">↦</a>
+        </span>
+        <p>Execute completion via the provider abstraction</p>
+
+    </div>
+    <div class="code">
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Calling AI provider: </span><span class="lsi">#{</span><span class="t">provider</span><span class="t">.</span><span class="t">name</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="t">response</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">provider</span><span class="t">.</span><span class="t">complete</span><span class="t">(</span><span class="t">request</span><span class="t">)</span><span class="t"></span>
+<span id="line-3"></span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">debug</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">AI response received (</span><span class="lsi">#{</span><span class="t">response</span><span class="t">.</span><span class="t">content</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="ls"> chars)</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section" class="grid">
+    <div class="doc" id="section">
+        <span class="anchor">
+            <a href="#section" class="anchor">↦</a>
+        </span>
+        <p>Return normalized response</p>
+
+    </div>
+    <div class="code">
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-2"></span><span class="t">      </span><span class="t">{</span><span class="t"></span>
+<span id="line-3"></span><span class="t">        </span><span class="t">content</span><span class="t">:</span><span class="t">  </span><span class="t">response</span><span class="t">.</span><span class="t">content</span><span class="t">,</span><span class="t"></span>
+<span id="line-4"></span><span class="t">        </span><span class="t">model</span><span class="t">:</span><span class="t">    </span><span class="t">response</span><span class="t">.</span><span class="t">model</span><span class="t">,</span><span class="t"></span>
+<span id="line-5"></span><span class="t">        </span><span class="t">provider</span><span class="t">:</span><span class="t"> </span><span class="t">response</span><span class="t">.</span><span class="t">provider</span><span class="t">,</span><span class="t"></span>
+<span id="line-6"></span><span class="t">        </span><span class="t">usage</span><span class="t">:</span><span class="t">    </span><span class="t">response</span><span class="t">.</span><span class="t">usage</span><span class="t">,</span><span class="t"></span>
+<span id="line-7"></span><span class="t">      </span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-8"></span><span class="t">    </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">JSON</span><span class="nc">::</span><span class="nc">ParseException</span><span class="t"></span>
+<span id="line-9"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-10"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">400</span><span class="t"></span>
+<span id="line-11"></span><span class="t">      </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Invalid JSON in request body: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-12"></span><span class="t">    </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="nc">Exception</span><span class="t"></span>
+<span id="line-13"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">application/json</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"></span>
+<span id="line-14"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="ln">500</span><span class="t"></span>
+<span id="line-15"></span><span class="t">      </span><span class="nc">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">AI provider error: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-16"></span><span class="t">      </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">AI request failed: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-17"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-18"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-19"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
