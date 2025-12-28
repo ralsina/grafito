@@ -2,7 +2,43 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.14.0] - 2025-12-17
+## [0.15.0] - 2025-12-28
+
+### 🚀 Features
+
+- Add multi-provider AI log analysis with dynamic prompts
+- Add model switching with dropdown UI and curated model lists per provider
+- Migrate to docopt-config for enhanced configuration
+
+### 🐛 Bug Fixes
+
+- Remove dead code for unused ai-current-provider element
+- Add error handling for malformed ai API responses
+- Remove redundant empty body check in /ask-ai endpoint
+- Prevent XSS in AI response error handling
+- Use to_s instead of as(String) for type flexibility
+- Handle timezone edge cases (/UTC, Etc/UTC) in Docker
+- Properly configure timezone in Docker image
+
+### 🚜 Refactor
+
+- *(ai)* Fix lint issues, reduce complexity, add constants for DRY, improve test coverage
+- Replace internal BakedFileHandler with external library
+
+### 📚 Documentation
+
+- Update README.md [skip ci]
+- Create .all-contributorsrc [skip ci]
+
+### 🎨 Styling
+
+- Fix ameba lint issues in AI module
+
+### 🧪 Testing
+
+- Add provider specs with webmock
+
+## [0.14.1] - 2025-12-17
 
 ### 🚀 Features
 
@@ -11,6 +47,10 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Crash on startup because of timezone
+
+### 💼 Other
+
+- Release v0.14.1
 
 ### 📚 Documentation
 
