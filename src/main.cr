@@ -191,7 +191,7 @@ def main
   # into the application. In our case, the Assets class we defined above.
   #
   # Uses the external ralsina/baked_file_handler library.
-  baked_asset_handler = BakedFileHandler::BakedFileHandler.new(Assets, base_path: Grafito.base_path)
+  baked_asset_handler = BakedFileHandler::BakedFileHandler.new(Assets, mount_path: Grafito.base_path)
   add_handler baked_asset_handler
 
   # Tell kemal to listen on the right port. That's it. The rest is done in [grafito.cr](grafito.cr.html)
