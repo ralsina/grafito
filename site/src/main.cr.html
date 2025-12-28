@@ -300,15 +300,17 @@ which lets us just write the help and then everything Just Works.</p>
 <span id="line-12">  -U UNITS, --units=UNITS       Comma-separated list of systemd units to show (restricts access).</span><span class="ls"></span>
 <span id="line-13">  --log-level=LEVEL             Set log level (debug, info, warn, error, fatal) [default: info].</span><span class="ls"></span>
 <span id="line-14">  -t TIMEZONE, --timezone=TIMEZONE  Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].</span><span class="ls"></span>
-<span id="line-15">  -h --help                     Show this screen.</span><span class="ls"></span>
-<span id="line-16">  --version                     Show version.</span><span class="ls"></span>
-<span id="line-17"></span><span class="ls"></span>
-<span id="line-18">Environment variables:</span><span class="ls"></span>
-<span id="line-19">  GRAFITO_AUTH_USER             Username for basic authentication (if set, GRAFITO_AUTH_PASS must also be set).</span><span class="ls"></span>
-<span id="line-20">  GRAFITO_AUTH_PASS             Password for basic authentication (if set, GRAFITO_AUTH_USER must also be set).</span><span class="ls"></span>
-<span id="line-21">  LOG_LEVEL                     Log level (debug, info, warn, error, fatal) [default: info].</span><span class="ls"></span>
-<span id="line-22">  GRAFITO_TIMEZONE              Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].</span><span class="ls"></span>
-<span id="line-23">DOCOPT</span><span class="ls"></span></code></pre></span>
+<span id="line-15">  --base-path=PATH              Base path for deployment (e.g., /, /grafito) [default: /].</span><span class="ls"></span>
+<span id="line-16">  -h --help                     Show this screen.</span><span class="ls"></span>
+<span id="line-17">  --version                     Show version.</span><span class="ls"></span>
+<span id="line-18"></span><span class="ls"></span>
+<span id="line-19">Environment variables:</span><span class="ls"></span>
+<span id="line-20">  GRAFITO_AUTH_USER             Username for basic authentication (if set, GRAFITO_AUTH_PASS must also be set).</span><span class="ls"></span>
+<span id="line-21">  GRAFITO_AUTH_PASS             Password for basic authentication (if set, GRAFITO_AUTH_USER must also be set).</span><span class="ls"></span>
+<span id="line-22">  LOG_LEVEL                     Log level (debug, info, warn, error, fatal) [default: info].</span><span class="ls"></span>
+<span id="line-23">  GRAFITO_TIMEZONE              Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].</span><span class="ls"></span>
+<span id="line-24">  GRAFITO_BASE_PATH             Base path for deployment (e.g., /, /grafito) [default: /].</span><span class="ls"></span>
+<span id="line-25">DOCOPT</span><span class="ls"></span></code></pre></span>
     </div>
 </div>
 
@@ -444,6 +446,35 @@ docopt-config handles the fallback automatically: CLI &gt; env var &gt; config &
         <span class="anchor">
             <a href="#section" class="anchor">↦</a>
         </span>
+        <p>Parse base path configuration
+docopt-config handles the fallback automatically: CLI &gt; env var &gt; config &gt; default</p>
+
+    </div>
+    <div class="code">
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">base_path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="ls">&quot;</span><span class="ls">--base-path</span><span class="ls">&quot;</span><span class="ls"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-2"></span><span class="t">  </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">base_path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">base_path</span><span class="t"></span>
+<span id="line-3"></span><span class="t">  </span><span class="nc">Grafito</span><span class="nc">::</span><span class="nc">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="ls">&quot;</span><span class="ls">Using base path: </span><span class="lsi">#{</span><span class="t">base_path</span><span class="t"></span><span class="lsi">}</span><span class="ls">&quot;</span><span class="ls"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section" class="grid">
+    <div class="doc" id="section">
+        <span class="anchor">
+            <a href="#section" class="anchor">↦</a>
+        </span>
+        <p>Register all Kemal routes (must be done after base_path is set)</p>
+
+    </div>
+    <div class="code">
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">register_routes</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section" class="grid">
+    <div class="doc" id="section">
+        <span class="anchor">
+            <a href="#section" class="anchor">↦</a>
+        </span>
         <p>Log at debug level. Probably worth making it configurable.</p>
 
     </div>
@@ -560,7 +591,7 @@ into the application. In our case, the Assets class we defined above.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">baked_asset_handler</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">BakedFileHandler</span><span class="nc">::</span><span class="nc">BakedFileHandler</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="nc">Assets</span><span class="t">)</span><span class="t"></span>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">baked_asset_handler</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nc">BakedFileHandler</span><span class="nc">::</span><span class="nc">BakedFileHandler</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="nc">Assets</span><span class="t">,</span><span class="t"> </span><span class="t">mount_path</span><span class="t">:</span><span class="t"> </span><span class="nc">Grafito</span><span class="t">.</span><span class="t">base_path</span><span class="t">)</span><span class="t"></span>
 <span id="line-2"></span><span class="t">  </span><span class="t">add_handler</span><span class="t"> </span><span class="t">baked_asset_handler</span></code></pre></span>
     </div>
 </div>

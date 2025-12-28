@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.16.2] - 2025-12-28
+
+### 🐛 Bug Fixes
+
+- Handle base path "/" correctly to avoid double slashes
+
 ## [0.16.1] - 2025-12-28
 
 ### 🐛 Bug Fixes
 
 - Use correct mount_path parameter for BakedFileHandler
+
+### 💼 Other
+
+- Release v0.16.1
 
 ## [0.16.0] - 2025-12-28
 
