@@ -45,6 +45,15 @@ module Grafito
   # Base path for deployment (e.g., "/" or "/grafito")
   class_property base_path : String = "/"
 
+  # Helper to build route paths with proper base path handling
+  private def self.route_path(path : String) : String
+    if base_path == "/"
+      "/" + path
+    else
+      "#{base_path}/#{path}"
+    end
+  end
+
   # Register all Kemal routes (called after base_path is set)
   # ameba:disable Metrics/CyclomaticComplexity
   def self.register_routes
@@ -57,7 +66,7 @@ module Grafito
     #   GET /logs?unit=nginx.service&since=-1h
     #   ```
     # In general all the parameters are derived from the journalctl CLI
-    get "#{base_path}/logs" do |env|
+    get route_path("logs") do |env|
       Log.debug { "Received #{base_path}/logs request with query params: #{env.params.query.inspect}" }
       # A time definition. For example: `-1w` means "since 1 week ago"
       since = optional_query_param(env, "since")
@@ -145,7 +154,7 @@ module Grafito
     # ```text
     # GET /services
     # ```
-    get "#{base_path}/services" do |env|
+    get route_path("services") do |env|
       Log.debug { "Received #{base_path}/services request" }
       # Here `known_service_units` is a wrapper around systemctl.
       service_units = Journalctl.known_service_units
@@ -178,7 +187,7 @@ module Grafito
     # The frontend uss this to show what the `journalctl` command equivalent to the
     # configured filters would be.
 
-    get "#{base_path}/command" do |env|
+    get route_path("command") do |env|
       Log.debug { "Received #{base_path}/command request with query params: #{env.params.query.inspect}" }
 
       since = optional_query_param(env, "since")
@@ -205,7 +214,7 @@ module Grafito
     #
     # It will return a "pretty JSON" representation of the raw log entry
     # represented by the `cursor`
-    get "#{base_path}/details" do |env|
+    get route_path("details") do |env|
       Log.debug { "Received #{base_path}/details request with query params: #{env.params.query.inspect}" }
       cursor = optional_query_param(env, "cursor")
       env.response.content_type = "text/html"
@@ -246,7 +255,7 @@ module Grafito
     #
     # Works like `/query` but it will return some of the log entries
     # that are around the requested one for context.
-    get "#{base_path}/context" do |env|
+    get route_path("context") do |env|
       Log.debug { "Received #{base_path}/context request with query params: #{env.params.query.inspect}" }
       cursor = optional_query_param(env, "cursor")
       count_str = optional_query_param(env, "count")
@@ -308,7 +317,7 @@ module Grafito
     # ```
     #
     # Returns JSON array of providers with id, name, and availability.
-    get "#{base_path}/ai-providers" do |env|
+    get route_path("ai-providers") do |env|
       env.response.content_type = "application/json"
 
       providers = AI::Config.available_providers
@@ -332,7 +341,7 @@ module Grafito
     # ```
     #
     # Returns JSON array of models with id, name, and default flag.
-    get "#{base_path}/ai-models" do |env|
+    get route_path("ai-models") do |env|
       env.response.content_type = "application/json"
 
       provider_id = env.params.query["provider"]?
@@ -359,7 +368,7 @@ module Grafito
     # ```
     #
     # Returns JSON with AI explanation or error message.
-    post "#{base_path}/ask-ai" do |env|
+    post route_path("ask-ai") do |env|
       Log.debug { "Received #{base_path}/ask-ai request" }
 
       # Parse JSON to check for provider/model override
