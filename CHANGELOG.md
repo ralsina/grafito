@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.16.1] - 2025-12-28
+
+### 🐛 Bug Fixes
+
+- Use correct mount_path parameter for BakedFileHandler
+
 ## [0.16.0] - 2025-12-28
 
 ### 🚀 Features
 
 - Add configurable base path for flexible deployment
+
+### 💼 Other
+
+- Release v0.16.0
 
 ## [0.15.0] - 2025-12-28
 
