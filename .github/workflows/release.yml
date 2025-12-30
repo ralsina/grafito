@@ -66,7 +66,7 @@ jobs:
         run: |
           ls -Rl bin
           for arch in `ls -d bin/linux* | cut -f 2 -d _`; do 
-            cp -v bin/linux_${arch}/grafito bin/linux_${arch}/grafito.${arch}
+            cp -v bin/linux_${arch}/grafito bin/linux_${arch}/grafito-static-linux-${arch}
           done
 
       - name: Build docker image
@@ -106,8 +106,8 @@ jobs:
           body: ${{ steps.notes.outputs.notes }}
           fail_on_unmatched_files: true
           files: |
-            bin/linux_amd64/grafito.amd64
-            bin/linux_arm64/grafito.arm64
+            bin/linux_amd64/grafito-static-linux-amd64
+            bin/linux_arm64/grafito-static-linux-arm64
 
       #- name: Publish AUR package
       #  uses: ulises-jeremias/github-actions-aur-publish@5a3661ae205f5ef93460c0c9fa1117c727b342bf
