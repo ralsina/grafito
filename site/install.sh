@@ -7,7 +7,6 @@ INSTALL_DIR="/usr/local/bin"
 SERVICE_DIR="/etc/systemd/system"
 SERVICE_NAME="grafito.service"
 BINARY_NAME="grafito"
-VERSION="0.16.0" # Hardcoded version
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "${TEMP_DIR}"' EXIT ERR INT TERM # Ensure cleanup
 
@@ -15,7 +14,7 @@ trap 'rm -rf "${TEMP_DIR}"' EXIT ERR INT TERM # Ensure cleanup
 
 # Check if required commands are available
 check_dependencies() {
-    local deps=("curl" "tar" "systemctl") # Removed jq
+    local deps=("curl" "tar" "systemctl" "grep" "tr") # Removed jq
     for dep in "${deps[@]}"; do
         if ! command -v "$dep" &> /dev/null; then
             echo "Error: Required dependency '$dep' is not installed." >&2
@@ -44,6 +43,10 @@ get_architecture() {
     esac
 }
 
+get_version() {
+    curl -s https://api.github.com/repos/ralsina/grafito/releases/latest | grep -o '"v[0-9]*\.[0-9]*\.[0-9]*"' | tr -d '"' 
+}
+
 # --- Main Installation Logic ---
 
 echo "Starting Grafito installation..."
@@ -60,6 +63,12 @@ check_dependencies
 # Get system architecture
 ARCH=$(get_architecture)
 echo "Detected architecture: ${ARCH}"
+
+# If version is not defined - find out the latest one
+if test -z "$VERSION"; then
+    VERSION=$(get_version)
+    echo "The latest version is: ${VERSION}"
+fi
 
 # Construct download URL for the hardcoded version
 echo "Using Grafito version: ${VERSION}"
