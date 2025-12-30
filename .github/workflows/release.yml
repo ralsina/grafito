@@ -1,0 +1,122 @@
+name: Build release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+  attestations: write
+  id-token: write
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+        # credentials improve quotas
+        #credentials:
+        #  username: ${{ secrets.DH_USER }}
+        #  password: ${{ secrets.DH_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install git-cliff
+        uses: taiki-e/install-action@git-cliff
+
+      - name: Get release notes
+        id: notes
+        run: |
+          notes=$(git cliff -l -s all)
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo $notes >> $GITHUB_OUTPUT
+          echo EOF >> $GITHUB_OUTPUT
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          # to have access to the registry service
+          driver-opts: network=host
+
+      - name: Build binaries
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.build
+          platforms: linux/amd64,linux/arm64
+          outputs: type=local,dest=bin
+
+      - name: List and rename binaries
+        run: |
+          ls -Rl bin
+          for arch in `ls -d bin/linux* | cut -f 2 -d _`; do 
+            cp -v bin/linux_${arch}/grafito bin/linux_${arch}/grafito-static-linux-${arch}
+          done
+
+      - name: Build docker image
+        uses: docker/build-push-action@v6
+        with:
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ github.ref_name }}
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          tags: localhost:5000/grafito:latest
+          outputs: type=registry,push=true,rewrite-timestamp=true
+
+      - name: Inspect images
+        run: |
+          docker buildx imagetools inspect localhost:5000/grafito:latest --format "{{json .Image}}"
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload images to ghcr.io
+        run: |
+            date
+            docker -D buildx imagetools create localhost:5000/grafito:latest \
+                                         --tag ghcr.io/${{ github.repository }}:latest \
+                                         --tag ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+
+      - name: Upload release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          body: ${{ steps.notes.outputs.notes }}
+          fail_on_unmatched_files: true
+          files: |
+            bin/linux_amd64/grafito-static-linux-amd64
+            bin/linux_arm64/grafito-static-linux-arm64
+
+      #- name: Publish AUR package
+      #  uses: ulises-jeremias/github-actions-aur-publish@5a3661ae205f5ef93460c0c9fa1117c727b342bf
+      #  with:
+      #    pkgname: my-awesome-package
+      #    pkgbuild: ./PKGBUILD
+      #    commit_username: ${{ secrets.AUR_USERNAME }}
+      #    commit_email: ${{ secrets.AUR_EMAIL }}
+      #    ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      #    commit_message: Update AUR package
+      #    ssh_keyscan_types: rsa,dsa,ecdsa,ed25519
+      #    update_pkgver: false
