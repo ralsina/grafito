@@ -2,11 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.16.3] - 2025-12-30
+
+### 🐛 Bug Fixes
+
+- Use build_url helper in HTML to avoid double slashes
+- Use buildUrl helper in JavaScript to avoid protocol-relative URLs
+
 ## [0.16.2] - 2025-12-28
 
 ### 🐛 Bug Fixes
 
 - Handle base path "/" correctly to avoid double slashes
+
+### 💼 Other
+
+- Release v0.16.2
 
 ## [0.16.1] - 2025-12-28
 
