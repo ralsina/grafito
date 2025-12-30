@@ -560,6 +560,15 @@
       // Get base path from data attribute (set by BakedFileHandler for deployment flexibility)
       const basePath = document.body.dataset.basePath || "/";
 
+      // Helper to build URLs with proper base path handling
+      function buildUrl(path) {
+        if (basePath === "/") {
+          return "/" + path;
+        } else {
+          return basePath + "/" + path;
+        }
+      }
+
       // --- Shared Configuration for Filters ---
       const SHARED_FILTER_CONFIGS = [
         { id: "search-box", param: "q", type: "value" },
@@ -690,7 +699,7 @@
           modelSelect.innerHTML = '<option value="">Loading models...</option>';
           modelSelect.disabled = true;
 
-          fetch(`${basePath}/ai-models?provider=${encodeURIComponent(providerId)}`)
+          fetch(`${buildUrl("ai-models")}?provider=${encodeURIComponent(providerId)}`)
             .then(response => response.json())
             .then(data => {
               modelSelect.innerHTML = '';
@@ -734,7 +743,7 @@
         }
 
         function loadAIProviders() {
-          fetch(`${basePath}/ai-providers`)
+          fetch(buildUrl("ai-providers"))
             .then(response => response.json())
             .then(data => {
               const loadingEl = document.getElementById('ai-loading');
@@ -1088,7 +1097,7 @@
         dialog.showModal();
 
         // First, get the target log entry details
-        fetch(`${basePath}/details?${new URLSearchParams({cursor: cursor})}`)
+        fetch(`${buildUrl("details")}?${new URLSearchParams({cursor: cursor})}`)
           .then((response) => response.text())
           .then((html) => {
             // Extract the message from the details page
@@ -1136,7 +1145,7 @@
         if (window.selectedAIModel) {
           aiRequestBody.model = window.selectedAIModel;
         }
-        fetch(`${basePath}/ask-ai`, {
+        fetch(buildUrl("ask-ai"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
