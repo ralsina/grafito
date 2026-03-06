@@ -7,7 +7,6 @@ INSTALL_DIR="/usr/local/bin"
 SERVICE_DIR="/etc/systemd/system"
 SERVICE_NAME="grafito.service"
 BINARY_NAME="grafito"
-VERSION="0.16.3" # Hardcoded version
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "${TEMP_DIR}"' EXIT ERR INT TERM # Ensure cleanup
 
@@ -61,20 +60,19 @@ check_dependencies
 ARCH=$(get_architecture)
 echo "Detected architecture: ${ARCH}"
 
-# Construct download URL for the hardcoded version
-echo "Using Grafito version: ${VERSION}"
+# Construct download URL for the latest release
 ASSET_NAME="${BINARY_NAME}-static-linux-${ARCH}" # Asset name based on architecture
-DOWNLOAD_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${ASSET_NAME}"
+DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${ASSET_NAME}"
 
 echo "Target asset name: ${ASSET_NAME}"
 echo "Constructed download URL: ${DOWNLOAD_URL}"
 
 # Download the asset
-echo "Downloading Grafito binary..."
+echo "Downloading Grafito binary (latest release)..."
 DOWNLOAD_PATH="${TEMP_DIR}/${ASSET_NAME}"
 if ! curl -L -o "${DOWNLOAD_PATH}" "${DOWNLOAD_URL}"; then
     echo "Error: Failed to download the asset from ${DOWNLOAD_URL}." >&2
-    echo "Please ensure version ${VERSION} and asset ${ASSET_NAME} exist at ${REPO} releases." >&2
+    echo "Please ensure asset ${ASSET_NAME} exists at ${REPO} releases." >&2
     exit 1
 fi
 
