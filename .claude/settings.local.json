@@ -16,7 +16,14 @@
       "Bash(git commit:*)",
       "Read(//usr/lib/crystal/**)",
       "WebFetch(domain:github.com)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(bash:*)",
+      "Bash(git push:*)",
+      "Bash(gh issue *)",
+      "Bash(git checkout *)",
+      "Bash(./main --help)",
+      "Bash(git merge *)",
+      "Bash(git branch *)"
     ],
     "deny": [],
     "ask": []
