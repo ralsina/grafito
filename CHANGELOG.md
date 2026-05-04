@@ -2,12 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.17.0] - 2026-05-04
+
+### 🚀 Features
+
+- Add --user flag for user systemd mode support
+
+### 📚 Documentation
+
+- Enhance CLAUDE.md and fix install.sh to use latest release
+
 ## [0.16.3] - 2025-12-30
 
 ### 🐛 Bug Fixes
 
 - Use build_url helper in HTML to avoid double slashes
 - Use buildUrl helper in JavaScript to avoid protocol-relative URLs
+
+### 💼 Other
+
+- Release v0.16.3
 
 ## [0.16.2] - 2025-12-28
 
