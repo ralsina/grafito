@@ -70,6 +70,35 @@ Grafito displays timestamps in your local timezone by default, but you can confi
 
 By default, Grafito uses your system's local timezone, so most users won't need to configure anything unless they want to use a different timezone.
 
+### User Systemd Mode Configuration
+
+Grafito supports user systemd instances for users without root privileges. When enabled, Grafito uses `journalctl --user` and `systemctl --user` to access user-level services and logs.
+
+**To enable user mode:**
+
+1. **Command line option**:
+   ```bash
+   ./bin/grafito --user
+   ```
+
+2. **Environment variable**:
+   ```bash
+   export GRAFITO_USER_MODE=true
+   ./bin/grafito
+   ```
+
+3. **In systemd user service**:
+   ```ini
+   [Service]
+   Environment="GRAFITO_USER_MODE=true"
+   ExecStart=/usr/local/bin/grafito -b 127.0.0.1 -p 3000
+   ```
+
+**Notes:**
+- User mode only shows logs and services for the current user
+- System-level logs and services are not accessible in user mode
+- Default is system mode (requires appropriate permissions)
+
 ![image](https://github.com/user-attachments/assets/1042269f-3c34-46d3-ad45-c9a0ee250c82)
 
 ## Installation

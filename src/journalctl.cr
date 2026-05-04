@@ -225,7 +225,14 @@ class Journalctl
     hostname : String | Nil = nil,
     lines : Int32 = 5000,
   ) : Array(String)
-    command = ["journalctl", "-m", "-o", "json", "-n", lines.to_s, "-r"]
+    command = ["journalctl"]
+
+    # Add --user flag if user mode is enabled
+    if Grafito.user_mode?
+      command << "--user"
+    end
+
+    command << "-m" << "-o" << "json" << "-n" << lines.to_s << "-r"
 
     if since
       command << "-S" << since
@@ -393,7 +400,14 @@ class Journalctl
       # --all: Show all loaded units, including inactive ones.
       # --no-legend: Suppress the legend header and footer.
       # --plain: Output a plain list without ANSI escape codes or truncation.
-      command = ["systemctl", "list-units", "--type=service", "--all", "--no-legend", "--plain"]
+      command = ["systemctl"]
+
+      # Add --user flag if user mode is enabled
+      if Grafito.user_mode?
+        command << "--user"
+      end
+
+      command << "list-units" << "--type=service" << "--all" << "--no-legend" << "--plain"
 
       Log.debug { "Generated systemctl command: #{command.inspect}" }
 
@@ -459,6 +473,11 @@ class Journalctl
   def self.get_entry_by_cursor(cursor : String) : LogEntry?
     Log.debug { "Executing Journalctl.get_entry_by_cursor with cursor: #{cursor}" }
     command_args = ["-m", "-o", "json", "--cursor", cursor, "-n", "1"]
+
+    # Add --user flag if user mode is enabled
+    if Grafito.user_mode?
+      command_args.insert(0, "--user")
+    end
 
     entries = run_journalctl_and_parse(command_args, "Journalctl.get_entry_by_cursor for cursor '#{cursor}'")
 
@@ -591,6 +610,12 @@ class Journalctl
     # Fetch 'before' entries: `journalctl -o json --cursor <cursor> -n <count + 1> --reverse`
     # This outputs: [Target, B1, B2, ..., B_count] (Target is newest, B1 is just before Target, etc.)
     cmd_before_args = ["-m", "-o", "json", "--cursor", cursor, "-n", (count + 1).to_s, "--reverse"]
+
+    # Add --user flag if user mode is enabled
+    if Grafito.user_mode?
+      cmd_before_args.insert(0, "--user")
+    end
+
     parsed_before_list = run_journalctl_and_parse(cmd_before_args, "Context (before entries for cursor '#{cursor}')")
 
     before_entries = parsed_before_list.size > 1 ? parsed_before_list[1..].reverse : ([] of LogEntry)
@@ -598,6 +623,12 @@ class Journalctl
     # Fetch 'after' entries: `journalctl -o json --after-cursor <cursor> -n <count>`
     # This outputs: [A1, A2, ..., A_count] (A1 is just after Target, in chronological order)
     cmd_after_args = ["-m", "-o", "json", "--after-cursor", cursor, "-n", count.to_s]
+
+    # Add --user flag if user mode is enabled
+    if Grafito.user_mode?
+      cmd_after_args.insert(0, "--user")
+    end
+
     after_entries = run_journalctl_and_parse(cmd_after_args, "Context (after entries for cursor '#{cursor}')")
 
     result = before_entries + [target_entry] + after_entries

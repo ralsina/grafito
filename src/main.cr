@@ -68,6 +68,7 @@ Options:
   --log-level=LEVEL             Set log level (debug, info, warn, error, fatal) [default: info].
   -t TIMEZONE, --timezone=TIMEZONE  Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
   --base-path=PATH              Base path for deployment (e.g., /, /grafito) [default: /].
+  --user                       Enable user systemd mode (use journalctl --user and systemctl --user) [default: false].
   -h --help                     Show this screen.
   --version                     Show version.
 
@@ -77,6 +78,7 @@ Environment variables:
   LOG_LEVEL                     Log level (debug, info, warn, error, fatal) [default: info].
   GRAFITO_TIMEZONE              Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
   GRAFITO_BASE_PATH             Base path for deployment (e.g., /, /grafito) [default: /].
+  GRAFITO_USER_MODE            Enable user systemd mode (true/false) [default: false].
 DOCOPT
 
 # ## The Assets class
@@ -145,6 +147,12 @@ def main
   base_path = args["--base-path"].to_s
   Grafito.base_path = base_path
   Grafito::Log.info { "Using base path: #{base_path}" }
+
+  # Parse user mode configuration
+  # docopt-config handles the fallback automatically: CLI > env var > config > default
+  user_mode_str = args["--user"].to_s
+  Grafito.user_mode = (user_mode_str == "true")
+  Grafito::Log.info { "User mode: #{Grafito.user_mode? ? "enabled" : "disabled"}" }
 
   # Register all Kemal routes (must be done after base_path is set)
   Grafito.register_routes

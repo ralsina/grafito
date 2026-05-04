@@ -45,6 +45,9 @@ module Grafito
   # Base path for deployment (e.g., "/" or "/grafito")
   class_property base_path : String = "/"
 
+  # User systemd mode - when enabled, use --user flag for journalctl/systemctl
+  class_property? user_mode : Bool = false
+
   # Helper to build route paths with proper base path handling
   private def self.route_path(path : String) : String
     if base_path == "/"
