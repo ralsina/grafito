@@ -1,4 +1,4 @@
-require "kemal" # For HTTP::Server::Context and HTML
+require "kemal" # For HTTP::Server::Context and HTML and Kemal::Handler
 require "json"
 require "./journalctl"
 require "./timeline"
@@ -7,6 +7,38 @@ require "html_builder"
 # Regex is part of Crystal core, no explicit require needed for it.
 
 module Grafito
+  # Middleware to shut down the server if it's idle for a given amount of time
+  private class IdleShutdownHandler < Kemal::Handler
+    @timeout_sec : Int32
+    @channel : Channel(Nil)
+    @logger : ::Log
+    def initialize(*, timeout_sec : Int32, logger : ::Log)
+      @timeout_sec = timeout_sec
+      @logger = logger
+      @channel = Channel(Nil).new
+      spawn(name: "IdleShutdownHandler(#{timeout_sec.to_s}s)") do
+        # Loop forever, exiting when timeout_sec passes without a new request
+        loop do
+          select
+            when @channel.receive
+            when timeout(timeout_sec.seconds)
+              @logger.info { "Shutting down because idle timeout was reached" }
+              exit 0
+          end
+        end
+      end
+    end
+
+    def call(context)
+      # On a request, reset the idle timer
+      spawn do
+        @channel.send(nil)
+      end
+      call_next(context)
+    end
+  end
+
+
   # Helper to build URLs with proper base path handling
   private def build_url(path : String) : String
     if Grafito.base_path == "/"

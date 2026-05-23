@@ -31,6 +31,9 @@ module Grafito
   # Global unit restriction - when set, only logs from these units will be shown
   class_property allowed_units : Array(String)? = nil
 
+  # Idle timeout - when set, will shut down if idle for the set number of seconds
+  class_property idle_timeout_sec : Int32 = 0
+
   # AI provider instance - nil if no provider is configured
   class_property ai_provider : AI::Provider? = nil
 
@@ -60,6 +63,11 @@ module Grafito
   # Register all Kemal routes (called after base_path is set)
   # ameba:disable Metrics/CyclomaticComplexity
   def self.register_routes
+    if idle_timeout_sec > 0
+      add_handler IdleShutdownHandler.new(timeout_sec: idle_timeout_sec, logger: Log)
+    end
+      
+
     # ## The `/logs` endpoint
     #
     # Exposes the Journalctl wrapper via a REST API.

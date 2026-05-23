@@ -39,6 +39,7 @@ require "docopt-config"
 require "kemal-basic-auth"
 require "kemal"
 require "log"
+require "socket"
 
 # This file [main.cr](main.cr.html) is the starting point for grafito. We get the instructions from the
 # user about how to start via the command line, using [docopt](https://docopt.org)
@@ -69,6 +70,7 @@ Options:
   -t TIMEZONE, --timezone=TIMEZONE  Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
   --base-path=PATH              Base path for deployment (e.g., /, /grafito) [default: /].
   --user                       Enable user systemd mode (use journalctl --user and systemctl --user) [default: false].
+  --idle-timeout-sec=TIMEOUT    Idle timeout in seconds after which to shut down. Primarily useful with systemd socket activation.
   -h --help                     Show this screen.
   --version                     Show version.
 
@@ -79,6 +81,7 @@ Environment variables:
   GRAFITO_TIMEZONE              Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
   GRAFITO_BASE_PATH             Base path for deployment (e.g., /, /grafito) [default: /].
   GRAFITO_USER_MODE            Enable user systemd mode (true/false) [default: false].
+  LISTEN_FDS                    Used for systemd socket activation. If set to 1, binds to the socket passed as fd 3.
 DOCOPT
 
 # ## The Assets class
@@ -125,7 +128,7 @@ def main
   ENV["LOG_LEVEL"] = log_level
   Log.setup_from_env
 
-  # Port and binding address are important
+  # Port and binding address are important to open a new server
   port = args["--port"].to_s.to_i32
   bind_address = args["--bind"].to_s
 
@@ -134,6 +137,14 @@ def main
     units = args["--units"].to_s.split(",").map(&.strip)
     Grafito.allowed_units = units
     Grafito::Log.info { "Restricting to units: #{units.join(", ")}" }
+  end
+
+  if args["--idle-timeout-sec"]?
+    timeout = args["--idle-timeout-sec"].to_s.to_i32
+    if timeout > 0
+      Grafito.idle_timeout_sec = timeout
+      Grafito::Log.info { "Will shut down after #{timeout.to_s}s without any requests" }
+    end
   end
 
   # Parse timezone configuration
@@ -160,9 +171,6 @@ def main
   # Log at debug level. Probably worth making it configurable.
 
   Log.setup(:debug) # Or use Log.setup_from_env for more flexibility
-  Grafito::Log.info { "Starting Grafito server on #{bind_address}:#{port}" }
-  # Start kemal listening on the right address
-  Kemal.config.host_binding = bind_address
 
   # Read credentials and realm from environment variables
   auth_user = ENV["GRAFITO_AUTH_USER"]?
@@ -202,11 +210,33 @@ def main
   baked_asset_handler = BakedFileHandler::BakedFileHandler.new(Assets, mount_path: Grafito.base_path)
   add_handler baked_asset_handler
 
-  # Tell kemal to listen on the right port. That's it. The rest is done in [grafito.cr](grafito.cr.html)
+  # Check if systemd passed a socket file descriptor to start from
+  listen_fds = ENV["LISTEN_FDS"]?.to_s.to_i { 0 }
+  if listen_fds > 1
+    Grafito::Log.fatal { "Unexpectedly got more than 1 socket from systemd" }
+    exit 1
+  end
+  socket_activation = listen_fds == 1
+
+  # Start kemal. That's it. The rest is done in [grafito.cr](grafito.cr.html)
   # where the kemal endpoints are defined.
   # Clear ARGV so Kemal doesn't try to parse command line arguments
   ARGV.clear
-  Kemal.run(port: port)
+  # If systemd socket activation is in use, don't shut down the socket when we exit.
+  # Systemd manages the lifetime of the socket in that case.
+  Kemal.run(trap_signal: !socket_activation) do |config|
+    # The HTTP server is initialized by Kemal before starting this block
+    server = config.server.not_nil!
+    if socket_activation
+      Grafito::Log.info { "Starting Grafito server via systemd socket activation" }
+      # Start kemal listening on the socket passed by socket activation
+      server.bind(TCPServer.new(fd: 3))
+    else
+      Grafito::Log.info { "Starting Grafito server on #{bind_address}:#{port}" }
+      # Start kemal listening on the user-specified address and port
+      server.bind_tcp(bind_address, port)
+    end
+  end
 end
 
 main()

@@ -241,6 +241,81 @@ To run Grafito as a systemd service, you can create a service file.
    sudo systemctl status grafito.service
    ```
 
+## Running with systemd socket activation
+
+To conserve resources and enable tighter sandboxing, it's also possible to run
+grafito as a [socket-activated](https://0pointer.de/blog/projects/socket-activation.html)
+systemd service. This makes grafito start up on demand. You can also use the
+`--idle-timeout-sec` flag to make grafito shut down after a set period without
+any new requests.
+
+1. **Create the service file:**
+
+    Create a file named `grafito.service` in `/etc/systemd/system/` (or `~/.config/systemd/user/` for a user service) with the following content. Adjust paths and user/group as necessary.
+
+    ```ini
+    [Unit]
+    Description=Grafito Log Viewer
+    After=network.target
+
+    [Service]
+    Type=simple
+    DynamicUser=yes
+    # If set to "systemd-journal" it can access all logs in the system
+    # Change if that is not what you want.
+    Group=systemd-journal
+
+    # --- Authentication Configuration ---
+    # Set these environment variables to enable Basic Authentication.
+    # If GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS are not set, Grafito will run without authentication.
+    Environment="GRAFITO_AUTH_USER=your_grafito_username"
+    Environment="GRAFITO_AUTH_PASS=your_strong_grafito_password"
+
+    # Replace with the actual path to your Grafito directory
+    WorkingDirectory=/usr/local/bin/
+    # Shut down after 5 minutes without requests
+    ExecStart=/usr/local/bin/grafito --idle-timeout-sec=300
+    ```
+
+2. **Create the socket file:**
+
+    Create a [systemd socket file](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html) named `grafito.socket` in `/etc/systemd/system/` (or `~/.config/systemd/user/` for a user service) with the following content. This file should have the same basename as the service file created above - in this case, `grafito`.
+
+    ```ini
+    [Unit]
+    Description=Socket for grafito log UI
+
+    [Socket]
+    # Set the port and, if desired, address to listen on here
+    ListenStream=1111
+    NoDelay=true
+
+    [Install]
+    WantedBy=sockets.target
+    ```
+
+3. **Reload systemd daemon:**
+
+   ```bash
+   sudo systemctl daemon-reload
+    ```
+
+4. **Enable and start the socket:**
+
+   ```bash
+   sudo systemctl enable --now grafito.socket
+   ```
+
+5. **Make a request to wake the server:**
+   ```bash
+   curl http://localhost:1111
+   ```
+
+6. **Check the status:**
+   ```bash
+   sudo systemctl status grafito.service grafito.socket
+   ```
+
 ## Journald Permissions
 
 By default, `journalctl` (and therefore Grafito) can only access the logs of the user running the command. To allow Grafito to access all system logs, the user running the Grafito process needs to be part of a group that has permissions to read system-wide journal logs.
