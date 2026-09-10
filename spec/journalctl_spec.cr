@@ -5,7 +5,8 @@ describe Journalctl::LogEntry do
     context "when parsing a standard journalctl JSON line" do
       # Sample JSON output from journalctl -o json
       # Note: journalctl outputs one JSON object per line, not a single array.
-      json_line = %({
+      json_line = <<-JSON
+        {
           "__REALTIME_TIMESTAMP" : "1678886400000000",
           "MESSAGE" : "This is a test log message.",
           "PRIORITY" : "6",
@@ -16,7 +17,8 @@ describe Journalctl::LogEntry do
           "SOME_BOOLEAN_FIELD" : "true",
           "SOME_NULL_FIELD" : null,
           "EMPTY_STRING_FIELD" : ""
-        })
+        }
+        JSON
 
       it "correctly populates the data hash with all fields as strings" do
         entry = Journalctl::LogEntry.from_json(json_line)
@@ -65,10 +67,13 @@ describe Journalctl::LogEntry do
       end
 
       it "handles missing optional fields gracefully" do
-        json_line_missing_fields = %({
+        # Missing PRIORITY, _SYSTEMD_UNIT, etc.
+        json_line_missing_fields = <<-JSON
+          {
           "__REALTIME_TIMESTAMP" : "1678886401000000",
           "MESSAGE" : "Another message."
-        }) # Missing PRIORITY, _SYSTEMD_UNIT, etc.
+          }
+          JSON
 
         entry = Journalctl::LogEntry.from_json(json_line_missing_fields)
 
