@@ -110,9 +110,46 @@ module Grafito
     end
   end
 
+  # Generates a single hover-action button cell for a log entry row.
+  # The htmx buttons share almost all attributes; only the icon, tooltip and
+  # URL differ. The AI button instead triggers a JavaScript function and takes
+  # an onclick handler. `js_arg` is interpolated verbatim and must already be
+  # a valid JavaScript literal (use `.to_json` for strings).
+  private def _hover_action_button_cell(
+    title : String,
+    icon : String,
+    url : String? = nil,
+    onclick : String? = nil,
+  ) : String
+    attributes = {
+      "class" => "round-button",
+      "title" => title,
+    }
+    if onclick
+      attributes["onclick"] = onclick
+    else
+      attributes = attributes.merge({
+        "hx-get"                    => url || "",
+        "hx-target"                 => "#details-dialog-content", # Target the content area within the modal
+        "hx-swap"                   => "innerHTML",
+        "hx-on:htmx:before-request" => "document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;",
+        "hx-on:htmx:after-request"  => "if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }",
+      })
+    end
+    HTML.build do
+      td(class: "hover-action-cell", style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
+        button(attributes) do
+          span(class: "material-icons", style: "vertical-align: middle;") do
+            text icon
+          end
+        end
+      end
+    end
+  end
+
   # Generates an HTML representation of log entries.
   # ameba:disable Metrics/CyclomaticComplexity
-  private def html_log_output(
+  def html_log_output(
     logs : Array(Journalctl::LogEntry),
     current_sort_by : String?,
     current_sort_order : String?,
@@ -248,51 +285,26 @@ module Grafito
                 end
 
                 if entry_cursor
+                  cursor_param = URI::Params.encode({"cursor" => entry_cursor})
                   # Details button
-                  td(class: "hover-action-cell", style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
-                    button({
-                      "class"                     => "round-button",
-                      "title"                     => "View full details for this log entry",
-                      "hx-get"                    => "#{build_url("details")}?#{URI::Params.encode({"cursor" => entry_cursor})}",
-                      "hx-target"                 => "#details-dialog-content", # Target the content area within the modal
-                      "hx-swap"                   => "innerHTML",
-                      "hx-on:htmx:before-request" => "document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;",
-                      "hx-on:htmx:after-request"  => "if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }",
-                    }) do
-                      span(class: "material-icons", style: "vertical-align: middle;") do
-                        text "search"
-                      end
-                    end
-                  end
+                  html _hover_action_button_cell(
+                    title: "View full details for this log entry",
+                    icon: "search",
+                    url: "#{build_url("details")}?#{cursor_param}",
+                  )
                   # Context button
-                  td(class: "hover-action-cell", style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
-                    button({
-                      "class"                     => "round-button",
-                      "title"                     => "View context for this log entry (e.g., 5 before & 5 after)",
-                      "hx-get"                    => "#{build_url("context")}?#{URI::Params.encode({"cursor" => entry_cursor})}",
-                      "hx-target"                 => "#details-dialog-content", # Target the content area within the modal
-                      "hx-swap"                   => "innerHTML",
-                      "hx-on:htmx:before-request" => "document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;",
-                      "hx-on:htmx:after-request"  => "if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }",
-                    }) do
-                      span(class: "material-icons", style: "vertical-align: middle;") do
-                        text "history"
-                      end
-                    end
-                  end
+                  html _hover_action_button_cell(
+                    title: "View context for this log entry (e.g., 5 before & 5 after)",
+                    icon: "history",
+                    url: "#{build_url("context")}?#{cursor_param}",
+                  )
                   # AI Explanation button (only shown if AI is enabled)
                   if Grafito.ai_enabled?
-                    td(class: "hover-action-cell", style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
-                      button({
-                        "class"   => "round-button",
-                        "title"   => "Ask AI to explain this log entry",
-                        "onclick" => "askAIExplanation('#{entry_cursor}')",
-                      }) do
-                        span(class: "material-icons", style: "vertical-align: middle;") do
-                          text "psychology"
-                        end
-                      end
-                    end
+                    html _hover_action_button_cell(
+                      title: "Ask AI to explain this log entry",
+                      icon: "psychology",
+                      onclick: "askAIExplanation(#{entry_cursor.to_json})",
+                    )
                   end
                 end
               end
