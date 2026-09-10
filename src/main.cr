@@ -55,34 +55,34 @@ require "socket"
 # And they are all optinal ;-)
 
 DOC = <<-DOCOPT
-  Grafito - A simple log viewer.
+    Grafito - A simple log viewer.
 
-  Usage:
-    grafito [options]
-    grafito (-h | --help)
-    grafito --version
+    Usage:
+      grafito [options]
+      grafito (-h | --help)
+      grafito --version
 
-Options:
-  -p PORT, --port=PORT          Port to listen on [default: 3000].
-  -b ADDRESS, --bind=ADDRESS    Address to bind to [default: 127.0.0.1].
-  -U UNITS, --units=UNITS       Comma-separated list of systemd units to show (restricts access).
-  --log-level=LEVEL             Set log level (debug, info, warn, error, fatal) [default: info].
-  -t TIMEZONE, --timezone=TIMEZONE  Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
-  --base-path=PATH              Base path for deployment (e.g., /, /grafito) [default: /].
-  --user                       Enable user systemd mode (use journalctl --user and systemctl --user) [default: false].
-  --idle-timeout-sec=TIMEOUT    Idle timeout in seconds after which to shut down. Primarily useful with systemd socket activation.
-  -h --help                     Show this screen.
-  --version                     Show version.
+  Options:
+    -p PORT, --port=PORT          Port to listen on [default: 3000].
+    -b ADDRESS, --bind=ADDRESS    Address to bind to [default: 127.0.0.1].
+    -U UNITS, --units=UNITS       Comma-separated list of systemd units to show (restricts access).
+    --log-level=LEVEL             Set log level (debug, info, warn, error, fatal) [default: info].
+    -t TIMEZONE, --timezone=TIMEZONE  Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
+    --base-path=PATH              Base path for deployment (e.g., /, /grafito) [default: /].
+    --user                       Enable user systemd mode (use journalctl --user and systemctl --user) [default: false].
+    --idle-timeout-sec=TIMEOUT    Idle timeout in seconds after which to shut down. Primarily useful with systemd socket activation.
+    -h --help                     Show this screen.
+    --version                     Show version.
 
-Environment variables:
-  GRAFITO_AUTH_USER             Username for basic authentication (if set, GRAFITO_AUTH_PASS must also be set).
-  GRAFITO_AUTH_PASS             Password for basic authentication (if set, GRAFITO_AUTH_USER must also be set).
-  LOG_LEVEL                     Log level (debug, info, warn, error, fatal) [default: info].
-  GRAFITO_TIMEZONE              Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
-  GRAFITO_BASE_PATH             Base path for deployment (e.g., /, /grafito) [default: /].
-  GRAFITO_USER_MODE            Enable user systemd mode (true/false) [default: false].
-  LISTEN_FDS                    Used for systemd socket activation. If set to 1, binds to the socket passed as fd 3.
-DOCOPT
+  Environment variables:
+    GRAFITO_AUTH_USER             Username for basic authentication (if set, GRAFITO_AUTH_PASS must also be set).
+    GRAFITO_AUTH_PASS             Password for basic authentication (if set, GRAFITO_AUTH_USER must also be set).
+    LOG_LEVEL                     Log level (debug, info, warn, error, fatal) [default: info].
+    GRAFITO_TIMEZONE              Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
+    GRAFITO_BASE_PATH             Base path for deployment (e.g., /, /grafito) [default: /].
+    GRAFITO_USER_MODE            Enable user systemd mode (true/false) [default: false].
+    LISTEN_FDS                    Used for systemd socket activation. If set to 1, binds to the socket passed as fd 3.
+  DOCOPT
 
 # ## The Assets class
 #
@@ -128,36 +128,14 @@ def main
   ENV["LOG_LEVEL"] = log_level
   Log.setup_from_env
 
-  # Port and binding address are important. The port may arrive as an
-  # Int32 (parsed default or config file) or as a String (command line),
-  # so accept both and fail with a clear message on garbage.
-  port_value = args["--port"]
-  port : Int32? = nil
-  case port_value
-  when Int32  then port = port_value
-  when String then port = port_value.to_i?
-  end
-  unless port && port > 0 && port <= 65535
-    Grafito::Log.fatal { "Invalid port '#{port_value}': must be a number between 1 and 65535." }
-    exit 1
-  end
+  # Port and binding address are important
+  port = parse_port(args)
   bind_address = args["--bind"].to_s
 
   # Parse units restriction if provided
-  units_arg = args["--units"]?
-  if units_arg.is_a?(String) && !units_arg.strip.empty?
-    units = units_arg.split(",").map(&.strip)
-    Grafito.allowed_units = units
-    Grafito::Log.info { "Restricting to units: #{units.join(", ")}" }
-  end
+  parse_units(args)
 
-  if args["--idle-timeout-sec"]?
-    timeout = args["--idle-timeout-sec"].to_s.to_i32
-    if timeout > 0
-      Grafito.idle_timeout_sec = timeout
-      Grafito::Log.info { "Will shut down after #{timeout.to_s}s without any requests" }
-    end
-  end
+  parse_idle_timeout(args)
 
   # Parse timezone configuration
   # docopt-config handles the fallback automatically: CLI > env var > config > default
@@ -212,7 +190,11 @@ def main
   # Systemd manages the lifetime of the socket in that case.
   Kemal.run(trap_signal: !socket_activation) do |config|
     # The HTTP server is initialized by Kemal before starting this block
-    server = config.server.not_nil!
+    server = config.server
+    if server.nil?
+      Grafito::Log.fatal { "Kemal did not initialize an HTTP server" }
+      exit 1
+    end
     if socket_activation
       Grafito::Log.info { "Starting Grafito server via systemd socket activation" }
       # Start kemal listening on the socket passed by socket activation
@@ -221,6 +203,44 @@ def main
       Grafito::Log.info { "Starting Grafito server on #{bind_address}:#{port}" }
       # Start kemal listening on the user-specified address and port
       server.bind_tcp(bind_address, port)
+    end
+  end
+end
+
+# Returns the port to listen on, parsing the docopt argument which may
+# arrive as Int32 (parsed default or config file) or String (command line).
+# Exits with a clear message on invalid values.
+def parse_port(args) : Int32
+  port_value = args["--port"]
+  port : Int32? = nil
+  case port_value
+  when Int32  then port = port_value
+  when String then port = port_value.to_i?
+  end
+  unless port && port > 0 && port <= 65535
+    Grafito::Log.fatal { "Invalid port '#{port_value}': must be a number between 1 and 65535." }
+    exit 1
+  end
+  port
+end
+
+# Applies the units restriction from the parsed arguments, if any.
+def parse_units(args)
+  units_arg = args["--units"]?
+  if units_arg.is_a?(String) && !units_arg.strip.empty?
+    units = units_arg.split(",").map(&.strip)
+    Grafito.allowed_units = units
+    Grafito::Log.info { "Restricting to units: #{units.join(", ")}" }
+  end
+end
+
+# Applies the idle shutdown timeout from the parsed arguments, if any.
+def parse_idle_timeout(args)
+  if args["--idle-timeout-sec"]?
+    timeout = args["--idle-timeout-sec"].to_s.to_i32
+    if timeout > 0
+      Grafito.idle_timeout_sec = timeout
+      Grafito::Log.info { "Will shut down after #{timeout}s without any requests" }
     end
   end
 end

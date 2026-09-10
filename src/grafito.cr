@@ -66,7 +66,6 @@ module Grafito
     if idle_timeout_sec > 0
       add_handler IdleShutdownHandler.new(timeout_sec: idle_timeout_sec, logger: Log)
     end
-      
 
     # ## The `/logs` endpoint
     #

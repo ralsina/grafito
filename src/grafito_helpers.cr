@@ -12,18 +12,19 @@ module Grafito
     @timeout_sec : Int32
     @channel : Channel(Nil)
     @logger : ::Log
+
     def initialize(*, timeout_sec : Int32, logger : ::Log)
       @timeout_sec = timeout_sec
       @logger = logger
       @channel = Channel(Nil).new
-      spawn(name: "IdleShutdownHandler(#{timeout_sec.to_s}s)") do
+      spawn(name: "IdleShutdownHandler(#{timeout_sec}s)") do
         # Loop forever, exiting when timeout_sec passes without a new request
         loop do
           select
-            when @channel.receive
-            when timeout(timeout_sec.seconds)
-              @logger.info { "Shutting down because idle timeout was reached" }
-              exit 0
+          when @channel.receive
+          when timeout(timeout_sec.seconds)
+            @logger.info { "Shutting down because idle timeout was reached" }
+            exit 0
           end
         end
       end
@@ -37,7 +38,6 @@ module Grafito
       call_next(context)
     end
   end
-
 
   # Helper to build URLs with proper base path handling
   private def build_url(path : String) : String
