@@ -423,15 +423,19 @@ module Grafito
         end
 
         # Get context entries (5 before and after)
-        context_entries = Journalctl.context(cursor, 5)
+        context_count = 5
+        context_entries = Journalctl.context(cursor, context_count)
         unless context_entries
           env.response.content_type = "application/json"
           env.response.status_code = 404
           next {error: "Could not retrieve context for cursor: #{cursor}"}.to_json
         end
 
-        # Find the target entry (the one at position 5, assuming 5 entries before)
-        target_entry = context_entries[5]?
+        # Find the target entry by matching its cursor in the context; fall
+        # back to the middle position (count entries before the target) if
+        # journalctl didn't report cursors for some reason.
+        target_entry = context_entries.find { |entry| entry.data["__CURSOR"]? == cursor } ||
+                       context_entries[context_count]?
         unless target_entry
           env.response.content_type = "application/json"
           env.response.status_code = 404
@@ -439,8 +443,8 @@ module Grafito
         end
 
         # Build context text for AI
-        context_lines = context_entries.map_with_index do |entry, index|
-          marker = index == 5 ? ">>> LINE 6 (TARGET): " : "    "
+        context_lines = context_entries.map do |entry|
+          marker = entry.same?(target_entry) ? ">>> LINE (TARGET): " : "    "
           "#{marker}[#{entry.timestamp}] [#{entry.formatted_priority}] [#{entry.unit || "N/A"}] #{entry.message}"
         end.join("\n")
 

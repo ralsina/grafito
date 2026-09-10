@@ -198,7 +198,7 @@ module Grafito::AI::Providers
       Log.debug { "  Status: #{http_response.status_code}" }
 
       parse_response(http_response)
-    rescue ex : IO::TimeoutError
+    rescue IO::TimeoutError
       Log.error { "API request timed out after #{@timeout}" }
       raise Exception.new("AI request timed out. Please try again.")
     rescue ex : Exception

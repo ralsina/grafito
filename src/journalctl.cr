@@ -214,23 +214,24 @@ class Journalctl
     end
   end
 
+  # Returns the `--user` flags to prepend to journalctl/systemctl commands
+  # when user systemd mode is enabled, or an empty array otherwise.
+  private def self.user_flags : Array(String)
+    Grafito.user_mode? ? ["--user"] : [] of String
+  end
+
   # Builds the journalctl command array based on the provided filters.
   # This is a private helper method.
   def self.build_query_command(
-    since : String | Nil = nil,
-    unit : String | Nil = nil,
-    tag : String | Nil = nil,
-    query : String | Nil = nil,
-    priority : String | Nil = nil,
-    hostname : String | Nil = nil,
+    since : String? = nil,
+    unit : String? = nil,
+    tag : String? = nil,
+    query : String? = nil,
+    priority : String? = nil,
+    hostname : String? = nil,
     lines : Int32 = 5000,
   ) : Array(String)
-    command = ["journalctl"]
-
-    # Add --user flag if user mode is enabled
-    if Grafito.user_mode?
-      command << "--user"
-    end
+    command = ["journalctl"] + user_flags
 
     command << "-m" << "-o" << "json" << "-n" << lines.to_s << "-r"
 
@@ -300,16 +301,16 @@ class Journalctl
   # Returns:
   #   An array of LogEntry
   def self.query(
-    since : String | Nil = nil,
-    unit : String | Nil = nil,
-    tag : String | Nil = nil,
-    query : String | Nil = nil,
-    priority : String | Nil = nil,
-    hostname : String | Nil = nil,
+    since : String? = nil,
+    unit : String? = nil,
+    tag : String? = nil,
+    query : String? = nil,
+    priority : String? = nil,
+    hostname : String? = nil,
     lines : Int32 = 5000,
-    sort_by : String | Nil = nil,
-    sort_order : String | Nil = nil,
-  ) : Array(LogEntry) | Nil
+    sort_by : String? = nil,
+    sort_order : String? = nil,
+  ) : Array(LogEntry)?
     Log.debug { "Executing Journalctl.query with arguments:" }
     Log.debug { "  Since: #{since.inspect}" }
     Log.debug { "  Unit: #{unit.inspect}" }
@@ -384,7 +385,7 @@ class Journalctl
   #
   # Returns:
   #   An Array(String) containing unique service unit names, sorted, or nil if an error occurs.
-  def self.known_service_units : Array(String) | Nil
+  def self.known_service_units : Array(String)?
     {% if flag?(:no_systemctl) %}
       Log.warn { "Journalctl.known_service_units: Systemctl is disabled by configuration." }
       return nil
@@ -400,12 +401,7 @@ class Journalctl
       # --all: Show all loaded units, including inactive ones.
       # --no-legend: Suppress the legend header and footer.
       # --plain: Output a plain list without ANSI escape codes or truncation.
-      command = ["systemctl"]
-
-      # Add --user flag if user mode is enabled
-      if Grafito.user_mode?
-        command << "--user"
-      end
+      command = ["systemctl"] + user_flags
 
       command << "list-units" << "--type=service" << "--all" << "--no-legend" << "--plain"
 
@@ -429,8 +425,8 @@ class Journalctl
         Log.debug { "Found #{known_units.size} unique service units." }
 
         # Filter by allowed units if set
-        if Grafito.allowed_units
-          allowed_set = Grafito.allowed_units.not_nil!.to_set
+        if allowed_units = Grafito.allowed_units
+          allowed_set = allowed_units.to_set
           filtered_units = known_units.select do |unit|
             # Check both the raw unit name and cleaned version
             unit_match = allowed_set.includes?(unit)
@@ -472,12 +468,7 @@ class Journalctl
   #   A LogEntry object if found, or nil otherwise.
   def self.get_entry_by_cursor(cursor : String) : LogEntry?
     Log.debug { "Executing Journalctl.get_entry_by_cursor with cursor: #{cursor}" }
-    command_args = ["-m", "-o", "json", "--cursor", cursor, "-n", "1"]
-
-    # Add --user flag if user mode is enabled
-    if Grafito.user_mode?
-      command_args.insert(0, "--user")
-    end
+    command_args = user_flags + ["-m", "-o", "json", "--cursor", cursor, "-n", "1"]
 
     entries = run_journalctl_and_parse(command_args, "Journalctl.get_entry_by_cursor for cursor '#{cursor}'")
 
@@ -487,9 +478,7 @@ class Journalctl
     end
 
     entries.first # Should be only one entry if found
-
-
-  rescue ex # Catch unexpected errors in this method's logic
+  rescue ex       # Catch unexpected errors in this method's logic
     Log.error(exception: ex) { "Unexpected error in Journalctl.get_entry_by_cursor for cursor: #{cursor}." }
     nil
   end
@@ -527,53 +516,7 @@ class Journalctl
         end
 
         # Apply server-side unit filtering if allowed_units is set
-        if Grafito.allowed_units
-          allowed_set = Grafito.allowed_units.not_nil!.to_set
-          Log.debug { "Unit filtering enabled. Allowed units: #{allowed_set.to_a}" }
-          filtered_count = entries.size
-          first_entry_unit = entries.first?.try { |e| e.internal_unit_name || e.unit } if entries.size > 0
-          Log.debug { "First entry unit before filtering: #{first_entry_unit}" if first_entry_unit }
-
-          entries = entries.select do |entry|
-            # Check both the raw unit name and the cleaned version
-            unit_match = false
-            entry_unit = entry.internal_unit_name || entry.unit
-
-            # Check internal_unit_name (with .service suffix)
-            if entry.internal_unit_name
-              unit_match ||= allowed_set.includes?(entry.internal_unit_name)
-              Log.debug { "Unit filter: '#{entry.internal_unit_name}' exact match -> #{unit_match}" }
-            end
-
-            # Check cleaned unit name (without .service suffix)
-            cleaned_unit = entry.unit
-            unless unit_match
-              unit_match ||= allowed_set.includes?(cleaned_unit)
-              Log.debug { "Unit filter: '#{cleaned_unit}' cleaned match -> #{unit_match}" }
-            end
-
-            # Also check if the allowed units contain patterns that match (case-insensitive)
-            unless unit_match
-              unit_match = allowed_set.any? do |allowed|
-                # Case-insensitive pattern matching
-                entry.internal_unit_name.try { |u| u.downcase.includes?(allowed.downcase) } ||
-                  cleaned_unit.downcase.includes?(allowed.downcase) ||
-                  allowed.downcase.includes?(cleaned_unit.downcase)
-              end
-              Log.debug { "Unit filter: '#{entry_unit}' pattern match -> #{unit_match}" }
-            end
-
-            # Log if entry is filtered out
-            unless unit_match
-              Log.debug { "Filtered out entry from unit '#{entry_unit}' (allowed: #{allowed_set.to_a})" }
-            end
-
-            unit_match
-          end
-          filtered_count -= entries.size
-          Log.info { "Filtered out #{filtered_count} log entries due to unit restrictions" } if filtered_count > 0
-          Log.debug { "Remaining entries after filtering: #{entries.size}" }
-        end
+        entries = filter_allowed_units(entries)
 
         entries
       else
@@ -584,6 +527,42 @@ class Journalctl
   rescue ex
     Log.error(exception: ex) { "#{log_context_message}: Error executing journalctl. Command: #{command.inspect}" }
     [] of LogEntry
+  end
+
+  # Filters log entries by the allowed units restriction, if one is configured.
+  # Matches the raw unit name, the cleaned name (without .service suffix), and
+  # falls back to case-insensitive substring matching in either direction.
+  private def self.filter_allowed_units(entries : Array(LogEntry)) : Array(LogEntry)
+    allowed_units = Grafito.allowed_units
+    return entries unless allowed_units
+
+    allowed_set = allowed_units.to_set
+    original_size = entries.size
+    filtered = entries.select do |entry|
+      entry_unit = entry.internal_unit_name || entry.unit
+      cleaned_unit = entry.unit
+
+      unit_match = false
+      if raw_name = entry.internal_unit_name
+        unit_match ||= allowed_set.includes?(raw_name)
+      end
+      unless unit_match
+        unit_match ||= allowed_set.includes?(cleaned_unit)
+      end
+      unless unit_match
+        unit_match = allowed_set.any? do |allowed|
+          raw_name.try(&.downcase.includes?(allowed.downcase)) ||
+            cleaned_unit.downcase.includes?(allowed.downcase) ||
+            allowed.downcase.includes?(cleaned_unit.downcase)
+        end
+      end
+
+      Log.debug { "Filtered out entry from unit '#{entry_unit}' (allowed: #{allowed_set.to_a})" } unless unit_match
+      unit_match
+    end
+    filtered_out = original_size - filtered.size
+    Log.info { "Filtered out #{filtered_out} log entries due to unit restrictions" } if filtered_out > 0
+    filtered
   end
 
   # Retrieves log entries surrounding a specific entry identified by a cursor.
@@ -609,12 +588,7 @@ class Journalctl
 
     # Fetch 'before' entries: `journalctl -o json --cursor <cursor> -n <count + 1> --reverse`
     # This outputs: [Target, B1, B2, ..., B_count] (Target is newest, B1 is just before Target, etc.)
-    cmd_before_args = ["-m", "-o", "json", "--cursor", cursor, "-n", (count + 1).to_s, "--reverse"]
-
-    # Add --user flag if user mode is enabled
-    if Grafito.user_mode?
-      cmd_before_args.insert(0, "--user")
-    end
+    cmd_before_args = user_flags + ["-m", "-o", "json", "--cursor", cursor, "-n", (count + 1).to_s, "--reverse"]
 
     parsed_before_list = run_journalctl_and_parse(cmd_before_args, "Context (before entries for cursor '#{cursor}')")
 
@@ -622,12 +596,7 @@ class Journalctl
 
     # Fetch 'after' entries: `journalctl -o json --after-cursor <cursor> -n <count>`
     # This outputs: [A1, A2, ..., A_count] (A1 is just after Target, in chronological order)
-    cmd_after_args = ["-m", "-o", "json", "--after-cursor", cursor, "-n", count.to_s]
-
-    # Add --user flag if user mode is enabled
-    if Grafito.user_mode?
-      cmd_after_args.insert(0, "--user")
-    end
+    cmd_after_args = user_flags + ["-m", "-o", "json", "--after-cursor", cursor, "-n", count.to_s]
 
     after_entries = run_journalctl_and_parse(cmd_after_args, "Context (after entries for cursor '#{cursor}')")
 
