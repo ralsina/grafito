@@ -69,10 +69,12 @@ minify: $(INDEX_HTML_MIN) $(STYLE_CSS_MIN)
 $(INDEX_HTML_MIN): $(INDEX_HTML_SRC)
 	@echo "Minifying $< to $@"
 	minify $< -o $@
+	@printf '\n' >> $@ # pre-commit's end-of-file-fixer requires a trailing newline
 
 $(STYLE_CSS_MIN): $(STYLE_CSS_SRC)
 	@echo "Minifying $< to $@"
 	minify $< -o $@
+	@printf '\n' >> $@ # pre-commit's end-of-file-fixer requires a trailing newline
 
 .PHONY: test
 test:
