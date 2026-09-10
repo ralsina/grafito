@@ -55,12 +55,12 @@ require "socket"
 # And they are all optinal ;-)
 
 DOC = <<-DOCOPT
-Grafito - A simple log viewer.
+  Grafito - A simple log viewer.
 
-Usage:
-  grafito [options]
-  grafito (-h | --help)
-  grafito --version
+  Usage:
+    grafito [options]
+    grafito (-h | --help)
+    grafito --version
 
 Options:
   -p PORT, --port=PORT          Port to listen on [default: 3000].
@@ -128,13 +128,25 @@ def main
   ENV["LOG_LEVEL"] = log_level
   Log.setup_from_env
 
-  # Port and binding address are important to open a new server
-  port = args["--port"].to_s.to_i32
+  # Port and binding address are important. The port may arrive as an
+  # Int32 (parsed default or config file) or as a String (command line),
+  # so accept both and fail with a clear message on garbage.
+  port_value = args["--port"]
+  port : Int32? = nil
+  case port_value
+  when Int32  then port = port_value
+  when String then port = port_value.to_i?
+  end
+  unless port && port > 0 && port <= 65535
+    Grafito::Log.fatal { "Invalid port '#{port_value}': must be a number between 1 and 65535." }
+    exit 1
+  end
   bind_address = args["--bind"].to_s
 
   # Parse units restriction if provided
-  if args["--units"]?
-    units = args["--units"].to_s.split(",").map(&.strip)
+  units_arg = args["--units"]?
+  if units_arg.is_a?(String) && !units_arg.strip.empty?
+    units = units_arg.split(",").map(&.strip)
     Grafito.allowed_units = units
     Grafito::Log.info { "Restricting to units: #{units.join(", ")}" }
   end
@@ -168,40 +180,14 @@ def main
   # Register all Kemal routes (must be done after base_path is set)
   Grafito.register_routes
 
-  # Log at debug level. Probably worth making it configurable.
-
-  Log.setup(:debug) # Or use Log.setup_from_env for more flexibility
-
   # Read credentials and realm from environment variables
   auth_user = ENV["GRAFITO_AUTH_USER"]?
   auth_pass = ENV["GRAFITO_AUTH_PASS"]?
 
   # Initialize AI provider using the abstraction layer
-  # Supports: Anthropic (ANTHROPIC_API_KEY), Z.AI (Z_AI_API_KEY),
-  # OpenAI (OPENAI_API_KEY), Groq (GROQ_API_KEY), Ollama (GRAFITO_AI_ENDPOINT)
-  ai_provider = Grafito::AI::Config.provider
-  if ai_provider
-    Grafito::Log.info { "AI features enabled: #{ai_provider.name}" }
-    Grafito.ai_provider = ai_provider
-  else
-    Grafito::Log.info { "AI features disabled - no provider configured" }
-    Grafito::Log.info { "  Set ANTHROPIC_API_KEY or Z_AI_API_KEY to enable" }
-    Grafito.ai_provider = nil
-  end
+  setup_ai_provider
 
-  # Both username and password are set, enable basic authentication
-  if auth_user && auth_pass
-    Grafito::Log.info { "Basic Authentication enabled. User: #{auth_user}" }
-    basic_auth auth_user.as(String), auth_pass.as(String)
-  elsif auth_user || auth_pass
-    # Only one of the credentials was set - this is a misconfiguration.
-    # Exit with an error code to prevent running in an insecure state.
-    Grafito::Log.fatal { "Basic Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended." }
-    exit 1
-  else
-    # Neither username nor password are set, run without authentication.
-    Grafito::Log.warn { "Basic Authentication is DISABLED. To enable, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS environment variables." }
-  end
+  setup_basic_auth(auth_user, auth_pass)
 
   # The `BakedFileHandler` is a custom handler that serves files that are baked
   # into the application. In our case, the Assets class we defined above.
@@ -236,6 +222,38 @@ def main
       # Start kemal listening on the user-specified address and port
       server.bind_tcp(bind_address, port)
     end
+  end
+end
+
+# Initializes the AI provider from the configured API keys, if any.
+# Supports: Anthropic (ANTHROPIC_API_KEY), Z.AI (Z_AI_API_KEY),
+# OpenAI (OPENAI_API_KEY), Groq (GROQ_API_KEY), Ollama (GRAFITO_AI_ENDPOINT)
+def setup_ai_provider
+  ai_provider = Grafito::AI::Config.provider
+  if ai_provider
+    Grafito::Log.info { "AI features enabled: #{ai_provider.name}" }
+    Grafito.ai_provider = ai_provider
+  else
+    Grafito::Log.info { "AI features disabled - no provider configured" }
+    Grafito::Log.info { "  Set ANTHROPIC_API_KEY or Z_AI_API_KEY to enable" }
+    Grafito.ai_provider = nil
+  end
+end
+
+# Enables basic authentication when both credentials are configured,
+# refuses to run half-configured, and warns when running unprotected.
+def setup_basic_auth(auth_user : String?, auth_pass : String?)
+  if auth_user && auth_pass
+    Grafito::Log.info { "Basic Authentication enabled. User: #{auth_user}" }
+    basic_auth auth_user, auth_pass
+  elsif auth_user || auth_pass
+    # Only one of the credentials was set - this is a misconfiguration.
+    # Exit with an error code to prevent running in an insecure state.
+    Grafito::Log.fatal { "Basic Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended." }
+    exit 1
+  else
+    # Neither username nor password are set, run without authentication.
+    Grafito::Log.warn { "Basic Authentication is DISABLED. To enable, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS environment variables." }
   end
 end
 
