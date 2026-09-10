@@ -38,7 +38,7 @@
             class="close"
             onclick="this.closest('dialog').close(); return false;"
           ></a>
-          Network Error
+          Error
         </header>
         <div id="global-error-dialog-content">
           <!-- Error message will be injected here by JavaScript -->
@@ -646,6 +646,32 @@
               }
 
               updateBrowserURL();
+            }
+          });
+
+          // HTTP error responses (4xx/5xx) fire htmx:responseError, not
+          // htmx:afterRequest with an error detail, so handle them here or
+          // the user just sees a silently empty results area.
+          document.body.addEventListener("htmx:responseError", function (event) {
+            const status = event.detail.xhr ? event.detail.xhr.status : "?";
+            console.error("HTMX Request Failed. Status:", status, "Details:", event.detail);
+            let errorText = `Server request failed (HTTP ${status})`;
+            // Using Pico's alert-like styling within the dialog content
+            globalErrorDialogContent.innerHTML = `
+              <p role="alert" style="border: 1px solid var(--pico-form-element-invalid-border-color); background-color: var(--pico-form-element-invalid-background-color); color: var(--pico-color); padding: 1em; margin-bottom:0;">
+                <strong>Details:</strong> ${errorText}
+              </p>`;
+            if (!globalErrorDialog.open) {
+              globalErrorDialog.showModal();
+            }
+            // If the failed request was meant to fill the results area,
+            // show the error inline instead of leaving it blank.
+            const target = event.detail.target || event.detail.elt;
+            if (target && target.id === "results") {
+              target.innerHTML = `
+                <p role="alert" style="border: 1px solid var(--pico-form-element-invalid-border-color); background-color: var(--pico-form-element-invalid-background-color); color: var(--pico-color); padding: 1em;">
+                  Failed to load logs (HTTP ${status}). Check the server or adjust the filters, then reload.
+                </p>`;
             }
           });
         }
