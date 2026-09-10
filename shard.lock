@@ -1,5 +1,9 @@
 version: 2.0
 shards:
+  ameba:
+    git: https://github.com/crystal-ameba/ameba.git
+    version: 1.7.0
+
   anthropic:
     git: https://github.com/jgaskins/anthropic.git
     version: 0.1.0+git.commit.1a3e02dbc0713df94e4dc9dc7475c689785c1839

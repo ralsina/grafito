@@ -39,6 +39,8 @@ dependencies:
 # Faker is used for the demo version which displays
 # fake data.
 development_dependencies:
+  ameba:
+    github: crystal-ameba/ameba
   faker:
     github: askn/faker
   webmock:

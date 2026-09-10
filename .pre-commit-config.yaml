@@ -31,6 +31,18 @@ repos:
       rev: 0.29.2
       hooks:
           - id: check-github-workflows
+    - repo: local
+      hooks:
+          - id: crystal-format
+            name: Crystal format check
+            entry: crystal tool format --check
+            language: system
+            files: '\.cr$'
+          - id: ameba
+            name: Ameba linter
+            entry: ameba
+            language: system
+            files: '\.cr$'
     - repo: https://github.com/commitizen-tools/commitizen
       rev: v3.29.0 # automatically updated by Commitizen
       hooks:
