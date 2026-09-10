@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,534 +7,715 @@
       name="description"
       content="Grafito: Your friendly, self-hosted Systemd Journal Log Viewer. Effortlessly navigate, filter, and understand your system logs."
     />
-    <meta name="color-scheme" content="light dark" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
-    />
+    <meta name="color-scheme" content="dark light" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Chivo&family=Noto+Emoji&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap"
       rel="stylesheet"
     />
 
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <title>Grafito - Friendly Systemd Journal Log Viewer</title>
     <style>
-      html,
-      h1,
-      h2,
-      body {
-        font-family: "Chivo", "sans";
+      /* ===================================================================
+         GRAFITO // LOG NAVIGATION CONSOLE
+         A retrofuturistic cockpit / CRT phosphor terminal look.
+         =================================================================== */
+      :root {
+        --bg: #060b07;
+        --panel: #0b130d;
+        --panel-2: #0f1a11;
+        --line: #1d3322;
+        --txt: #8dfda2;
+        --muted: #52a566;
+        --faint: #2f6b3d;
+        --amber: #ffb000;
+        --err: #ff5f56;
+        --info: #5ad7ff;
+        --glow: rgba(77, 255, 122, 0.16);
+        --scan: rgba(0, 0, 0, 0.22);
       }
-      .grafito-title {
-        font-weight: normal;
-        font-size: 4rem;
-        text-align: center;
-        margin-bottom: 0.5rem;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-      }
-      .grafito-title a {
-        text-decoration: none;
-        color: white;
-      }
-      .subtitle {
-        text-align: center;
-        font-size: 1.2rem;
-        color: rgba(255, 255, 255, 0.9);
-        margin-bottom: 2rem;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-      }
-      .hero {
-        text-align: center;
-        padding: 0 1rem 3rem 1rem;
-        margin-top: 0;
-        position: relative;
-        background: linear-gradient(135deg,
-          var(--pico-primary) 0%,
-          var(--pico-primary-hover) 100%);
-        border-radius: 0 0 2rem 2rem;
-        overflow: hidden;
-        color: white;
-      }
-      .hero::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background:
-          radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-          radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
-        pointer-events: none;
-      }
-      .hero-content {
-        position: relative;
-        z-index: 2;
-      }
-      .hero-content-grid {
-        display: grid;
-        /* On larger screens, create two columns. On smaller, it wraps to one. */
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 2.5rem;
-        align-items: center;
-        margin-top: 2rem;
-      }
-      .hero-text-content {
-        text-align: left; /* Override hero's center alignment */
-        color: rgba(255, 255, 255, 0.95);
-      }
-      .hero-text-content p {
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-      }
-      .hero-testimonials h3 {
-        text-align: center;
-        margin-top: 0;
-        margin-bottom: 1rem;
-        color: rgba(255, 255, 255, 0.95);
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+      html[data-theme="light"] {
+        --bg: #efeadd;
+        --panel: #f7f3e6;
+        --panel-2: #e6e0cd;
+        --line: #c9c1a4;
+        --txt: #233324;
+        --muted: #5c6e58;
+        --faint: #8b9787;
+        --amber: #a56a00;
+        --err: #b3261e;
+        --info: #1f6e9c;
+        --glow: rgba(60, 110, 60, 0.12);
+        --scan: rgba(120, 110, 70, 0.1);
       }
 
-      .hero img {
-        max-width: 150px;
-        margin-bottom: 1rem;
+      * {
+        box-sizing: border-box;
       }
-      .features-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-top: 2rem;
-        margin-bottom: 3rem;
+      html {
+        font-size: 17px;
       }
-      .feature-card {
-        border: 1px solid var(--pico-card-border-color);
-        border-radius: var(--pico-border-radius);
-        padding: 1.5rem;
-        background-color: var(--pico-card-background-color);
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--txt);
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+        line-height: 1.55;
+        overflow-x: hidden;
       }
-      .feature-card hgroup {
-        margin-bottom: 1rem;
+
+      /* --- The tube: scanlines + vignette + (subtle) flicker ---------- */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 9998;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          to bottom,
+          var(--scan) 0px,
+          var(--scan) 1px,
+          transparent 1px,
+          transparent 3px
+        );
       }
-      .feature-card h2 {
-        margin-bottom: 0.5rem;
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        pointer-events: none;
+        background: radial-gradient(
+          ellipse at center,
+          transparent 55%,
+          var(--glow) 100%
+        );
       }
-      .feature-card p {
-        color: var(--pico-secondary);
-        font-size: 0.95rem;
+      @media (prefers-reduced-motion: no-preference) {
+        body::before {
+          animation: flicker 4s infinite steps(1);
+        }
       }
-      .feature-icon {
-        margin-right: 0.5rem;
+      @keyframes flicker {
+        0%, 91.9%, 94%, 96.9%, 100% { opacity: 1; }
+        92%, 93.9% { opacity: 0.85; }
+        97%, 98.9% { opacity: 0.93; }
       }
-      .cta-section {
-        text-align: center;
-        padding: 2rem 0;
+
+      ::selection {
+        background: var(--amber);
+        color: var(--bg);
       }
-      .theme-switch-wrapper-footer {
+      a {
+        color: var(--amber);
+        text-decoration: none;
+        text-shadow: 0 0 8px color-mix(in srgb, var(--amber) 55%, transparent);
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      h1, h2, h3 {
+        font-family: "VT323", var(--font-body);
+        font-weight: 400;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        text-shadow: 0 0 10px color-mix(in srgb, currentColor 55%, transparent);
+      }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 1.25rem;
+      }
+
+      /* --- Cockpit top bar -------------------------------------------- */
+      .cockpit-bar {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
         align-items: center;
-        padding-top: 1rem;
+        gap: 1rem;
+        padding: 0.5rem 1.25rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--amber) 45%, var(--line));
+        background: var(--panel);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--muted);
       }
-      .theme-switch-wrapper-footer label {
-        margin-bottom: 0;
-      }
-      nav ul:last-child {
-        /* Target the right-side UL in the nav */
+      .cockpit-bar .lights {
         display: flex;
-        align-items: center; /* Vertically align items */
+        gap: 0.5rem;
+        align-items: center;
       }
-      footer.container {
+      .light {
+        width: 8px;
+        height: 8px;
+        border-radius: 1px;
+        display: inline-block;
+      }
+      .light.green {
+        background: var(--txt);
+        box-shadow: 0 0 8px var(--txt);
+        animation: blink 1.4s infinite steps(1);
+      }
+      .light.amber {
+        background: var(--amber);
+        box-shadow: 0 0 8px var(--amber);
+      }
+      .light.blue {
+        background: var(--info);
+        box-shadow: 0 0 8px var(--info);
+      }
+      @keyframes blink {
+        0%, 55% { opacity: 1; }
+        56%, 100% { opacity: 0.25; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .light.green { animation: none; }
+      }
+
+      /* --- Hero: boot screen ------------------------------------------- */
+      .hero {
+        position: relative;
+        padding: 4rem 0 3.5rem;
         text-align: center;
+        overflow: hidden;
+        border-bottom: 1px solid var(--line);
       }
-      .emoji {
-        font-family: "Noto Emoji", sans-serif;
+      #rain-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.25;
+        pointer-events: none;
       }
-      .cta-button-large {
-        font-size: 1.1rem;
-        padding: 0.75rem 1.5rem;
+      .hero > .wrap {
+        position: relative;
+        z-index: 1;
       }
-      .theme-switch-wrapper-nav {
-        padding-top: 0 !important; /* Ensure override if needed */
+      .boot-lines {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: var(--faint);
+        margin-bottom: 1.5rem;
       }
-      .screenshot {
-        display: block;
-        max-width: 100%;
-        margin: 2rem auto; /* Centered with top/bottom margin */
-        border-radius: var(--pico-border-radius);
+      .boot-lines .ok {
+        color: var(--txt);
       }
-      /* Testimonial Carousel */
+      .grafito-title {
+        font-size: clamp(3.5rem, 10vw, 6.5rem);
+        margin: 0 0 0.25rem;
+        line-height: 1;
+      }
+      .grafito-title a {
+        color: var(--txt);
+        text-shadow:
+          0 0 6px color-mix(in srgb, var(--txt) 70%, transparent),
+          0 0 28px color-mix(in srgb, var(--txt) 35%, transparent);
+      }
+      .grafito-title .cursor {
+        color: var(--amber);
+        font-size: 0.5em;
+        vertical-align: 0.12em;
+        animation: blink 1.1s infinite steps(1);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .grafito-title .cursor { animation: none; }
+      }
+      .subtitle {
+        font-size: clamp(1rem, 2.6vw, 1.3rem);
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        margin: 0 0 2rem;
+      }
+      .hero-text-content {
+        max-width: 640px;
+        margin: 0 auto 1.75rem;
+        text-align: left;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        padding: 1.1rem 1.25rem;
+        box-shadow: inset 0 0 24px color-mix(in srgb, var(--glow) 60%, transparent);
+      }
+      .hero-text-content p {
+        margin: 0;
+      }
+      .prompt {
+        color: var(--amber);
+      }
+      .hero-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 2.25rem;
+      }
+      .console-button {
+        display: inline-block;
+        font-family: inherit;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--txt);
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        padding: 0.7rem 1.3rem;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease;
+      }
+      .console-button::before { content: "[ "; color: var(--faint); }
+      .console-button::after { content: " ]"; color: var(--faint); }
+      .console-button:hover {
+        text-decoration: none;
+        border-color: var(--amber);
+        box-shadow: 0 0 16px color-mix(in srgb, var(--amber) 40%, transparent);
+      }
+      .console-button.primary {
+        color: var(--bg);
+        background: var(--amber);
+        border-color: var(--amber);
+        text-shadow: none;
+      }
+      .console-button.primary::before,
+      .console-button.primary::after {
+        color: color-mix(in srgb, var(--bg) 70%, var(--amber));
+      }
+
+      /* --- Testimonials: incoming transmissions ------------------------ */
+      .transmissions {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      .transmissions-label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--faint);
+        margin-bottom: 1rem;
+      }
+      .transmissions-label .light {
+        margin-right: 0.5rem;
+        vertical-align: middle;
+      }
       .testimonial-carousel {
         position: relative;
-        min-height: 150px; /* Adjust as needed based on quote length */
-        margin: 2rem auto;
-        max-width: 800px;
+        min-height: 130px;
         text-align: center;
       }
       .testimonial-slide {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
+        inset: 0;
         opacity: 0;
         transition: opacity 0.7s ease-in-out;
-        margin: 0; /* Reset blockquote margin */
+        margin: 0;
       }
       .testimonial-slide.active {
         opacity: 1;
-        position: relative; /* Allows container to have height */
+        position: relative;
       }
       .testimonial-slide p {
-        font-size: 1.2rem;
-        font-style: italic;
-        color: rgba(255, 255, 255, 0.9);
-        margin-bottom: 1rem;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        font-size: 1.15rem;
+        margin: 0 0 0.75rem;
       }
+      .testimonial-slide p::before { content: "> "; color: var(--amber); }
       .testimonial-slide footer {
-        color: rgba(255, 255, 255, 0.8);
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        font-size: 0.85rem;
+        color: var(--muted);
       }
-      .testimonial-slide footer a {
-        color: rgba(255, 255, 255, 0.9);
-        text-decoration: underline;
-      }
-      /* Adjust carousel for hero section */
-      .hero-testimonials .testimonial-carousel {
-        max-width: 100%;
-        margin: 0 auto;
-      }
-      /* Code block with copy button */
-      .code-block-wrapper {
-        position: relative;
-        margin-top: 0.5rem;
-      }
-      .code-block {
-        background-color: var(--pico-form-element-background-color);
-        border: 1px solid var(--pico-form-element-border-color);
-        padding: 0.75em 1em;
-        border-radius: var(--pico-border-radius);
-        overflow-x: auto;
-        font-size: 0.85em;
-        margin: 0;
-        padding-right: 3.5rem; /* Space for the button */
-      }
-      .copy-button {
-        position: absolute;
-        top: 50%;
-        right: 0.25rem;
-        transform: translateY(-50%);
-        background: transparent;
-        border: none;
-        padding: 0.5rem;
-        cursor: pointer;
-        color: var(--pico-secondary);
-        border-radius: var(--pico-border-radius);
-      }
-      .copy-button:hover, .copy-button:focus {
-        color: var(--pico-primary-hover);
-      }
-      /* Particle effects */
-      #particles-canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 1;
-      }
-      /* Fancy horizontal separator */
-      .hero-separator {
-        position: relative;
-        height: 60px;
-        background: linear-gradient(90deg,
-          transparent 0%,
-          var(--pico-primary) 20%,
-          var(--pico-primary-hover) 50%,
-          var(--pico-primary) 80%,
-          transparent 100%);
-        margin: 0;
-        overflow: hidden;
-      }
-      .hero-separator::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg,
-          transparent 0%,
-          rgba(255, 255, 255, 0.3) 50%,
-          transparent 100%);
-        animation: shine 3s ease-in-out infinite;
-      }
-      @keyframes shine {
-        0% { left: -100%; }
-        50% { left: 100%; }
-        100% { left: 100%; }
-      }
-      .hero-separator svg {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-      }
-      /* Theme switcher in hero */
-      .hero-theme-switch {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        z-index: 3;
-        background: rgba(0, 0, 0, 0.2);
-        padding: 0.5rem;
-        border-radius: var(--pico-border-radius);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-      }
-      .hero-theme-switch label {
-        margin-bottom: 0;
+
+      /* --- Panels: modules --------------------------------------------- */
+      .section-label {
         display: flex;
         align-items: center;
-        color: white;
+        gap: 0.75rem;
+        margin: 3.5rem 0 1.5rem;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--faint);
+      }
+      .section-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--line);
+      }
+      .panel {
+        position: relative;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        padding: 1.4rem 1.5rem;
+        box-shadow: inset 0 0 24px color-mix(in srgb, var(--glow) 55%, transparent);
+      }
+      /* Corner brackets, cockpit instrument style */
+      .panel::before,
+      .panel::after {
+        content: "";
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border: 1px solid var(--amber);
+        opacity: 0.7;
+      }
+      .panel::before {
+        top: -1px;
+        left: -1px;
+        border-right: none;
+        border-bottom: none;
+      }
+      .panel::after {
+        bottom: -1px;
+        right: -1px;
+        border-left: none;
+        border-top: none;
+      }
+      .panel h2 {
+        font-size: 1.5rem;
+        margin: 0 0 0.6rem;
+      }
+      .panel h2 .module-id {
+        color: var(--faint);
+        font-size: 0.75em;
+        margin-right: 0.6rem;
+      }
+      .panel p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      .panel p code {
+        color: var(--txt);
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        border-radius: 2px;
+        padding: 0 0.3em;
+      }
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.25rem;
+      }
+
+      /* --- Install: terminal window ------------------------------------ */
+      .install-panel {
+        margin-bottom: 1.25rem;
+      }
+      .terminal-window {
+        margin-top: 1rem;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        background: var(--panel-2);
+        overflow: hidden;
+      }
+      .terminal-titlebar {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.75rem;
+        border-bottom: 1px solid var(--line);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--faint);
+      }
+      .terminal-titlebar .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .dot.r { background: var(--err); }
+      .dot.a { background: var(--amber); }
+      .dot.g { background: var(--txt); }
+      .terminal-body {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.9rem 1rem;
+        overflow-x: auto;
+      }
+      .terminal-body .prompt-sign {
+        color: var(--amber);
+        flex: none;
+      }
+      .terminal-body code {
+        font-family: inherit;
+        color: var(--txt);
+        white-space: nowrap;
+      }
+      .copy-button {
+        margin-left: auto;
+        flex: none;
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 2px;
+        color: var(--muted);
+        font-family: inherit;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        padding: 0.35rem 0.7rem;
+        cursor: pointer;
+      }
+      .copy-button:hover {
+        color: var(--amber);
+        border-color: var(--amber);
+        box-shadow: 0 0 12px color-mix(in srgb, var(--amber) 35%, transparent);
+      }
+
+      /* --- CTA + footer ------------------------------------------------- */
+      .cta-section {
+        text-align: center;
+        padding: 3.5rem 0;
+      }
+      .cta-section h2 {
+        font-size: 2.2rem;
+        margin: 0 0 0.5rem;
+      }
+      .cta-section p {
+        color: var(--muted);
+        margin: 0 0 2rem;
+      }
+      footer.site-footer {
+        border-top: 1px solid var(--line);
+        padding: 1.5rem 0 2.5rem;
+        text-align: center;
+        font-size: 0.82rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+      footer.site-footer .sep {
+        color: var(--faint);
+        margin: 0 0.75rem;
+      }
+
+      /* Theme switch, cockpit toggle style */
+      .theme-switch-wrapper-nav {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+      }
+      .theme-switch-wrapper-nav input {
+        accent-color: var(--amber);
+        margin: 0;
+      }
+
+      @media (max-width: 640px) {
+        .cockpit-bar .bar-label { display: none; }
+        .hero { padding-top: 2.5rem; }
       }
     </style>
   </head>
   <body>
-    <nav class="container-fluid">
-      <ul></ul>
-      <ul></ul>
-    </nav>
+    <div class="cockpit-bar">
+      <span>grafito // log navigation console</span>
+      <span class="bar-label">sys.journal — read/write: ok — uptime: ∞</span>
+      <span class="lights">
+        <span class="light green"></span>
+        <span class="light amber"></span>
+        <span class="light blue"></span>
+        <label class="theme-switch-wrapper-nav" for="theme-switch" title="Toggle light/dark mode">
+          <input type="checkbox" id="theme-switch" name="theme" role="switch" />
+          <span> daylight</span>
+        </label>
+      </span>
+    </div>
 
-    <main class="container">
-      <section class="hero">
-        <canvas id="particles-canvas"></canvas>
-        <div class="hero-theme-switch">
-          <label for="theme-switch" title="Toggle light/dark mode">
-            <span class="emoji">🌞</span
-            ><input
-              type="checkbox"
-              id="theme-switch"
-              name="theme"
-              role="switch"
-            /><span class="emoji">🌒</span>
-          </label>
-        </div>
-        <div class="hero-content">
-          <h1 class="grafito-title">
-            <a href="https://github.com/ralsina/grafito" target="_blank"
-              >Grafito</a
-            >
-          </h1>
-          <p class="subtitle">
-            Your friendly, self-hosted Systemd Journal Log Viewer.
-          </p>
+    <header class="hero">
+      <canvas id="rain-canvas"></canvas>
+      <div class="wrap">
+        <p class="boot-lines">
+          boot &gt; journald.sys <span class="ok">[online]</span> &nbsp;
+          index &gt; 0 entries lost <span class="ok">[ok]</span> &nbsp;
+          ai.link <span class="ok">[standby]</span>
+        </p>
+        <h1 class="grafito-title">
+          <a href="https://github.com/ralsina/grafito" target="_blank">Grafito<span class="cursor">▊</span></a>
+        </h1>
+        <p class="subtitle">Your friendly, self-hosted systemd journal log viewer</p>
 
-          <div class="hero-content-grid">
-            <div class="hero-text-content">
-              <p>
-                Effortlessly navigate, filter, and understand your system logs
-                with a clean, web-based interface. <br />No more complex terminal
-                commands for everyday log viewing!
-              </p>
-              <div role="group">
-                <a
-                  href="https://github.com/ralsina/grafito"
-                  target="_blank"
-                  role="button"
-                  >Get Grafito on GitHub</a
-                >&nbsp;<a
-                  href="https://grafito-demo.ralsina.me"
-                  target="_blank"
-                  role="button"
-                  >View Demo Site</a
-                >
-              </div>
-            </div>
-            <div class="hero-testimonials">
-              <div class="testimonial-carousel">
-                <blockquote class="testimonial-slide">
-                  <p>
-                    "I gave it a whirl to see what it could do. The result
-                    impressed me."
-                  </p>
-                  <footer>
-                    —
-                    <a
-                      href="https://delightlylinux.wordpress.com/2025/06/03/grafito-a-clean-journalctl-log-viewer-in-your-browser/"
-                      target="_blank"
-                      >Delightly Linux</a
-                    >
-                  </footer>
-                </blockquote>
-                <blockquote class="testimonial-slide">
-                  <p>"Systemd log viewer with an awesome web interface"</p>
-                  <footer>
-                    —
-                    <a
-                      href="https://www.edivaldobrito.com.br/grafito-visualizador-de-logs-do-systemd-com-uma-interface-web-incrivel/"
-                      target="_blank"
-                      >Edivaldo Brito</a
-                    >
-                  </footer>
-                </blockquote>
-                <blockquote class="testimonial-slide">
-                  <p>
-                    "If you're tired of having to dig through logs with the
-                    journalctl command every time, Grafito is for you."
-                  </p>
-                  <footer>
-                    —
-                    <a
-                      href="https://linuxmint.hu/hir/2025/06/grafito-letisztult-webes-naplonezegeto-a-systemd-szamara"
-                      target="_blank"
-                      >Balacy</a
-                    >
-                  </footer>
-                </blockquote>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div class="hero-separator">
-        <svg viewBox="0 0 1200 60" preserveAspectRatio="none">
-          <path d="M0,60 Q300,10 600,30 T1200,20 L1200,60 Z" fill="var(--pico-background-color)" opacity="0.8"/>
-          <path d="M0,60 Q300,15 600,25 T1200,15 L1200,60 Z" fill="var(--pico-background-color)" opacity="0.6"/>
-          <path d="M0,60 Q300,20 600,20 T1200,10 L1200,60 Z" fill="var(--pico-background-color)"/>
-        </svg>
-      </div>
-
-      <section id="features">
-        <!-- Quick Install Card - Full-width above the grid -->
-        <article class="feature-card" style="margin-bottom: 2rem">
-          <!-- Added margin-bottom for spacing -->
-          <h2><span class="feature-icon emoji">🚀</span>Quick Install</h2>
+        <div class="hero-text-content">
           <p>
-            Get started quickly on Linux (with systemd). Use our simple install
-            script to download the correct binary, place it in
-            <code>/usr/local/bin</code>, and set up a systemd service (or follow
-            any of the possible
-            <a href="https://github.com/ralsina/grafito"
-              >installation instructions</a
-            >).
+            <span class="prompt">$ grafito --navigate</span><br />
+            Effortlessly navigate, filter, and understand your system logs
+            with a clean, web-based interface. No more complex terminal
+            commands for everyday log viewing!
           </p>
-          <div class="code-block-wrapper">
-            <pre class="code-block"><code id="install-command-text">curl -sSL https://grafito.ralsina.me/install.sh | sudo bash</code></pre>
-            <button class="copy-button" id="copy-install-command" title="Copy to clipboard">
-              <span class="emoji">📋</span>
-            </button>
+        </div>
+
+        <div class="hero-buttons">
+          <a class="console-button primary" href="https://github.com/ralsina/grafito" target="_blank">Get Grafito on GitHub</a>
+          <a class="console-button" href="https://grafito-demo.ralsina.me" target="_blank">View Demo Site</a>
+        </div>
+
+        <div class="transmissions">
+          <p class="transmissions-label">
+            <span class="light green"></span>incoming transmissions — field reports
+          </p>
+          <div class="testimonial-carousel">
+            <blockquote class="testimonial-slide">
+              <p>
+                "I gave it a whirl to see what it could do. The result
+                impressed me."
+              </p>
+              <footer>
+                —
+                <a
+                  href="https://delightlylinux.wordpress.com/2025/06/03/grafito-a-clean-journalctl-log-viewer-in-your-browser/"
+                  target="_blank"
+                  >Delightly Linux</a
+                >
+              </footer>
+            </blockquote>
+            <blockquote class="testimonial-slide">
+              <p>"Systemd log viewer with an awesome web interface"</p>
+              <footer>
+                —
+                <a
+                  href="https://www.edivaldobrito.com.br/grafito-visualizador-de-logs-do-systemd-com-uma-interface-web-incrivel/"
+                  target="_blank"
+                  >Edivaldo Brito</a
+                >
+              </footer>
+            </blockquote>
+            <blockquote class="testimonial-slide">
+              <p>
+                "If you're tired of having to dig through logs with the
+                journalctl command every time, Grafito is for you."
+              </p>
+              <footer>
+                —
+                <a
+                  href="https://linuxmint.hu/hir/2025/06/grafito-letisztult-webes-naplonezegeto-a-systemd-szamara"
+                  target="_blank"
+                  >Balacy</a
+                >
+              </footer>
+            </blockquote>
           </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <p class="section-label">module 01 — deployment</p>
+      <article class="panel install-panel">
+        <h2><span class="module-id">01</span>Quick Install</h2>
+        <p>
+          Get started quickly on Linux (with systemd). Use our simple install
+          script to download the correct binary, place it in
+          <code>/usr/local/bin</code>, and set up a systemd service (or follow
+          any of the possible
+          <a href="https://github.com/ralsina/grafito">installation instructions</a>).
+        </p>
+        <div class="terminal-window">
+          <div class="terminal-titlebar">
+            <span class="dot r"></span><span class="dot a"></span><span class="dot g"></span>
+            <span>install.sh — bash</span>
+          </div>
+          <div class="terminal-body">
+            <span class="prompt-sign">$</span>
+            <code id="install-command-text">curl -sSL https://grafito.ralsina.me/install.sh | sudo bash</code>
+            <button class="copy-button" id="copy-install-command" title="Copy to clipboard">copy</button>
+          </div>
+        </div>
+      </article>
+
+      <p class="section-label">modules 02–10 — capabilities</p>
+      <div class="features-grid">
+        <article class="panel">
+          <h2><span class="module-id">02</span>Powerful Filtering</h2>
+          <p>
+            Quickly find what you need. Search by text, systemd unit, syslog
+            tag, time range (e.g., "last 15 min", "last week"), and log
+            priority. Filters update dynamically as you type! Detail and
+            context views!
+          </p>
         </article>
 
-        <div class="features-grid">
-          <article class="feature-card">
-            <h2>
-              <span class="feature-icon emoji">🔍</span>Powerful Filtering
-            </h2>
-            <p>
-              Quickly find what you need. Search by text, systemd unit, syslog
-              tag, time range (e.g., "last 15 min", "last week"), and log
-              priority. Filters update dynamically as you type! Detail and
-              context views!
-            </p>
-          </article>
+        <article class="panel">
+          <h2><span class="module-id">03</span>Live Log Streaming</h2>
+          <p>
+            Monitor logs in real-time with the "Live View" feature. See new
+            entries appear automatically without manual refreshes, perfect for
+            active troubleshooting.
+          </p>
+        </article>
 
-          <article class="feature-card">
-            <h2>
-              <span class="feature-icon emoji">📺</span>Live Log Streaming
-            </h2>
-            <p>
-              Monitor logs in real-time with the "Live View" feature. See new
-              entries appear automatically without manual refreshes, perfect for
-              active troubleshooting.
-            </p>
-          </article>
+        <article class="panel">
+          <h2><span class="module-id">04</span>Understand Your Commands</h2>
+          <p>
+            Curious about the underlying `journalctl` magic? Grafito shows you
+            the equivalent terminal command for your currently active filters.
+          </p>
+        </article>
 
-          <article class="feature-card">
-            <h2>
-              <span class="feature-icon emoji">❔</span>Understand Your Commands
-            </h2>
-            <p>
-              Curious about the underlying `journalctl` magic? Grafito shows you
-              the equivalent terminal command for your currently active filters.
-            </p>
-          </article>
+        <article class="panel">
+          <h2><span class="module-id">05</span>Shareable & Bookmarkable Views</h2>
+          <p>
+            Easily copy a URL that includes all your current filter settings.
+            Share it with colleagues or bookmark it for quick access to common
+            log views.
+          </p>
+        </article>
 
-          <article class="feature-card">
-            <h2>
-              <span class="feature-icon emoji">🔗</span>Shareable & Bookmarkable
-              Views
-            </h2>
-            <p>
-              Easily copy a URL that includes all your current filter settings.
-              Share it with colleagues or bookmark it for quick access to common
-              log views.
-            </p>
-          </article>
+        <article class="panel">
+          <h2><span class="module-id">06</span>Export Logs</h2>
+          <p>
+            Need logs offline? Download your filtered log entries as a plain
+            text file for archiving, sharing, or further analysis in other
+            tools.
+          </p>
+        </article>
 
-          <article class="feature-card">
-            <h2><span class="feature-icon emoji">💾</span>Export Logs</h2>
-            <p>
-              Need logs offline? Download your filtered log entries as a plain
-              text file for archiving, sharing, or further analysis in other
-              tools.
-            </p>
-          </article>
+        <article class="panel">
+          <h2><span class="module-id">07</span>Self-Hosted & Secure</h2>
+          <p>
+            Grafito runs on your own server. Your log data stays private and
+            under your control. Ideal for individuals and teams who prioritize
+            data security.
+          </p>
+        </article>
 
-          <article class="feature-card">
-            <h2>
-              <span class="feature-icon emoji">🏠</span>Self-Hosted & Secure
-            </h2>
-            <p>
-              Grafito runs on your own server. Your log data stays private and
-              under your control. Ideal for individuals and teams who prioritize
-              data security.
-            </p>
-          </article>
+        <article class="panel">
+          <h2><span class="module-id">08</span>Lightweight & Responsive</h2>
+          <p>
+            Built with Crystal and HTMX, Grafito is designed to be fast and
+            efficient, providing a smooth user experience even with many log
+            entries. Since it's not <b>a lot</b> of code, you can
+            <a href="src/main.cr.html">read the explained source code!</a>
+          </p>
+        </article>
 
-          <article class="feature-card">
-            <h2>
-              <span class="feature-icon emoji">⚡</span>Lightweight & Responsive
-            </h2>
-            <p>
-              Built with Crystal and HTMX, Grafito is designed to be fast and
-              efficient, providing a smooth user experience even with many log
-              entries. Since it's not <b>a lot</b> of code, you can
-              <a href="src/main.cr.html">read the explained source code!</a>
-            </p>
-          </article>
+        <article class="panel">
+          <h2><span class="module-id">09</span>AI-Powered Log Analysis</h2>
+          <p>
+            Stuck on a confusing error? Get intelligent explanations from LLMs
+            with a single click. The AI analyzes log context to explain what went
+            wrong, potential causes, and suggested solutions. Uses affordable
+            <a href="https://z.ai" target="_blank">z.ai</a> API - completely optional!
+          </p>
+        </article>
 
-          <article class="feature-card">
-            <h2>
-              <span class="feature-icon emoji">🧠</span>AI-Powered Log Analysis
-            </h2>
-            <p>
-              Stuck on a confusing error? Get intelligent explanations from LLMs
-              with a single click. The AI analyzes log context to explain what went
-              wrong, potential causes, and suggested solutions. Uses affordable
-              <a href="https://z.ai" target="_blank">z.ai</a> API - completely optional!
-            </p>
-          </article>
-
-          <article class="feature-card">
-            <h2>
-              <span class="feature-icon emoji">🎨</span>Clean & Intuitive UI
-            </h2>
-            <p>
-              A modern, clutter-free interface styled with PicoCSS. Supports
-              both light and dark modes to match your preference and reduce eye
-              strain.
-            </p>
-          </article>
-        </div>
-
-      </section>
+        <article class="panel">
+          <h2><span class="module-id">10</span>Clean & Intuitive UI</h2>
+          <p>
+            A modern, clutter-free interface. Supports both light and dark
+            modes to match your preference and reduce eye strain.
+          </p>
+        </article>
+      </div>
 
       <section class="cta-section">
         <h2>Ready to Simplify Your Log Viewing?</h2>
@@ -542,120 +723,65 @@
           Grafito is open-source and easy to set up. Explore the full source
           code and other installation methods on GitHub:
         </p>
-        <a
-          href="https://github.com/ralsina/grafito"
-          target="_blank"
-          role="button"
-          class="contrast cta-button-large"
-        >
+        <a class="console-button primary" href="https://github.com/ralsina/grafito" target="_blank">
           View on GitHub & Get Started
         </a>
       </section>
     </main>
 
-    <footer class="container">
-      <hr />
-      <p>
-        <a href="https://links.ralsina.me" target="_blank"
-          ><span class="emoji">🏃</span> Roberto Alsina</a
-        >
-        <span>|||</span>
-        <a href="https://github.com/ralsina/grafito" target="_blank"
-          >Grafito Project <span class="emoji">🖥︎</span></a
-        >
-      </p>
+    <footer class="site-footer">
+      <a href="https://links.ralsina.me" target="_blank">Roberto Alsina</a>
+      <span class="sep">|||</span>
+      <a href="https://github.com/ralsina/grafito" target="_blank">Grafito Project</a>
     </footer>
 
     <script>
-      // --- PARTICLE EFFECTS ---
-      class ParticleSystem {
+      // --- DATA RAIN: falling glyphs over the hero -----------------------
+      class DataRain {
         constructor(canvas) {
           this.canvas = canvas;
-          this.ctx = canvas.getContext('2d');
-          this.particles = [];
-          this.maxParticles = 50;
-
-          this.resizeCanvas();
-          this.createParticles();
-          this.animate();
-
-          window.addEventListener('resize', () => this.resizeCanvas());
-        }
-
-        resizeCanvas() {
-          this.canvas.width = this.canvas.offsetWidth;
-          this.canvas.height = this.canvas.offsetHeight;
-        }
-
-        createParticles() {
-          for (let i = 0; i < this.maxParticles; i++) {
-            this.particles.push({
-              x: Math.random() * this.canvas.width,
-              y: Math.random() * this.canvas.height,
-              vx: (Math.random() - 0.5) * 0.5,
-              vy: (Math.random() - 0.5) * 0.5,
-              size: Math.random() * 3 + 1,
-              opacity: Math.random() * 0.5 + 0.1,
-              hue: Math.random() * 60 + 200 // Blue-ish hues
-            });
+          this.ctx = canvas.getContext("2d");
+          this.glyphs = "01<>[]{}$#%*grafito".split("");
+          this.columns = [];
+          this.fontSize = 14;
+          this.resize();
+          window.addEventListener("resize", () => this.resize());
+          if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            this.animate();
           }
         }
-
+        resize() {
+          this.canvas.width = this.canvas.offsetWidth;
+          this.canvas.height = this.canvas.offsetHeight;
+          const columnCount = Math.ceil(this.canvas.width / this.fontSize);
+          this.columns = Array.from({ length: columnCount }, () =>
+            Math.floor(Math.random() * (this.canvas.height / this.fontSize))
+          );
+        }
         animate() {
-          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-          this.particles.forEach(particle => {
-            // Update position
-            particle.x += particle.vx;
-            particle.y += particle.vy;
-
-            // Wrap around edges
-            if (particle.x < 0) particle.x = this.canvas.width;
-            if (particle.x > this.canvas.width) particle.x = 0;
-            if (particle.y < 0) particle.y = this.canvas.height;
-            if (particle.y > this.canvas.height) particle.y = 0;
-
-            // Draw particle
-            this.ctx.beginPath();
-            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            this.ctx.fillStyle = `hsla(${particle.hue}, 70%, 70%, ${particle.opacity})`;
-            this.ctx.fill();
-
-            // Add a subtle glow
-            this.ctx.shadowColor = `hsla(${particle.hue}, 70%, 70%, 0.5)`;
-            this.ctx.shadowBlur = 10;
-            this.ctx.fill();
-            this.ctx.shadowBlur = 0;
+          const { ctx, canvas, fontSize, columns } = this;
+          ctx.fillStyle = "rgba(6, 11, 7, 0.12)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.font = fontSize + "px 'Share Tech Mono', monospace";
+          columns.forEach((y, i) => {
+            const glyph = this.glyphs[Math.floor(Math.random() * this.glyphs.length)];
+            const x = i * fontSize;
+            ctx.fillStyle = Math.random() < 0.03 ? "#ffb000" : "#4dd06e";
+            ctx.fillText(glyph, x, y * fontSize);
+            columns[i] = y * fontSize > canvas.height && Math.random() > 0.975 ? 0 : y + 1;
           });
-
-          // Draw connections between nearby particles
-          this.particles.forEach((particle, i) => {
-            this.particles.slice(i + 1).forEach(otherParticle => {
-              const dx = particle.x - otherParticle.x;
-              const dy = particle.y - otherParticle.y;
-              const distance = Math.sqrt(dx * dx + dy * dy);
-
-              if (distance < 100) {
-                this.ctx.beginPath();
-                this.ctx.moveTo(particle.x, particle.y);
-                this.ctx.lineTo(otherParticle.x, otherParticle.y);
-                this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - distance / 100)})`;
-                this.ctx.stroke();
-              }
-            });
-          });
-
           requestAnimationFrame(() => this.animate());
         }
       }
 
-      // --- THEME SWITCHER LOGIC ---
       document.addEventListener("DOMContentLoaded", function () {
-        // Initialize particle system
-        const particlesCanvas = document.getElementById('particles-canvas');
-        if (particlesCanvas) {
-          new ParticleSystem(particlesCanvas);
+        // Initialize the data rain
+        const rainCanvas = document.getElementById("rain-canvas");
+        if (rainCanvas) {
+          new DataRain(rainCanvas);
         }
+
+        // --- THEME SWITCHER LOGIC ---
         const themeSwitch = document.getElementById("theme-switch");
         const htmlElement = document.documentElement;
 
@@ -679,7 +805,7 @@
         ) {
           applyTheme("dark");
         } else {
-          applyTheme("light"); // Default
+          applyTheme("dark"); // The CRT look is the identity: default to dark
         }
 
         if (themeSwitch) {
@@ -691,17 +817,15 @@
         // --- TESTIMONIAL CAROUSEL LOGIC ---
         const slides = document.querySelectorAll(".testimonial-slide");
         if (slides.length > 1) {
-          // Only run if there's more than one slide
           let currentSlide = 0;
           slides[0].classList.add("active");
-
           setInterval(() => {
             slides[currentSlide].classList.remove("active");
             currentSlide = (currentSlide + 1) % slides.length;
             slides[currentSlide].classList.add("active");
           }, 20000); // 20 seconds
         } else if (slides.length === 1) {
-          slides[0].classList.add("active"); // Show the single slide
+          slides[0].classList.add("active");
         }
 
         // --- COPY TO CLIPBOARD LOGIC ---
@@ -711,16 +835,14 @@
         if (copyButton && commandTextElement) {
           copyButton.addEventListener("click", () => {
             navigator.clipboard.writeText(commandTextElement.textContent).then(() => {
-              const originalContent = copyButton.innerHTML;
-              copyButton.innerHTML = '<span class="emoji">✅</span>';
-              copyButton.setAttribute("title", "Copied!");
+              const originalContent = copyButton.textContent;
+              copyButton.textContent = "copied!";
               setTimeout(() => {
-                copyButton.innerHTML = originalContent;
-                copyButton.setAttribute("title", "Copy to clipboard");
+                copyButton.textContent = originalContent;
               }, 2000);
             }).catch(err => {
               console.error("Could not copy text: ", err);
-              copyButton.setAttribute("title", "Failed to copy!");
+              copyButton.textContent = "failed";
             });
           });
         }
