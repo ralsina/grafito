@@ -180,7 +180,10 @@ module FakeJournalData
       data = Hash(String, String).new
       data["__REALTIME_TIMESTAMP"] = (timestamp.to_unix_ms).to_s # Microseconds string
       data["__MONOTONIC_TIMESTAMP"] = rand(1_000_000..1_000_000_000).to_s
-      data["__CURSOR"] = cursor || "fakecursor_#{entries.size}_#{timestamp.to_unix_ms}"
+      # Every entry needs a UNIQUE cursor: the context endpoint highlights
+      # entries by cursor, and reusing the --cursor argument here made
+      # every generated entry light up as "the" target entry.
+      data["__CURSOR"] = "fakecursor_#{entries.size}_#{timestamp.to_unix_ms}"
       data["_BOOT_ID"] = "fakebootid1234567890abcdef12345678"
       data["_TRANSPORT"] = ["journal", "stdout", "kernel"].sample
       data["_MACHINE_ID"] = "fake_machine_id_for_#{current_hostname}" # Make machine ID somewhat related to hostname

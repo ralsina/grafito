@@ -220,13 +220,16 @@ describe FakeJournalData do
     end
 
     context "with --cursor argument" do
-      it "uses the provided cursor in generated entries" do
+      it "generates unique cursors that do not reuse the provided cursor" do
         custom_cursor = "my_special_cursor_123"
         args = ["--cursor", custom_cursor, "-n", "5"]
         entries = FakeJournalData.fake_run_journalctl_and_parse(args, dummy_context_message)
         entries.should_not be_empty
-        entries.each do |entry|
-          entry.data["__CURSOR"].should eq custom_cursor
+
+        cursors = entries.map { |entry| entry.data["__CURSOR"] }
+        cursors.uniq.size.should eq(cursors.size)
+        cursors.each do |cursor|
+          cursor.should_not eq(custom_cursor)
         end
       end
     end
