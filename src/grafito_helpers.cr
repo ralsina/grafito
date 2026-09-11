@@ -39,6 +39,27 @@ module Grafito
     end
   end
 
+  # Sets cache headers appropriate for each asset type: HTML documents
+  # must always revalidate (they link the other assets), while CSS/JS may
+  # be cached briefly by browsers and CDNs. Without this, deployments
+  # under caching proxies (e.g. Cloudflare) serve stale frontends for as
+  # long as the default TTL.
+  private class CacheHeadersHandler < Kemal::Handler
+    def call(context)
+      call_next(context)
+      content_type = context.response.headers["Content-Type"]?
+      if content_type
+        if content_type.starts_with?("text/html")
+          context.response.headers["Cache-Control"] = "no-cache"
+        elsif content_type.starts_with?("text/css") ||
+              content_type.starts_with?("application/javascript") ||
+              content_type.starts_with?("text/javascript")
+          context.response.headers["Cache-Control"] = "public, max-age=300"
+        end
+      end
+    end
+  end
+
   # Helper to build URLs with proper base path handling
   private def build_url(path : String) : String
     if Grafito.base_path == "/"
@@ -114,10 +135,12 @@ module Grafito
   # The htmx buttons share almost all attributes; only the icon, tooltip and
   # URL differ. The AI button instead triggers a JavaScript function and takes
   # an onclick handler. `js_arg` is interpolated verbatim and must already be
-  # a valid JavaScript literal (use `.to_json` for strings).
+  # a valid JavaScript literal (use `.to_json` for strings). `tab` selects
+  # which sidebar pane the response lands in.
   private def _hover_action_button_cell(
     title : String,
     icon : String,
+    tab : String,
     url : String? = nil,
     onclick : String? = nil,
   ) : String
@@ -130,10 +153,10 @@ module Grafito
     else
       attributes = attributes.merge({
         "hx-get"                    => url || "",
-        "hx-target"                 => "#details-dialog-content", # Target the content area within the modal
+        "hx-target"                 => "#panel-#{tab}-content",
         "hx-swap"                   => "innerHTML",
-        "hx-on:htmx:before-request" => "document.getElementById('details-dialog-content').innerHTML = document.getElementById('details-dialog-loading-spinner-template').innerHTML;",
-        "hx-on:htmx:after-request"  => "if(event.detail.successful) { document.getElementById('details-dialog').showModal(); } else { document.getElementById('details-dialog-content').innerHTML = '<p class=\\'error\\'>Failed to load details. Status: ' + event.detail.xhr.status + ' ' + event.detail.xhr.statusText + '</p>'; document.getElementById('details-dialog').showModal(); }",
+        "hx-on:htmx:before-request" => "panelSpinner('#panel-#{tab}-content')",
+        "hx-on:htmx:after-request"  => "if(event.detail.successful){showLogPanel('#{tab}')}else{panelError('#panel-#{tab}-content',event.detail.xhr.status);showLogPanel('#{tab}')}",
       })
     end
     HTML.build do
@@ -167,7 +190,9 @@ module Grafito
       if chart
         # Generate and add the timeline SVG only if there are logs
         if !logs.empty?
-          timeline_data = Timeline.generate_frequency_timeline(logs)
+          # Align chart buckets to the timezone the table displays.
+          timeline_location = logs.first.convert_to_timezone(logs.first.timestamp).location
+          timeline_data = Timeline.generate_frequency_timeline(logs, location: timeline_location)
           svg_timeline_html = Timeline.generate_svg_timeline(timeline_data)
           div(style: "margin-bottom: 1em;") do
             html svg_timeline_html
@@ -185,7 +210,7 @@ module Grafito
                                  end
 
       # Prepare the styled count message for the header
-      styled_count_span = %Q(<span style="font-style: italic; font-size: 0.9em; color: var(--pico-muted-color); margin-left: 0.5em;">(#{count_message_inner_text})</span>)
+      styled_count_span = %Q(<span class="results-count" style="font-style: italic; font-size: 0.9em; color: var(--pico-muted-color); margin-left: 0.5em;">(#{count_message_inner_text})</span>)
       message_header_text = "Message #{styled_count_span}"
 
       headers_to_display = [] of NamedTuple(text: String, hx_vals: String, key_name: String)
@@ -212,10 +237,13 @@ module Grafito
             headers_to_display.each do |header|
               # All remaining headers are sortable and will use this block
               th({
-                "style"        => "cursor: pointer; vertical-align: middle;",
-                "hx-get"       => build_url("logs"),
-                "hx-vals"      => header[:hx_vals],
-                "hx-include"   => "#search-box, #unit-filter, #tag-filter, #priority-filter, #time-range-filter, #live-view",
+                "style"   => "cursor: pointer; vertical-align: middle;",
+                "hx-get"  => build_url("logs"),
+                "hx-vals" => header[:hx_vals],
+                # Include every .log-filter so column-visibility toggles and
+                # the hostname filter survive sort requests (a stale hardcoded
+                # whitelist used to blank the table here).
+                "hx-include"   => ".log-filter",
                 "hx-target"    => "#results",
                 "hx-indicator" => "#loading-spinner",
               }) do
@@ -235,18 +263,31 @@ module Grafito
             logs.each do |entry|
               row_classes = ["log-row-hover-actions", "priority-#{entry.priority.to_i}"]
               entry_cursor = entry.data["__CURSOR"]?
-              if highlight_cursor && entry_cursor == highlight_cursor
+              is_target = !highlight_cursor.nil? && entry_cursor == highlight_cursor
+              if is_target
                 row_classes << "highlighted-row"
+                row_classes << "context-target"
               end
-              tr(class: row_classes.join(" ")) do
+              # The cursor rides on the row so a plain click can open the
+              # detail tab in the sidebar.
+              row_attributes = {"class" => row_classes.join(" ")}
+              row_attributes["data-cursor"] = entry_cursor if entry_cursor
+              row_attributes["data-epoch"] = entry.timestamp.to_unix.to_s
+              tr(row_attributes) do
                 if show_timestamp
-                  td(style: "white-space: nowrap; min-width: 14ch;") do
+                  td(class: "log-timestamp-cell", style: "white-space: nowrap; min-width: 14ch;") do
+                    if is_target
+                      span(class: "context-target-badge") do
+                        text "this entry"
+                      end
+                      text " "
+                    end
                     # Using timezone-aware timestamp format: MM-DD HH:MM:SS
                     text entry.formatted_timestamp_with_timezone("%m-%d %H:%M:%S")
                   end
                 end
                 if show_hostname
-                  td do
+                  td(class: "log-hostname-cell") do
                     # Make the hostname clickable to set the filter
                     display_hostname = HTML.escape(entry.hostname)
                     js_arg_hostname = entry.hostname.to_json # Ensures proper JS string escaping
@@ -267,8 +308,10 @@ module Grafito
                   end
                 end
                 if show_priority
-                  td do
-                    text HTML.escape(entry.formatted_priority)
+                  td(class: "log-priority-cell") do
+                    span(class: "tag") do
+                      text HTML.escape(entry.formatted_priority)
+                    end
                   end
                 end
                 if show_message
@@ -290,12 +333,14 @@ module Grafito
                   html _hover_action_button_cell(
                     title: "View full details for this log entry",
                     icon: "search",
+                    tab: "detail",
                     url: "#{build_url("details")}?#{cursor_param}",
                   )
                   # Context button
                   html _hover_action_button_cell(
                     title: "View context for this log entry (e.g., 5 before & 5 after)",
                     icon: "history",
+                    tab: "context",
                     url: "#{build_url("context")}?#{cursor_param}",
                   )
                   # AI Explanation button (only shown if AI is enabled)
@@ -303,6 +348,7 @@ module Grafito
                     html _hover_action_button_cell(
                       title: "Ask AI to explain this log entry",
                       icon: "psychology",
+                      tab: "ai",
                       onclick: "askAIExplanation(#{entry_cursor.to_json})",
                     )
                   end

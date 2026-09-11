@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Grafito · Prototype B — Field Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Chivo:wght@400;600&family=Chivo+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --paper: #faf8f4;
+    --paper-2: #f1ede5;
+    --rule: #d9d2c4;
+    --ink: #2b2a26;
+    --ink-soft: #7a766c;
+    --pencil: #c2571f;      /* burnt sienna accent */
+    --err: #b3402e; --warn: #a8761b; --ok: #3e7d5c; --info: #3a6ea5;
+    --mono: "Chivo Mono", ui-monospace, monospace;
+    --sans: "Chivo", sans-serif;
+    --display: "Fraunces", serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── Masthead ───────────────────────── */
+  .masthead {
+    display: flex; align-items: baseline; gap: 1rem;
+    padding: 1.4rem 2rem 0.8rem;
+    border-bottom: 2px solid var(--ink);
+  }
+  .masthead h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 2rem;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .masthead h1 em { font-style: italic; color: var(--pencil); }
+  .masthead .sub { color: var(--ink-soft); font-size: 0.85rem; }
+  .masthead .spacer { flex: 1; }
+  .masthead a { color: var(--ink-soft); text-decoration: none; font-size: 0.82rem; }
+  .masthead a:hover { color: var(--pencil); }
+
+  /* ── Sparkline band ─────────────────── */
+  .band {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: end;
+    padding: 1rem 2rem 0.9rem;
+    border-bottom: 1px solid var(--rule);
+    background:
+      repeating-linear-gradient(0deg, transparent 0 23px, rgba(43,42,38,.035) 23px 24px);
+  }
+  .spark { width: 100%; height: 64px; display: block; }
+  .band-meta {
+    text-align: right; font-family: var(--mono);
+    font-size: 0.75rem; color: var(--ink-soft); line-height: 1.7;
+    white-space: nowrap;
+  }
+  .band-meta b { color: var(--ink); font-weight: 500; }
+  .legend { display: inline-flex; gap: 0.9rem; }
+  .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+
+  /* ── Filter chips row ───────────────── */
+  .chips {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.7rem 2rem;
+    border-bottom: 1px solid var(--rule);
+    flex-wrap: wrap;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--mono); font-size: 0.76rem;
+    border: 1px solid var(--rule);
+    background: #fff;
+    border-radius: 999px;
+    padding: 0.32rem 0.8rem;
+    cursor: pointer;
+    color: var(--ink);
+    transition: border-color .12s;
+  }
+  .chip:hover { border-color: var(--ink); }
+  .chip .k { color: var(--ink-soft); }
+  .chip.active { border-color: var(--pencil); color: var(--pencil); background: #fdf3ec; }
+  .chip .x { opacity: .45; }
+  .chip.add { border-style: dashed; color: var(--ink-soft); background: transparent; }
+  .search {
+    margin-left: auto;
+    font-family: var(--mono); font-size: 0.78rem;
+    border: 1px solid var(--rule); border-radius: 999px;
+    padding: 0.34rem 0.9rem;
+    background: #fff;
+    color: var(--ink);
+    width: 240px; outline: none;
+  }
+  .search:focus { border-color: var(--pencil); }
+
+  /* ── Entries ────────────────────────── */
+  .entries { max-width: 1200px; margin: 0 auto; padding: 0.6rem 2rem 3rem; }
+  .day {
+    font-family: var(--display);
+    font-size: 1.05rem; font-weight: 500;
+    color: var(--ink-soft);
+    margin: 1.6rem 0 0.4rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .day::after { content: ""; flex: 1; border-top: 1px dashed var(--rule); }
+  .entry {
+    display: grid;
+    grid-template-columns: 108px 74px 200px 1fr auto;
+    gap: 1rem;
+    padding: 0.55rem 0.6rem;
+    border-bottom: 1px solid #ece7dc;
+    align-items: baseline;
+    cursor: pointer;
+    transition: background .1s;
+  }
+  .entry:hover { background: #f4f0e8; }
+  .entry.sel { background: #fdf3ec; box-shadow: inset 3px 0 0 var(--pencil); }
+  .t { font-family: var(--mono); font-size: 0.76rem; color: var(--ink-soft); white-space: nowrap; }
+  .pri-dot { display: flex; align-items: center; gap: 0.45rem; font-family: var(--mono); font-size: 0.72rem; }
+  .pri-dot i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .d-err i { background: var(--err); } .d-err { color: var(--err); }
+  .d-warn i { background: var(--warn); } .d-warn { color: var(--warn); }
+  .d-notice i { background: var(--ok); } .d-notice { color: var(--ok); }
+  .d-info i { background: var(--info); } .d-info { color: var(--info); }
+  .d-debug i { background: #b9b2a3; } .d-debug { color: #8f897c; }
+  .src { font-family: var(--mono); font-size: 0.78rem; }
+  .src .u { font-weight: 500; }
+  .src .h { color: var(--ink-soft); font-size: 0.7rem; }
+  .msg { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; min-width: 0; overflow-wrap: break-word; }
+  .msg mark { background: #f7e3b0; padding: 0 2px; border-radius: 2px; }
+  .actions { display: flex; gap: 0.3rem; opacity: 0; transition: opacity .12s; }
+  .entry:hover .actions, .entry.sel .actions { opacity: 1; }
+  .actions button {
+    font-family: var(--mono); font-size: 0.7rem;
+    border: 1px solid var(--rule); background: #fff;
+    border-radius: 6px; padding: 0.2rem 0.55rem; cursor: pointer;
+    color: var(--ink-soft);
+  }
+  .actions button:hover { border-color: var(--pencil); color: var(--pencil); }
+
+  /* detail card, inline expansion */
+  .detail {
+    grid-column: 1 / -1;
+    display: none;
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    margin: 0.4rem 0;
+  }
+  .entry.sel .detail { display: block; }
+  .detail pre {
+    margin: 0 0 0.7rem; font-size: 0.74rem; line-height: 1.55;
+    color: var(--ink-soft); white-space: pre-wrap; word-break: break-word;
+  }
+  .ai-card {
+    border-left: 3px solid var(--pencil);
+    background: #fdf6ef;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.82rem; line-height: 1.55;
+    border-radius: 0 8px 8px 0;
+  }
+  .ai-card b { font-family: var(--display); color: var(--pencil); }
+  .ai-card code { font-family: var(--mono); font-size: 0.78rem; background: #f1e6d8; padding: 0 3px; border-radius: 3px; }
+</style>
+</head>
+<body>
+  <div class="masthead">
+    <h1>grafito<em>.</em></h1>
+    <span class="sub">field notes from your machine — mindy, system journal</span>
+    <span class="spacer"></span>
+    <a href="#">export</a>
+    <a href="#">share view</a>
+    <a href="#">github ↗</a>
+  </div>
+
+  <div class="band">
+    <svg class="spark" viewBox="0 0 1000 64" preserveAspectRatio="none" aria-hidden="true"></svg>
+    <div class="band-meta">
+      <span class="legend">
+        <span><i style="background:var(--err)"></i>error</span>
+        <span><i style="background:var(--warn)"></i>warn</span>
+        <span><i style="background:var(--info)"></i>info</span>
+      </span><br/>
+      <b>12:00 → 13:00</b> · 1,240 entries<br/>
+      14 errors · 6 warnings · <span style="color:var(--pencil)">live</span>
+    </div>
+  </div>
+
+  <div class="chips">
+    <span class="chip active">priority <span class="k">≤ notice</span> <span class="x">×</span></span>
+    <span class="chip"><span class="k">since</span> 1h</span>
+    <span class="chip"><span class="k">unit</span> nginx.service <span class="x">×</span></span>
+    <span class="chip add">+ filter</span>
+    <input class="search" placeholder="grep messages… ⏎"/>
+  </div>
+
+  <div class="entries" id="entries"></div>
+
+<script>
+  const data = [
+    ["13:52:54","err","getty@ttyUSB0.service","mindy","Failed at step STDIN spawning /sbin/agetty: No such file or directory"],
+    ["13:52:52","err","nginx.service","mindy","upstream timed out (110: Connection timed out) while reading response header from upstream"],
+    ["13:52:51","notice","init.scope","mindy","tocry.service: Main process exited, code=exited, status=127/n/a"],
+    ["13:52:51","err","sshd.service","mindy","Failed password for invalid user admin from 203.0.113.42 port 41022 ssh2"],
+    ["13:52:49","info","postgresql.service","mindy","checkpoint starting: time"],
+    ["13:52:48","warn","myapp.service","mindy","unhandled rejection: TypeError: Cannot read properties of undefined (reading 'retry_count')"],
+    ["13:52:45","err","kernel","mindy","NVRM: Xid (PCI:0000:01:00): 13, Graphics Exception on graphics pipeline"],
+    ["13:52:42","info","redis-server.service","mindy","Background saving started by pid 4210"],
+    ["13:52:36","info","kernel","mindy","usb 1-4: new high-speed USB device number 12 using xhci_hcd"],
+    ["13:52:31","err","myapp.service","mindy","ECONNREFUSED 127.0.0.1:5432 — retry 3 of 5 in 4s"],
+    ["13:52:28","warn","smartd","mindy","Device: /dev/sda, SMART Usage Attribute: 194 Temperature_Celsius changed from 118 to 121"],
+    ["13:52:26","err","sshd.service","beta-2","Invalid user oracle from 198.51.100.7 port 55280"],
+    ["13:52:20","err","nginx.service","mindy","open() \"/var/log/nginx/api.access.log\" failed (24: Too many open files)"],
+    ["13:52:16","notice","NetworkManager","gamma","device (wlan0): supplicant management connection state changed: completed"],
+    ["13:52:12","info","systemd-logind","mindy","New session 4721 of user ralsina."],
+    ["13:52:10","err","kernel","mindy","EXT4-fs error (device sda2): ext4_find_entry:1455: inode #2: comm ls: bad entry in directory"],
+    ["13:52:06","notice","systemd","mindy","Finished Rotate log files."],
+    ["13:52:04","err","myapp.service","mindy","FATAL: worker loop crashed, initiating shutdown"],
+    ["13:51:58","info","cron.service","mindy","(root) CMD (run-parts /etc/cron.hourly)"],
+    ["13:51:55","warn","docker.service","mindy","Health check for container db_replica_2: timeout after 5s"],
+    ["13:51:50","debug","systemd-journald","beta-2","Oldest journal entry: 2026-08-14 09:11:02"],
+    ["13:51:44","info","systemd","gamma","Reached target Multi-User System."],
+    ["13:51:40","err","getty@ttyUSB0.service","mindy","Failed to set up standard input: No such file or directory"],
+    ["13:51:33","notice","apt-daily.service","gamma","apt-daily.service: Deactivated successfully."],
+    ["13:51:27","info","postgresql.service","mindy","database system is ready to accept connections"],
+  ];
+  const cls = {err:"d-err", warn:"d-warn", notice:"d-notice", info:"d-info", debug:"d-debug"};
+
+  const wrap = document.getElementById("entries");
+  const day = document.createElement("div");
+  day.className = "day";
+  day.textContent = "today";
+  wrap.appendChild(day);
+
+  data.forEach(([ts, pri, unit, host, msg]) => {
+    const e = document.createElement("div");
+    e.className = "entry";
+    e.innerHTML =
+      `<span class="t">${ts}</span>` +
+      `<span class="pri-dot ${cls[pri]}"><i></i>${pri}</span>` +
+      `<span class="src"><span class="u">${unit}</span><br/><span class="h">${host}</span></span>` +
+      `<span class="msg">${msg}</span>` +
+      `<span class="actions"><button title="context">context</button><button title="explain">🧠 explain</button></span>` +
+      `<div class="detail">` +
+        `<pre>${msg}\n\n_PRIORITY=3  _SYSTEMD_UNIT=${unit}  _HOSTNAME=${host}\n__REALTIME_TIMESTAMP=1789031571482  _PID=4821  _UID=0</pre>` +
+        `<div class="ai-card"><b>🧠 Field note —</b> a serial getty is configured on <code>ttyUSB0</code> but the device doesn't exist, so systemd retries and fails on every login attempt. Silence it with <code>systemctl disable getty@ttyUSB0.service</code>.</div>` +
+      `</div>`;
+    e.addEventListener("click", () => {
+      const was = e.classList.contains("sel");
+      document.querySelectorAll(".entry.sel").forEach(x => x.classList.remove("sel"));
+      if (!was) e.classList.add("sel");
+    });
+    wrap.appendChild(e);
+  });
+
+  // sparkline: stacked severity area, hand-drawn feel
+  const svg = document.querySelector(".spark");
+  const pts = [1,2,1,3,2,4,1,2,5,3,2,1,4,6,3,2,5,8,4,2,3,1,2,4,6,3,2,1,3,5,2,4,7,3,1,2,4,2,6,3,2,5,3,1,2,4,3,6];
+  let paths = {err:[], warn:[], info:[]};
+  pts.forEach((v, i) => {
+    const x = i * (1000 / pts.length);
+    paths.info.push(`${x},${64 - v * 3}`);
+    paths.warn.push(`${x},${64 - v * 2}`);
+    paths.err.push(`${x},${64 - Math.min(v, 3)}`);
+  });
+  const area = (arr, fill, op) =>
+    `<polygon points="0,64 ${arr.join(" ")} 1000,64" fill="${fill}" opacity="${op}"/>`;
+  svg.innerHTML =
+    area(paths.info, "var(--info)", .18) +
+    area(paths.warn, "var(--warn)", .25) +
+    area(paths.err, "var(--err)", .35) +
+    `<line x1="0" y1="63.5" x2="1000" y2="63.5" stroke="var(--rule)"/>`;
+</script>
+</body>
+</html>

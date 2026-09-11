@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Grafito · Prototype A — Graphite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@300;400;500;600&family=Chivo:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --ink-0: #0d0f12;      /* deepest background */
+    --ink-1: #12151a;      /* page background */
+    --ink-2: #191d24;      /* panels */
+    --ink-3: #22272f;      /* raised */
+    --line: #2a3038;       /* hairlines */
+    --graphite: #8b93a1;   /* secondary text */
+    --chalk: #e8ebef;      /* primary text */
+    --pencil: #e8b84b;     /* the one accent */
+    --emerg: #ff5d5d; --err: #ff7a6e; --warn: #ffc46b; --ok: #7ec9a1; --info: #6aa7d8;
+    --mono: "Chivo Mono", ui-monospace, monospace;
+    --sans: "Chivo", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--ink-1);
+    color: var(--chalk);
+    font-family: var(--mono);
+    font-size: 13.5px;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ─────────────────────────── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.7rem 1.1rem 0.4rem;
+  }
+  .brand {
+    display: flex; align-items: baseline; gap: 0.6rem;
+    user-select: none;
+  }
+  .brand h1 {
+    font-family: var(--sans);
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+  .brand h1::after {
+    content: "";
+    display: inline-block;
+    width: 0.55em; height: 0.55em;
+    margin-left: 0.3em;
+    border-radius: 50%;
+    background: var(--pencil);
+    box-shadow: 0 0 12px var(--pencil);
+  }
+  .brand small { color: var(--graphite); font-size: 0.75rem; }
+
+  /* ── Omnibox ────────────────────────── */
+  .omnibox-wrap { padding: 0.2rem 1.1rem 0.6rem; }
+  .omnibox {
+    display: flex; align-items: center; gap: 0.7rem;
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.55rem 0.9rem;
+    transition: border-color .15s;
+  }
+  .omnibox:focus-within { border-color: var(--pencil); box-shadow: 0 0 0 3px rgba(232,184,75,.12); }
+  .omnibox .glyph { color: var(--pencil); font-weight: 600; }
+  .omnibox input {
+    flex: 1; background: none; border: none; outline: none;
+    color: var(--chalk); font: inherit; letter-spacing: 0.01em;
+  }
+  .omnibox input::placeholder { color: #556; }
+  .omnibox kbd {
+    font-family: var(--mono); font-size: 0.72rem;
+    color: var(--graphite);
+    border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 5px; padding: 0.1rem 0.45rem;
+    background: var(--ink-3);
+  }
+
+  /* ── Timeline strip ─────────────────── */
+  .timeline {
+    display: flex; align-items: flex-end; gap: 2px;
+    height: 44px; margin: 0 1.1rem 0.5rem;
+    padding: 6px 8px 4px;
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .tl-col {
+    flex: 1; display: flex; flex-direction: column-reverse; gap: 1px;
+    min-width: 2px;
+  }
+  .tl-col div { border-radius: 1px; }
+  .tl-col .e { background: var(--err); opacity: .85; }
+  .tl-col .w { background: var(--warn); opacity: .8; }
+  .tl-col .i { background: var(--info); opacity: .45; }
+  .tl-col:hover div { opacity: 1; }
+  .tl-meta {
+    margin: 0 1.1rem 0.35rem;
+    display: flex; justify-content: space-between;
+    color: var(--graphite); font-size: 0.72rem;
+  }
+  .tl-meta b { color: var(--warn); font-weight: 500; }
+
+  /* ── Log stream ─────────────────────── */
+  .stream {
+    overflow-y: auto;
+    margin: 0 1.1rem;
+    border: 1px solid var(--line);
+    border-radius: 10px 10px 0 0;
+    background: var(--ink-0);
+    scrollbar-width: thin;
+    scrollbar-color: var(--ink-3) transparent;
+  }
+  table { border-collapse: collapse; width: 100%; }
+  tbody tr {
+    border-bottom: 1px solid #171b21;
+    border-left: 2px solid transparent;
+    cursor: pointer;
+    transition: background .08s;
+  }
+  tbody tr:hover { background: #161a21; }
+  tbody tr.open { background: #1a1f27; border-left-color: var(--pencil); }
+  td { padding: 0.32rem 0.6rem; vertical-align: top; }
+  td.ts { color: var(--graphite); white-space: nowrap; font-size: 0.82rem; padding-top: 0.42rem; }
+  td.ts b { color: #c3c9d2; font-weight: 500; }
+  td.pri { width: 66px; }
+  .tag {
+    display: inline-block;
+    font-size: 0.68rem; line-height: 1;
+    padding: 0.28rem 0.5rem; border-radius: 4px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    border: 1px solid;
+  }
+  .p3 { color: var(--err); border-color: rgba(255,122,110,.35); background: rgba(255,122,110,.08); }
+  .p4 { color: var(--warn); border-color: rgba(255,196,107,.3); background: rgba(255,196,107,.07); }
+  .p5 { color: var(--ok); border-color: rgba(126,201,161,.3); background: rgba(126,201,161,.06); }
+  .p6 { color: var(--info); border-color: rgba(106,167,216,.3); background: rgba(106,167,216,.06); }
+  .p7 { color: var(--graphite); border-color: var(--line); background: transparent; }
+  td.unit { color: #9fd0b4; white-space: nowrap; max-width: 24ch; overflow: hidden; text-overflow: ellipsis; font-size: 0.88rem; }
+  td.unit .host { color: #566072; }
+  td.msg { font-size: 0.88rem; line-height: 1.45; color: #c9cfd8; max-width: 90ch; }
+  td.msg mark { background: rgba(232,184,75,.25); color: var(--pencil); border-radius: 2px; padding: 0 2px; }
+  td.ai { width: 30px; text-align: center; }
+  .brain {
+    opacity: 0; transition: opacity .12s;
+    color: var(--pencil); font-size: 0.95rem;
+  }
+  tr:hover .brain { opacity: .8; }
+
+  /* ── Status bar ─────────────────────── */
+  .statusbar {
+    display: flex; align-items: center; gap: 1.2rem;
+    padding: 0.4rem 1.4rem;
+    background: var(--ink-2);
+    border-top: 1px solid var(--line);
+    color: var(--graphite); font-size: 0.74rem;
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 8px var(--ok);
+    animation: pulse 2s infinite;
+    display: inline-block; margin-right: 0.4rem;
+  }
+  @keyframes pulse { 50% { opacity: .4; } }
+  .statusbar .spacer { flex: 1; }
+  .statusbar a { color: var(--graphite); text-decoration: none; }
+  .statusbar a:hover { color: var(--chalk); }
+
+  /* ── Detail drawer ──────────────────── */
+  .drawer {
+    position: fixed; top: 0; right: -460px;
+    width: 440px; height: 100vh;
+    background: var(--ink-2);
+    border-left: 1px solid var(--line);
+    box-shadow: -20px 0 50px rgba(0,0,0,.45);
+    transition: right .22s cubic-bezier(.2,.8,.2,1);
+    display: flex; flex-direction: column;
+    z-index: 50;
+  }
+  .drawer.open { right: 0; }
+  .drawer-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.9rem 1.1rem 0.7rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .drawer-head h2 { font-family: var(--sans); font-size: 0.95rem; margin: 0; font-weight: 600; }
+  .drawer-close { background: none; border: none; color: var(--graphite); font-size: 1rem; cursor: pointer; }
+  .drawer-close:hover { color: var(--chalk); }
+  .drawer-body { padding: 1rem 1.1rem; overflow-y: auto; flex: 1; }
+  .kv { display: grid; grid-template-columns: 110px 1fr; gap: 0.35rem 0.8rem; font-size: 0.8rem; margin-bottom: 1.1rem; }
+  .kv dt { color: var(--graphite); }
+  .kv dd { margin: 0; word-break: break-word; }
+  .raw {
+    background: var(--ink-0); border: 1px solid var(--line); border-radius: 8px;
+    padding: 0.8rem; font-size: 0.76rem; line-height: 1.5;
+    color: #aeb6c2; white-space: pre-wrap; word-break: break-word;
+    margin: 0 0 1.1rem;
+  }
+  .ai-note {
+    border: 1px solid rgba(232,184,75,.3);
+    background: rgba(232,184,75,.06);
+    border-radius: 8px; padding: 0.8rem 0.9rem;
+    font-family: var(--sans); font-size: 0.8rem; line-height: 1.55;
+    color: #d8cba6;
+  }
+  .ai-note b { color: var(--pencil); }
+  .scrim {
+    position: fixed; inset: 0; background: rgba(0,0,0,.35);
+    opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40;
+  }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>grafito</h1>
+      <small>journalctl, sharpened</small>
+    </div>
+  </header>
+
+  <div class="omnibox-wrap">
+    <div class="omnibox">
+      <span class="glyph">›</span>
+      <input placeholder="Search, or type a query:  unit:nginx prio:err since:1h failed" spellcheck="false"/>
+      <kbd>⌘K</kbd>
+    </div>
+  </div>
+
+  <div>
+    <div class="timeline" aria-hidden="true"></div>
+    <div class="tl-meta">
+      <span>12:00 — now</span>
+      <span><b>14 errors</b> · 6 warnings in view</span>
+      <span>live · 10s</span>
+    </div>
+  </div>
+
+  <div class="stream">
+    <table>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <div class="statusbar">
+    <span><span class="live-dot"></span>live tail on</span>
+    <span>5,000 entries · 1,240 shown</span>
+    <span class="spacer"></span>
+    <span>mindy · system</span>
+    <a href="#">journalctl ⇥</a>
+    <a href="#">export</a>
+    <a href="#">share</a>
+  </div>
+
+  <div class="scrim" onclick="closeDrawer()"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <h2>Entry detail</h2>
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div class="drawer-body">
+      <dl class="kv">
+        <dt>Timestamp</dt><dd>2026-09-10 12:52:51.482 —03</dd>
+        <dt>Priority</dt><dd><span class="tag p3">error</span></dd>
+        <dt>Unit</dt><dd>getty@ttyUSB0.service</dd>
+        <dt>Hostname</dt><dd>mindy</dd>
+        <dt>Tag</dt><dd>sshd</dd>
+        <dt>Cursor</dt><dd style="font-size:.72rem;color:var(--graphite)">s=efa805…;i=3077…;b=43f9…</dd>
+      </dl>
+      <pre class="raw">{
+  "MESSAGE": "Failed at step STDIN spawning /sbin/agetty: No such file or directory",
+  "PRIORITY": "3",
+  "_SYSTEMD_UNIT": "getty@ttyUSB0.service",
+  "_HOSTNAME": "mindy",
+  "__REALTIME_TIMESTAMP": "1789031571482"
+}</pre>
+      <div class="ai-note">
+        <b>🧠 Why this happens</b> — a serial getty is configured on <code>ttyUSB0</code>,
+        but no such device exists, so systemd fails it on every restart attempt.
+        Disable the unit with
+        <code>systemctl disable getty@ttyUSB0.service</code>, or fix the
+        <code>serial-getty</code> generator configuration.
+      </div>
+    </div>
+  </aside>
+
+<script>
+  const entries = [
+    ["12:52:54","3","getty@ttyUSB0.service","mindy","Failed at step STDIN spawning /sbin/agetty: No such file or directory"],
+    ["12:52:54","3","getty@ttyUSB0.service","mindy","Failed to set up standard input: No such file or directory"],
+    ["12:52:52","3","nginx.service","mindy","upstream timed out (110: Connection timed out) while reading response header from upstream, client: 10.0.0.8"],
+    ["12:52:52","4","docker.service","mindy","container webapp_prod_1 (image: registry.local/webapp:1.42) exited with code 137"],
+    ["12:52:51","5","init.scope","mindy","tocry.service: Main process exited, code=exited, status=127/n/a"],
+    ["12:52:51","3","sshd.service","mindy","Failed password for invalid user admin from 203.0.113.42 port 41022 ssh2"],
+    ["12:52:50","6","systemd","mindy","Started Daily Cleanup of Temporary Directories."],
+    ["12:52:49","6","postgresql.service","mindy","checkpoint starting: time"],
+    ["12:52:48","4","myapp.service","mindy","unhandled rejection: TypeError: Cannot read properties of undefined (reading 'retry_count')"],
+    ["12:52:46","6","cron.service","mindy","(root) CMD (run-parts /etc/cron.hourly)"],
+    ["12:52:45","3","kernel","mindy","NVRM: Xid (PCI:0000:01:00): 13, Graphics Exception on graphics pipeline"],
+    ["12:52:44","7","systemd-journald","mindy","Suppressed 412 messages from 'getty@ttyUSB0.service'"],
+    ["12:52:42","6","redis-server.service","mindy","Background saving started by pid 4210"],
+    ["12:52:40","3","getty@ttyUSB0.service","mindy","Failed at step STDIN spawning /sbin/agetty: No such file or directory"],
+    ["12:52:38","4","nginx.service","beta-2","worker_connections are not enough, client: 10.0.0.31, server: api.internal"],
+    ["12:52:36","6","kernel","mindy","usb 1-4: new high-speed USB device number 12 using xhci_hcd"],
+    ["12:52:34","5","init.scope","gamma","apt-daily.service: Deactivated successfully."],
+    ["12:52:31","3","myapp.service","mindy","ECONNREFUSED 127.0.0.1:5432 — retry 3 of 5 in 4s"],
+    ["12:52:30","6","systemd","gamma","Reached target Multi-User System."],
+    ["12:52:28","4","smartd","mindy","Device: /dev/sda, SMART Usage Attribute: 194 Temperature_Celsius changed from 118 to 121"],
+    ["12:52:26","3","sshd.service","beta-2","Invalid user oracle from 198.51.100.7 port 55280"],
+    ["12:52:24","6","anacron","mindy","Will run job `cron.daily' in 5 min."],
+    ["12:52:22","7","systemd-journald","beta-2","Oldest journal entry: 2026-08-14 09:11:02"],
+    ["12:52:20","3","nginx.service","mindy","open() \"/var/log/nginx/api.access.log\" failed (24: Too many open files)"],
+    ["12:52:18","6","postgresql.service","mindy","database system is ready to accept connections"],
+    ["12:52:16","5","NetworkManager","gamma","device (wlan0): supplicant management connection state changed:_completed"],
+    ["12:52:14","4","docker.service","mindy","Health check for container db_replica_2: timeout after 5s"],
+    ["12:52:12","6","systemd-logind","mindy","New session 4721 of user ralsina."],
+    ["12:52:10","3","kernel","mindy","EXT4-fs error (device sda2): ext4_find_entry:1455: inode #2: comm ls: bad entry in directory"],
+    ["12:52:08","7","cron.service","beta-2","(CRON) INFO (pidfile fd 3 is not locked)"],
+    ["12:52:06","5","systemd","mindy","Finished Rotate log files."],
+    ["12:52:04","3","myapp.service","mindy","FATAL: worker loop crashed, initiating shutdown"],
+  ];
+  const priclass = p => ["p0","p1","p2","p3","p4","p5","p6","p7"][+p];
+  const priname  = p => ["emerg","alert","crit","error","warn","notice","info","debug"][+p];
+
+  const rows = document.getElementById("rows");
+  entries.forEach(([ts, pri, unit, host, msg], idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td class="ts">Sep 10 <b>${ts}</b></td>` +
+      `<td class="pri"><span class="tag ${priclass(pri)}">${priname(pri)}</span></td>` +
+      `<td class="unit">${unit}<br/><span class="host">${host}</span></td>` +
+      `<td class="msg">${msg}</td>` +
+      `<td class="ai" title="Explain with AI">🧠</td>`;
+    tr.addEventListener("click", () => {
+      document.querySelectorAll("tr.open").forEach(el => el.classList.remove("open"));
+      tr.classList.add("open");
+      document.getElementById("drawer").classList.add("open");
+      document.querySelector(".scrim").classList.add("show");
+    });
+    rows.appendChild(tr);
+  });
+
+  // Fake severity timeline: 48 buckets of [err, warn, info] heights
+  const tl = document.querySelector(".timeline");
+  const seed = [1,2,0,1,3,2,1,0,4,6,3,1,2,5,8,4,2,1,0,2,3,6,9,4,2,1,1,3,2,5,7,3,2,1,0,1,4,2,2,6,3,1,2,0,1,2,3,5];
+  seed.forEach(n => {
+    const col = document.createElement("div");
+    col.className = "tl-col";
+    col.innerHTML =
+      `<div class="i" style="height:${2 + n*2}px"></div>` +
+      `<div class="w" style="height:${n > 3 ? 5 : 0}px"></div>` +
+      `<div class="e" style="height:${n > 5 ? 7 : n > 2 ? 3 : 0}px"></div>`;
+    tl.appendChild(col);
+  });
+
+  function closeDrawer() {
+    document.getElementById("drawer").classList.remove("open");
+    document.querySelector(".scrim").classList.remove("show");
+  }
+</script>
+</body>
+</html>

@@ -159,7 +159,7 @@ class Journalctl
     end
 
     # Converts a Time object to the configured timezone
-    private def convert_to_timezone(time : Time) : Time
+    def convert_to_timezone(time : Time) : Time
       # Normalize timezone string: strip whitespace and leading slashes
       # This handles cases where /etc/timezone contains "Etc/UTC" but gets read as "/UTC"
       timezone_config = Grafito.timezone.strip.lstrip('/')

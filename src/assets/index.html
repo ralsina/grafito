@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-ui="mission" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Chivo:wght@300;400;600;700&family=Chivo+Mono:wght@300;400;500&family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Space+Grotesk:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <link
@@ -51,93 +51,92 @@
       </article>
     </dialog>
 
-    <div id="page-content-layout" class="container-fluid">
-      <button
-        id="toggle-sidebar-btn"
-        class="secondary"
-        aria-expanded="true"
-        aria-controls="filters-sidebar"
-        title="Hide Filters Sidebar"
-      >
-        <span class="material-icons" style="vertical-align: middle">menu</span>
-      </button>
-      <aside id="filters-sidebar">
-        <hgroup class="sidebar-header-info" style="text-align: right">
-          <h1>
-            <a href="https://grafito.ralsina.me" class="grafito-title-link"
-              >Grafito</a
-            >
-          </h1>
-          <span>A simple log viewer</span>
-        </hgroup>
-        <hr />
-        <div class="search-container-wrapper">
+    <div id="app-shell">
+      <header id="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <a
+            href="https://grafito.ralsina.me"
+            class="grafito-title-link"
+            title="Grafito home"
+            >grafito</a
+          >
+          <span class="brand-sub" id="brand-sub">log viewer</span>
+        </div>
+
+        <div class="omnibox" id="search-omnibox">
+          <span class="omnibox-glyph" aria-hidden="true">⌕</span>
           <input
             type="search"
             id="search-box"
-            placeholder="Search logs..."
+            placeholder="Search logs… (journalctl -g)"
             title="Enter text to search in log messages (uses journalctl -g)"
             hx-get="logs"
-            hx-trigger="keyup changed delay:500ms"
+            hx-trigger="input changed delay:600ms"
             hx-target="#results"
             name="q"
             class="log-filter"
             hx-indicator="#loading-spinner"
             hx-include=".log-filter"
           />
+          <kbd>grep</kbd>
         </div>
 
-        <!-- AI Provider Section -->
-        <details id="ai-section" class="filter-group-controls">
-          <summary
-            role="button"
-            class="secondary outline"
-            style="font-weight: bold; margin-bottom: var(--pico-form-element-spacing-vertical);"
-          >
-            🤖 AI Provider
-          </summary>
-          <div id="ai-provider-content" style="padding: 0.5rem;">
-            <div id="ai-loading" style="color: var(--pico-muted-color); font-size: 0.85em;">
-              Loading providers...
-            </div>
-            <div id="ai-disabled" style="display: none; color: var(--pico-muted-color); font-size: 0.85em;">
-              <p style="margin: 0;">AI features disabled.</p>
-              <p style="margin: 0.5rem 0 0 0; font-size: 0.9em;">Set an API key to enable:</p>
-              <ul style="margin: 0.25rem 0; padding-left: 1rem; font-size: 0.8em;">
-                <li><code>ANTHROPIC_API_KEY</code></li>
-                <li><code>OPENAI_API_KEY</code></li>
-                <li><code>GROQ_API_KEY</code></li>
-              </ul>
-            </div>
-            <div id="ai-enabled" style="display: none;">
-              <div>
-                <select id="ai-provider-select" title="Select AI provider for log explanations">
-                </select>
-              </div>
-              <div style="margin-top: 0.5rem;">
-                <select id="ai-model-select" title="Select AI model">
-                  <option value="">Loading models...</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </details>
+        <select
+          id="time-range-filter"
+          name="since"
+          class="log-filter topbar-select"
+          title="Filter logs by time range"
+          hx-get="logs"
+          hx-trigger="change"
+          hx-target="#results"
+          hx-indicator="#loading-spinner"
+          hx-include=".log-filter"
+        >
+          <option value="">Any time</option>
+          <option value="-15m">15 min</option>
+          <option value="-1h">1 hour</option>
+          <option value="-1d">24 hours</option>
+          <option value="-7d">Week</option>
+          <option value="-1M">Month</option>
+          <option value="-3M">3 months</option>
+          <option value="-1y">Year</option>
+        </select>
 
-        <details class="filter-group-controls" open>
+        <select
+          id="priority-filter"
+          name="priority"
+          class="log-filter topbar-select"
+          title="Filter logs by priority level (show this severity and worse)"
+          hx-get="logs"
+          hx-trigger="change"
+          hx-target="#results"
+          hx-indicator="#loading-spinner"
+          hx-include=".log-filter"
+        >
+          <option value="0">Emergency</option>
+          <option value="1">Alert</option>
+          <option value="2">Critical</option>
+          <option value="3">Error</option>
+          <option value="4">Warning</option>
+          <option value="5" selected>Notice</option>
+          <option value="6">Info</option>
+          <option value="7">Debug</option>
+        </select>
+
+        <!-- Collapsible panel: advanced filters, columns, AI provider -->
+        <details id="filter-panel">
           <summary
             role="button"
-            class="secondary outline"
-            style="
-              font-weight: bold;
-              margin-bottom: var(--pico-form-element-spacing-vertical);
-            "
+            class="topbar-tool"
+            title="Advanced filters: unit, tag, hostname, columns, AI"
           >
-            Advanced Filters
+            <span class="material-icons" aria-hidden="true">tune</span>
+            <span class="topbar-tool-label">Filters</span>
           </summary>
-          <div>
-            <hr style="margin-top: var(--pico-form-element-spacing-vertical)" />
-            <!-- Unit and Tag Filters -->
-            <div>
+          <div id="filter-panel-content">
+            <div class="filter-panel-section">
+              <h4>Filter by</h4>
               <input
                 type="text"
                 id="unit-filter"
@@ -146,29 +145,25 @@
                 placeholder="Unit (e.g., docker)"
                 title="Filter logs by systemd unit (e.g., nginx)"
                 hx-get="logs"
-                hx-trigger="keyup delay:500ms, change delay:500ms, immediateUnitFilterUpdate"
+                hx-trigger="input changed delay:600ms, immediateUnitFilterUpdate"
                 hx-target="#results"
                 class="log-filter"
                 hx-indicator="#loading-spinner"
                 hx-include=".log-filter"
               />
-            </div>
-            <div>
               <input
                 type="text"
                 id="tag-filter"
                 name="tag"
-                placeholder="Syslog Tag (e.g., myapp)"
+                placeholder="Syslog tag (e.g., myapp)"
                 title="Filter logs by syslog identifier (tag)"
                 hx-get="logs"
-                hx-trigger="keyup changed delay:500ms"
+                hx-trigger="input changed delay:600ms"
                 hx-target="#results"
                 class="log-filter"
                 hx-indicator="#loading-spinner"
                 hx-include=".log-filter"
               />
-            </div>
-            <div>
               <input
                 type="text"
                 id="hostname-filter"
@@ -176,7 +171,7 @@
                 placeholder="Hostname (e.g., server1)"
                 title="Filter logs by hostname (_HOSTNAME)"
                 hx-get="logs"
-                hx-trigger="keyup delay:500ms, change delay:500ms, immediateHostnameFilterUpdate"
+                hx-trigger="input changed delay:600ms, immediateHostnameFilterUpdate"
                 hx-target="#results"
                 class="log-filter"
                 hx-indicator="#loading-spinner"
@@ -184,276 +179,215 @@
               />
             </div>
 
-            <!-- Time and Priority Filters -->
-            <div>
-              <select
-                id="time-range-filter"
-                name="since"
-                hx-get="logs"
-                title="Filter logs by time range"
-                hx-trigger="change"
-                hx-target="#results"
-                class="log-filter"
-                hx-indicator="#loading-spinner"
-                hx-include=".log-filter"
-              >
-                <option value="">Any time</option>
-                <option value="-15m">Last 15 minutes</option>
-                <option value="-1h">Last 1 hour</option>
-                <option value="-1d">Last 24 hours</option>
-                <option value="-7d">Last week</option>
-                <option value="-1M">Last month</option>
-                <option value="-3M">Last 3 months</option>
-                <option value="-1y">Last year</option>
-              </select>
+            <div class="filter-panel-section">
+              <h4>Columns</h4>
+              <div class="column-toggles">
+                <label
+                  ><input
+                    type="checkbox"
+                    id="col-visible-timestamp"
+                    name="col-visible-timestamp"
+                    class="log-filter"
+                    role="switch"
+                    hx-get="logs"
+                    hx-target="#results"
+                    hx-indicator="#loading-spinner"
+                    hx-include=".log-filter"
+                    hx-trigger="change"
+                    checked
+                  />
+                  Timestamp</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    id="col-visible-hostname"
+                    name="col-visible-hostname"
+                    class="log-filter"
+                    role="switch"
+                    hx-get="logs"
+                    hx-target="#results"
+                    hx-indicator="#loading-spinner"
+                    hx-include=".log-filter"
+                    hx-trigger="change"
+                    checked
+                  />
+                  Hostname</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    id="col-visible-unit"
+                    name="col-visible-unit"
+                    class="log-filter"
+                    role="switch"
+                    hx-get="logs"
+                    hx-target="#results"
+                    hx-indicator="#loading-spinner"
+                    hx-include=".log-filter"
+                    hx-trigger="change"
+                    checked
+                  />
+                  Unit</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    id="col-visible-priority"
+                    name="col-visible-priority"
+                    class="log-filter"
+                    role="switch"
+                    hx-get="logs"
+                    hx-target="#results"
+                    hx-indicator="#loading-spinner"
+                    hx-include=".log-filter"
+                    hx-trigger="change"
+                    checked
+                  />
+                  Priority</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    id="col-visible-message"
+                    name="col-visible-message"
+                    class="log-filter"
+                    role="switch"
+                    hx-get="logs"
+                    hx-target="#results"
+                    hx-indicator="#loading-spinner"
+                    hx-include=".log-filter"
+                    hx-trigger="change"
+                    checked
+                  />
+                  Message</label
+                >
+              </div>
             </div>
-            <div>
-              <select
-                id="priority-filter"
-                name="priority"
-                hx-get="logs"
-                title="Filter logs by priority level"
-                hx-trigger="change"
-                hx-target="#results"
-                class="log-filter"
-                hx-indicator="#loading-spinner"
-                hx-include=".log-filter"
-              >
-                <option value="0">Emergency</option>
-                <option value="1">Alert</option>
-                <option value="2">Critical</option>
-                <option value="3">Error</option>
-                <option value="4">Warning</option>
-                <option value="5" selected>Notice</option>
-                <option value="6">Informational</option>
-                <option value="7">Debug</option>
-              </select>
+
+            <div class="filter-panel-section">
+              <h4>AI provider</h4>
+              <div id="ai-loading" class="muted-note">
+                Loading providers…
+              </div>
+              <div id="ai-disabled" class="muted-note" style="display: none">
+                <p style="margin: 0">AI features disabled.</p>
+                <p style="margin: 0.5rem 0 0 0">
+                  Set an API key to enable:
+                </p>
+                <ul>
+                  <li><code>ANTHROPIC_API_KEY</code></li>
+                  <li><code>OPENAI_API_KEY</code></li>
+                  <li><code>GROQ_API_KEY</code></li>
+                </ul>
+              </div>
+              <div id="ai-enabled" style="display: none">
+                <select
+                  id="ai-provider-select"
+                  title="Select AI provider for log explanations"
+                ></select>
+                <select
+                  id="ai-model-select"
+                  title="Select AI model"
+                  style="margin-top: 0.5rem"
+                >
+                  <option value="">Loading models…</option>
+                </select>
+              </div>
             </div>
           </div>
         </details>
 
-        <!-- Column Visibility Toggles -->
-        <details class="column-visibility-controls">
-          <summary
-            role="button"
-            class="secondary outline"
-            style="
-              font-weight: bold;
-              margin-bottom: var(--pico-form-element-spacing-vertical);
-            "
+        <div class="topbar-actions">
+          <button
+            id="show-command-button"
+            class="topbar-tool"
+            aria-label="Show equivalent command"
+            title="Show equivalent journalctl command"
+            hx-get="command"
+            hx-include=".log-filter"
+            hx-trigger="click"
+            hx-swap="none"
+            hx-on:htmx:after-request="if(event.detail.successful) alert('These filters are the equivalent of: ' + event.detail.xhr.responseText); else alert('Error fetching command: ' + event.detail.xhr.statusText + '\\nCheck console for more details.');"
           >
-            Column Visibility
-          </summary>
-          <div>
-            <!-- Content of the collapsible section -->
-            <hr style="margin-top: var(--pico-form-element-spacing-vertical)" />
-            <div>
-              <label for="col-visible-timestamp"
-                ><input
-                  type="checkbox"
-                  id="col-visible-timestamp"
-                  name="col-visible-timestamp"
-                  class="log-filter"
-                  role="switch"
-                  hx-get="logs"
-                  hx-target="#results"
-                  hx-indicator="#loading-spinner"
-                  hx-include=".log-filter"
-                  hx-trigger="change"
-                  checked
-                />
-                Timestamp</label
-              >
-            </div>
-            <div>
-              <label for="col-visible-hostname"
-                ><input
-                  type="checkbox"
-                  id="col-visible-hostname"
-                  name="col-visible-hostname"
-                  class="log-filter"
-                  role="switch"
-                  hx-get="logs"
-                  hx-target="#results"
-                  hx-indicator="#loading-spinner"
-                  hx-include=".log-filter"
-                  hx-trigger="change"
-                  checked
-                />
-                Hostname</label
-              >
-            </div>
-            <div>
-              <label for="col-visible-unit"
-                ><input
-                  type="checkbox"
-                  id="col-visible-unit"
-                  name="col-visible-unit"
-                  class="log-filter"
-                  role="switch"
-                  hx-get="logs"
-                  hx-target="#results"
-                  hx-indicator="#loading-spinner"
-                  hx-include=".log-filter"
-                  hx-trigger="change"
-                  checked
-                />
-                Unit</label
-              >
-            </div>
-            <div>
-              <label for="col-visible-priority"
-                ><input
-                  type="checkbox"
-                  id="col-visible-priority"
-                  name="col-visible-priority"
-                  class="log-filter"
-                  role="switch"
-                  hx-get="logs"
-                  hx-target="#results"
-                  hx-indicator="#loading-spinner"
-                  hx-include=".log-filter"
-                  hx-trigger="change"
-                  checked
-                />
-                Priority</label
-              >
-            </div>
-            <div>
-              <label for="col-visible-message"
-                ><input
-                  type="checkbox"
-                  id="col-visible-message"
-                  name="col-visible-message"
-                  class="log-filter"
-                  role="switch"
-                  hx-get="logs"
-                  hx-target="#results"
-                  hx-indicator="#loading-spinner"
-                  hx-include=".log-filter"
-                  hx-trigger="change"
-                  checked
-                />
-                Message</label
-              >
-            </div>
-            <!-- Note: Action columns (Details, Context) are not included here as they are typically always desired -->
-          </div>
-        </details>
-        <div class="sidebar-actions-area">
-          <!-- Help button for command -->
-          <div class="sidebar-buttons-row">
-            <button
-              id="show-command-button"
-              class="secondary"
-              aria-label="Show equivalent command"
-              title="Show equivalent journalctl command"
-              hx-get="command"
-              hx-include=".log-filter"
-              hx-trigger="click"
-              hx-swap="none"
-              hx-on:htmx:after-request="if(event.detail.successful) alert('These filters are the equivalent of: ' + event.detail.xhr.responseText); else alert('Error fetching command: ' + event.detail.xhr.statusText + '\\nCheck console for more details.');"
-            >
-              <span class="material-icons" style="vertical-align: middle"
-                >help_outline</span
-              >
-            </button>
-            <button
-              id="clear-filters-btn"
-              class="secondary"
-              title="Clear all filters"
-            >
-              <span class="material-icons" style="vertical-align: middle"
-                >clear</span
-              >
-            </button>
-            <button
-              id="copy-link-button"
-              class="secondary"
-              aria-label="Copy shareable link"
-              title="Copy link with current filters"
-              onclick="copyShareableLink()"
-            >
-              <span class="material-icons" style="vertical-align: middle"
-                >link</span
-              >
-            </button>
-            <button
-              id="export-logs-button"
-              class="secondary"
-              aria-label="Export logs"
-              title="Export current logs as text"
-              onclick="exportLogsAsText()"
-            >
-              <span class="material-icons" style="vertical-align: middle"
-                >save_alt</span
-              >
-            </button>
-            <div class="live-view-controls">
-              <label
-                for="live-view"
-                title="Toggle live log updates every 10 seconds"
-              >
-                <input
-                  type="checkbox"
-                  id="live-view"
-                  name="live-view"
-                  role="switch"
-                  class="log-filter"
-                  hx-get="logs"
-                  hx-target="#results"
-                  hx-indicator="#loading-spinner"
-                />
-                Live
-              </label>
-            </div>
-          </div>
+            <span class="material-icons" aria-hidden="true">terminal</span>
+            <span class="topbar-tool-label">Command</span>
+          </button>
+          <button
+            id="clear-filters-btn"
+            class="topbar-tool icon-only"
+            aria-label="Clear all filters"
+            title="Clear all filters"
+          >
+            <span class="material-icons" aria-hidden="true">restart_alt</span>
+          </button>
+          <button
+            id="copy-link-button"
+            class="topbar-tool icon-only"
+            aria-label="Copy shareable link"
+            title="Copy link with current filters"
+            onclick="copyShareableLink()"
+          >
+            <span class="material-icons" aria-hidden="true">link</span>
+          </button>
+          <button
+            id="export-logs-button"
+            class="topbar-tool icon-only"
+            aria-label="Export logs"
+            title="Export current logs as text"
+            onclick="exportLogsAsText()"
+          >
+            <span class="material-icons" aria-hidden="true">download</span>
+          </button>
+          <label
+            class="live-toggle"
+            for="live-view"
+            title="Toggle live log updates every 10 seconds"
+          >
+            <input
+              type="checkbox"
+              id="live-view"
+              name="live-view"
+              role="switch"
+              class="log-filter"
+              hx-get="logs"
+              hx-target="#results"
+              hx-indicator="#loading-spinner"
+            />
+            <span class="live-dot" aria-hidden="true"></span>
+            <span class="topbar-tool-label">Live</span>
+          </label>
         </div>
-        <datalist id="unit-suggestions"></datalist>
-        <footer class="container-fluid">
-          <a href="https://links.ralsina.me" style="text-decoration: none"
-            ><span class="material-icons" style="vertical-align: middle"
-              >directions_run</span
-            >
-            Roberto Alsina</a
-          >
-          <span> | </span>
-          <a href="https://grafito.ralsina.me"
-            ><span class="material-icons" style="vertical-align: middle"
-              >home</span
-            ></a
-          >
-          <span> | </span>
-          <a href="https://github.com/ralsina/grafito"
-            ><span class="material-icons" style="vertical-align: middle"
-              >code</span
-            ></a
-          >
-          <hr />
-          <div class="theme-switch-wrapper">
-            <label for="theme-switch" title="Toggle light/dark mode">
-              <span class="material-icons" style="vertical-align: middle"
-                >light_mode</span
-              >
-              <input
-                type="checkbox"
-                id="theme-switch"
-                name="theme"
-                role="switch"
-                style="margin: 0"
-              />
-              <span class="material-icons" style="vertical-align: middle"
-                >dark_mode</span
-              >
-            </label>
-          </div>
-        </footer>
-      </aside>
-      <main>
+      </header>
+
+      <div id="stats-strip" aria-label="Log statistics">
+        <div class="stat">
+          <span class="stat-label">Entries</span>
+          <span class="stat-value" id="stat-total">–</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Errors</span>
+          <span class="stat-value stat-error" id="stat-errors">–</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Warnings</span>
+          <span class="stat-value stat-warn" id="stat-warnings">–</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Active units</span>
+          <span class="stat-value" id="stat-units">–</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Noisiest unit</span>
+          <span class="stat-value stat-small" id="stat-noisiest">–</span>
+        </div>
+      </div>
+
+      <main id="stream">
         <!-- Spinner Element -->
         <div id="loading-spinner" class="htmx-indicator">
           <div>
-            Loading...
+            Loading…
             <span aria-busy="true"></span>
           </div>
         </div>
@@ -478,91 +412,203 @@
           <!-- Results will be displayed here -->
         </div>
       </main>
+
+      <aside id="minimap">
+        <button
+          id="minimap-top"
+          title="Scroll to top"
+          aria-label="Scroll to top"
+        >
+          <span class="material-icons" aria-hidden="true">north</span>
+        </button>
+        <div id="minimap-track"></div>
+        <span class="minimap-label">60 min</span>
+      </aside>
+
+      <footer id="statusbar">
+        <a href="https://ralsina.me">Roberto Alsina</a>
+        <span class="statusbar-sep">·</span>
+        <a href="https://grafito.ralsina.me">grafito</a>
+        <span class="statusbar-sep">·</span>
+        <a href="https://github.com/ralsina/grafito">code</a>
+        <span class="statusbar-spacer"></span>
+        <div
+          id="mode-switcher"
+          role="group"
+          aria-label="Interface mode"
+          title="Interface mode"
+        >
+          <button
+            data-ui-mode="graphite"
+            title="Graphite: dark, dense, terminal-style"
+          >
+            Graphite
+          </button>
+          <button
+            data-ui-mode="fieldnotes"
+            title="Field Notes: light, editorial, paper-style"
+          >
+            Notes
+          </button>
+          <button
+            data-ui-mode="mission"
+            title="Mission Control: stats, inspector and minimap"
+          >
+            Mission
+          </button>
+        </div>
+        <label class="theme-switch-wrapper" for="theme-switch">
+          <span class="material-icons" aria-hidden="true">light_mode</span>
+          <input
+            type="checkbox"
+            id="theme-switch"
+            name="theme"
+            role="switch"
+            style="margin: 0"
+          />
+          <span class="material-icons" aria-hidden="true">dark_mode</span>
+        </label>
+      </footer>
     </div>
 
-    <!-- Details Dialog -->
-    <dialog id="details-dialog">
-      <article>
-        <header>
-          <a
-            href="#close"
-            aria-label="Close"
-            class="close"
-            onclick="this.closest('dialog').close(); return false;"
-          ></a>
-          Log Entry Details
-        </header>
-        <div
-          id="details-dialog-content"
-          style="max-height: 70vh; overflow-y: auto"
-        >
-          <!-- Content will be loaded here by HTMX -->
-        </div>
-        <template id="details-dialog-loading-spinner-template">
-          <div style="text-align: center; padding: 2em">
-            <span aria-busy="true">Loading details...</span>
-          </div>
-        </template>
-        <footer>
-          <form method="dialog" style="margin-bottom: 0">
-            <button type="submit" class="secondary">Close</button>
-          </form>
-        </footer>
-      </article>
-    </dialog>
+    <datalist id="unit-suggestions"></datalist>
 
-    <!-- AI Explanation Dialog -->
-    <dialog id="ai-explanation-dialog">
-      <article>
-        <header>
-          <a
-            href="#close"
-            aria-label="Close"
-            class="close"
-            onclick="this.closest('dialog').close(); return false;"
-          ></a>
-          AI Log Explanation
-        </header>
-        <!-- Target Log Entry Section -->
-        <div id="target-log-entry" style="margin: 1rem 0; padding: 1rem; background-color: var(--pico-background-color, #fff); border: 1px solid var(--pico-muted-border-color, #e1e1e1); border-radius: var(--border-radius); font-family: 'Chivo Mono', monospace; font-size: 0.9em; word-break: break-word;">
-          <!-- Target log entry will be shown here -->
-        </div>
-        <div
-          id="ai-explanation-dialog-content"
-          class="ai-markdown-content"
-          style="max-height: 60vh; overflow-y: auto"
+    <!-- Entry inspector side panel: Detail / Context / AI tabs -->
+    <aside
+      id="side-panel"
+      aria-label="Entry inspector"
+      role="complementary"
+    >
+      <div id="side-panel-tabs">
+        <button
+          class="insp-tab active"
+          data-tab="detail"
+          role="tab"
+          aria-selected="true"
+          title="Entry details"
         >
-          <!-- Content will be loaded here by JavaScript -->
+          Detail
+        </button>
+        <button
+          class="insp-tab"
+          data-tab="context"
+          role="tab"
+          aria-selected="false"
+          title="Surrounding log entries"
+        >
+          Context
+        </button>
+        <button
+          class="insp-tab"
+          data-tab="ai"
+          role="tab"
+          aria-selected="false"
+          title="AI explanation (if AI is configured)"
+        >
+          AI
+        </button>
+        <button
+          id="side-panel-close"
+          class="insp-close"
+          title="Close panel (Esc)"
+          aria-label="Close panel"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="insp-pane active" data-pane="detail">
+        <div id="panel-detail-content" class="insp-content">
+          <p class="muted-note" style="padding: 1em">
+            Select an entry to inspect it — click a row, or use the row's
+            magnifier button.
+          </p>
         </div>
-        <template id="ai-explanation-loading-template">
-          <div style="text-align: center; padding: 2em">
-            <span aria-busy="true">Getting AI explanation...</span>
+      </div>
+
+      <div class="insp-pane" data-pane="context">
+        <div id="panel-context-content" class="insp-content">
+          <p class="muted-note" style="padding: 1em">
+            Use a row's clock button to load the surrounding log entries.
+          </p>
+        </div>
+      </div>
+
+      <div class="insp-pane" data-pane="ai">
+        <div class="insp-content">
+          <div id="target-log-entry">
+            <!-- Target log entry will be shown here -->
           </div>
-        </template>
-        <footer style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+          <div
+            id="ai-explanation-dialog-content"
+            class="ai-markdown-content"
+          >
+            <p class="muted-note" style="padding: 1em">
+              Use a row's 🧠 button to get an AI explanation, then refine it
+              with follow-up questions here.
+            </p>
+          </div>
+        </div>
+        <!-- Pinned below the scrolling answer so the reply box is always
+             visible, no matter how long the explanation is. -->
+        <div id="ai-followup-row">
+          <input
+            type="text"
+            id="ai-followup-input"
+            placeholder="Ask a follow-up… (e.g. “how do I stop these errors?”)"
+            title="Refine the AI explanation with a follow-up question"
+            autocomplete="off"
+          />
+          <button
+            id="ai-followup-send"
+            class="topbar-tool"
+            title="Send follow-up question"
+          >
+            Send
+          </button>
           <button
             id="copy-ai-explanation-btn"
-            class="secondary"
+            class="topbar-tool"
             onclick="copyAIExplanation()"
-            title="Copy AI explanation to clipboard"
+            title="Copy the first AI explanation to clipboard"
           >
-            <span class="material-icons" style="vertical-align: middle">content_copy</span>
-            Copy
+            <span
+              class="material-icons"
+              style="vertical-align: middle; font-size: 1rem"
+              >content_copy</span
+            >
           </button>
-          <form method="dialog" style="margin-bottom: 0">
-            <button type="submit" class="secondary">Close</button>
-          </form>
-        </footer>
-      </article>
-    </dialog>
+        </div>
+      </div>
+    </aside>
+
+    <template id="ai-explanation-loading-template">
+      <div class="ai-loading">
+        <span class="ai-loading-spinner" aria-hidden="true"></span>
+        <strong>Asking the AI to explain this entry…</strong>
+        <span class="ai-loading-sub"
+          >The model usually answers in 10&ndash;30 seconds. This panel
+          updates automatically.</span
+        >
+      </div>
+    </template>
+
+    <template id="details-dialog-loading-spinner-template">
+      <div style="text-align: center; padding: 2em">
+        <span aria-busy="true">Loading…</span>
+      </div>
+    </template>
 
     <script>
-      // Get base path from data attribute (set by BakedFileHandler for deployment flexibility)
-      const basePath = document.body.dataset.basePath || "/";
+      // Get base path from data attribute (set by BakedFileHandler for deployment flexibility),
+      // falling back to the path the page itself was served from, so that
+      // deployments under a base path (e.g. /grafito) work without config.
+      const pagePath = window.location.pathname.replace(/\/+$/, "");
+      const basePath = document.body.dataset.basePath || pagePath;
 
       // Helper to build URLs with proper base path handling
       function buildUrl(path) {
-        if (basePath === "/") {
+        if (basePath === "" || basePath === "/") {
           return "/" + path;
         } else {
           return basePath + "/" + path;
@@ -630,9 +676,8 @@
               console.error("HTMX Request Failed. Details:", event.detail); // For debugging
               let errorText =
                 event.detail.error.message || "Failed to send request";
-              // Using Pico's alert-like styling within the dialog content
               globalErrorDialogContent.innerHTML = `
-                <p role="alert" style="border: 1px solid var(--pico-form-element-invalid-border-color); background-color: var(--pico-form-element-invalid-background-color); color: var(--pico-color); padding: 1em; margin-bottom:0;">
+                <p role="alert" class="inline-alert">
                   <strong>Details:</strong> ${errorText}
                 </p>`;
               if (!globalErrorDialog.open) {
@@ -656,9 +701,8 @@
             const status = event.detail.xhr ? event.detail.xhr.status : "?";
             console.error("HTMX Request Failed. Status:", status, "Details:", event.detail);
             let errorText = `Server request failed (HTTP ${status})`;
-            // Using Pico's alert-like styling within the dialog content
             globalErrorDialogContent.innerHTML = `
-              <p role="alert" style="border: 1px solid var(--pico-form-element-invalid-border-color); background-color: var(--pico-form-element-invalid-background-color); color: var(--pico-color); padding: 1em; margin-bottom:0;">
+              <p role="alert" class="inline-alert">
                 <strong>Details:</strong> ${errorText}
               </p>`;
             if (!globalErrorDialog.open) {
@@ -669,13 +713,75 @@
             const target = event.detail.target || event.detail.elt;
             if (target && target.id === "results") {
               target.innerHTML = `
-                <p role="alert" style="border: 1px solid var(--pico-form-element-invalid-border-color); background-color: var(--pico-form-element-invalid-background-color); color: var(--pico-color); padding: 1em;">
+                <p role="alert" class="inline-alert">
                   Failed to load logs (HTTP ${status}). Check the server or adjust the filters, then reload.
                 </p>`;
             }
           });
         }
         // --- END GLOBAL HTMX ERROR HANDLER ---
+
+        // --- INTERFACE MODE SWITCHER ---
+        // Three looks, one document: 'graphite', 'fieldnotes' and 'mission'.
+        // The mode sets the palette and layout via data-ui on <html>; the
+        // light/dark switch still works within every mode.
+        const UI_MODES = ["graphite", "fieldnotes", "mission"];
+        const DEFAULT_MODE_THEME = {
+          graphite: "dark",
+          fieldnotes: "light",
+          mission: "dark",
+        };
+
+        function applyUiMode(mode) {
+          if (!UI_MODES.includes(mode)) {
+            mode = "mission";
+          }
+          document.documentElement.setAttribute("data-ui", mode);
+          localStorage.setItem("grafito-ui-mode", mode);
+          document.querySelectorAll("#mode-switcher button").forEach(
+            (button) => {
+              button.classList.toggle(
+                "active",
+                button.dataset.uiMode === mode
+              );
+            }
+          );
+          applyTheme(DEFAULT_MODE_THEME[mode]);
+          updateStatsAndMinimap();
+        }
+
+        const modeSwitcher = document.getElementById("mode-switcher");
+        if (modeSwitcher) {
+          modeSwitcher.addEventListener("click", function (event) {
+            const button = event.target.closest("button[data-ui-mode]");
+            if (button) {
+              applyUiMode(button.dataset.uiMode);
+            }
+          });
+          const savedMode = localStorage.getItem("grafito-ui-mode");
+          // A ?ui= URL parameter wins over the saved mode, so a mode can be
+          // shared or forced via link.
+          const urlMode = new URLSearchParams(window.location.search).get(
+            "ui"
+          );
+          const initialMode =
+            urlMode && UI_MODES.includes(urlMode)
+              ? urlMode
+              : savedMode && UI_MODES.includes(savedMode)
+                ? savedMode
+                : "mission";
+          document.documentElement.setAttribute("data-ui", initialMode);
+          localStorage.setItem("grafito-ui-mode", initialMode);
+          document
+            .querySelectorAll("#mode-switcher button")
+            .forEach((button) => {
+              button.classList.toggle(
+                "active",
+                button.dataset.uiMode === initialMode
+              );
+            });
+        }
+        // --- END INTERFACE MODE SWITCHER ---
 
         // --- THEME SWITCHER LOGIC ---
         const themeSwitch = document.getElementById("theme-switch");
@@ -692,17 +798,15 @@
           localStorage.setItem("theme", theme);
         }
 
-        // Apply initial theme: 1. localStorage, 2. OS preference, 3. Default to light
+        // Apply initial theme: 1. saved choice, 2. current mode's default.
+        // (An explicit user choice beats the mode default; the OS preference
+        // is only honored through the mode defaults.)
         const savedTheme = localStorage.getItem("theme");
         if (savedTheme) {
           applyTheme(savedTheme);
-        } else if (
-          window.matchMedia &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches
-        ) {
-          applyTheme("dark");
         } else {
-          applyTheme("light"); // Default
+          const initialUiMode = htmlElement.getAttribute("data-ui");
+          applyTheme(DEFAULT_MODE_THEME[initialUiMode] || "dark");
         }
 
         if (themeSwitch) {
@@ -879,110 +983,208 @@
                 element.value = paramValue;
               }
             } else if (config.type === "checkbox") {
-              // For checkboxes like 'live-view' or 'col-visible-*', they are included in URL if true (e.g., live-view=on).
-              // If the param is present and matches trueValue, it's checked.
-              // If the param is present but doesn't match (shouldn't happen for "on"), or if param is absent, it's unchecked.
-              // This correctly makes checkboxes reflect the URL state.
-              // Note: `params.get(config.param)` returns `null` if not present.
+              // Checkboxes are only present in the URL when checked (e.g. live-view=on).
               element.checked = params.get(config.param) === config.trueValue;
             }
           }
         });
 
-        // Sidebar Toggle Functionality
-        const toggleButton = document.getElementById("toggle-sidebar-btn");
-        const sidebar = document.getElementById("filters-sidebar");
-        const mainContent = document.querySelector("main"); // Assuming main content area
+        // Clear All Filters Button Functionality
+        const clearFiltersButton =
+          document.getElementById("clear-filters-btn");
+        if (clearFiltersButton) {
+          clearFiltersButton.addEventListener("click", function () {
+            // Reset text inputs
+            document.getElementById("search-box").value = "";
+            document.getElementById("unit-filter").value = "";
+            document.getElementById("tag-filter").value = "";
+            document.getElementById("hostname-filter").value = "";
 
-        // Constants for button and sidebar interaction
-        const BUTTON_TITLE_EXPAND = "Show Filters Sidebar";
-        const BUTTON_TITLE_COLLAPSE = "Hide Filters Sidebar";
+            // Reset select elements to their default values
+            document.getElementById("time-range-filter").value = ""; // "Any time"
+            document.getElementById("priority-filter").value = "5"; // "Notice"
 
-        function updateToggleButtonPosition() {
-          if (!toggleButton || !sidebar) return;
-
-          // Update CSS custom property for sidebar width
-          const sidebarWidth = sidebar.classList.contains('collapsed') ? '0rem' : '18.75rem';
-          document.documentElement.style.setProperty('--sidebar-width', sidebarWidth);
-
-          // Fallback for browsers that don't support :has() selector
-          if (!CSS.supports('selector(:has(*))')) {
-            const isCollapsed = sidebar.classList.contains('collapsed');
-            const leftPosition = isCollapsed
-              ? 'calc(var(--spacing, 1rem) + 0.5rem)'
-              : 'calc(18.75rem + var(--spacing, 1rem) + 0.5rem)';
-            toggleButton.style.left = leftPosition;
-          }
+            // Reset checkbox
+            const liveViewCheckbox = document.getElementById("live-view");
+            if (liveViewCheckbox.checked) {
+              liveViewCheckbox.checked = false;
+              // Manually trigger change for HTMX if live view was active
+              htmx.trigger(liveViewCheckbox, "change");
+            }
+            htmx.trigger(document.body, "initial-load-event", {}); // Reload logs
+            updateBrowserURL(); // Update URL after clearing filters
+          });
         }
 
-        function setSidebarState(isCollapsed) {
-          // Ensure all necessary elements exist
-          if (!sidebar || !toggleButton || !mainContent) {
-            console.error("Required elements for sidebar toggle not found.");
-            return;
-          }
+        // Trigger the initial load for #results after filters are set from URL
+        htmx.trigger(document.body, "initial-load-event", {});
 
-          if (isCollapsed) {
-            sidebar.classList.add("collapsed");
-            toggleButton.setAttribute("aria-expanded", "false");
-            toggleButton.setAttribute("title", BUTTON_TITLE_EXPAND);
-          } else {
-            sidebar.classList.remove("collapsed");
-            toggleButton.setAttribute("aria-expanded", "true");
-            toggleButton.setAttribute("title", BUTTON_TITLE_COLLAPSE);
-          }
+        // --- STATS STRIP + MINIMAP ---
+        // Both are computed client-side from the rendered table, so they
+        // stay in sync with whatever the server sent (filters, sorting…).
+        function updateStatsAndMinimap() {
+          const rows = document.querySelectorAll(
+            "#results table tbody tr.log-row-hover-actions"
+          );
+          let total = rows.length;
+          let errors = 0;
+          let warnings = 0;
+          const unitCounts = new Map();
 
-          // Update button position after state change
-          updateToggleButtonPosition();
-        }
-
-        if (toggleButton && sidebar) {
-          toggleButton.addEventListener("click", () => {
-            const isCollapsed = sidebar.classList.contains("collapsed");
-            setSidebarState(!isCollapsed);
-            localStorage.setItem("sidebarCollapsed", !isCollapsed);
+          rows.forEach((row) => {
+            for (let priority = 0; priority <= 7; priority++) {
+              if (!row.classList.contains(`priority-${priority}`)) continue;
+              if (priority <= 3) errors++;
+              else if (priority === 4) warnings++;
+              break;
+            }
+            const unitCell = row.querySelector("td.log-unit-cell");
+            if (unitCell) {
+              const unitName = unitCell.textContent.trim();
+              unitCounts.set(unitName, (unitCounts.get(unitName) || 0) + 1);
+            }
           });
 
-          // Clear All Filters Button Functionality
-          const clearFiltersButton =
-            document.getElementById("clear-filters-btn");
-          if (clearFiltersButton) {
-            clearFiltersButton.addEventListener("click", function () {
-              // Reset text inputs
-              document.getElementById("search-box").value = "";
-              document.getElementById("unit-filter").value = "";
-              document.getElementById("tag-filter").value = "";
-              document.getElementById("hostname-filter").value = "";
+          const countMessage = document.querySelector(
+            "#results .results-count"
+          );
+          const totalEl = document.getElementById("stat-total");
+          if (totalEl) {
+            totalEl.textContent = total.toLocaleString();
+            totalEl.title = countMessage
+              ? countMessage.textContent.trim()
+              : "";
+          }
+          const errorsEl = document.getElementById("stat-errors");
+          if (errorsEl) errorsEl.textContent = errors.toLocaleString();
+          const warningsEl = document.getElementById("stat-warnings");
+          if (warningsEl) warningsEl.textContent = warnings.toLocaleString();
+          const unitsEl = document.getElementById("stat-units");
+          if (unitsEl) unitsEl.textContent = unitCounts.size.toLocaleString();
 
-              // Reset select elements to their default values
-              document.getElementById("time-range-filter").value = ""; // "Any time"
-              document.getElementById("priority-filter").value = "5"; // "Notice" (or your preferred default)
+          let noisiestUnit = "–";
+          let noisiestCount = 0;
+          unitCounts.forEach((count, unitName) => {
+            if (count > noisiestCount) {
+              noisiestCount = count;
+              noisiestUnit = unitName;
+            }
+          });
+          const noisiestEl = document.getElementById("stat-noisiest");
+          if (noisiestEl) {
+            noisiestEl.textContent = noisiestUnit;
+            noisiestEl.title =
+              noisiestCount > 0
+                ? `${noisiestCount} entries in view`
+                : "No units in view";
+          }
 
-              // Reset checkbox
-              const liveViewCheckbox = document.getElementById("live-view");
-              if (liveViewCheckbox.checked) {
-                liveViewCheckbox.checked = false;
-                // Manually trigger change for HTMX if live view was active
-                htmx.trigger(liveViewCheckbox, "change");
+          // Minimap: one tick per row (sampled), colored by severity.
+          // Ticks carry enough data to preview the entry on hover and to
+          // scroll to it on click.
+          const track = document.getElementById("minimap-track");
+          if (track) {
+            track.innerHTML = "";
+            const maxTicks = 240;
+            const step = Math.max(1, Math.ceil(total / maxTicks));
+            for (let index = 0; index < total; index += step) {
+              const row = rows[index];
+              const tick = document.createElement("i");
+              tick.dataset.rowIndex = String(index);
+              for (let priority = 0; priority <= 7; priority++) {
+                if (row.classList.contains(`priority-${priority}`)) {
+                  tick.dataset.priority = priority;
+                  break;
+                }
               }
-              htmx.trigger(document.body, "initial-load-event", {}); // Reload logs
-              updateBrowserURL(); // Update URL after clearing filters
-            });
+              const timestampCell = row.querySelector("td.log-timestamp-cell");
+              const priorityCell = row.querySelector(
+                "td.log-priority-cell .tag"
+              );
+              const messageCell = row.querySelector("td.log-message-cell");
+              tick.dataset.ts = timestampCell
+                ? timestampCell.textContent.trim()
+                : "";
+              tick.dataset.pri = priorityCell
+                ? priorityCell.textContent.trim()
+                : "";
+              tick.dataset.msg = messageCell
+                ? messageCell.textContent.trim().slice(0, 140)
+                : "";
+              track.appendChild(tick);
+            }
           }
-          // Apply initial state from localStorage
-          const savedState = localStorage.getItem("sidebarCollapsed");
-          if (savedState !== null) {
-            setSidebarState(savedState === "true");
-          } else {
-            setSidebarState(false); // Default to expanded if no saved state
-          }
-
-          // Ensure button position is correct on initial load
-          updateToggleButtonPosition();
-
-          // Trigger the initial load for #results after filters are set from URL
-          htmx.trigger(document.body, "initial-load-event", {});
         }
+
+        document.body.addEventListener("htmx:afterSwap", function (event) {
+          if (event.detail.target && event.detail.target.id === "results") {
+            updateStatsAndMinimap();
+          }
+        });
+
+        // --- Minimap interaction: hover previews, click jumps ---
+        const minimapTop = document.getElementById("minimap-top");
+        if (minimapTop) {
+          minimapTop.addEventListener("click", function () {
+            const stream = document.getElementById("stream");
+            if (stream) {
+              stream.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          });
+        }
+
+        const minimapTrack = document.getElementById("minimap-track");
+        const minimapTooltip = document.createElement("div");
+        minimapTooltip.id = "minimap-tooltip";
+        minimapTooltip.hidden = true;
+        document.body.appendChild(minimapTooltip);
+
+        function hideMinimapTooltip() {
+          minimapTooltip.hidden = true;
+        }
+
+        if (minimapTrack) {
+          minimapTrack.addEventListener("mouseover", function (event) {
+            const tick = event.target.closest("i");
+            if (!tick || !tick.dataset.ts) return;
+            minimapTooltip.innerHTML =
+              `<div class="minimap-tip-time">${tick.dataset.ts}` +
+              ` · ${tick.dataset.pri}</div>` +
+              `<div class="minimap-tip-msg"></div>`;
+            minimapTooltip
+              .querySelector(".minimap-tip-msg")
+              .textContent = tick.dataset.msg;
+            minimapTooltip.hidden = false;
+            const rect = tick.getBoundingClientRect();
+            const top = Math.min(
+              Math.max(rect.top + rect.height / 2 - 20, 8),
+              window.innerHeight - 70
+            );
+            minimapTooltip.style.top = `${top}px`;
+            minimapTooltip.style.right = `${window.innerWidth - rect.left + 10}px`;
+          });
+          minimapTrack.addEventListener("mouseleave", hideMinimapTooltip);
+
+          minimapTrack.addEventListener("click", function (event) {
+            const tick = event.target.closest("i");
+            if (!tick) return;
+            const index = Number(tick.dataset.rowIndex || 0);
+            const row = document.querySelectorAll(
+              "#results table tbody tr.log-row-hover-actions"
+            )[index];
+            if (!row) return;
+            row.scrollIntoView({ behavior: "smooth", block: "center" });
+            row.classList.remove("row-flash");
+            // Restart the flash animation if the row is clicked twice
+            void row.offsetWidth;
+            row.classList.add("row-flash");
+            setTimeout(function () {
+              row.classList.remove("row-flash");
+            }, 1300);
+          });
+        }
+        // --- END MINIMAP INTERACTION ---
+        // --- END STATS STRIP + MINIMAP ---
       });
 
       // Helper function to build URLSearchParams from current filters
@@ -1000,8 +1202,6 @@
               // This works with server-side `has_key?` logic.
             } else if (element.value) {
               // For text inputs and selects.
-              // If element.value is "", like for "Any time", it will add "param=" to the query string.
-              // This is consistent with how copyShareableLink and exportLogsAsText work.
               params.set(config.param, element.value);
             }
           }
@@ -1067,7 +1267,7 @@
 
         params.set("format", "text"); // Specify text format for the export
 
-        const exportUrl = "/logs?" + params.toString(); // Endpoint for logs
+        const exportUrl = buildUrl("logs") + "?" + params.toString();
 
         const tempLink = document.createElement("a");
         tempLink.href = exportUrl;
@@ -1097,9 +1297,314 @@
         return false; // Prevent default anchor link behavior
       }
 
+      // --- Entry inspector side panel ---
+      // One docked panel with three tabs (detail / context / AI). The
+      // server-rendered buttons load their content into a pane and then
+      // call these helpers to show the panel and switch tabs.
+      // The entry the panel is currently inspecting, and the one whose
+      // context has been loaded, so the Context tab can lazy-load.
+      let currentPanelCursor = null;
+      let loadedContextCursor = null;
+      let loadedAICursor = null;
+
+      window.showLogPanel = function (tab) {
+        const panel = document.getElementById("side-panel");
+        if (!panel) return;
+        panel.classList.add("open");
+        document
+          .querySelectorAll("#side-panel-tabs .insp-tab")
+          .forEach(function (tabButton) {
+            const active = tabButton.dataset.tab === tab;
+            tabButton.classList.toggle("active", active);
+            tabButton.setAttribute("aria-selected", active ? "true" : "false");
+          });
+        document
+          .querySelectorAll("#side-panel .insp-pane")
+          .forEach(function (pane) {
+            pane.classList.toggle("active", pane.dataset.pane === tab);
+          });
+        if (tab === "context" && currentPanelCursor) {
+          loadPanelContext(currentPanelCursor);
+        }
+        if (
+          tab === "ai" &&
+          currentPanelCursor &&
+          loadedAICursor !== currentPanelCursor &&
+          !aiDisabledForPanel()
+        ) {
+          askAIExplanation(currentPanelCursor);
+        }
+      };
+
+      // True when the providers list reports AI as unavailable — used to
+      // avoid firing pointless requests when the AI tab is opened.
+      function aiDisabledForPanel() {
+        const disabledEl = document.getElementById("ai-disabled");
+        return !!disabledEl && disabledEl.style.display !== "none";
+      }
+
+      window.loadPanelContext = function (cursor) {
+        if (loadedContextCursor === cursor) return; // already loaded
+        loadedContextCursor = cursor;
+        const pane = document.getElementById("panel-context-content");
+        panelSpinner("panel-context-content");
+        fetch(
+          `${buildUrl("context")}?${new URLSearchParams({ cursor: cursor })}`
+        )
+          .then(function (response) {
+            if (!response.ok) {
+              throw new Error("HTTP " + response.status);
+            }
+            return response.text();
+          })
+          .then(function (html) {
+            pane.innerHTML = html;
+            // Center the central entry so it is immediately visible.
+            const target = pane.querySelector("tr.context-target");
+            if (target) {
+              target.scrollIntoView({ block: "center" });
+            }
+          })
+          .catch(function (error) {
+            console.error("Error fetching log context:", error);
+            showError(pane, "Failed to load context: " + error.message);
+          });
+      };
+
+      window.closeLogPanel = function () {
+        const panel = document.getElementById("side-panel");
+        if (panel) panel.classList.remove("open");
+      };
+
+      window.panelSpinner = function (paneId) {
+        const pane = document.getElementById(paneId);
+        if (pane) {
+          pane.innerHTML = document.getElementById(
+            "details-dialog-loading-spinner-template"
+          ).innerHTML;
+        }
+      };
+
+      window.panelError = function (paneId, status) {
+        const pane = document.getElementById(paneId);
+        if (pane) {
+          pane.innerHTML =
+            '<p class="inline-alert">Failed to load content (HTTP ' +
+            status +
+            "). Check the server or adjust the filters.</p>";
+        }
+      };
+
+      // Remember which entry the panel is inspecting when a row's htmx
+      // button (details / context) fires.
+      document.body.addEventListener("htmx:beforeRequest", function (event) {
+        const elt = event.detail.elt;
+        if (!elt || !elt.closest) return;
+        const row = elt.closest("tr.log-row-hover-actions");
+        if (row && row.dataset.cursor) {
+          currentPanelCursor = row.dataset.cursor;
+        }
+      });
+
+      // Clicking a frequency-chart bucket scrolls the stream to that
+      // moment (first visible entry at or after the bucket start).
+      document.body.addEventListener("click", function (event) {
+        const bar = event.target.closest("g.tl-bar");
+        if (!bar || !bar.dataset.start) return;
+        const start = Number(bar.dataset.start);
+        const interval = Number(
+          document.querySelector("#results svg")?.dataset.interval || 3600
+        );
+        const rows = document.querySelectorAll(
+          "#results table tbody tr.log-row-hover-actions[data-epoch]"
+        );
+        let target = null;
+        rows.forEach(function (row) {
+          const epoch = Number(row.dataset.epoch);
+          if (target === null && epoch >= start && epoch < start + interval) {
+            target = row;
+          }
+        });
+        // Sorting may not be chronological: fall back to the closest entry
+        // at or after the bucket start.
+        if (!target) {
+          rows.forEach(function (row) {
+            if (target === null && Number(row.dataset.epoch) >= start) {
+              target = row;
+            }
+          });
+        }
+        if (!target && rows.length) {
+          target = rows[rows.length - 1];
+        }
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+          target.classList.remove("row-flash");
+          void target.offsetWidth;
+          target.classList.add("row-flash");
+          setTimeout(function () {
+            target.classList.remove("row-flash");
+          }, 1300);
+        }
+      });
+
+      // Clicking a log entry row opens it in the Detail tab.
+      document.body.addEventListener("click", function (event) {
+        if (event.target.closest("button, a, input, select, summary, dialog")) {
+          return;
+        }
+        const row = event.target.closest("tr.log-row-hover-actions");
+        if (!row || !row.dataset.cursor) return;
+        currentPanelCursor = row.dataset.cursor;
+
+        const pane = document.getElementById("panel-detail-content");
+        panelSpinner("panel-detail-content");
+        showLogPanel("detail");
+        fetch(
+          `${buildUrl("details")}?${new URLSearchParams({ cursor: row.dataset.cursor })}`
+        )
+          .then(function (response) {
+            if (!response.ok) {
+              throw new Error("HTTP " + response.status);
+            }
+            return response.text();
+          })
+          .then(function (html) {
+            pane.innerHTML = html;
+          })
+          .catch(function (error) {
+            console.error("Error fetching log details:", error);
+            showError(pane, "Failed to load details: " + error.message);
+          });
+      });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const closeButton = document.getElementById("side-panel-close");
+        if (closeButton) {
+          closeButton.addEventListener("click", closeLogPanel);
+        }
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            closeLogPanel();
+          }
+        });
+        document
+          .querySelectorAll("#side-panel-tabs .insp-tab")
+          .forEach(function (tabButton) {
+            tabButton.addEventListener("click", function () {
+              showLogPanel(tabButton.dataset.tab);
+            });
+          });
+      });
+
       // --- AI Explanation Functions ---
       let currentAIExplanation = "";
       let currentTargetLogEntry = "";
+      // Conversation state for iterative refinement of the explanation.
+      let currentAICursor = null;
+      let currentAIHistory = [];
+      let currentAIRequest = null;
+
+      function appendAIMessage(role, renderedNode) {
+        const content = document.getElementById("ai-explanation-dialog-content");
+        const message = document.createElement("div");
+        message.className = `ai-message ai-message-${role}`;
+        if (role === "user") {
+          const label = document.createElement("div");
+          label.className = "ai-message-label";
+          label.textContent = "You asked";
+          message.appendChild(label);
+          const body = document.createElement("div");
+          body.textContent = renderedNode;
+          message.appendChild(body);
+        } else {
+          const label = document.createElement("div");
+          label.className = "ai-message-label";
+          label.textContent = "AI answer";
+          message.appendChild(label);
+          message.appendChild(renderedNode);
+        }
+        content.appendChild(message);
+        content.scrollTop = content.scrollHeight;
+        return message;
+      }
+
+      function sendAIFollowUp() {
+        const input = document.getElementById("ai-followup-input");
+        const sendButton = document.getElementById("ai-followup-send");
+        const question = (input?.value || "").trim();
+        if (!question || currentAIRequest || !currentAICursor) return;
+
+        input.value = "";
+        appendAIMessage("user", question);
+        currentAIHistory.push({ role: "user", content: question });
+
+        const content = document.getElementById("ai-explanation-dialog-content");
+        const pending = document.createElement("div");
+        pending.className = "ai-message ai-message-assistant";
+        pending.innerHTML = document.getElementById(
+          "ai-explanation-loading-template"
+        ).innerHTML;
+        content.appendChild(pending);
+        content.scrollTop = content.scrollHeight;
+        sendButton.disabled = true;
+        input.disabled = true;
+        currentAIRequest = { cursor: currentAICursor };
+
+        const aiRequestBody = { cursor: currentAICursor, history: currentAIHistory };
+        if (window.selectedAIProvider) {
+          aiRequestBody.provider = window.selectedAIProvider;
+        }
+        if (window.selectedAIModel) {
+          aiRequestBody.model = window.selectedAIModel;
+        }
+        fetch(buildUrl("ask-ai"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(aiRequestBody),
+        })
+          .then(async (response) => {
+            if (!response.ok) {
+              throw new Error(`AI request failed (HTTP ${response.status})`);
+            }
+            const text = await response.text();
+            try {
+              return JSON.parse(text);
+            } catch (parseError) {
+              throw new Error(
+                "The AI service returned an unexpected (non-JSON) response."
+              );
+            }
+          })
+          .then((data) => {
+            if (data.error) {
+              throw new Error(data.error);
+            }
+            const answer = document.createElement("div");
+            answer.innerHTML = marked.parse(data.content || "");
+            if (data.provider || data.model) {
+              const note = document.createElement("div");
+              note.className = "ai-provider-note";
+              note.textContent = `🤖 ${data.provider || "AI"}${data.model ? ` (${data.model})` : ""}`;
+              answer.appendChild(note);
+            }
+            appendAIMessage("assistant", answer);
+            currentAIHistory.push({ role: "assistant", content: data.content || "" });
+          })
+          .catch((error) => {
+            console.error("Error calling AI:", error);
+            pending.remove();
+            currentAIHistory.pop(); // drop the failed user turn so retry is clean
+            showError(content, `Follow-up failed: ${error.message}`);
+          })
+          .finally(() => {
+            pending.remove();
+            sendButton.disabled = false;
+            input.disabled = false;
+            input.focus();
+            currentAIRequest = null;
+          });
+      }
 
       // Helper to display error messages safely (prevents XSS)
       function showError(container, message) {
@@ -1112,15 +1617,23 @@
       }
 
       function askAIExplanation(cursor) {
-        const dialog = document.getElementById("ai-explanation-dialog");
         const content = document.getElementById("ai-explanation-dialog-content");
         const targetEntryDiv = document.getElementById("target-log-entry");
         const loadingTemplate = document.getElementById("ai-explanation-loading-template");
 
-        // Show loading state
+        // New entry: reset the refinement conversation. This must happen
+        // before showLogPanel("ai") — that call auto-triggers the
+        // explanation request, and marking the cursor first is what breaks
+        // the recursion.
+        currentAICursor = cursor;
+        currentPanelCursor = cursor;
+        loadedAICursor = cursor;
+        currentAIHistory = [];
+
+        // Open the AI tab of the inspector and show loading state
+        showLogPanel("ai");
         content.innerHTML = loadingTemplate.innerHTML;
         targetEntryDiv.innerHTML = "Loading log entry...";
-        dialog.showModal();
 
         // First, get the target log entry details
         fetch(`${buildUrl("details")}?${new URLSearchParams({cursor: cursor})}`)
@@ -1154,13 +1667,13 @@
             } else {
               // No log entry found or empty content
               currentTargetLogEntry = "";
-              targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem; color: #666;">Unable to load log message</div>`;
+              targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem;">Unable to load log message</div>`;
             }
           })
           .catch((error) => {
             console.error("Error fetching log details:", error);
             currentTargetLogEntry = "";
-            targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem; color: #666;">Error loading log message</div>`;
+            targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem;">Error loading log message</div>`;
           });
 
         // Call the AI endpoint with selected provider and model
@@ -1178,7 +1691,20 @@
           },
           body: JSON.stringify(aiRequestBody),
         })
-          .then((response) => response.json())
+          .then(async (response) => {
+            if (!response.ok) {
+              throw new Error(`AI request failed (HTTP ${response.status})`);
+            }
+            // Guard against non-JSON error pages so the message stays useful
+            const text = await response.text();
+            try {
+              return JSON.parse(text);
+            } catch (parseError) {
+              throw new Error(
+                "The AI service returned an unexpected (non-JSON) response."
+              );
+            }
+          })
           .then((data) => {
             if (data.error) {
               showError(content, `Error: ${data.error}`);
@@ -1191,7 +1717,7 @@
               // Append provider info safely using textContent (prevents XSS)
               if (data.provider || data.model) {
                 const providerDiv = document.createElement('div');
-                providerDiv.style.cssText = 'font-size: 0.75rem; color: var(--pico-muted-color); margin-top: 1rem; text-align: right;';
+                providerDiv.className = 'ai-provider-note';
                 const provider = data.provider || 'AI';
                 const model = data.model || '';
                 providerDiv.textContent = `🤖 Powered by ${provider}${model ? ` (${model})` : ''}`;
@@ -1206,6 +1732,21 @@
             showError(content, `Failed to get AI explanation: ${error.message}`);
           });
       }
+
+      // Wire up the follow-up conversation controls
+      document.addEventListener("DOMContentLoaded", function () {
+        const followUpInput = document.getElementById("ai-followup-input");
+        const followUpSend = document.getElementById("ai-followup-send");
+        if (followUpInput && followUpSend) {
+          followUpSend.addEventListener("click", sendAIFollowUp);
+          followUpInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              sendAIFollowUp();
+            }
+          });
+        }
+      });
 
       function copyAIExplanation() {
         if (!currentAIExplanation) {

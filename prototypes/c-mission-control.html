@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Grafito · Prototype C — Mission Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #101418;
+    --panel: #161b22;
+    --panel-2: #1c232c;
+    --line: #29313c;
+    --txt: #dfe6ee;
+    --dim: #8b96a5;
+    --faint: #59636f;
+    --accent: #4cc2a9;      /* teal */
+    --err: #f0635a; --warn: #e9a23b; --info: #58a6ff; --debug: #6e7681;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --sans: "Space Grotesk", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--txt);
+    font-family: var(--sans);
+    display: grid;
+    grid-template-columns: 1fr 56px;
+    grid-template-rows: 56px auto 1fr;
+    height: 100vh; overflow: hidden;
+  }
+
+  /* ── Top bar ────────────────────────── */
+  .topbar {
+    grid-column: 1; grid-row: 1;
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0 1rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+  .logo {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-weight: 600; font-size: 1.05rem; letter-spacing: 0.01em;
+    padding-right: 1rem; border-right: 1px solid var(--line);
+    height: 32px; align-items: center;
+  }
+  .logo .cube {
+    width: 14px; height: 14px; background: var(--accent);
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  }
+  .host-switch {
+    display: flex; align-items: center; gap: 0.45rem;
+    font-family: var(--mono); font-size: 0.78rem;
+    color: var(--dim);
+    border: 1px solid var(--line); border-radius: 7px;
+    padding: 0.3rem 0.7rem; cursor: pointer;
+  }
+  .host-switch:hover { border-color: var(--faint); }
+  .cmd-trigger {
+    flex: 1; max-width: 560px;
+    display: flex; align-items: center; gap: 0.6rem;
+    font-family: var(--mono); font-size: 0.8rem;
+    color: var(--faint);
+    background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 7px;
+    padding: 0.42rem 0.8rem;
+    cursor: text;
+  }
+  .cmd-trigger:hover { border-color: var(--faint); }
+  .cmd-trigger kbd {
+    margin-left: auto; font-family: var(--mono); font-size: 0.68rem;
+    color: var(--dim); border: 1px solid var(--line);
+    border-radius: 4px; padding: 0.05rem 0.4rem; background: var(--panel);
+  }
+  .top-actions { margin-left: auto; display: flex; gap: 0.5rem; }
+  .tbtn {
+    font-family: var(--mono); font-size: 0.74rem;
+    color: var(--dim); background: none;
+    border: 1px solid var(--line); border-radius: 7px;
+    padding: 0.4rem 0.75rem; cursor: pointer;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .tbtn:hover { color: var(--txt); border-color: var(--faint); }
+  .tbtn.live { color: var(--accent); border-color: rgba(76,194,169,.4); }
+  .tbtn.live .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 7px var(--accent); animation: blink 2s infinite;
+  }
+  @keyframes blink { 50% { opacity: .35; } }
+
+  /* ── Severity minimap rail ──────────── */
+  .minimap {
+    grid-column: 2; grid-row: 1 / 4;
+    border-left: 1px solid var(--line);
+    background: var(--panel);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 0.8rem 0;
+    gap: 0.6rem;
+  }
+  .mm-col {
+    width: 5px; border-radius: 3px; flex: 1;
+    display: flex; flex-direction: column-reverse; gap: 2px;
+  }
+  .mm-col i { border-radius: 2px; display: block; width: 100%; }
+  .mm-col .e { background: var(--err); } .mm-col .w { background: var(--warn); }
+  .mm-col .n { background: var(--info); opacity: .5; } .mm-col .d { background: var(--debug); opacity: .3; }
+  .mm-label {
+    writing-mode: vertical-rl; font-size: 0.62rem; letter-spacing: 0.15em;
+    color: var(--faint); text-transform: uppercase;
+  }
+
+  /* ── Stats strip ────────────────────── */
+  .stats {
+    grid-column: 1; grid-row: 2;
+    display: flex; gap: 1px;
+    border-bottom: 1px solid var(--line);
+    background: var(--line);
+    overflow-x: auto;
+  }
+  .stat {
+    flex: 1; min-width: 130px;
+    background: var(--bg);
+    padding: 0.7rem 1.1rem;
+    display: flex; flex-direction: column; gap: 0.15rem;
+  }
+  .stat .label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--faint); }
+  .stat .value { font-family: var(--mono); font-size: 1.15rem; }
+  .stat .trend { font-size: 0.68rem; font-family: var(--mono); }
+  .up { color: var(--err); } .down { color: var(--accent); } .flat { color: var(--faint); }
+  .stat.err .value { color: var(--err); }
+  .stat.warn .value { color: var(--warn); }
+
+  /* ── Split: stream + inspector ──────── */
+  .content {
+    grid-column: 1; grid-row: 3;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    min-height: 0;
+  }
+  .stream { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+  table { border-collapse: collapse; width: 100%; }
+  thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--panel);
+    font-size: 0.66rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--faint); text-align: left;
+    padding: 0.5rem 0.7rem;
+    border-bottom: 1px solid var(--line);
+  }
+  tbody tr { border-bottom: 1px solid #141920; cursor: pointer; }
+  tbody tr:hover { background: #171d25; }
+  tbody tr.sel { background: #18222a; box-shadow: inset 2px 0 0 var(--accent); }
+  td { font-family: var(--mono); font-size: 0.79rem; padding: 0.36rem 0.7rem; vertical-align: top; }
+  td.t { color: var(--dim); white-space: nowrap; }
+  td.pri span {
+    font-size: 0.66rem; padding: 0.14rem 0.45rem; border-radius: 4px;
+  }
+  .pri-e span { background: rgba(240,99,90,.14); color: var(--err); }
+  .pri-w span { background: rgba(233,162,59,.13); color: var(--warn); }
+  .pri-n span { background: rgba(88,166,255,.12); color: var(--info); }
+  .pri-d span { color: var(--debug); }
+  td.u { color: #86d7c2; white-space: nowrap; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; }
+  td.m { color: #c3ccd6; line-height: 1.45; max-width: 75ch; overflow-wrap: break-word; }
+  td.m .hl { color: var(--accent); text-decoration: underline; text-decoration-color: rgba(76,194,169,.5); text-underline-offset: 3px; }
+
+  /* inspector */
+  .inspector {
+    border-left: 1px solid var(--line);
+    background: var(--panel);
+    display: flex; flex-direction: column;
+    min-height: 0;
+  }
+  .insp-tabs { display: flex; border-bottom: 1px solid var(--line); }
+  .insp-tab {
+    flex: 1; text-align: center; padding: 0.6rem 0;
+    font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--faint); cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  .insp-tab.active { color: var(--txt); border-bottom-color: var(--accent); }
+  .insp-body { padding: 1rem 1.1rem; overflow-y: auto; flex: 1; }
+  .kv { display: grid; grid-template-columns: 96px 1fr; gap: 0.4rem 0.8rem; font-size: 0.78rem; font-family: var(--mono); margin-bottom: 1rem; }
+  .kv .k { color: var(--faint); }
+  .context { margin-bottom: 1rem; }
+  .ctx-row {
+    font-family: var(--mono); font-size: 0.72rem; color: var(--faint);
+    padding: 0.14rem 0.5rem; border-left: 2px solid transparent;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ctx-row.me { color: var(--txt); background: var(--panel-2); border-left-color: var(--accent); }
+  .ai-box {
+    border: 1px solid rgba(76,194,169,.3); border-radius: 9px;
+    background: rgba(76,194,169,.05);
+    padding: 0.85rem 1rem;
+    font-size: 0.82rem; line-height: 1.6;
+  }
+  .ai-box h3 {
+    margin: 0 0 0.4rem; font-size: 0.8rem; color: var(--accent);
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .ai-box code {
+    font-family: var(--mono); font-size: 0.74rem;
+    background: rgba(76,194,169,.12); padding: 0.05rem 0.35rem; border-radius: 4px;
+  }
+  .insp-foot {
+    border-top: 1px solid var(--line);
+    padding: 0.6rem 1rem; display: flex; gap: 0.5rem;
+  }
+  .insp-foot button {
+    flex: 1; font-family: var(--mono); font-size: 0.74rem;
+    background: none; color: var(--dim);
+    border: 1px solid var(--line); border-radius: 7px;
+    padding: 0.45rem 0; cursor: pointer;
+  }
+  .insp-foot button:hover { color: var(--txt); border-color: var(--faint); }
+  .insp-foot button.primary { background: var(--accent); color: #0c1215; border-color: var(--accent); font-weight: 500; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo"><span class="cube"></span>grafito</div>
+    <div class="host-switch">▦ mindy <span style="color:var(--faint)">▾</span></div>
+    <div class="cmd-trigger">⌕ grep, unit:, prio:, since: — 14 errors in last hour <kbd>⌘K</kbd></div>
+    <div class="top-actions">
+      <button class="tbtn live"><span class="dot"></span>LIVE</button>
+      <button class="tbtn">export</button>
+      <button class="tbtn">share</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="label">entries / min</span><span class="value">1,240</span><span class="trend up">▲ 12%</span></div>
+    <div class="stat err"><span class="label">errors</span><span class="value">14</span><span class="trend up">▲ 5</span></div>
+    <div class="stat warn"><span class="label">warnings</span><span class="value">6</span><span class="trend flat">—</span></div>
+    <div class="stat"><span class="label">active units</span><span class="value">38</span><span class="trend flat">—</span></div>
+    <div class="stat"><span class="label">noisiest</span><span class="value" style="font-size:.85rem;padding-top:.2rem">getty@ttyUSB0</span><span class="trend flat">412 suppressed</span></div>
+    <div class="stat"><span class="label">journal disk</span><span class="value">2.1G</span><span class="trend down">▼ vacuumed</span></div>
+  </div>
+
+  <div class="content">
+    <div class="stream">
+      <table>
+        <thead><tr><th>time</th><th>pri</th><th>unit</th><th>message</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <aside class="inspector">
+      <div class="insp-tabs">
+        <div class="insp-tab active">detail</div>
+        <div class="insp-tab">context</div>
+        <div class="insp-tab">similar</div>
+      </div>
+      <div class="insp-body">
+        <div class="kv">
+          <span class="k">time</span><span>2026-09-10 12:52:51 —03</span>
+          <span class="k">priority</span><span style="color:var(--err)">3 · error</span>
+          <span class="k">unit</span><span>getty@ttyUSB0.service</span>
+          <span class="k">host</span><span>mindy</span>
+          <span class="k">pid / uid</span><span>4821 / 0</span>
+          <span class="k">count</span><span>412× in 24h ⚠</span>
+        </div>
+        <div class="context">
+          <div class="ctx-row">12:52:49  systemd  Started Session c12 of user root.</div>
+          <div class="ctx-row">12:52:50  systemd  getty@ttyUSB0: Scheduled restart job…</div>
+          <div class="ctx-row me">12:52:51  getty@…  Failed at step STDIN spawning /sbin/agetty…</div>
+          <div class="ctx-row">12:52:51  systemd  getty@ttyUSB0: Failed with result 'exit-code'.</div>
+          <div class="ctx-row">12:52:52  kernel   audit: type=1400 apparmor="DENIED"…</div>
+        </div>
+        <div class="ai-box">
+          <h3>◈ AI diagnosis</h3>
+          A serial getty is configured on <code>ttyUSB0</code> but the device
+          doesn't exist, so systemd retries and fails on every restart (412
+          failures in 24h — your noisiest unit). Disable it:
+          <br/><br/><code>systemctl disable getty@ttyUSB0.service</code>
+        </div>
+      </div>
+      <div class="insp-foot">
+        <button>copy</button>
+        <button>journalctl ⇥</button>
+        <button class="primary">🧠 re-explain</button>
+      </div>
+    </aside>
+  </div>
+
+  <div class="minimap" aria-hidden="true">
+    <div class="mm-label">60 min</div>
+    <div id="mm"></div>
+  </div>
+
+<script>
+  const data = [
+    ["12:52:54","e","getty@ttyUSB0.service","Failed at step STDIN spawning /sbin/agetty: No such file or directory"],
+    ["12:52:54","e","getty@ttyUSB0.service","Failed to set up standard input: No such file or directory"],
+    ["12:52:52","e","nginx.service","upstream timed out (110: Connection timed out) while reading response header from upstream, client: 10.0.0.8"],
+    ["12:52:52","w","docker.service","container webapp_prod_1 (image: registry.local/webapp:1.42) exited with code 137"],
+    ["12:52:51","n","init.scope","tocry.service: Main process exited, code=exited, status=127/n/a"],
+    ["12:52:51","e","sshd.service","Failed password for invalid user admin from 203.0.113.42 port 41022 ssh2"],
+    ["12:52:50","n","systemd","Started Daily Cleanup of Temporary Directories."],
+    ["12:52:49","n","postgresql.service","checkpoint starting: time"],
+    ["12:52:48","w","myapp.service","unhandled rejection: TypeError: Cannot read properties of undefined (reading 'retry_count')"],
+    ["12:52:46","n","cron.service","(root) CMD (run-parts /etc/cron.hourly)"],
+    ["12:52:45","e","kernel","NVRM: Xid (PCI:0000:01:00): 13, Graphics Exception on graphics pipeline"],
+    ["12:52:44","d","systemd-journald","Suppressed 412 messages from 'getty@ttyUSB0.service'"],
+    ["12:52:42","n","redis-server.service","Background saving started by pid 4210"],
+    ["12:52:40","e","getty@ttyUSB0.service","Failed at step STDIN spawning /sbin/agetty: No such file or directory"],
+    ["12:52:38","w","nginx.service","worker_connections are not enough, client: 10.0.0.31, server: api.internal"],
+    ["12:52:36","n","kernel","usb 1-4: new high-speed USB device number 12 using xhci_hcd"],
+    ["12:52:34","n","init.scope","apt-daily.service: Deactivated successfully."],
+    ["12:52:31","e","myapp.service","ECONNREFUSED 127.0.0.1:5432 — retry 3 of 5 in 4s"],
+    ["12:52:30","n","systemd","Reached target Multi-User System."],
+    ["12:52:28","w","smartd","Device: /dev/sda, SMART Usage Attribute: 194 Temperature_Celsius changed from 118 to 121"],
+    ["12:52:26","e","sshd.service","Invalid user oracle from 198.51.100.7 port 55280"],
+    ["12:52:20","e","nginx.service","open() \"/var/log/nginx/api.access.log\" failed (24: Too many open files)"],
+    ["12:52:18","n","postgresql.service","database system is ready to accept connections"],
+    ["12:52:16","n","NetworkManager","device (wlan0): supplicant management connection state changed: completed"],
+    ["12:52:14","w","docker.service","Health check for container db_replica_2: timeout after 5s"],
+    ["12:52:12","n","systemd-logind","New session 4721 of user ralsina."],
+    ["12:52:10","e","kernel","EXT4-fs error (device sda2): ext4_find_entry:1455: inode #2: comm ls: bad entry in directory"],
+    ["12:52:08","d","cron.service","(CRON) INFO (pidfile fd 3 is not locked)"],
+    ["12:52:06","n","systemd","Finished Rotate log files."],
+    ["12:52:04","e","myapp.service","FATAL: worker loop crashed, initiating shutdown"],
+  ];
+  const pri = { e:"pri-e", w:"pri-w", n:"pri-n", d:"pri-d" };
+  const plabel = { e:"err", w:"warn", n:"note", d:"dbg" };
+  const rows = document.getElementById("rows");
+  data.forEach(([ts, p, unit, msg]) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td class="t">${ts}</td>` +
+      `<td class="pri ${pri[p]}"><span>${plabel[p]}</span></td>` +
+      `<td class="u">${unit}</td>` +
+      `<td class="m">${msg}</td>`;
+    tr.addEventListener("click", () => {
+      document.querySelectorAll("tr.sel").forEach(el => el.classList.remove("sel"));
+      tr.classList.add("sel");
+    });
+    rows.appendChild(tr);
+  });
+  // mark one row selected by default
+  rows.children[4].classList.add("sel");
+
+  // minimap
+  const mm = document.getElementById("mm");
+  const mmEl = document.createElement("div");
+  mmEl.className = "mm-col";
+  const buckets = [3,2,4,1,5,7,2,8,4,3,6,9,3,2,5,4,6,8,3,2,7,5,4,9,6,3,4,2,5,8];
+  buckets.forEach(v => {
+    mmEl.innerHTML =
+      `<i class="d" style="height:${v}px"></i>` +
+      `<i class="n" style="height:${v + 4}px"></i>` +
+      `<i class="w" style="height:${v > 4 ? 6 : 0}px"></i>` +
+      `<i class="e" style="height:${v > 6 ? 8 : v > 3 ? 4 : 0}px"></i>`;
+    mm.appendChild(mmEl.cloneNode(true));
+    mmEl.innerHTML = "";
+  });
+  [...mm.children].forEach(col => { col.className = "mm-col"; });
+</script>
+</body>
+</html>
