@@ -66,6 +66,15 @@ module Grafito
     if idle_timeout_sec > 0
       add_handler IdleShutdownHandler.new(timeout_sec: idle_timeout_sec, logger: Log)
     end
+    add_handler CacheHeadersHandler.new
+
+    # When deployed under a base path (e.g. /grafito), visitors hitting the
+    # bare root (http://host:port/) should land in the app, not a 404.
+    if base_path != "/"
+      get "/" do |env|
+        env.redirect base_path.ends_with?("/") ? base_path : "#{base_path}/"
+      end
+    end
 
     # ## The `/logs` endpoint
     #
@@ -242,9 +251,19 @@ module Grafito
               text "No details available for this log entry."
             end
           else
-            # Create a pretty JSON version of the raw entry
+            # Pretty JSON of the raw entry, with the fields sorted
+            # alphabetically so they are easy to scan.
+            sorted_json = String.build do |str|
+              JSON.build(str, indent: "  ") do |json|
+                json.object do
+                  entry.data.to_a.sort_by(&.[0]).each do |field_name, value|
+                    json.field(field_name, value)
+                  end
+                end
+              end
+            end
             tag("pre") do
-              text entry.to_pretty_json
+              text sorted_json
             end
           end
         end
@@ -331,6 +350,18 @@ module Grafito
       env.response.content_type = "application/json"
 
       providers = AI::Config.available_providers
+
+      # A provider configured through endpoint overrides (e.g. a local
+      # proxy) may not have any API-key env var for the availability list.
+      # Expose it as a synthetic "default" entry so the UI stays usable.
+      if providers.empty? && (active = Grafito.ai_provider)
+        providers = [AI::Config::ProviderInfo.new(
+          id: "default",
+          name: active.name,
+          available: true,
+        )]
+      end
+
       current = Grafito.ai_provider.try(&.name)
 
       {
@@ -362,6 +393,17 @@ module Grafito
       end
 
       models = AI::Config.models_for_provider(provider_id)
+
+      # The synthetic "default" provider has no models endpoint; report the
+      # active provider's current model so the UI selector stays usable.
+      if models.empty? && provider_id == "default" && (active = Grafito.ai_provider)
+        models = [AI::ModelInfo.new(
+          id: active.current_model,
+          name: active.current_model,
+          default: true,
+        )]
+      end
+
       {models: models}.to_json
     end
 
@@ -386,6 +428,7 @@ module Grafito
       provider_id : String? = nil
       model_id : String? = nil
       cursor : String? = nil
+      history = [] of Hash(String, String)
 
       unless body.empty?
         begin
@@ -393,14 +436,29 @@ module Grafito
           cursor = json_body["cursor"]?.try(&.as_s)
           provider_id = json_body["provider"]?.try(&.as_s)
           model_id = json_body["model"]?.try(&.as_s)
+          if raw_history = json_body["history"]?.try(&.as_a)
+            raw_history.each do |item|
+              role = item["role"]?.try(&.as_s)
+              content = item["content"]?.try(&.as_s)
+              if role && content && (role == "user" || role == "assistant")
+                history << {"role" => role, "content" => content}
+              end
+            end
+          end
         rescue
           # Will be handled below
         end
       end
 
-      # Get provider (either specified or default), with optional model
-      provider = if pid = provider_id
-                   AI::Config.provider_by_id(pid, model_id) || Grafito.ai_provider
+      # Get provider (either specified or default), with optional model.
+      # A requested provider that isn't actually usable in this process
+      # (e.g. remembered in the UI but its API key is not set) falls back
+      # to the default provider instead of failing mid-request.
+      requested_provider = if pid = provider_id
+                             AI::Config.provider_by_id(pid, model_id)
+                           end
+      provider = if requested_provider && requested_provider.available?
+                   requested_provider
                  else
                    Grafito.ai_provider
                  end
@@ -449,6 +507,19 @@ module Grafito
 
         # Create normalized AI request with priority-aware prompts
         request = AI::Request.for_log_analysis(context_lines, target_entry.priority)
+
+        # Iterative refinement: replay prior conversation turns as real
+        # messages so the model continues the discussion about this log
+        # entry. The client sends the follow-up question as the last turn.
+        if !history.empty?
+          request = AI::Request.new(
+            system_prompt: request.system_prompt,
+            user_prompt: request.user_prompt,
+            max_tokens: request.max_tokens,
+            temperature: request.temperature,
+            history: history,
+          )
+        end
 
         # Execute completion via the provider abstraction
         Log.debug { "Calling AI provider: #{provider.name}" }
