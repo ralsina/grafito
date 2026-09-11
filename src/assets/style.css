@@ -458,9 +458,13 @@ html[data-ui="fieldnotes"] #mode-switcher {
 }
 
 /* Filter panel (dropdown popover) */
-#filter-panel {
+#filter-panel,
+#filter-panel[open] {
   position: relative;
-  border: none;
+  height: 2.1rem; /* keep the topbar row height constant when open */
+  margin-bottom: 0;
+}
+#filter-panel[open] summary.topbar-tool {
   margin-bottom: 0;
 }
 #filter-panel summary {
@@ -1486,4 +1490,18 @@ html[data-ui="mission"] #results table tbody tr:hover {
   border: 1px dashed var(--line);
   border-radius: 8px;
   background: color-mix(in srgb, var(--panel-2) 60%, transparent);
+}
+
+/* Command dialog */
+#command-dialog {
+  max-width: 720px;
+  width: 92vw;
+}
+#command-dialog pre {
+  margin: 1rem 0;
+}
+#command-dialog footer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
 }
