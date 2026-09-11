@@ -196,7 +196,7 @@
                 placeholder="Syslog tag (e.g., myapp)"
                 title="Filter logs by syslog identifier (tag)"
                 hx-get="logs"
-                hx-trigger="input changed delay:600ms"
+                hx-trigger="input changed delay:600ms, immediateTagFilterUpdate"
                 hx-target="#results"
                 class="log-filter"
                 hx-indicator="#loading-spinner"
@@ -1251,9 +1251,9 @@
         if (!container) return;
         container.innerHTML = "";
         [
-          ["unit-filter", "unit"],
-          ["tag-filter", "tag"],
-          ["hostname-filter", "hostname"],
+          ["unit-filter", "unit", "immediateUnitFilterUpdate"],
+          ["tag-filter", "tag", "immediateTagFilterUpdate"],
+          ["hostname-filter", "hostname", "immediateHostnameFilterUpdate"],
         ].forEach(function (config) {
           const input = document.getElementById(config[0]);
           const value = (input?.value || "").trim();
@@ -1271,7 +1271,10 @@
           remove.textContent = "✕";
           remove.addEventListener("click", function () {
             input.value = "";
-            htmx.trigger(input, "input");
+            // Use the input's dedicated immediate trigger: the plain "input"
+            // event's `changed` filter can suppress the refetch when the
+            // filter was set programmatically (e.g. clicking a unit link).
+            htmx.trigger(input, config[2]);
             renderActiveFilterChips();
           });
           chip.append(labelText, remove);
