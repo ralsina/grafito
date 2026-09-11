@@ -9,12 +9,43 @@ Grafito is a simple, self-contained web-based log viewer for `journalctl`.
 It provides an intuitive interface to browse and filter system logs
 directly from your web browser.
 
-<img width="1114" height="942" alt="image" src="https://github.com/user-attachments/assets/39e37006-eecb-4fe7-a57d-ec31ca4a6d74" />
+| Mission Control (dark) | Field Notes (light) |
+| --------------------- | ------------------- |
+| ![Mission Control mode](screenshots/mission.png) | ![Field Notes mode](screenshots/fieldnotes.png) |
 
-<img width="1105" height="947" alt="image" src="https://github.com/user-attachments/assets/170d1584-b977-4197-866a-cefca449e59f" />
+<p align="center">
+  <img src="screenshots/ai-panel.png" width="49%" alt="AI explanation panel" />
+  <img src="screenshots/mobile.png" width="14%" alt="Mobile layout" />
+</p>
 
+There is a live demo with fake logs (and AI enabled) at
+[grafito-demo.ralsina.me](https://grafito-demo.ralsina.me).
 
 Key features include:
+
+* **Three switchable UIs** - Mission Control (dark ops dashboard), Field
+  Notes (light editorial) and Graphite (amber terminal look), plus a
+  light/dark toggle inside each of them.
+* **Inspector side panel** - clicking any log entry opens a Detail tab;
+  Context shows the surrounding entries with the inspected one
+  highlighted, and the AI tab holds the explanation.
+* Real-time log viewing (with an optional auto-refresh) and an
+  interactive severity minimap with hover previews and click-to-jump.
+* An event frequency chart with adaptive buckets: click a bar to jump
+  to that moment in the log.
+* Filtering by unit, tag, hostname, time range, priority and a general
+  search query (debounced, works on mobile).
+* Mobile-friendly layout: entries collapse into two lines (metadata +
+  full-width message).
+* **AI-powered log explanations with iterative refinement** - ask
+  follow-up questions in context (optional, requires a provider).
+* **Configurable timezone support** - display timestamps in your local
+  timezone or any timezone you prefer.
+* A dynamic user interface powered by HTMX for a smooth experience.
+* Embedded assets (HTML, favicon) for easy deployment as a single
+  binary.
+* Built with the Crystal programming language and the Kemal web
+  framework.
 
 * Real-time log viewing (with an optional auto-refresh).
 * Filtering by unit, tag, time range, and a general search query.
@@ -26,22 +57,49 @@ Key features include:
 
 ### AI Log Analysis
 
-Grafito includes an optional AI feature that provides intelligent explanations for log entries. When configured, you'll see a psychology icon (🧠) next to each log entry that allows you to get AI-powered analysis.
+Grafito includes an optional AI feature that explains log entries in
+natural language. When configured, each row shows a 🧠 button and the
+inspector panel has an **AI** tab with the explanation, plus a reply
+box so you can ask follow-up questions about that entry.
 
-**To enable AI features:**
+**Providers**
 
-1. **Get an API key** from [z.ai](https://z.ai) - they offer affordable LLM access with low costs.
-2. **Set the environment variable** before running Grafito:
-   ```bash
-   export Z_AI_API_KEY="your_api_key_here"
-   ./bin/grafito
-   ```
-3. **Or add it to your systemd service**:
-   ```ini
-   Environment="Z_AI_API_KEY=your_api_key_here"
-   ```
+Any OpenAI-compatible endpoint works, and there are specific presets
+for a few services:
 
-The AI feature sends ±5 lines of log context around the selected entry to analyze patterns, suggest solutions, and explain complex errors. The feature is completely optional - Grafito works perfectly without it, and the AI button only appears when the API key is configured.
+| Variable | Provider |
+| -------- | -------- |
+| `Z_AI_API_KEY` | [z.ai](https://z.ai) GLM models |
+| `ANTHROPIC_API_KEY` | Anthropic Claude |
+| `OPENAI_API_KEY` | OpenAI |
+| `GROQ_API_KEY` | Groq |
+| `TOGETHER_API_KEY` | Together |
+| `GRAFITO_AI_API_KEY` | Any OpenAI-compatible endpoint (with `GRAFITO_AI_ENDPOINT`) |
+
+The feature is completely optional - Grafito works perfectly without
+it, and the AI tab only appears when a provider is configured.
+
+**Useful environment variables:**
+
+```bash
+export Z_AI_API_KEY="your_api_key_here"     # pick ONE provider key
+export GRAFITO_AI_PROVIDER=z_ai             # optional: provider preset
+export GRAFITO_AI_MODEL=glm-4.5-flash       # optional: model override
+export GRAFITO_AI_ENDPOINT=http://127.0.0.1:4100/v1/chat/completions
+export GRAFITO_AI_PROVIDER_NAME="ChatJimmy (Llama 3.1 8B)"  # label in the UI
+export GRAFITO_AI_TIMEOUT_SEC=90            # request timeout
+export GRAFITO_AI_DISABLE_THINKING=true     # for GLM reasoning models
+```
+
+The AI feature sends ±5 lines of log context around the selected entry
+to analyze patterns, suggest solutions, and explain complex errors.
+Prior follow-up questions are replayed too, so the answers stay in
+context.
+
+**Self-hosted / proxied setups:** if you run a local proxy (the demo
+uses [jimmy-proxy](https://github.com/Fadeleke57/jimmy-proxy) to expose
+ChatJimmy's free Llama 3.1 8B), point `GRAFITO_AI_ENDPOINT` at it and
+label it with `GRAFITO_AI_PROVIDER_NAME`.
 
 ### Timezone Configuration
 
@@ -395,11 +453,21 @@ Once set up, logs from all client hosts will appear in Grafito on the central se
    The application will typically be available at `http://localhost:3000`.
 
 4. **Linting:**
-   This project uses Ameba for static code analysis. To run the linter:
+   This project uses Ameba for static code analysis. CI builds it from
+   the vendored source, so the equivalent local command is:
 
    ```bash
-   ./bin/ameba
+   crystal build lib/ameba/bin/ameba.cr -o bin/ameba && bin/ameba src spec
    ```
+
+5. **Demo site:**
+   The public demo at [grafito-demo.ralsina.me](https://grafito-demo.ralsina.me)
+   runs fake journal data with AI enabled. It is deployed as a docker
+   compose stack (see `demo-site/compose.yml`) that runs the demo image
+   alongside [jimmy-proxy](https://github.com/Fadeleke57/jimmy-proxy), a
+   tiny proxy exposing ChatJimmy's free Llama 3.1 8B as an
+   OpenAI-compatible API. `./deploy_site.sh` builds, pushes and deploys
+   the whole stack.
 
 ## Contributing
 

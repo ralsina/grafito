@@ -1,1 +1,1 @@
-style ".md.rb"
+rule 'MD013', :line_length => 999
