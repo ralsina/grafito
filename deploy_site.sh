@@ -24,7 +24,9 @@ ssh root@rocky "curl -fsSL https://raw.githubusercontent.com/Fadeleke57/jimmy-pr
 # jimmy-proxy hardcodes 127.0.0.1; it must listen on all interfaces
 # inside its container for the grafito container to reach it.
 ssh root@rocky "sed -i 's/(\"127.0.0.1\", args.port)/(\"0.0.0.0\", args.port)/' /data/stacks/grafito-demo/proxy.py"
-ssh root@rocky "cd /data/stacks/grafito-demo && docker compose pull grafito && docker compose up -d"
+ssh root@rocky "cd /data/stacks/grafito-demo && docker compose pull grafito && docker compose up -d --force-recreate"
+# --force-recreate covers both services: recreating only one can leave
+# the other on a stale network attachment, breaking the jimmy DNS alias.
 
 make website
 rsync -rav site/* root@rocky:/data/stacks/web/websites/grafito.ralsina.me/
