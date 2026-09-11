@@ -601,6 +601,14 @@ class Journalctl
     after_entries = run_journalctl_and_parse(cmd_after_args, "Context (after entries for cursor '#{cursor}')")
 
     result = before_entries + [target_entry] + after_entries
+
+    # The entry at index `count` is the target. Pin its cursor to the
+    # requested one so exactly one row is highlighted as the target
+    # (regenerated fake/demo entries have fresh cursors).
+    if result.size > count
+      result[count].data["__CURSOR"] = cursor
+    end
+
     Log.info { "Context for cursor '#{cursor}' with count #{count}: Found #{before_entries.size} before, 1 target, #{after_entries.size} after. Total: #{result.size}" }
     result
   end
