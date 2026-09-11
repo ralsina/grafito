@@ -25,6 +25,7 @@ module Grafito::AI::Providers
   # - GRAFITO_AI_API_KEY: Generic API key fallback
   # - GRAFITO_AI_MODEL: Model override
   # - GRAFITO_AI_ENDPOINT: Custom endpoint URL
+  # - GRAFITO_AI_PROVIDER_NAME: Display name for endpoint-only setups
   # - GRAFITO_AI_TIMEOUT_SEC: Request timeout in seconds (default 30)
   # - GRAFITO_AI_DISABLE_THINKING: Set to disable hidden reasoning on
   #   models that support it (e.g. z.ai GLM), for faster responses
@@ -141,7 +142,9 @@ module Grafito::AI::Providers
       @provider_id = force_provider || detect_provider
       config = PROVIDERS[@provider_id]? || PROVIDERS["z_ai"]
 
-      @provider_name = config.name
+      # Endpoint-only setups (e.g. a local proxy) can label themselves via
+      # the environment instead of inheriting the fallback entry's name.
+      @provider_name = ENV["GRAFITO_AI_PROVIDER_NAME"]? || config.name
       @api_key = resolve_api_key(config)
       @endpoint = URI.parse(ENV["GRAFITO_AI_ENDPOINT"]? || config.endpoint)
       @models_endpoint = config.models_endpoint

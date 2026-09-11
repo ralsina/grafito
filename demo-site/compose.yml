@@ -24,4 +24,5 @@ services:
       GRAFITO_AI_PROVIDER: openai_compatible
       GRAFITO_AI_ENDPOINT: http://jimmy:4100/v1/chat/completions
       GRAFITO_AI_MODEL: llama3.1-8B
+      GRAFITO_AI_PROVIDER_NAME: "ChatJimmy (Llama 3.1 8B)"
       GRAFITO_AI_API_KEY: local
