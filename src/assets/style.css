@@ -289,12 +289,17 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   min-width: 220px;
   max-width: 560px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.3rem 0.6rem;
   background: var(--panel-2);
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.15rem 0.8rem;
+  cursor: text;
+}
+#search-omnibox:not(:focus-within) input {
+  min-width: 12ch;
 }
 #search-omnibox:focus-within {
   border-color: var(--accent);
@@ -1506,12 +1511,15 @@ html[data-ui="mission"] #results table tbody tr:hover {
   justify-content: flex-end;
 }
 
-/* Active filter chips (unit / tag / hostname) */
+/* Active filter chips (unit / tag / hostname) - DataDog-style tokens
+   embedded in the search omnibox */
 .active-filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.3rem;
   align-items: center;
+  flex: none;
+  max-width: 60%;
 }
 .active-filters:empty {
   display: none;
@@ -1519,13 +1527,13 @@ html[data-ui="mission"] #results table tbody tr:hover {
 .af-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.3rem;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  background: var(--panel-2);
-  border: 1px solid var(--tag-color, var(--line));
-  border-radius: 999px;
-  padding: 0.2rem 0.3rem 0.2rem 0.6rem;
+  font-size: 0.64rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.12rem 0.25rem 0.12rem 0.4rem;
 }
 .af-chip-label {
   color: var(--txt);
@@ -1541,5 +1549,18 @@ html[data-ui="mission"] #results table tbody tr:hover {
   padding: 0 0.15rem;
 }
 .af-chip-x:hover {
+  color: var(--err);
+}
+
+#search-omnibox .af-chip-x {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.62rem;
+  line-height: 1;
+  padding: 0 0.1rem;
+}
+#search-omnibox .af-chip-x:hover {
   color: var(--err);
 }
