@@ -50,7 +50,7 @@ shards:
 
   kemal:
     git: https://github.com/kemalcr/kemal.git
-    version: 1.8.0
+    version: 1.13.0
 
   kemal-basic-auth:
     git: https://github.com/kemalcr/kemal-basic-auth.git

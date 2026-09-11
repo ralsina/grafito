@@ -178,7 +178,7 @@ def main
     mount_path: Grafito.base_path,
     cache_control: "public, max-age=300",
   )
-  add_handler baked_asset_handler
+  use baked_asset_handler
 
   # Check if systemd passed a socket file descriptor to start from
   listen_fds = ENV["LISTEN_FDS"]?.to_s.to_i { 0 }

@@ -64,9 +64,9 @@ module Grafito
   # ameba:disable Metrics/CyclomaticComplexity
   def self.register_routes
     if idle_timeout_sec > 0
-      add_handler IdleShutdownHandler.new(timeout_sec: idle_timeout_sec, logger: Log)
+      use IdleShutdownHandler.new(timeout_sec: idle_timeout_sec, logger: Log)
     end
-    add_handler CacheHeadersHandler.new
+    use CacheHeadersHandler.new
 
     # When deployed under a base path (e.g. /grafito), visitors hitting the
     # bare root (http://host:port/) should land in the app, not a 404.
