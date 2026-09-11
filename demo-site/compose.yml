@@ -31,3 +31,4 @@ services:
       GRAFITO_AI_MODEL: llama3.1-8B
       GRAFITO_AI_PROVIDER_NAME: "ChatJimmy (Llama 3.1 8B)"
       GRAFITO_AI_API_KEY: local
+      GRAFITO_AI_TIMEOUT_SEC: "120"
