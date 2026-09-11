@@ -19,8 +19,8 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="style.min.css" />
     <title>Grafito Log Viewer</title>
-    <script src="htmx.org@1.9.10.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="htmx.org@1.9.10.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
   </head>
   <body
     hx-get="services"
@@ -69,6 +69,7 @@
           <input
             type="search"
             id="search-box"
+            aria-label="Search log messages"
             placeholder="Search logs… (journalctl -g)"
             title="Enter text to search in log messages (uses journalctl -g)"
             hx-get="logs"
@@ -555,6 +556,7 @@
           <input
             type="text"
             id="ai-followup-input"
+            aria-label="Follow-up question for the AI"
             placeholder="Ask a follow-up… (e.g. “how do I stop these errors?”)"
             title="Refine the AI explanation with a follow-up question"
             autocomplete="off"

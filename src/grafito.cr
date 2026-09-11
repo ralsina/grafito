@@ -67,6 +67,7 @@ module Grafito
       use IdleShutdownHandler.new(timeout_sec: idle_timeout_sec, logger: Log)
     end
     use CacheHeadersHandler.new
+    use GzipHandler.new
 
     # When deployed under a base path (e.g. /grafito), visitors hitting the
     # bare root (http://host:port/) should land in the app, not a 404.

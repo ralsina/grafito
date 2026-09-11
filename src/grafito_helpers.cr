@@ -1,4 +1,5 @@
-require "kemal" # For HTTP::Server::Context and HTML and Kemal::Handler
+require "kemal"
+require "compress/gzip" # For HTTP::Server::Context and HTML and Kemal::Handler
 require "json"
 require "./journalctl"
 require "./timeline"
@@ -56,6 +57,37 @@ module Grafito
               content_type.starts_with?("text/javascript")
           context.response.headers["Cache-Control"] = "public, max-age=300"
         end
+      end
+    end
+  end
+
+  # Compresses text responses with gzip when the client accepts it. The
+  # baked asset handler and the log endpoints serve large uncompressed
+  # HTML/CSS/JS payloads, so this saves 70-90% of the transfer size.
+  private class GzipHandler < Kemal::Handler
+    COMPRESSIBLE = /^text\/|^application\/(json|javascript)/
+
+    def call(context)
+      accepts = context.request.headers["Accept-Encoding"]?
+      if accepts.try(&.includes?("gzip"))
+        original_output = context.response.output
+        buffer = IO::Memory.new
+        context.response.output = buffer
+        call_next(context)
+        content_type = context.response.headers["Content-Type"]?
+        if content_type.try(&.matches?(COMPRESSIBLE)) && buffer.bytesize > 512 &&
+           !context.response.headers.has_key?("Content-Encoding")
+          context.response.output = original_output
+          context.response.headers["Content-Encoding"] = "gzip"
+          context.response.headers.delete("Content-Length")
+          buffer.rewind
+          Compress::Gzip::Writer.open(original_output) { |gz| IO.copy(buffer, gz) }
+        else
+          context.response.output = original_output
+          context.response.print buffer.to_s
+        end
+      else
+        call_next(context)
       end
     end
   end

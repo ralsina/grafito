@@ -1476,3 +1476,14 @@ html[data-ui="mission"] #results table tbody tr:hover {
     width: 1.7rem;
   }
 }
+
+/* Reserve the chart's space before HTMX injects it (kills layout shift) */
+#results:empty::before {
+  content: "";
+  display: block;
+  height: 64px;
+  margin: 0.75rem 0 0.5rem;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel-2) 60%, transparent);
+}
