@@ -21,6 +21,6 @@ jobs:
     - name: Check formatting
       run: crystal tool format --check src spec
     - name: Build and run linter
-      run: crystal build lib/ameba/bin/ameba.cr -o bin/ameba && bin/ameba src spec
+      run: mkdir -p bin && crystal build lib/ameba/bin/ameba.cr -o bin/ameba && bin/ameba src spec
     - name: Run tests
       run: crystal spec
