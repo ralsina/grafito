@@ -65,6 +65,8 @@
         font-family: "Share Tech Mono", ui-monospace, monospace;
         line-height: 1.55;
         overflow-x: hidden;
+        /* keep fixed footer from covering the end of the content */
+        padding-bottom: 4.5rem;
       }
 
       /* --- The tube: scanlines + vignette + (subtle) flicker ---------- */
@@ -219,9 +221,12 @@
           0 0 28px color-mix(in srgb, var(--txt) 35%, transparent);
       }
       .grafito-title .cursor {
-        color: var(--amber);
-        font-size: 0.5em;
-        vertical-align: 0.12em;
+        display: inline-block;
+        width: 0.45em;
+        height: 0.72em;
+        margin-left: 0.08em;
+        background: var(--amber);
+        box-shadow: 0 0 12px color-mix(in srgb, var(--amber) 60%, transparent);
         animation: blink 1.1s infinite steps(1);
       }
       @media (prefers-reduced-motion: reduce) {
@@ -486,8 +491,14 @@
         margin: 0 0 2rem;
       }
       footer.site-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        background: var(--bg);
         border-top: 1px solid var(--line);
-        padding: 1.5rem 0 2.5rem;
+        padding: 1rem 0;
         text-align: center;
         font-size: 0.82rem;
         color: var(--muted);
@@ -541,7 +552,7 @@
           ai.link <span class="ok">[standby]</span>
         </p>
         <h1 class="grafito-title">
-          <a href="https://github.com/ralsina/grafito" target="_blank">Grafito<span class="cursor">▊</span></a>
+          <a href="https://github.com/ralsina/grafito" target="_blank">Grafito<span class="cursor"></span></a>
         </h1>
         <p class="subtitle">Your friendly, self-hosted systemd journal log viewer</p>
 
@@ -730,7 +741,7 @@
     </main>
 
     <footer class="site-footer">
-      <a href="https://links.ralsina.me" target="_blank">Roberto Alsina</a>
+      <a href="https://ralsina.me" target="_blank">Roberto Alsina</a>
       <span class="sep">|||</span>
       <a href="https://github.com/ralsina/grafito" target="_blank">Grafito Project</a>
     </footer>

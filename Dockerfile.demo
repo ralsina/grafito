@@ -1,0 +1,12 @@
+# Demo image: grafito built with fake journal data, for the public demo
+# site. Built by deploy_site.sh from the static arm64 binary produced by
+# the grafito-builder image, pushed as
+# ghcr.io/ralsina/grafito-demo-arm64:latest
+FROM alpine:3.20
+ARG VERSION
+LABEL org.opencontainers.image.source="https://github.com/ralsina/grafito"
+LABEL org.opencontainers.image.version="${VERSION}"
+
+COPY bin/grafito-fake-static-linux-arm64 /usr/local/bin/grafito
+EXPOSE 3000
+ENTRYPOINT ["/usr/local/bin/grafito", "-b", "0.0.0.0"]

@@ -91,11 +91,6 @@
         left: -1.2em;
         opacity: 0;
         -webkit-transition: opacity 0.2s linear;
-
-            {
-            # font-size: 150%;
-            #
-        }
     }
 
     div.doc:hover .anchor {
@@ -212,16 +207,16 @@
 
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-0" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-0" class="anchor">↦</a>
         </span>
 
     </div>
     <div class="code">
         <span id="line-1"><pre class="b" ><code class="b"><span class="nt">name</span><span class="p">:</span><span class="tw"> </span><span class="l">grafito</span><span class="tw"></span>
-<span id="line-2"></span><span class="tw"></span><span class="nt">version</span><span class="p">:</span><span class="tw"> </span><span class="m">0.16</span><span class="m">.3</span><span class="tw"></span>
+<span id="line-2"></span><span class="tw"></span><span class="nt">version</span><span class="p">:</span><span class="tw"> </span><span class="m">0.17</span><span class="m">.0</span><span class="tw"></span>
 <span id="line-3"></span><span class="tw"></span>
 <span id="line-4"></span><span class="tw"></span><span class="nt">authors</span><span class="p">:</span><span class="tw"></span>
 <span id="line-5"></span><span class="tw"></span><span class="tw">  </span><span class="t">- </span><span class="l">Roberto Alsina &lt;roberto.alsina@gmail.com&gt;</span><span class="tw"></span>
@@ -232,10 +227,10 @@
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-1" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-1" class="anchor">↦</a>
         </span>
         <p>Trying to keep dependencies to a minimum.</p>
 <ul>
@@ -248,58 +243,60 @@ makes for horrible-looking code</li>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="nt">dependencies</span><span class="p">:</span><span class="tw"></span>
-<span id="line-2"></span><span class="tw"></span><span class="tw">  </span><span class="nt">baked_file_system</span><span class="p">:</span><span class="tw"></span>
-<span id="line-3"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/baked_file_system</span><span class="tw"></span>
-<span id="line-4"></span><span class="tw">    </span><span class="nt">branch</span><span class="p">:</span><span class="tw"> </span><span class="l">master</span><span class="tw"></span>
-<span id="line-5"></span><span class="tw">  </span><span class="nt">docopt</span><span class="p">:</span><span class="tw"></span>
-<span id="line-6"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/docopt.cr</span><span class="tw"></span>
-<span id="line-7"></span><span class="tw">  </span><span class="nt">docopt-config</span><span class="p">:</span><span class="tw"></span>
-<span id="line-8"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/docopt-config</span><span class="tw"></span>
-<span id="line-9"></span><span class="tw">  </span><span class="nt">html_builder</span><span class="p">:</span><span class="tw"></span>
-<span id="line-10"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">crystal-lang/html_builder</span><span class="tw"></span>
-<span id="line-11"></span><span class="tw">  </span><span class="nt">kemal</span><span class="p">:</span><span class="tw"></span>
-<span id="line-12"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">kemalcr/kemal</span><span class="tw"></span>
-<span id="line-13"></span><span class="tw">  </span><span class="nt">kemal-basic-auth</span><span class="p">:</span><span class="tw"></span>
-<span id="line-14"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">kemalcr/kemal-basic-auth</span><span class="tw"></span>
-<span id="line-15"></span><span class="tw">  </span><span class="nt">baked_file_handler</span><span class="p">:</span><span class="tw"></span>
-<span id="line-16"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/baked_file_handler</span></code></pre></span>
+        <span id="line-19"><pre class="b" ><code class="b"><span class="nt">dependencies</span><span class="p">:</span><span class="tw"></span>
+<span id="line-20"></span><span class="tw"></span><span class="tw">  </span><span class="nt">baked_file_system</span><span class="p">:</span><span class="tw"></span>
+<span id="line-21"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/baked_file_system</span><span class="tw"></span>
+<span id="line-22"></span><span class="tw">    </span><span class="nt">branch</span><span class="p">:</span><span class="tw"> </span><span class="l">master</span><span class="tw"></span>
+<span id="line-23"></span><span class="tw">  </span><span class="nt">docopt</span><span class="p">:</span><span class="tw"></span>
+<span id="line-24"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/docopt.cr</span><span class="tw"></span>
+<span id="line-25"></span><span class="tw">  </span><span class="nt">docopt-config</span><span class="p">:</span><span class="tw"></span>
+<span id="line-26"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/docopt-config</span><span class="tw"></span>
+<span id="line-27"></span><span class="tw">  </span><span class="nt">html_builder</span><span class="p">:</span><span class="tw"></span>
+<span id="line-28"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">crystal-lang/html_builder</span><span class="tw"></span>
+<span id="line-29"></span><span class="tw">  </span><span class="nt">kemal</span><span class="p">:</span><span class="tw"></span>
+<span id="line-30"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">kemalcr/kemal</span><span class="tw"></span>
+<span id="line-31"></span><span class="tw">  </span><span class="nt">kemal-basic-auth</span><span class="p">:</span><span class="tw"></span>
+<span id="line-32"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">kemalcr/kemal-basic-auth</span><span class="tw"></span>
+<span id="line-33"></span><span class="tw">  </span><span class="nt">baked_file_handler</span><span class="p">:</span><span class="tw"></span>
+<span id="line-34"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/baked_file_handler</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-2" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-2" class="anchor">↦</a>
         </span>
         <p>Anthropic/Claude AI provider</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="tw">  </span><span class="nt">anthropic</span><span class="p">:</span><span class="tw"></span>
-<span id="line-2"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">jgaskins/anthropic</span></code></pre></span>
+        <span id="line-36"><pre class="b" ><code class="b"><span class="tw">  </span><span class="nt">anthropic</span><span class="p">:</span><span class="tw"></span>
+<span id="line-37"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">jgaskins/anthropic</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-3" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-3" class="anchor">↦</a>
         </span>
         <p>Faker is used for the demo version which displays
 fake data.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="nt">development_dependencies</span><span class="p">:</span><span class="tw"></span>
-<span id="line-2"></span><span class="tw"></span><span class="tw">  </span><span class="nt">faker</span><span class="p">:</span><span class="tw"></span>
-<span id="line-3"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">askn/faker</span><span class="tw"></span>
-<span id="line-4"></span><span class="tw">  </span><span class="nt">webmock</span><span class="p">:</span><span class="tw"></span>
-<span id="line-5"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">manastech/webmock.cr</span><span class="tw"></span>
-<span id="line-6"></span><span class="tw"></span>
-<span id="line-7"></span><span class="tw"></span><span class="nt">crystal</span><span class="p">:</span><span class="tw"> </span><span class="s2">&quot;&gt;=1.16.0&quot;</span><span class="tw"></span>
-<span id="line-8"></span><span class="tw"></span>
-<span id="line-9"></span><span class="tw"></span><span class="nt">license</span><span class="p">:</span><span class="tw"> </span><span class="l">MIT</span></code></pre></span>
+        <span id="line-41"><pre class="b" ><code class="b"><span class="nt">development_dependencies</span><span class="p">:</span><span class="tw"></span>
+<span id="line-42"></span><span class="tw"></span><span class="tw">  </span><span class="nt">ameba</span><span class="p">:</span><span class="tw"></span>
+<span id="line-43"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">crystal-ameba/ameba</span><span class="tw"></span>
+<span id="line-44"></span><span class="tw">  </span><span class="nt">faker</span><span class="p">:</span><span class="tw"></span>
+<span id="line-45"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">askn/faker</span><span class="tw"></span>
+<span id="line-46"></span><span class="tw">  </span><span class="nt">webmock</span><span class="p">:</span><span class="tw"></span>
+<span id="line-47"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">manastech/webmock.cr</span><span class="tw"></span>
+<span id="line-48"></span><span class="tw"></span>
+<span id="line-49"></span><span class="tw"></span><span class="nt">crystal</span><span class="p">:</span><span class="tw"> </span><span class="s2">&quot;&gt;=1.16.0&quot;</span><span class="tw"></span>
+<span id="line-50"></span><span class="tw"></span>
+<span id="line-51"></span><span class="tw"></span><span class="nt">license</span><span class="p">:</span><span class="tw"> </span><span class="l">MIT</span></code></pre></span>
     </div>
 </div>
 

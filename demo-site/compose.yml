@@ -1,0 +1,27 @@
+services:
+  # jimmy-proxy: single-file OpenAI-compatible proxy to ChatJimmy's
+  # free Llama 3.1 8B. No API key needed. Internal to this stack.
+  jimmy:
+    image: python:3.12-alpine
+    container_name: grafito-demo-jimmy
+    restart: unless-stopped
+    volumes:
+      - ./proxy.py:/app/proxy.py:ro
+    command: ["python", "/app/proxy.py", "--port", "4100"]
+
+  # Grafito demo instance, built with fake journal data. The image is
+  # built and pushed by deploy_site.sh.
+  grafito:
+    image: ghcr.io/ralsina/grafito-demo-arm64:latest
+    container_name: grafito-demo
+    restart: unless-stopped
+    depends_on:
+      - jimmy
+    ports:
+      - "1112:1112"
+    command: ["-p", "1112"]
+    environment:
+      GRAFITO_AI_PROVIDER: openai_compatible
+      GRAFITO_AI_ENDPOINT: http://jimmy:4100/v1/chat/completions
+      GRAFITO_AI_MODEL: llama3.1-8B
+      GRAFITO_AI_API_KEY: local

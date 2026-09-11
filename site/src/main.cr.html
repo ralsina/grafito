@@ -91,11 +91,6 @@
         left: -1.2em;
         opacity: 0;
         -webkit-transition: opacity 0.2s linear;
-
-            {
-            # font-size: 150%;
-            #
-        }
     }
 
     div.doc:hover .anchor {
@@ -212,10 +207,10 @@
 
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="grafito" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#grafito" class="anchor">↦</a>
         </span>
         <p>[markdown]</p>
 <h1>Grafito</h1>
@@ -247,30 +242,31 @@ and configuration and is performant. Easy, right?</p>
     </div>
 </div>
 
-<div id="maincr" class="grid">
-    <div class="doc" id="maincr">
+<div id="section-1" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#maincr" class="anchor">↦</a>
+            <a href="#section-1" class="anchor">↦</a>
         </span>
         <h2>main.cr</h2>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./grafito</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-2"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./ai/config</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-3"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">baked_file_handler</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-4"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">baked_file_system</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-5"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">docopt-config</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-6"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">kemal-basic-auth</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-7"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">kemal</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-8"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log</span><span class="s">&quot;</span><span class="s"></span></code></pre></span>
+        <span id="line-34"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./grafito</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-35"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./ai/config</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-36"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">baked_file_handler</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-37"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">baked_file_system</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-38"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">docopt-config</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-39"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">kemal-basic-auth</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-40"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">kemal</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-41"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-42"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">socket</span><span class="s">&quot;</span><span class="s"></span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-2" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-2" class="anchor">↦</a>
         </span>
         <p>This file <a href="main.cr.html">main.cr</a> is the starting point for grafito. We get the instructions from the
 user about how to start via the command line, using <a href="https://docopt.org">docopt</a>
@@ -286,38 +282,42 @@ which lets us just write the help and then everything Just Works.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="no">DOC</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&lt;&lt;-DOCOPT</span><span class="t"></span>
-<span id="line-2"></span><span class="s">Grafito - A simple log viewer.</span><span class="s"></span>
-<span id="line-3"></span><span class="s"></span>
-<span id="line-4">Usage:</span><span class="s"></span>
-<span id="line-5">  grafito [options]</span><span class="s"></span>
-<span id="line-6">  grafito (-h | --help)</span><span class="s"></span>
-<span id="line-7">  grafito --version</span><span class="s"></span>
-<span id="line-8"></span><span class="s"></span>
-<span id="line-9">Options:</span><span class="s"></span>
-<span id="line-10">  -p PORT, --port=PORT          Port to listen on [default: 3000].</span><span class="s"></span>
-<span id="line-11">  -b ADDRESS, --bind=ADDRESS    Address to bind to [default: 127.0.0.1].</span><span class="s"></span>
-<span id="line-12">  -U UNITS, --units=UNITS       Comma-separated list of systemd units to show (restricts access).</span><span class="s"></span>
-<span id="line-13">  --log-level=LEVEL             Set log level (debug, info, warn, error, fatal) [default: info].</span><span class="s"></span>
-<span id="line-14">  -t TIMEZONE, --timezone=TIMEZONE  Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].</span><span class="s"></span>
-<span id="line-15">  --base-path=PATH              Base path for deployment (e.g., /, /grafito) [default: /].</span><span class="s"></span>
-<span id="line-16">  -h --help                     Show this screen.</span><span class="s"></span>
-<span id="line-17">  --version                     Show version.</span><span class="s"></span>
-<span id="line-18"></span><span class="s"></span>
-<span id="line-19">Environment variables:</span><span class="s"></span>
-<span id="line-20">  GRAFITO_AUTH_USER             Username for basic authentication (if set, GRAFITO_AUTH_PASS must also be set).</span><span class="s"></span>
-<span id="line-21">  GRAFITO_AUTH_PASS             Password for basic authentication (if set, GRAFITO_AUTH_USER must also be set).</span><span class="s"></span>
-<span id="line-22">  LOG_LEVEL                     Log level (debug, info, warn, error, fatal) [default: info].</span><span class="s"></span>
-<span id="line-23">  GRAFITO_TIMEZONE              Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].</span><span class="s"></span>
-<span id="line-24">  GRAFITO_BASE_PATH             Base path for deployment (e.g., /, /grafito) [default: /].</span><span class="s"></span>
-<span id="line-25">DOCOPT</span><span class="s"></span></code></pre></span>
+        <span id="line-57"><pre class="b" ><code class="b"><span class="no">DOC</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&lt;&lt;-DOCOPT</span><span class="t"></span>
+<span id="line-58"></span><span class="s">    Grafito - A simple log viewer.</span><span class="s"></span>
+<span id="line-59"></span><span class="s"></span>
+<span id="line-60">    Usage:</span><span class="s"></span>
+<span id="line-61">      grafito [options]</span><span class="s"></span>
+<span id="line-62">      grafito (-h | --help)</span><span class="s"></span>
+<span id="line-63">      grafito --version</span><span class="s"></span>
+<span id="line-64"></span><span class="s"></span>
+<span id="line-65">  Options:</span><span class="s"></span>
+<span id="line-66">    -p PORT, --port=PORT          Port to listen on [default: 3000].</span><span class="s"></span>
+<span id="line-67">    -b ADDRESS, --bind=ADDRESS    Address to bind to [default: 127.0.0.1].</span><span class="s"></span>
+<span id="line-68">    -U UNITS, --units=UNITS       Comma-separated list of systemd units to show (restricts access).</span><span class="s"></span>
+<span id="line-69">    --log-level=LEVEL             Set log level (debug, info, warn, error, fatal) [default: info].</span><span class="s"></span>
+<span id="line-70">    -t TIMEZONE, --timezone=TIMEZONE  Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].</span><span class="s"></span>
+<span id="line-71">    --base-path=PATH              Base path for deployment (e.g., /, /grafito) [default: /].</span><span class="s"></span>
+<span id="line-72">    --user                       Enable user systemd mode (use journalctl --user and systemctl --user) [default: false].</span><span class="s"></span>
+<span id="line-73">    --idle-timeout-sec=TIMEOUT    Idle timeout in seconds after which to shut down. Primarily useful with systemd socket activation.</span><span class="s"></span>
+<span id="line-74">    -h --help                     Show this screen.</span><span class="s"></span>
+<span id="line-75">    --version                     Show version.</span><span class="s"></span>
+<span id="line-76"></span><span class="s"></span>
+<span id="line-77">  Environment variables:</span><span class="s"></span>
+<span id="line-78">    GRAFITO_AUTH_USER             Username for basic authentication (if set, GRAFITO_AUTH_PASS must also be set).</span><span class="s"></span>
+<span id="line-79">    GRAFITO_AUTH_PASS             Password for basic authentication (if set, GRAFITO_AUTH_USER must also be set).</span><span class="s"></span>
+<span id="line-80">    LOG_LEVEL                     Log level (debug, info, warn, error, fatal) [default: info].</span><span class="s"></span>
+<span id="line-81">    GRAFITO_TIMEZONE              Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].</span><span class="s"></span>
+<span id="line-82">    GRAFITO_BASE_PATH             Base path for deployment (e.g., /, /grafito) [default: /].</span><span class="s"></span>
+<span id="line-83">    GRAFITO_USER_MODE            Enable user systemd mode (true/false) [default: false].</span><span class="s"></span>
+<span id="line-84">    LISTEN_FDS                    Used for systemd socket activation. If set to 1, binds to the socket passed as fd 3.</span><span class="s"></span>
+<span id="line-85">  DOCOPT</span><span class="s"></span></code></pre></span>
     </div>
 </div>
 
-<div id="the-assets-class" class="grid">
-    <div class="doc" id="the-assets-class">
+<div id="section-3" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#the-assets-class" class="anchor">↦</a>
+            <a href="#section-3" class="anchor">↦</a>
         </span>
         <h2>The Assets class</h2>
 <p>Bake all files from the src/assets directory into the binary.
@@ -337,31 +337,31 @@ it will work fine but fonts will look different and icons may be missing.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="nk">class</span><span class="t"> </span><span class="no">Assets</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="nk">extend</span><span class="t"> </span><span class="no">BakedFileSystem</span><span class="t"></span>
-<span id="line-3"></span><span class="t">  </span><span class="t">bake_folder</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./assets</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-4"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-105"><pre class="b" ><code class="b"><span class="nk">class</span><span class="t"> </span><span class="no">Assets</span><span class="t"></span>
+<span id="line-106"></span><span class="t">  </span><span class="nk">extend</span><span class="t"> </span><span class="no">BakedFileSystem</span><span class="t"></span>
+<span id="line-107"></span><span class="t">  </span><span class="t">bake_folder</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./assets</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-108"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-4" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-4" class="anchor">↦</a>
         </span>
         <p>This <code>main()</code>function is called from the top-level so it's code that
 always gets executed.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">main</span></code></pre></span>
+        <span id="line-113"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">main</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-5" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-5" class="anchor">↦</a>
         </span>
         <p>We parse the command line (<code>ARGV</code>) using the help we described above.
 docopt-config automatically handles environment variables with GRAFITO_ prefix
@@ -369,249 +369,410 @@ and optional config files.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">args</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Docopt</span><span class="t">.</span><span class="t">docopt_config</span><span class="t">(</span><span class="t"></span>
-<span id="line-2"></span><span class="t">    </span><span class="no">DOC</span><span class="t">,</span><span class="t"></span>
-<span id="line-3"></span><span class="t">    </span><span class="t">argv</span><span class="t">:</span><span class="t"> </span><span class="no">ARGV</span><span class="t">,</span><span class="t"></span>
-<span id="line-4"></span><span class="t">    </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">VERSION</span><span class="t">,</span><span class="t"></span>
-<span id="line-5"></span><span class="t">    </span><span class="t">env_prefix</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">GRAFITO</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-6"></span><span class="t">    </span><span class="t">config_file_path</span><span class="t">:</span><span class="t"> </span><span class="no">ENV</span><span class="t">[</span><span class="s">&quot;</span><span class="s">GRAFITO_CONFIG</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
-<span id="line-7"></span><span class="t">  </span><span class="t">)</span></code></pre></span>
+        <span id="line-118"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">args</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Docopt</span><span class="t">.</span><span class="t">docopt_config</span><span class="t">(</span><span class="t"></span>
+<span id="line-119"></span><span class="t">    </span><span class="no">DOC</span><span class="t">,</span><span class="t"></span>
+<span id="line-120"></span><span class="t">    </span><span class="t">argv</span><span class="t">:</span><span class="t"> </span><span class="no">ARGV</span><span class="t">,</span><span class="t"></span>
+<span id="line-121"></span><span class="t">    </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">VERSION</span><span class="t">,</span><span class="t"></span>
+<span id="line-122"></span><span class="t">    </span><span class="t">env_prefix</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">GRAFITO</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-123"></span><span class="t">    </span><span class="t">config_file_path</span><span class="t">:</span><span class="t"> </span><span class="no">ENV</span><span class="t">[</span><span class="s">&quot;</span><span class="s">GRAFITO_CONFIG</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-124"></span><span class="t">  </span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-6" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-6" class="anchor">↦</a>
         </span>
         <p>Set log level from command line argument</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">log_level</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--log-level</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">upcase</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="no">ENV</span><span class="t">[</span><span class="s">&quot;</span><span class="s">LOG_LEVEL</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">log_level</span><span class="t"></span>
-<span id="line-3"></span><span class="t">  </span><span class="no">Log</span><span class="t">.</span><span class="t">setup_from_env</span></code></pre></span>
+        <span id="line-127"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">log_level</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--log-level</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">upcase</span><span class="t"></span>
+<span id="line-128"></span><span class="t">  </span><span class="no">ENV</span><span class="t">[</span><span class="s">&quot;</span><span class="s">LOG_LEVEL</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">log_level</span><span class="t"></span>
+<span id="line-129"></span><span class="t">  </span><span class="no">Log</span><span class="t">.</span><span class="t">setup_from_env</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-7" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-7" class="anchor">↦</a>
         </span>
         <p>Port and binding address are important</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--port</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">to_i32</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="t">bind_address</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--bind</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span></code></pre></span>
+        <span id="line-132"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parse_port</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"></span>
+<span id="line-133"></span><span class="t">  </span><span class="t">bind_address</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--bind</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-8" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-8" class="anchor">↦</a>
         </span>
         <p>Parse units restriction if provided</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--units</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
-<span id="line-2"></span><span class="t">    </span><span class="t">units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--units</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="s">&quot;</span><span class="s">,</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">strip</span><span class="t">)</span><span class="t"></span>
-<span id="line-3"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">allowed_units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">units</span><span class="t"></span>
-<span id="line-4"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Restricting to units: </span><span class="lsi">#{</span><span class="t">units</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s">, </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-5"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-136"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">parse_units</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"></span>
+<span id="line-137"></span><span class="t"></span>
+<span id="line-138"></span><span class="t">  </span><span class="t">parse_idle_timeout</span><span class="t">(</span><span class="t">args</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-9" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-9" class="anchor">↦</a>
         </span>
         <p>Parse timezone configuration
 docopt-config handles the fallback automatically: CLI &gt; env var &gt; config &gt; default</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">timezone</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--timezone</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">timezone</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">timezone</span><span class="t"></span>
-<span id="line-3"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Using timezone: </span><span class="lsi">#{</span><span class="t">timezone</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
+        <span id="line-142"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">timezone</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--timezone</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-143"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">timezone</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">timezone</span><span class="t"></span>
+<span id="line-144"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Using timezone: </span><span class="lsi">#{</span><span class="t">timezone</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-10" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-10" class="anchor">↦</a>
         </span>
         <p>Parse base path configuration
 docopt-config handles the fallback automatically: CLI &gt; env var &gt; config &gt; default</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">base_path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--base-path</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">base_path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">base_path</span><span class="t"></span>
-<span id="line-3"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Using base path: </span><span class="lsi">#{</span><span class="t">base_path</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
+        <span id="line-148"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">base_path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--base-path</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-149"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">base_path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">base_path</span><span class="t"></span>
+<span id="line-150"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Using base path: </span><span class="lsi">#{</span><span class="t">base_path</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-11" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-11" class="anchor">↦</a>
+        </span>
+        <p>Parse user mode configuration
+docopt-config handles the fallback automatically: CLI &gt; env var &gt; config &gt; default</p>
+
+    </div>
+    <div class="code">
+        <span id="line-154"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">user_mode_str</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--user</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-155"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">user_mode</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">user_mode_str</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">true</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-156"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">User mode: </span><span class="lsi">#{</span><span class="no">Grafito</span><span class="t">.</span><span class="t">user_mode?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">enabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">disabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-12" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-12" class="anchor">↦</a>
         </span>
         <p>Register all Kemal routes (must be done after base_path is set)</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">register_routes</span></code></pre></span>
+        <span id="line-159"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">register_routes</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-13" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
-        </span>
-        <p>Log at debug level. Probably worth making it configurable.</p>
-
-    </div>
-    <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">Log</span><span class="t">.</span><span class="t">setup</span><span class="t">(</span><span class="ss">:debug</span><span class="t">)</span><span class="t"> </span><span class="c"># Or use Log.setup_from_env for more flexibility</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Starting Grafito server on </span><span class="lsi">#{</span><span class="t">bind_address</span><span class="t"></span><span class="lsi">}</span><span class="s">:</span><span class="lsi">#{</span><span class="t">port</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
-    </div>
-</div>
-
-<div id="section" class="grid">
-    <div class="doc" id="section">
-        <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
-        </span>
-        <p>Start kemal listening on the right address</p>
-
-    </div>
-    <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">Kemal</span><span class="t">.</span><span class="t">config</span><span class="t">.</span><span class="t">host_binding</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">bind_address</span></code></pre></span>
-    </div>
-</div>
-
-<div id="section" class="grid">
-    <div class="doc" id="section">
-        <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-13" class="anchor">↦</a>
         </span>
         <p>Read credentials and realm from environment variables</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">auth_user</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">ENV</span><span class="t">[</span><span class="s">&quot;</span><span class="s">GRAFITO_AUTH_USER</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="t">auth_pass</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">ENV</span><span class="t">[</span><span class="s">&quot;</span><span class="s">GRAFITO_AUTH_PASS</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span></code></pre></span>
+        <span id="line-162"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">auth_user</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">ENV</span><span class="t">[</span><span class="s">&quot;</span><span class="s">GRAFITO_AUTH_USER</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-163"></span><span class="t">  </span><span class="t">auth_pass</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">ENV</span><span class="t">[</span><span class="s">&quot;</span><span class="s">GRAFITO_AUTH_PASS</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-14" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-14" class="anchor">↦</a>
         </span>
-        <p>Initialize AI provider using the abstraction layer
+        <p>Initialize AI provider using the abstraction layer</p>
+
+    </div>
+    <div class="code">
+        <span id="line-166"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">setup_ai_provider</span><span class="t"></span>
+<span id="line-167"></span><span class="t"></span>
+<span id="line-168"></span><span class="t">  </span><span class="t">setup_basic_auth</span><span class="t">(</span><span class="t">auth_user</span><span class="t">,</span><span class="t"> </span><span class="t">auth_pass</span><span class="t">)</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-15" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-15" class="anchor">↦</a>
+        </span>
+        <p>The <code>BakedFileHandler</code> is a custom handler that serves files that are baked
+into the application. In our case, the Assets class we defined above.</p>
+<p>Uses the external ralsina/baked_file_handler library. Cache-Control is
+capped so deployments behind caching proxies don't pin stale frontends;
+the CacheHeadersHandler further forces no-cache on HTML responses.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-176"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">baked_asset_handler</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">BakedFileHandler</span><span class="no">::</span><span class="no">BakedFileHandler</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-177"></span><span class="t">    </span><span class="no">Assets</span><span class="t">,</span><span class="t"></span>
+<span id="line-178"></span><span class="t">    </span><span class="t">mount_path</span><span class="t">:</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">base_path</span><span class="t">,</span><span class="t"></span>
+<span id="line-179"></span><span class="t">    </span><span class="t">cache_control</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">public, max-age=300</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-180"></span><span class="t">  </span><span class="t">)</span><span class="t"></span>
+<span id="line-181"></span><span class="t">  </span><span class="t">add_handler</span><span class="t"> </span><span class="t">baked_asset_handler</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-16" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-16" class="anchor">↦</a>
+        </span>
+        <p>Check if systemd passed a socket file descriptor to start from</p>
+
+    </div>
+    <div class="code">
+        <span id="line-184"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">listen_fds</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">ENV</span><span class="t">[</span><span class="s">&quot;</span><span class="s">LISTEN_FDS</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">to_i</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-185"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">listen_fds</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
+<span id="line-186"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Unexpectedly got more than 1 socket from systemd</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-187"></span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
+<span id="line-188"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-189"></span><span class="t">  </span><span class="t">socket_activation</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">listen_fds</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="m">1</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-17" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-17" class="anchor">↦</a>
+        </span>
+        <p>Start kemal. That's it. The rest is done in <a href="grafito.cr.html">grafito.cr</a>
+where the kemal endpoints are defined.
+Clear ARGV so Kemal doesn't try to parse command line arguments</p>
+
+    </div>
+    <div class="code">
+        <span id="line-194"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">ARGV</span><span class="t">.</span><span class="t">clear</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-18" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-18" class="anchor">↦</a>
+        </span>
+        <p>If systemd socket activation is in use, don't shut down the socket when we exit.
+Systemd manages the lifetime of the socket in that case.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-197"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">Kemal</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">trap_signal</span><span class="t">:</span><span class="t"> </span><span class="o">!</span><span class="t">socket_activation</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">config</span><span class="o">|</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-19" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-19" class="anchor">↦</a>
+        </span>
+        <p>The HTTP server is initialized by Kemal before starting this block</p>
+
+    </div>
+    <div class="code">
+        <span id="line-199"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">server</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">config</span><span class="t">.</span><span class="t">server</span><span class="t"></span>
+<span id="line-200"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">server</span><span class="t">.</span><span class="nk">nil?</span><span class="t"></span>
+<span id="line-201"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Kemal did not initialize an HTTP server</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-202"></span><span class="t">      </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
+<span id="line-203"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-204"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">socket_activation</span><span class="t"></span>
+<span id="line-205"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Starting Grafito server via systemd socket activation</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-20" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-20" class="anchor">↦</a>
+        </span>
+        <p>Start kemal listening on the socket passed by socket activation</p>
+
+    </div>
+    <div class="code">
+        <span id="line-207"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">server</span><span class="t">.</span><span class="t">bind</span><span class="t">(</span><span class="no">TCPServer</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">fd</span><span class="t">:</span><span class="t"> </span><span class="m">3</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-208"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-209"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Starting Grafito server on </span><span class="lsi">#{</span><span class="t">bind_address</span><span class="t"></span><span class="lsi">}</span><span class="s">:</span><span class="lsi">#{</span><span class="t">port</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-21" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-21" class="anchor">↦</a>
+        </span>
+        <p>Start kemal listening on the user-specified address and port</p>
+
+    </div>
+    <div class="code">
+        <span id="line-211"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">server</span><span class="t">.</span><span class="t">bind_tcp</span><span class="t">(</span><span class="t">bind_address</span><span class="t">,</span><span class="t"> </span><span class="t">port</span><span class="t">)</span><span class="t"></span>
+<span id="line-212"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-213"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-214"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-22" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-22" class="anchor">↦</a>
+        </span>
+        <p>Returns the port to listen on, parsing the docopt argument which may
+arrive as Int32 (parsed default or config file) or String (command line).
+Exits with a clear message on invalid values.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-219"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">parse_port</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"></span>
+<span id="line-220"></span><span class="t">  </span><span class="t">port_value</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--port</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"></span>
+<span id="line-221"></span><span class="t">  </span><span class="t">port</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-222"></span><span class="t">  </span><span class="nk">case</span><span class="t"> </span><span class="t">port_value</span><span class="t"></span>
+<span id="line-223"></span><span class="t">  </span><span class="nk">when</span><span class="t"> </span><span class="no">Int32</span><span class="t">  </span><span class="nk">then</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">port_value</span><span class="t"></span>
+<span id="line-224"></span><span class="t">  </span><span class="nk">when</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="nk">then</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">port_value</span><span class="t">.</span><span class="t">to_i?</span><span class="t"></span>
+<span id="line-225"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-226"></span><span class="t">  </span><span class="nk">unless</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">&lt;=</span><span class="t"> </span><span class="m">65535</span><span class="t"></span>
+<span id="line-227"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Invalid port &#39;</span><span class="lsi">#{</span><span class="t">port_value</span><span class="t"></span><span class="lsi">}</span><span class="s">&#39;: must be a number between 1 and 65535.</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-228"></span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
+<span id="line-229"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-230"></span><span class="t">  </span><span class="t">port</span><span class="t"></span>
+<span id="line-231"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-23" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-23" class="anchor">↦</a>
+        </span>
+        <p>Applies the units restriction from the parsed arguments, if any.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-234"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">parse_units</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"></span>
+<span id="line-235"></span><span class="t">  </span><span class="t">units_arg</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--units</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-236"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">units_arg</span><span class="t">.</span><span class="nk">is_a?</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">units_arg</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-237"></span><span class="t">    </span><span class="t">units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">units_arg</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="s">&quot;</span><span class="s">,</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">strip</span><span class="t">)</span><span class="t"></span>
+<span id="line-238"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">allowed_units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">units</span><span class="t"></span>
+<span id="line-239"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Restricting to units: </span><span class="lsi">#{</span><span class="t">units</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s">, </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-240"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-241"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-24" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-24" class="anchor">↦</a>
+        </span>
+        <p>Applies the idle shutdown timeout from the parsed arguments, if any.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-244"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">parse_idle_timeout</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"></span>
+<span id="line-245"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--idle-timeout-sec</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-246"></span><span class="t">    </span><span class="t">timeout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--idle-timeout-sec</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">to_i32</span><span class="t"></span>
+<span id="line-247"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">timeout</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"></span>
+<span id="line-248"></span><span class="t">      </span><span class="no">Grafito</span><span class="t">.</span><span class="t">idle_timeout_sec</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">timeout</span><span class="t"></span>
+<span id="line-249"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Will shut down after </span><span class="lsi">#{</span><span class="t">timeout</span><span class="t"></span><span class="lsi">}</span><span class="s">s without any requests</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-250"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-251"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-252"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-25" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-25" class="anchor">↦</a>
+        </span>
+        <p>Initializes the AI provider from the configured API keys, if any.
 Supports: Anthropic (ANTHROPIC_API_KEY), Z.AI (Z_AI_API_KEY),
 OpenAI (OPENAI_API_KEY), Groq (GROQ_API_KEY), Ollama (GRAFITO_AI_ENDPOINT)</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">AI</span><span class="no">::</span><span class="no">Config</span><span class="t">.</span><span class="t">provider</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">ai_provider</span><span class="t"></span>
-<span id="line-3"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI features enabled: </span><span class="lsi">#{</span><span class="t">ai_provider</span><span class="t">.</span><span class="t">name</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-4"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">ai_provider</span><span class="t"></span>
-<span id="line-5"></span><span class="t">  </span><span class="nk">else</span><span class="t"></span>
-<span id="line-6"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI features disabled - no provider configured</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-7"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">  Set ANTHROPIC_API_KEY or Z_AI_API_KEY to enable</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-8"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
-<span id="line-9"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-257"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">setup_ai_provider</span><span class="t"></span>
+<span id="line-258"></span><span class="t">  </span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">AI</span><span class="no">::</span><span class="no">Config</span><span class="t">.</span><span class="t">provider</span><span class="t"></span>
+<span id="line-259"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">ai_provider</span><span class="t"></span>
+<span id="line-260"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI features enabled: </span><span class="lsi">#{</span><span class="t">ai_provider</span><span class="t">.</span><span class="t">name</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-261"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">ai_provider</span><span class="t"></span>
+<span id="line-262"></span><span class="t">  </span><span class="nk">else</span><span class="t"></span>
+<span id="line-263"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI features disabled - no provider configured</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-264"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">  Set ANTHROPIC_API_KEY or Z_AI_API_KEY to enable</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-265"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-266"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-267"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-26" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-26" class="anchor">↦</a>
         </span>
-        <p>Both username and password are set, enable basic authentication</p>
+        <p>Enables basic authentication when both credentials are configured,
+refuses to run half-configured, and warns when running unprotected.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">auth_pass</span><span class="t"></span>
-<span id="line-2"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Basic Authentication enabled. User: </span><span class="lsi">#{</span><span class="t">auth_user</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-3"></span><span class="t">    </span><span class="t">basic_auth</span><span class="t"> </span><span class="t">auth_user</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">,</span><span class="t"> </span><span class="t">auth_pass</span><span class="t">.</span><span class="nk">as</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t"></span>
-<span id="line-4"></span><span class="t">  </span><span class="nk">elsif</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">auth_pass</span></code></pre></span>
+        <span id="line-271"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">setup_basic_auth</span><span class="t">(</span><span class="t">auth_user</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t">,</span><span class="t"> </span><span class="t">auth_pass</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t">)</span><span class="t"></span>
+<span id="line-272"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">auth_pass</span><span class="t"></span>
+<span id="line-273"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Basic Authentication enabled. User: </span><span class="lsi">#{</span><span class="t">auth_user</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-274"></span><span class="t">    </span><span class="t">basic_auth</span><span class="t"> </span><span class="t">auth_user</span><span class="t">,</span><span class="t"> </span><span class="t">auth_pass</span><span class="t"></span>
+<span id="line-275"></span><span class="t">  </span><span class="nk">elsif</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">auth_pass</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-27" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-27" class="anchor">↦</a>
         </span>
         <p>Only one of the credentials was set - this is a misconfiguration.
 Exit with an error code to prevent running in an insecure state.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Basic Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended.</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-2"></span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
-<span id="line-3"></span><span class="t">  </span><span class="nk">else</span></code></pre></span>
+        <span id="line-278"><pre class="b" ><code class="b"><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Basic Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended.</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-279"></span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
+<span id="line-280"></span><span class="t">  </span><span class="nk">else</span></code></pre></span>
     </div>
 </div>
 
-<div id="section" class="grid">
-    <div class="doc" id="section">
+<div id="section-28" class="grid">
+    <div class="doc">
         <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
+            <a href="#section-28" class="anchor">↦</a>
         </span>
         <p>Neither username nor password are set, run without authentication.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Basic Authentication is DISABLED. To enable, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS environment variables.</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
-    </div>
-</div>
-
-<div id="section" class="grid">
-    <div class="doc" id="section">
-        <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
-        </span>
-        <p>The <code>BakedFileHandler</code> is a custom handler that serves files that are baked
-into the application. In our case, the Assets class we defined above.</p>
-<p>Uses the external ralsina/baked_file_handler library.</p>
-
-    </div>
-    <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">baked_asset_handler</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">BakedFileHandler</span><span class="no">::</span><span class="no">BakedFileHandler</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="no">Assets</span><span class="t">,</span><span class="t"> </span><span class="t">mount_path</span><span class="t">:</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">base_path</span><span class="t">)</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="t">add_handler</span><span class="t"> </span><span class="t">baked_asset_handler</span></code></pre></span>
-    </div>
-</div>
-
-<div id="section" class="grid">
-    <div class="doc" id="section">
-        <span class="anchor">
-            <a href="#section" class="anchor">↦</a>
-        </span>
-        <p>Tell kemal to listen on the right port. That's it. The rest is done in <a href="grafito.cr.html">grafito.cr</a>
-where the kemal endpoints are defined.
-Clear ARGV so Kemal doesn't try to parse command line arguments</p>
-
-    </div>
-    <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">ARGV</span><span class="t">.</span><span class="t">clear</span><span class="t"></span>
-<span id="line-2"></span><span class="t">  </span><span class="no">Kemal</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="t">port</span><span class="t">)</span><span class="t"></span>
-<span id="line-3"></span><span class="nk">end</span><span class="t"></span>
-<span id="line-4"></span><span class="t"></span>
-<span id="line-5"></span><span class="t">main</span><span class="t">(</span><span class="t">)</span></code></pre></span>
+        <span id="line-282"><pre class="b" ><code class="b"><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Basic Authentication is DISABLED. To enable, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS environment variables.</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-283"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-284"></span><span class="nk">end</span><span class="t"></span>
+<span id="line-285"></span><span class="t"></span>
+<span id="line-286"></span><span class="t">main</span><span class="t">(</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
