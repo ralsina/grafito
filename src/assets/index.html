@@ -1637,7 +1637,12 @@
 
         // First, get the target log entry details
         fetch(`${buildUrl("details")}?${new URLSearchParams({cursor: cursor})}`)
-          .then((response) => response.text())
+          .then(async (response) => {
+            if (!response.ok) {
+              throw new Error("HTTP " + response.status);
+            }
+            return response.text();
+          })
           .then((html) => {
             // Extract the message from the details page
             const tempDiv = document.createElement('div');
