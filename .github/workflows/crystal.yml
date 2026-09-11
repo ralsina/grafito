@@ -20,7 +20,7 @@ jobs:
       run: shards install
     - name: Check formatting
       run: crystal tool format --check src spec
-    - name: Build and run linter
-      run: shards build ameba && bin/ameba src spec
+    - name: Run linter
+      run: bin/ameba src spec
     - name: Run tests
       run: crystal spec
