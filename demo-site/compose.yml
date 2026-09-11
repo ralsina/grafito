@@ -11,7 +11,7 @@ services:
     restart: unless-stopped
     depends_on:
       - grafito
-    network_mode: "service:grafito-demo"
+    network_mode: "service:grafito"
     volumes:
       - ./proxy.py:/app/proxy.py:ro
     command: ["python", "/app/proxy.py", "--port", "4100"]
