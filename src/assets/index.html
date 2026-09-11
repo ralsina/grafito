@@ -108,7 +108,7 @@
             id="search-box"
             aria-label="Search log messages"
             placeholder="Search logs… (journalctl -g)"
-            title="Enter text to search in log messages (uses journalctl -g)"
+            title="Enter text to search in log messages (uses journalctl -g). Type unit:, tag:, hostname: or prio: followed by a value and press space to turn it into a filter."
             hx-get="logs"
             hx-trigger="input changed delay:600ms"
             hx-target="#results"
@@ -1244,6 +1244,80 @@
           }
         });
         return params;
+      }
+
+      // --- Omnibox tokenizer ---
+      // The DataDog trick: typing `unit:foo`, `tag:foo`, `hostname:foo` or
+      // `prio:foo` in the search box and pressing space or enter turns the
+      // word into the matching filter control (visible as a chip in the
+      // omnibox) instead of grepping log messages for it.
+      const OMNIBOX_FILTER_KEYS = {
+        unit: { id: "unit-filter", trigger: "immediateUnitFilterUpdate" },
+        tag: { id: "tag-filter", trigger: "immediateTagFilterUpdate" },
+        hostname: {
+          id: "hostname-filter",
+          trigger: "immediateHostnameFilterUpdate",
+        },
+        prio: { id: "priority-filter", trigger: "change" },
+        priority: { id: "priority-filter", trigger: "change" },
+      };
+
+      const PRIORITY_NAME_TO_VALUE = {
+        emerg: "0",
+        emergency: "0",
+        alert: "1",
+        crit: "2",
+        critical: "2",
+        err: "3",
+        error: "3",
+        warn: "4",
+        warning: "4",
+        notice: "5",
+        info: "6",
+        debug: "7",
+      };
+
+      function tokenizeOmnibox() {
+        const searchBox = document.getElementById("search-box");
+        if (!searchBox) return;
+        const words = searchBox.value.split(/\s+/);
+        const remaining = [];
+        const tokens = [];
+        words.forEach(function (word) {
+          const separator = word.indexOf(":");
+          const key = separator > 0 ? word.slice(0, separator).toLowerCase() : "";
+          const value = separator > 0 ? word.slice(separator + 1).trim() : "";
+          const config = OMNIBOX_FILTER_KEYS[key];
+          if (config && value && document.getElementById(config.id)) {
+            tokens.push([config, value]);
+          } else if (word) {
+            remaining.push(word);
+          }
+        });
+        if (tokens.length === 0) return;
+        // Rewrite the search box before applying the tokens: the immediate
+        // triggers snapshot the included filter values, and the query must
+        // not still contain the token words at that moment.
+        searchBox.value = remaining.join(" ");
+        tokens.forEach(function (token) {
+          const config = token[0];
+          const filter = document.getElementById(config.id);
+          filter.value =
+            config.id === "priority-filter"
+              ? PRIORITY_NAME_TO_VALUE[token[1]] || token[1]
+              : token[1];
+          htmx.trigger(filter, config.trigger);
+        });
+        renderActiveFilterChips();
+      }
+
+      const searchBox = document.getElementById("search-box");
+      if (searchBox) {
+        searchBox.addEventListener("keydown", function (event) {
+          if (event.key === " " || event.key === "Enter") {
+            tokenizeOmnibox();
+          }
+        });
       }
 
       function renderActiveFilterChips() {
