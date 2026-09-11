@@ -405,7 +405,7 @@
         <div
           id="results"
           hx-get="logs"
-          hx-trigger="initial-load-event from:body"
+          hx-trigger="load, initial-load-event from:body"
           hx-indicator="#loading-spinner"
           hx-include=".log-filter"
           hx-target="this"
@@ -1017,9 +1017,6 @@
             updateBrowserURL(); // Update URL after clearing filters
           });
         }
-
-        // Trigger the initial load for #results after filters are set from URL
-        htmx.trigger(document.body, "initial-load-event", {});
 
         // --- STATS STRIP + MINIMAP ---
         // Both are computed client-side from the rendered table, so they
