@@ -79,13 +79,21 @@ module Grafito::AI::Providers
 
       start_time = Time.monotonic
 
+      # Replay iterative refinement turns (if any) after the base
+      # analysis request, so the model can continue the conversation.
+      # The client's history ends with the user's latest message.
+      history_messages = request.history.map do |message|
+        role = message["role"] == "assistant" ? ::Anthropic::Message::Role::Assistant : ::Anthropic::Message::Role::User
+        ::Anthropic::Message.new(message["content"], role)
+      end.to_a
+
       # Use the jgaskins/anthropic shard's Messages API
       anthropic_response = @client.messages.create(
         model: @model,
         system: request.system_prompt,
         messages: [
           ::Anthropic::Message.new(request.user_prompt),
-        ],
+        ] + history_messages,
         max_tokens: request.max_tokens,
         temperature: request.temperature
       )

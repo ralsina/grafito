@@ -34,12 +34,22 @@ module Grafito::AI
     # Randomness: 0.0 = deterministic, 1.0 = creative
     getter temperature : Float64
 
+    # Prior conversation turns about this same request (iterative
+    # refinement). Each entry is {"role" => "user"|"assistant",
+    # "content" => String}, in chronological order, ending with the
+    # user's latest message. Providers that support multi-turn
+    # conversations send these as real messages; others may render them
+    # into the prompt as a transcript.
+    getter history : Array(Hash(String, String))
+
     def initialize(
       @system_prompt : String,
       @user_prompt : String,
       @max_tokens : Int32 = 1024,
       @temperature : Float64 = 0.7,
+      history : Array(Hash(String, String)) = [] of Hash(String, String),
     ) : Nil
+      @history = history
     end
 
     # Convenience constructor for log analysis use case.

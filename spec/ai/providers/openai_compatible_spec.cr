@@ -404,3 +404,78 @@ describe Grafito::AI::Providers::OpenAICompatible do
     end
   end
 end
+
+describe "iterative refinement" do
+  before_each do
+    WebMock.reset
+    ENV["Z_AI_API_KEY"] = "test-key"
+    ENV["GRAFITO_AI_ENDPOINT"] = nil
+    ENV["GRAFITO_AI_MODEL"] = nil
+  end
+
+  it "replays conversation history as real messages" do
+    received_body = nil
+    WebMock.stub(:post, "https://api.z.ai/api/paas/v4/chat/completions")
+      .to_return do |request|
+        received_body = JSON.parse(request.body || "{}")
+        HTTP::Client::Response.new(
+          status_code: 200,
+          body: {
+            choices: [{message: {content: "Follow-up answer"}}],
+            model:   "glm-4.5-flash",
+            usage:   {prompt_tokens: 30, completion_tokens: 10},
+          }.to_json
+        )
+      end
+
+    provider = Grafito::AI::Providers::OpenAICompatible.new
+    request = Grafito::AI::Request.new(
+      system_prompt: "You are helpful",
+      user_prompt: "Analyze this log",
+      history: [
+        {"role" => "assistant", "content" => "Previous answer"},
+        {"role" => "user", "content" => "Latest question"},
+      ]
+    )
+
+    response = provider.complete(request)
+    response.content.should eq("Follow-up answer")
+
+    body = received_body.should be_a(JSON::Any)
+    messages = body["messages"].as_a
+    messages.size.should eq(4)
+    messages[0]["role"].should eq("system")
+    messages[1]["role"].should eq("user")
+    messages[1]["content"].should eq("Analyze this log")
+    messages[2]["role"].should eq("assistant")
+    messages[2]["content"].should eq("Previous answer")
+    messages[3]["role"].should eq("user")
+    messages[3]["content"].should eq("Latest question")
+  end
+
+  it "omits history for single-turn requests" do
+    received_body = nil
+    WebMock.stub(:post, "https://api.z.ai/api/paas/v4/chat/completions")
+      .to_return do |request|
+        received_body = JSON.parse(request.body || "{}")
+        HTTP::Client::Response.new(
+          status_code: 200,
+          body: {
+            choices: [{message: {content: "ok"}}],
+            model:   "glm-4.5-flash",
+            usage:   {prompt_tokens: 5, completion_tokens: 1},
+          }.to_json
+        )
+      end
+
+    provider = Grafito::AI::Providers::OpenAICompatible.new
+    request = Grafito::AI::Request.new(
+      system_prompt: "You are helpful",
+      user_prompt: "Hello"
+    )
+
+    provider.complete(request)
+    body = received_body.should be_a(JSON::Any)
+    body["messages"].as_a.size.should eq(2)
+  end
+end

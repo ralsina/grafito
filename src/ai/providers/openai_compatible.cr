@@ -25,6 +25,9 @@ module Grafito::AI::Providers
   # - GRAFITO_AI_API_KEY: Generic API key fallback
   # - GRAFITO_AI_MODEL: Model override
   # - GRAFITO_AI_ENDPOINT: Custom endpoint URL
+  # - GRAFITO_AI_TIMEOUT_SEC: Request timeout in seconds (default 30)
+  # - GRAFITO_AI_DISABLE_THINKING: Set to disable hidden reasoning on
+  #   models that support it (e.g. z.ai GLM), for faster responses
   class OpenAICompatible < Provider
     Log = ::Log.for(self)
 
@@ -131,6 +134,7 @@ module Grafito::AI::Providers
     @provider_id : String
     @models_endpoint : String?
     @timeout : Time::Span
+    @disable_thinking : Bool
     @cached_models : Array(ModelInfo)?
 
     def initialize(force_provider : String? = nil, model : String? = nil) : Nil
@@ -142,7 +146,8 @@ module Grafito::AI::Providers
       @endpoint = URI.parse(ENV["GRAFITO_AI_ENDPOINT"]? || config.endpoint)
       @models_endpoint = config.models_endpoint
       @model = model || ENV["GRAFITO_AI_MODEL"]? || config.default_model
-      @timeout = Time::Span.new(seconds: 30)
+      @timeout = Time::Span.new(seconds: configured_timeout)
+      @disable_thinking = ENV["GRAFITO_AI_DISABLE_THINKING"]?.in?("1", "true", "yes")
       @cached_models = nil
 
       Log.info { "Initialized OpenAI-compatible provider: #{@provider_name}" }
@@ -249,32 +254,46 @@ module Grafito::AI::Providers
 
     # Build the request body in OpenAI format
     private def build_request_body(request : Request) : String
+      # Iterative refinement: the base analysis request comes first, then
+      # the conversation turns, ending with the user's latest message.
+      history_messages = request.history.map do |message|
+        {role: message["role"], content: message["content"]}
+      end.to_a
+      messages = [
+        {role: "system", content: request.system_prompt},
+        {role: "user", content: request.user_prompt},
+      ] + history_messages
+
       # Newer models (gpt-5, o1) use max_completion_tokens instead of max_tokens
       if uses_completion_tokens?
-        {
+        body = {
           model:                 @model,
           max_completion_tokens: request.max_tokens,
-          messages:              [
-            {role: "system", content: request.system_prompt},
-            {role: "user", content: request.user_prompt},
-          ],
-        }.to_json
+          messages:              messages,
+        }
       else
-        {
+        body = {
           model:       @model,
           max_tokens:  request.max_tokens,
           temperature: request.temperature,
-          messages:    [
-            {role: "system", content: request.system_prompt},
-            {role: "user", content: request.user_prompt},
-          ],
-        }.to_json
+          messages:    messages,
+        }
       end
+      # z.ai GLM models burn time (and tokens) on hidden reasoning unless it
+      # is explicitly turned off. Only sent when the user opts in, because
+      # other providers may reject unknown fields.
+      body = body.merge(thinking: {"type" => "disabled"}) if @disable_thinking
+      body.to_json
     end
 
     # Check if model uses max_completion_tokens instead of max_tokens
     private def uses_completion_tokens? : Bool
       @model.starts_with?("gpt-5") || @model.starts_with?("o1")
+    end
+
+    # Request timeout, configurable for slow or reasoning-heavy models.
+    private def configured_timeout : Int32
+      ENV["GRAFITO_AI_TIMEOUT_SEC"]?.try(&.to_i?) || 30
     end
 
     # Parse the HTTP response into our Response type
