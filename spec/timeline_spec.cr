@@ -10,69 +10,85 @@ def new_log_entry(
   hostname : String = "localhost",
 ) : Journalctl::LogEntry
   Journalctl::LogEntry.new(
-    timestamp: timestamp,       # Pass the Time object to the 'timestamp' property
-    message_raw: message,       # Pass the message string to the 'message_raw' property
-    raw_priority_val: priority, # Pass the priority string to the 'raw_priority_val' property
-    internal_unit_name: unit,   # Pass the unit string to the 'internal_unit_name' property
-    hostname: hostname,         # Pass the hostname string to the 'hostname' property
+    timestamp: timestamp,
+    message_raw: message,
+    raw_priority_val: priority,
+    internal_unit_name: unit,
+    hostname: hostname,
   )
 end
 
 describe Timeline do
-  # Unified helper to create LogEntry instances for tests
-  # Accepts a timestamp string and optional message, unit, and priority.
-
   describe ".generate_frequency_timeline" do
     it "returns an empty array for empty logs" do
       logs = [] of Journalctl::LogEntry
       Timeline.generate_frequency_timeline(logs).should be_empty
     end
 
-    it "groups logs by hour and counts them correctly" do
-      logs = [
-        new_log_entry(Time.parse_rfc3339 "2023-01-01T10:15:00Z"),
-        new_log_entry(Time.parse_rfc3339 "2023-01-01T10:30:00Z"),
-        new_log_entry(Time.parse_rfc3339 "2023-01-01T11:05:00Z"),
-        new_log_entry(Time.parse_rfc3339 "2023-01-01T10:55:00Z"), # Another one in 10:00 hour
-        new_log_entry(Time.parse_rfc3339 "2023-01-01T12:00:00Z"),
-      ]
-
+    it "creates a single bucket for a lone entry" do
+      logs = [new_log_entry(Time.utc(2023, 1, 1, 10, 15, 0))]
       timeline = Timeline.generate_frequency_timeline(logs)
-
-      timeline.size.should eq(3)
-
-      # Check 10:00 hour
-      point1 = timeline.find { |p| p[:start_time] == Time.utc(2023, 1, 1, 10, 0, 0) }
-      point1.should_not be_nil
-      point1.as(NamedTuple)[:count].should eq(3)
-
-      # Check 11:00 hour
-      point2 = timeline.find { |p| p[:start_time] == Time.utc(2023, 1, 1, 11, 0, 0) }
-      point2.should_not be_nil
-      point2.as(NamedTuple)[:count].should eq(1)
-
-      # Check 12:00 hour
-      point3 = timeline.find { |p| p[:start_time] == Time.utc(2023, 1, 1, 12, 0, 0) }
-      point3.should_not be_nil
-      point3.as(NamedTuple)[:count].should eq(1)
-
-      # Check sorting
-      timeline[0][:start_time].should eq(Time.utc(2023, 1, 1, 10, 0, 0))
-      timeline[1][:start_time].should eq(Time.utc(2023, 1, 1, 11, 0, 0))
-      timeline[2][:start_time].should eq(Time.utc(2023, 1, 1, 12, 0, 0))
+      timeline.size.should eq(1)
+      timeline[0][:count].should eq(1)
+      timeline[0][:start_time].should eq(Time.utc(2023, 1, 1, 10, 15, 0))
     end
 
-    it "handles logs with timestamps exactly on the hour" do
+    it "zero-fills buckets that have no entries" do
+      # Entries at 10:00 and 10:10 span 10 minutes; the smallest interval
+      # keeps buckets under 48, so 1-minute buckets would be 11. With a
+      # 5-minute interval picked from BUCKET_INTERVALS: span/300 = 2 <= 48.
       logs = [
-        new_log_entry(Time.parse_rfc3339 "2023-01-01T10:00:00Z"),
-        new_log_entry(Time.parse_rfc3339 "2023-01-01T11:00:00Z"),
+        new_log_entry(Time.utc(2023, 1, 1, 10, 0, 0)),
+        new_log_entry(Time.utc(2023, 1, 1, 10, 10, 0)),
       ]
       timeline = Timeline.generate_frequency_timeline(logs)
-      timeline.size.should eq(2)
-      timeline[0][:start_time].should eq(Time.utc(2023, 1, 1, 10, 0, 0))
+      # Span is 600s; smallest interval with span/interval <= 48 is 60s,
+      # giving 11 buckets (10:00 .. 10:10).
+      timeline.size.should eq(11)
       timeline[0][:count].should eq(1)
-      timeline[1][:start_time].should eq(Time.utc(2023, 1, 1, 11, 0, 0))
-      timeline[1][:count].should eq(1)
+      timeline[5][:count].should eq(0) # 10:05 bucket is empty
+      timeline[10][:count].should eq(1)
+    end
+
+    it "counts severities into err/warn/info sub-counts" do
+      logs = [
+        new_log_entry(Time.utc(2023, 1, 1, 10, 0, 0), priority: "3"),
+        new_log_entry(Time.utc(2023, 1, 1, 10, 0, 5), priority: "4"),
+        new_log_entry(Time.utc(2023, 1, 1, 10, 0, 10), priority: "6"),
+        new_log_entry(Time.utc(2023, 1, 1, 10, 0, 15), priority: "7"),
+      ]
+      timeline = Timeline.generate_frequency_timeline(logs)
+      timeline[0][:count].should eq(4)
+      timeline[0][:err].should eq(1)
+      timeline[0][:warn].should eq(1)
+      timeline[0][:info].should eq(2)
+    end
+
+    it "picks hourly buckets for a multi-day span" do
+      logs = [
+        new_log_entry(Time.utc(2023, 1, 1, 10, 0, 0)),
+        new_log_entry(Time.utc(2023, 1, 3, 10, 0, 0)),
+      ]
+      timeline = Timeline.generate_frequency_timeline(logs)
+      # Span is 2 days; hourly buckets would be 49 (> 48), so the interval
+      # steps up and every bucket is 2+ hours wide. Whatever the interval,
+      # the buckets must cover the whole span contiguously.
+      timeline.size.should be <= 48
+      total = timeline.sum(&.[:count])
+      total.should eq(2)
+      timeline.first[:start_time].should eq(Time.utc(2023, 1, 1, 10, 0, 0))
+      timeline.last[:start_time].should eq(Time.utc(2023, 1, 3, 10, 0, 0))
+    end
+
+    it "keeps buckets sorted chronologically" do
+      logs = [
+        new_log_entry(Time.utc(2023, 1, 1, 12, 0, 0)),
+        new_log_entry(Time.utc(2023, 1, 1, 10, 0, 0)),
+        new_log_entry(Time.utc(2023, 1, 1, 11, 0, 0)),
+      ]
+      timeline = Timeline.generate_frequency_timeline(logs)
+      times = timeline.map(&.[:start_time])
+      times.should eq(times.sort)
     end
   end
 
@@ -84,68 +100,49 @@ describe Timeline do
       svg.should contain("No data available")
     end
 
-    it "generates an SVG with correct structure for single data point" do
-      data = [{start_time: Time.utc(2023, 1, 1, 10), count: 10_i32}]
-      svg = Timeline.generate_svg_timeline(data, width: 200, height: 100, padding: 5, bar_color: "blue")
-
-      svg.should contain("<svg width=\"100%\" height=\"100\"") # Check for responsive width
-      svg.should contain("viewBox=\"0 0 200 100\"")
-      svg.should contain(".bar { fill: blue; }")
-      svg.should contain("<rect ") # Check for bar
-      svg.should contain("<title>2023-01-01 10:00: 10</title>")
-
-      # Chart height = 100 - (2*5) = 90. Bar height should be 90.
-      svg.should contain("height=\"90.0\"")
-    end
-
-    it "generates an SVG with multiple bars scaled correctly" do
+    it "generates severity-stacked bars with tooltips" do
       data = [
-        {start_time: Time.utc(2023, 1, 1, 10), count: 10_i32},
-        {start_time: Time.utc(2023, 1, 1, 11), count: 20_i32}, # Max count
-        {start_time: Time.utc(2023, 1, 1, 12), count: 5_i32},
+        {start_time: Time.utc(2023, 1, 1, 10), count: 3_i32, err: 1_i32, warn: 1_i32, info: 1_i32},
+        {start_time: Time.utc(2023, 1, 1, 11), count: 2_i32, err: 0_i32, warn: 0_i32, info: 2_i32},
       ]
-      svg = Timeline.generate_svg_timeline(data, width: 300, height: 120, padding: 10, bar_color: "green")
+      svg = Timeline.generate_svg_timeline(data, width: 300, height: 120, padding: 10)
 
       svg.should contain("<svg width=\"100%\" height=\"120\"")
       svg.should contain("viewBox=\"0 0 300 120\"")
-      svg.should contain(".bar { fill: green; }")
+      svg.should contain("data-interval=\"3600\"")
+      svg.should contain("data-start=\"")
+      svg.should contain("class=\"tl-err\"")
+      svg.should contain("class=\"tl-warn\"")
+      svg.should contain("class=\"tl-info\"")
 
-      # Count occurrences of <rect to ensure 3 bars
-      svg.scan(/<rect /).size.should eq(3)
-
-      # Chart height = 120 - (2*10) = 100. Max count is 20.
-      # Bar 1 (count 10): height = (10/20) * 100 = 50
-      # Bar 2 (count 20): height = (20/20) * 100 = 100
-      # Bar 3 (count 5):  height = (5/20) * 100 = 25
-      svg.should contain("height=\"50.0\"")
-      svg.should contain("height=\"100.0\"")
-      svg.should contain("height=\"25.0\"")
-
-      svg.should contain("<title>2023-01-01 10:00: 10</title>")
-      svg.should contain("<title>2023-01-01 11:00: 20</title>")
-      svg.should contain("<title>2023-01-01 12:00: 5</title>")
+      # Tooltip includes the bucket range and the entry count
+      svg.should contain("10:00–11:00 · 3 entries")
+      svg.should contain("1 err")
     end
 
-    it "handles zero counts correctly, avoiding division by zero" do
+    it "draws time axis labels" do
       data = [
-        {start_time: Time.utc(2023, 1, 1, 10), count: 0_i32},
-        {start_time: Time.utc(2023, 1, 1, 11), count: 0_i32},
+        {start_time: Time.utc(2023, 1, 1, 10), count: 1_i32, err: 0_i32, warn: 0_i32, info: 1_i32},
+        {start_time: Time.utc(2023, 1, 1, 11), count: 1_i32, err: 0_i32, warn: 0_i32, info: 1_i32},
+        {start_time: Time.utc(2023, 1, 1, 12), count: 1_i32, err: 0_i32, warn: 0_i32, info: 1_i32},
+      ]
+      svg = Timeline.generate_svg_timeline(data, width: 300, height: 120)
+      svg.should contain("class=\"tl-label\"")
+      svg.should contain(">10:00</text>")
+      svg.should contain(">12:00</text>")
+    end
+
+    it "renders zero-count buckets without bars" do
+      data = [
+        {start_time: Time.utc(2023, 1, 1, 10), count: 0_i32, err: 0_i32, warn: 0_i32, info: 0_i32},
+        {start_time: Time.utc(2023, 1, 1, 11), count: 4_i32, err: 2_i32, warn: 1_i32, info: 1_i32},
       ]
       svg = Timeline.generate_svg_timeline(data, width: 200, height: 100, padding: 10)
-      # Max_count becomes 1.0 to avoid division by zero. Bar heights should be 0.
-      svg.should contain("height=\"0.0\"") # Both bars should have 0 height
-      svg.scan(/height=\"0.0\"/).size.should eq(2)
-    end
-
-    it "uses default parameter values if not provided" do
-      data = [{start_time: Time.utc(2023, 1, 1, 10), count: 1_i32}]
-      svg = Timeline.generate_svg_timeline(data) # Use all defaults
-
-      # Check for default width, height, bar_color
-      svg.should contain("viewBox=\"0 0 800 100\"")   # Default width 800, height 100
-      svg.should contain(".bar { fill: steelblue; }") # Default bar_color
-      # Default padding is 10. Chart height = 100 - 20 = 80. Bar height = (1/1)*80 = 80
-      svg.should contain("height=\"80.0\"")
+      # The empty bucket still gets its group with zero-height rects,
+      # while the populated one has three severity segments.
+      svg.scan(/class="tl-err"/).size.should eq(1)
+      svg.scan(/class="tl-warn"/).size.should eq(1)
+      svg.scan(/class="tl-info"/).size.should eq(1)
     end
   end
 end
