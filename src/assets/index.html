@@ -385,9 +385,6 @@
               name="live-view"
               role="switch"
               class="log-filter"
-              hx-get="logs"
-              hx-target="#results"
-              hx-indicator="#loading-spinner"
             />
             <span class="live-dot" aria-hidden="true"></span>
             <span class="topbar-tool-label">Live</span>
@@ -431,7 +428,7 @@
         <div
           id="live-view-poller"
           hx-get="logs"
-          hx-trigger="every 10s[document.getElementById('live-view').checked]"
+          hx-trigger="every 10s[document.getElementById('live-view').checked], live-poll from:body"
           hx-target="#results"
           hx-include=".log-filter"
         ></div>
@@ -1049,6 +1046,14 @@
             }
             htmx.trigger(document.body, "initial-load-event", {}); // Reload logs
             updateBrowserURL(); // Update URL after clearing filters
+          });
+        }
+
+        // Live toggle: refresh immediately when switched on or off
+        const liveViewInput = document.getElementById("live-view");
+        if (liveViewInput) {
+          liveViewInput.addEventListener("change", function () {
+            htmx.trigger(document.body, "live-poll");
           });
         }
 
