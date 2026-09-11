@@ -183,7 +183,7 @@ module Grafito::AI::Providers
       Log.debug { "  Model: #{@model}" }
       Log.debug { "  Max tokens: #{request.max_tokens}" }
 
-      start_time = Time.monotonic
+      start_time = Time.instant
 
       body = build_request_body(request)
       headers = build_headers
@@ -198,7 +198,7 @@ module Grafito::AI::Providers
         body: body
       )
 
-      elapsed = Time.monotonic - start_time
+      elapsed = Time.instant - start_time
       Log.debug { "API response received in #{elapsed.total_milliseconds.round(2)}ms" }
       Log.debug { "  Status: #{http_response.status_code}" }
 

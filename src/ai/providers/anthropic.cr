@@ -77,7 +77,7 @@ module Grafito::AI::Providers
       Log.debug { "  Max tokens: #{request.max_tokens}" }
       Log.debug { "  Temperature: #{request.temperature}" }
 
-      start_time = Time.monotonic
+      start_time = Time.instant
 
       # Replay iterative refinement turns (if any) after the base
       # analysis request, so the model can continue the conversation.
@@ -98,7 +98,7 @@ module Grafito::AI::Providers
         temperature: request.temperature
       )
 
-      elapsed = Time.monotonic - start_time
+      elapsed = Time.instant - start_time
       Log.debug { "Anthropic API response received in #{elapsed.total_milliseconds.round(2)}ms" }
 
       # Extract content from response
