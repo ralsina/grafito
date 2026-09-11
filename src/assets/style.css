@@ -1443,3 +1443,21 @@ html[data-ui=mission] #results table tbody tr:hover {
   line-height: 1;
 
 }
+
+/* Mobile browsers: 100vh measures the large viewport and ignores the
+   dynamic toolbar, pushing the statusbar and the AI reply box under the
+   browser chrome. dvh tracks the visible viewport instead. */
+#app-shell {
+  height: 100vh;
+  height: 100dvh;
+}
+#side-panel {
+  height: 100vh;
+  height: 100dvh;
+}
+#statusbar {
+  padding-bottom: calc(0.4rem + env(safe-area-inset-bottom, 0px));
+}
+#ai-followup-row {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
