@@ -1505,3 +1505,41 @@ html[data-ui="mission"] #results table tbody tr:hover {
   gap: 0.5rem;
   justify-content: flex-end;
 }
+
+/* Active filter chips (unit / tag / hostname) */
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.active-filters:empty {
+  display: none;
+}
+.af-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  background: var(--panel-2);
+  border: 1px solid var(--tag-color, var(--line));
+  border-radius: 999px;
+  padding: 0.2rem 0.3rem 0.2rem 0.6rem;
+}
+.af-chip-label {
+  color: var(--txt);
+  white-space: nowrap;
+}
+.af-chip-x {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0 0.15rem;
+}
+.af-chip-x:hover {
+  color: var(--err);
+}

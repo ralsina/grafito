@@ -119,6 +119,8 @@
           <kbd>grep</kbd>
         </div>
 
+        <div id="active-filters" class="active-filters" aria-label="Active filters"></div>
+
         <select
           id="time-range-filter"
           name="since"
@@ -1240,8 +1242,42 @@
         return params;
       }
 
+      function renderActiveFilterChips() {
+        const container = document.getElementById("active-filters");
+        if (!container) return;
+        container.innerHTML = "";
+        [
+          ["unit-filter", "unit"],
+          ["tag-filter", "tag"],
+          ["hostname-filter", "hostname"],
+        ].forEach(function (config) {
+          const input = document.getElementById(config[0]);
+          const value = (input?.value || "").trim();
+          if (!value) return;
+          const chip = document.createElement("span");
+          chip.className = "af-chip";
+          const labelText = document.createElement("span");
+          labelText.className = "af-chip-label";
+          labelText.textContent = config[1] + ": " + value;
+          const remove = document.createElement("button");
+          remove.className = "af-chip-x";
+          remove.type = "button";
+          remove.title = "Remove this filter";
+          remove.setAttribute("aria-label", "Remove " + config[1] + " filter");
+          remove.textContent = "✕";
+          remove.addEventListener("click", function () {
+            input.value = "";
+            htmx.trigger(input, "input");
+            renderActiveFilterChips();
+          });
+          chip.append(labelText, remove);
+          container.appendChild(chip);
+        });
+      }
+
       function updateBrowserURL() {
         const params = buildFilterURLSearchParams();
+        renderActiveFilterChips();
 
         let queryString = params.toString();
         const newUrl = queryString
