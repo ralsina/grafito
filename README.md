@@ -9,6 +9,11 @@ Grafito is a simple, self-contained web-based log viewer for `journalctl`.
 It provides an intuitive interface to browse and filter system logs
 directly from your web browser.
 
+<img width="1114" height="942" alt="image" src="https://github.com/user-attachments/assets/39e37006-eecb-4fe7-a57d-ec31ca4a6d74" />
+
+<img width="1105" height="947" alt="image" src="https://github.com/user-attachments/assets/170d1584-b977-4197-866a-cefca449e59f" />
+
+
 Key features include:
 
 * Real-time log viewing (with an optional auto-refresh).
@@ -98,8 +103,6 @@ Grafito supports user systemd instances for users without root privileges. When 
 - User mode only shows logs and services for the current user
 - System-level logs and services are not accessible in user mode
 - Default is system mode (requires appropriate permissions)
-
-![image](https://github.com/user-attachments/assets/1042269f-3c34-46d3-ad45-c9a0ee250c82)
 
 ## Installation
 
