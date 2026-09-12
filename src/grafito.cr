@@ -263,7 +263,15 @@ module Grafito
                 end
               end
             end
-            tag("pre") do
+            div(style: "text-align: right; margin-bottom: 0.5em;") do
+              tag("button", class: "secondary", onclick: "copyTextToClipboard(document.getElementById('detail-json').textContent, this)") do
+                tag("span", class: "material-icons", style: "vertical-align: middle; font-size: 1rem") do
+                  text "content_copy"
+                end
+                text " Copy data"
+              end
+            end
+            tag("pre", id: "detail-json") do
               text sorted_json
             end
           end

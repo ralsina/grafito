@@ -375,6 +375,23 @@ module Grafito
                     tab: "context",
                     url: "#{build_url("context")}?#{cursor_param}",
                   )
+                  # Copy-entry button: copies the entry as a journalctl-style
+                  # line (timestamp hostname unit[pid]: message).
+                  copied_entry_text = String.build do |str|
+                    str << entry.formatted_timestamp_with_timezone("%Y-%m-%d %H:%M:%S")
+                    str << " " << entry.hostname
+                    str << " " << entry.unit
+                    if pid = entry.data["_PID"]?
+                      str << "[" << pid << "]"
+                    end
+                    str << ": " << entry.message
+                  end
+                  html _hover_action_button_cell(
+                    title: "Copy this log entry to the clipboard",
+                    icon: "content_copy",
+                    tab: "copy",
+                    onclick: "copyLogEntry(#{copied_entry_text.to_json}, this)",
+                  )
                   # AI Explanation button (only shown if AI is enabled)
                   if Grafito.ai_enabled?
                     html _hover_action_button_cell(

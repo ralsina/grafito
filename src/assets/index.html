@@ -1901,26 +1901,57 @@
         }
       });
 
-      function copyEquivalentCommand() {
-        const text = document.getElementById("command-dialog-code").textContent;
+      // Shared clipboard helper: copies text and flashes the button (check
+      // icon plus label) so the user sees it worked. Falls back to an alert
+      // where clipboard access is unavailable.
+      function copyTextToClipboard(text, button) {
         if (window.isSecureContext && navigator.clipboard) {
           navigator.clipboard
             .writeText(text)
             .then(() => {
-              const btn = document.getElementById("copy-command-btn");
-              const original = btn.innerHTML;
-              btn.innerHTML =
+              if (!button) return;
+              const original = button.innerHTML;
+              button.innerHTML =
                 '<span class="material-icons" style="vertical-align: middle; font-size: 1rem">check</span> Copied';
               setTimeout(function () {
-                btn.innerHTML = original;
+                button.innerHTML = original;
               }, 2000);
             })
             .catch((err) => {
-              alert("Failed to copy the command: " + err.message);
+              alert("Failed to copy: " + err.message);
             });
         } else {
-          alert("Command (copy manually):\n\n" + text);
+          alert("Copy the text manually:\n\n" + text);
         }
+      }
+
+      // Quick copy of a log entry from a table row. Row buttons are
+      // icon-only, so flash the icon instead of swapping in a label.
+      function copyLogEntry(text, button) {
+        if (window.isSecureContext && navigator.clipboard) {
+          navigator.clipboard
+            .writeText(text)
+            .then(() => {
+              const icon = button ? button.querySelector(".material-icons") : null;
+              if (!icon) return;
+              icon.textContent = "check";
+              setTimeout(function () {
+                icon.textContent = "content_copy";
+              }, 1500);
+            })
+            .catch((err) => {
+              alert("Failed to copy: " + err.message);
+            });
+        } else {
+          alert("Log entry (copy manually):\n\n" + text);
+        }
+      }
+
+      function copyEquivalentCommand() {
+        copyTextToClipboard(
+          document.getElementById("command-dialog-code").textContent,
+          document.getElementById("copy-command-btn")
+        );
       }
 
       async function loadEquivalentCommand() {
@@ -1949,28 +1980,6 @@
           code.textContent = text.replace(/^"|"$/g, "");
         } catch (error) {
           code.textContent = "Failed to build the command: " + error.message;
-        }
-      }
-
-      function copyEquivalentCommand() {
-        const text = document.getElementById("command-dialog-code").textContent;
-        if (window.isSecureContext && navigator.clipboard) {
-          navigator.clipboard
-            .writeText(text)
-            .then(() => {
-              const btn = document.getElementById("copy-command-btn");
-              const original = btn.innerHTML;
-              btn.innerHTML =
-                '<span class="material-icons" style="vertical-align: middle; font-size: 1rem">check</span> Copied';
-              setTimeout(function () {
-                btn.innerHTML = original;
-              }, 2000);
-            })
-            .catch((err) => {
-              alert("Failed to copy the command: " + err.message);
-            });
-        } else {
-          alert("Command (copy manually):\n\n" + text);
         }
       }
 
