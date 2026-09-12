@@ -112,11 +112,12 @@ module Grafito
       show_timestamp_col = env.params.query.has_key?("col-visible-timestamp")
       show_hostname_col = env.params.query.has_key?("col-visible-hostname")
       show_unit_col = env.params.query.has_key?("col-visible-unit")
+      show_tag_col = env.params.query.has_key?("col-visible-tag")
       show_priority_col = env.params.query.has_key?("col-visible-priority")
       show_message_col = env.params.query.has_key?("col-visible-message")
 
       output_format = (format_param.presence || "html").downcase
-      Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, hostname=#{hostname.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}, show_timestamp=#{show_timestamp_col}, show_hostname=#{show_hostname_col}, show_unit=#{show_unit_col}, show_priority=#{show_priority_col}, show_message=#{show_message_col}" }
+      Log.debug { "Querying Journalctl with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, hostname=#{hostname.inspect}, sort_by=#{current_sort_by.inspect}, sort_order=#{current_sort_order.inspect}, show_timestamp=#{show_timestamp_col}, show_hostname=#{show_hostname_col}, show_unit=#{show_unit_col}, show_tag=#{show_tag_col}, show_priority=#{show_priority_col}, show_message=#{show_message_col}" }
 
       # Now that we know exactly what logs we want, we send the query to the `journalctl` wrapper
       # defined in [journalctl.cr](journalctl.cr.html).
@@ -148,6 +149,7 @@ module Grafito
             show_timestamp: show_timestamp_col,
             show_hostname: show_hostname_col,
             show_unit: show_unit_col,
+            show_tag: show_tag_col,
             show_priority: show_priority_col,
             show_message: show_message_col
           )

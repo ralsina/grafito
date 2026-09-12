@@ -60,3 +60,32 @@ describe "Grafito HTML log output" do
     output.should_not contain("<b>important</b>")
   end
 end
+
+describe "Grafito HTML log output tags column" do
+  it "renders the syslog identifier as a clickable tag filter" do
+    entry = make_entry("hello")
+    entry.data["SYSLOG_IDENTIFIER"] = "my-app"
+    output = Grafito.html_log_output([entry], nil, nil, nil)
+
+    output.should contain(">Tags<")
+    output.should contain("setTagFilterAndTrigger(")
+    output.should contain("my-app")
+  end
+
+  it "renders an empty tag cell without a link when the entry has no identifier" do
+    entry = make_entry("hello")
+    output = Grafito.html_log_output([entry], nil, nil, nil)
+
+    output.should contain(">Tags<")
+    output.should_not contain("setTagFilterAndTrigger(")
+  end
+
+  it "omits the tags column when show_tag is false" do
+    entry = make_entry("hello")
+    entry.data["SYSLOG_IDENTIFIER"] = "my-app"
+    output = Grafito.html_log_output([entry], nil, nil, nil, show_tag: false)
+
+    output.should_not contain(">Tags<")
+    output.should_not contain("setTagFilterAndTrigger(")
+  end
+end

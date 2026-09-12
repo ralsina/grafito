@@ -141,6 +141,12 @@ class Journalctl
       (@data["_HOSTNAME"]? || "localhost").strip
     end
 
+    # Getter for the syslog identifier (tag), empty when the entry
+    # has none.
+    def tag : String
+      (@data["SYSLOG_IDENTIFIER"]? || "").strip
+    end
+
     def to_s
       # Use a standard timestamp format for to_s, and getters for other fields
       "#{timestamp.to_s("%Y-%m-%d %H:%M:%S.%L")} [#{hostname}] [#{unit}] [Prio: #{priority}] - #{message}"
@@ -350,6 +356,8 @@ class Journalctl
                         a.message.downcase <=> b.message.downcase # Uses getter
                       when "unit"                                 # Renamed from service
                         a.unit.downcase <=> b.unit.downcase
+                      when "tag"
+                        a.tag.downcase <=> b.tag.downcase
                       else
                         Log.warn { "Unknown sort_by key: #{sort_by}" }
                         0 # No change for unknown key

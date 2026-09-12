@@ -215,6 +215,7 @@ module Grafito
     show_timestamp : Bool = true,
     show_hostname : Bool = true,
     show_unit : Bool = true,
+    show_tag : Bool = true,
     show_priority : Bool = true,
     show_message : Bool = true,
   ) : String
@@ -255,6 +256,9 @@ module Grafito
       end
       if show_unit
         headers_to_display << _generate_header_attributes("unit", "Unit", current_sort_by, current_sort_order)
+      end
+      if show_tag
+        headers_to_display << _generate_header_attributes("tag", "Tags", current_sort_by, current_sort_order)
       end
       if show_priority
         headers_to_display << _generate_header_attributes("priority", "Priority", current_sort_by, current_sort_order)
@@ -336,6 +340,19 @@ module Grafito
                     js_arg_unit_name = entry.unit.to_json
                     a(href: "#", onclick: "return setUnitFilterAndTrigger(#{js_arg_unit_name});") do
                       text display_unit_name
+                    end
+                  end
+                end
+                if show_tag
+                  td(class: "log-tag-cell") do
+                    # Make the tag clickable to set the filter, like the
+                    # unit and hostname cells.
+                    if !entry.tag.strip.empty?
+                      display_tag = HTML.escape(entry.tag)
+                      js_arg_tag = entry.tag.to_json
+                      a(href: "#", onclick: "return setTagFilterAndTrigger(#{js_arg_tag});") do
+                        text display_tag
+                      end
                     end
                   end
                 end

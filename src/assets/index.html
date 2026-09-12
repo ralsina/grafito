@@ -271,6 +271,22 @@
                 <label
                   ><input
                     type="checkbox"
+                    id="col-visible-tag"
+                    name="col-visible-tag"
+                    class="log-filter"
+                    role="switch"
+                    hx-get="logs"
+                    hx-target="#results"
+                    hx-indicator="#loading-spinner"
+                    hx-include=".log-filter"
+                    hx-trigger="change"
+                    checked
+                  />
+                  Tags</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
                     id="col-visible-priority"
                     name="col-visible-priority"
                     class="log-filter"
@@ -680,6 +696,12 @@
           trueValue: "on",
         },
         {
+          id: "col-visible-tag",
+          param: "col-visible-tag",
+          type: "checkbox",
+          trueValue: "on",
+        },
+        {
           id: "col-visible-priority",
           param: "col-visible-priority",
           type: "checkbox",
@@ -980,6 +1002,7 @@
           "col-visible-timestamp",
           "col-visible-hostname",
           "col-visible-unit",
+          "col-visible-tag",
           "col-visible-priority",
           "col-visible-message",
         ];
@@ -1441,6 +1464,16 @@
           hostnameFilterInput.value = hostname;
           // Trigger a custom event that is configured for immediate HTMX requests
           htmx.trigger(hostnameFilterInput, "immediateHostnameFilterUpdate");
+        }
+        return false; // Prevent default anchor link behavior
+      }
+
+      function setTagFilterAndTrigger(tag) {
+        const tagFilterInput = document.getElementById("tag-filter");
+        if (tagFilterInput) {
+          tagFilterInput.value = tag;
+          // Trigger a custom event that is configured for immediate HTMX requests
+          htmx.trigger(tagFilterInput, "immediateTagFilterUpdate");
         }
         return false; // Prevent default anchor link behavior
       }
