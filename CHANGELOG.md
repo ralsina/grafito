@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2026-09-12
+
+### 🚀 Features
+
+- *(ui)* Tags column with sortable header and click-to-filter
+
 ## [1.1.0] - 2026-09-12
 
 ### 🚀 Features
@@ -17,6 +23,10 @@ All notable changes to this project will be documented in this file.
 - *(deploy)* Add AI provider name label to demo compose
 - *(ui)* Live toggle polls with full filters and refreshes immediately
 - *(ui)* Refetch immediately when removing a filter chip
+
+### 💼 Other
+
+- Release v1.1.0
 
 ## [1.0.1] - 2026-09-11
 
