@@ -469,6 +469,15 @@ Once set up, logs from all client hosts will appear in Grafito on the central se
    OpenAI-compatible API. `./deploy_site.sh` builds, pushes and deploys
    the whole stack.
 
+6. **Real instance:**
+   The real Grafito instance (actual system journal, also with AI via
+   jimmy) runs as the docker compose stack in `/data/stacks/grafito` on
+   the server, using the published `ghcr.io/ralsina/grafito-arm64`
+   image. `real-site/compose.yml` is the source of truth for that
+   stack: it bind-mounts `/var/log/journal`, `/etc/machine-id` and
+   `/etc/localtime` read-only so the container sees the host journal
+   in the host timezone.
+
 ## Contributing
 
 1. Fork it (<https://github.com/ralsina/grafito/fork>)
