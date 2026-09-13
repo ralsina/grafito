@@ -246,19 +246,19 @@ describe Dashboard do
 
       html = Dashboard.unit_details_fragment(broken, enable_actions: true)
       # A failed, disabled unit: start + enable, no stop/restart/disable.
-      html.should contain("> start")
-      html.should contain("> enable")
-      html.should_not contain("> stop")
-      html.should_not contain("> restart")
-      html.should_not contain("> disable")
+      html.should contain("/start?from=panel")
+      html.should contain("/enable?from=panel")
+      html.should_not contain("/stop?from=panel")
+      html.should_not contain("/restart?from=panel")
+      html.should_not contain("/disable?from=panel")
 
       running_html = Dashboard.unit_details_fragment(running, enable_actions: true)
       # An active, enabled unit: stop/restart + disable, no start/enable.
-      running_html.should contain("> stop")
-      running_html.should contain("> restart")
-      running_html.should contain("> disable")
-      running_html.should_not contain("> start")
-      running_html.should_not contain("> enable")
+      running_html.should contain("/stop?from=panel")
+      running_html.should contain("/restart?from=panel")
+      running_html.should contain("/disable?from=panel")
+      running_html.should_not contain("/start?from=panel")
+      running_html.should_not contain("/enable?from=panel")
     end
 
     it "omits panel actions when they are disabled" do

@@ -384,14 +384,16 @@ module Dashboard
     end
   end
 
-  # One action button in the service panel: posts to the unit action
-  # endpoint and swaps the refreshed panel in.
+  # One action button in the service panel: icon-only, matching the
+  # unit table's action cells (the tooltip names the action), posting
+  # to the unit action endpoint and swapping the refreshed panel in.
   private def panel_action_button(unit_name : String, action : String, icon : String) : String
     HTML.build do
       confirm_text = "#{action[0].upcase}#{action[1..]} unit #{unit_name}?"
       attributes = {
         "class"        => "round-button",
         "title"        => "#{action[0].upcase}#{action[1..]} #{unit_name}",
+        "aria-label"   => "#{action[0].upcase}#{action[1..]} #{unit_name}",
         "hx-post"      => "#{build_action_url(unit_name, action)}?from=panel",
         "hx-target"    => "#panel-detail-content",
         "hx-swap"      => "innerHTML",
@@ -402,7 +404,6 @@ module Dashboard
         span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
           text icon
         end
-        text " #{action}"
       end
     end
   end
