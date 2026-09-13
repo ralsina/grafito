@@ -576,23 +576,24 @@ module Dashboard
     svg << %(aria-label="Memory, disk and error frequency over the selected time window">)
     has_errors = !error_buckets.empty? && error_buckets.max_of(&.[1]) > 0
     if has_errors
-      svg << %(  <polygon fill="var(--err, darkorange)" fill-opacity="0.25" stroke="none" points="#{error_area_points(error_buckets, oldest, span_sec, width, height)}" />)
+      svg << error_bars(error_buckets, oldest, span_sec, width, height)
     end
     svg << %(  <polyline fill="none" stroke="var(--info, steelblue)" stroke-width="2" points="#{polyline_points(points, oldest, span_sec, width, height, &.mem_used_pct)}" />)
     svg << %(  <polyline fill="none" stroke="var(--err, darkorange)" stroke-width="2" points="#{polyline_points(points, oldest, span_sec, width, height, &.disk_used_pct)}" />)
     svg << %(  <text x="8" y="#{(height - 8).to_i}" class="tl-label">#{points.first.ts.to_s("%m-%d %H:%M")}</text>)
     svg << %(  <text x="#{(width - 8).to_i}" y="#{(height - 8).to_i}" text-anchor="end" class="tl-label">#{points.last.ts.to_s("%m-%d %H:%M")}</text>)
     if has_errors
-      svg << %(  <text x="8" y="14" class="tl-label">error frequency (shaded)</text>)
+      svg << %(  <text x="8" y="14" class="tl-label">error frequency (bars)</text>)
     end
     svg << %(</svg>)
     svg.to_s
   end
 
-  # Builds the polygon for the overlaid error-frequency area: same x
-  # mapping as the line series, y scaled so the bucket maximum reaches
-  # the top of the chart. Closed along the bottom edge.
-  private def error_area_points(
+  # Builds one translucent bar per error bucket: same x mapping and
+  # extent as the line series, height scaled so the bucket maximum
+  # reaches the top of the chart. Bars sit behind the lines with a
+  # small gap between them so buckets read as discrete counts.
+  private def error_bars(
     buckets : Array(Tuple(Time, Int32)),
     oldest : Time,
     span_sec : Float64,
@@ -601,15 +602,22 @@ module Dashboard
   ) : String
     padding = 8.0
     usable = height - 2 * padding
-    max_count = buckets.max_of(&.[1]).to_f
-    return "" if max_count.zero?
-    coords = buckets.map do |bucket_time, count|
+    # Scale against a reference of at least 10 errors per bucket so a
+    # sparse window (1 error per busy bucket) doesn't render every bar
+    # at full height; busier windows scale to their own maximum.
+    reference = [buckets.max_of(&.[1]).to_f, 10.0].max
+    slot = (width - 2 * padding) / buckets.size
+    bar_width = (slot * 0.7).round(2)
+    bars = IO::Memory.new
+    buckets.each do |bucket_time, count|
+      next if count.zero?
       x = padding + ((bucket_time - oldest).total_seconds / span_sec) * (width - 2 * padding)
-      y = padding + (1.0 - count.to_f / max_count) * usable
-      "#{x.round(1)},#{y.round(1)}"
+      bar_height = (count.to_f / reference * usable).round(2)
+      y = (height - padding - bar_height).round(2)
+      bars << %(  <rect x="#{x.round(2)}" y="#{y}" width="#{bar_width}" height="#{bar_height}" )
+      bars << %(fill="var(--err, darkorange)" fill-opacity="0.35" stroke="none" />)
     end
-    baseline = (height - padding).round(1)
-    "#{padding.round(1)},#{baseline} #{coords.join(" ")} #{(width - padding).round(1)},#{baseline}"
+    bars.to_s
   end
 
   # Builds the x/y point list for one series: x spans the time range,

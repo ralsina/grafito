@@ -61,7 +61,7 @@ describe Dashboard do
     svg.scan(/<polyline/).size.should eq(2)
   end
 
-  it "overlays the error frequency area when buckets are given" do
+  it "overlays the error frequency bars when buckets are given" do
     points = [
       point_at(60, mem: 10.0, disk: 20.0),
       point_at(30, mem: 50.0, disk: 20.0),
@@ -74,13 +74,13 @@ describe Dashboard do
       {base + 60.seconds, 2},
     ] of Tuple(Time, Int32)
     svg = Dashboard.generate_svg_history(points, buckets)
-    svg.should contain("<polygon")
-    svg.should contain("error frequency (shaded)")
-    # A zero-only bucket set is still rendered, but an all-zero max
-    # would divide by zero, so guard: all-zero buckets skip the area.
+    svg.should contain("<rect")
+    svg.scan(/<rect/).size.should eq(2) # one bar per non-empty bucket
+    svg.should contain("error frequency (bars)")
+    # All-zero buckets render no bars at all.
     zero_buckets = buckets.map { |bucket_time, _| {bucket_time, 0} }
     svg_zero = Dashboard.generate_svg_history(points, zero_buckets)
-    svg_zero.should_not contain("<polygon")
+    svg_zero.should_not contain("<rect")
   end
 
   it "renders the dashboard fragment with cards and services" do
