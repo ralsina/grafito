@@ -242,18 +242,17 @@ module Dashboard
 
   private def unit_row(unit_state : SystemStatus::UnitState, enable_actions : Bool) : String
     HTML.build do
-      tr(class: unit_state.failed? ? "dashboard-unit-failed" : "") do
-        td do
-          span_class = case unit_state.active_state
-                       when "active"                  then "tag"
-                       when "failed"                  then "tag tag-error"
-                       when "activating", "reloading" then "tag tag-warn"
-                       else                                "tag tag-muted"
-                       end
-          span(class: span_class) { text HTML.escape(unit_state.active_state) }
+      # The row class carries the state color as --tag-color, which the
+      # CSS turns into the left-side stripe, like the log view's
+      # severity stripes. Failed rows keep an extra tint.
+      row_class = "du-state-#{unit_state.active_state}"
+      row_class = "#{row_class} dashboard-unit-failed" if unit_state.failed?
+      tr(class: row_class) do
+        td(class: "dashboard-state-cell") do
+          html state_pill(unit_state.active_state)
         end
-        td do
-          text HTML.escape(unit_state.sub_state)
+        td(class: "dashboard-sub-cell") do
+          html state_pill(unit_state.sub_state)
         end
         td do
           text HTML.escape(unit_state.description)
@@ -267,6 +266,24 @@ module Dashboard
         if enable_actions
           html action_cell(unit_state.unit)
         end
+      end
+    end
+  end
+
+  # Renders a state or sub-state value as a pill matching the log view's
+  # priority tags: same shape, color chosen by semantic value.
+  private def state_pill(value : String) : String
+    color = case value
+            when "active", "running"       then "ok"
+            when "failed"                  then "err"
+            when "activating", "reloading" then "warn"
+            when "exited"                  then "info"
+            when "dead", "inactive"        then "debug"
+            else                                "muted"
+            end
+    HTML.build do
+      span(class: "tag tag-#{color}") do
+        text HTML.escape(value)
       end
     end
   end

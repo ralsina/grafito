@@ -121,10 +121,21 @@ describe Dashboard do
       sort_by: "state",
       sort_order: "asc",
     )
-    # The state column values appear in the tags inside each row; their
-    # order in the fragment must be non-decreasing.
-    states = html.scan(/<span class="tag[^"]*">([a-z]+)<\/span>/).map(&.[1])
+    # Only the State column pills, in row order, must be non-decreasing.
+    states = html.scan(/<td class="dashboard-state-cell"><span class="tag[^"]*">([a-z]+)<\/span>/).map(&.[1])
     states.should eq(states.sort)
+  end
+
+  it "renders state and sub-state pills with state stripes" do
+    snapshot = SystemStatus.snapshot
+    html = Dashboard.render_html(snapshot, [] of Grafito::MetricsStore::MetricPoint, 0)
+    # Both State and Sub render as pills with semantic color classes...
+    html.should contain("dashboard-state-cell")
+    html.should contain("dashboard-sub-cell")
+    html.should contain("tag-ok")
+    # ...and each row carries its state class for the left stripe.
+    html.should contain("du-state-active")
+    html.should contain("du-state-failed")
   end
 
   it "ignores unknown sort columns" do

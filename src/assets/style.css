@@ -659,23 +659,57 @@ body[data-view="dashboard"] #side-panel {
 .dashboard-units td:last-child {
   white-space: normal;
 }
+/* Left-side state stripe, matching the log table's severity stripes. */
+.dashboard-units tbody tr {
+  border-left: 5px solid var(--tag-color, transparent);
+}
+.dashboard-units tbody tr.du-state-active {
+  --tag-color: var(--ok);
+}
+.dashboard-units tbody tr.du-state-failed {
+  --tag-color: var(--err);
+}
+.dashboard-units tbody tr.du-state-activating,
+.dashboard-units tbody tr.du-state-reloading {
+  --tag-color: var(--warn);
+}
+.dashboard-units tbody tr.du-state-inactive {
+  --tag-color: var(--debug);
+}
 .dashboard-unit-failed {
   --pico-table-row-stripped-background: rgba(240, 99, 90, 0.12);
   background: rgba(240, 99, 90, 0.12);
 }
-.dashboard-unit-failed td {
-  border-left: 2px solid var(--err, #f0635a);
+/* State and sub-state pills, mirroring the log view's priority tags. */
+.dashboard-units .tag {
+  display: inline-block;
+  font-size: 0.62rem;
+  line-height: 1;
+  padding: 0.28rem 0.5rem;
+  border-radius: 5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid var(--tag-color, var(--line));
+  color: var(--tag-color, var(--muted));
+  background: color-mix(in srgb, var(--tag-color, var(--muted)) 10%, transparent);
 }
-.tag-error {
-  background: rgba(240, 99, 90, 0.14);
-  color: var(--err, #f0635a);
+.dashboard-units .tag-ok {
+  --tag-color: var(--ok);
 }
-.tag-warn {
-  background: rgba(233, 162, 59, 0.14);
-  color: var(--warn, #e9a23b);
+.dashboard-units .tag-err {
+  --tag-color: var(--err);
 }
-.tag-muted {
-  opacity: 0.65;
+.dashboard-units .tag-warn {
+  --tag-color: var(--warn);
+}
+.dashboard-units .tag-info {
+  --tag-color: var(--info);
+}
+.dashboard-units .tag-debug {
+  --tag-color: var(--debug);
+}
+.dashboard-units .tag-muted {
+  --tag-color: var(--muted);
 }
 .dashboard-action-cell {
   white-space: nowrap;
