@@ -29,6 +29,16 @@ describe SystemStatus do
     unit.running?.should be_false
     JSON.parse(unit.to_json)["active_state"].should eq("failed")
   end
+
+  it "returns status output for a unit, or nil without exploding" do
+    output = SystemStatus.unit_status_output("sshd.service")
+    if output
+      output.should contain("sshd")
+      output.should_not contain("\x1b") # no ANSI color codes
+    else
+      output.should be_nil
+    end
+  end
 end
 
 describe Dashboard do

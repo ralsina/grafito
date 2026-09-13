@@ -69,6 +69,37 @@ module SystemStatus
     snapshot.units
   end
 
+  # Raw `systemctl status` output for one unit, for the AI explanation
+  # endpoint. Read-only, so it needs neither --enable-actions nor root.
+  # Journal excerpts are stripped (-n 0) because the AI report already
+  # carries a longer journal tail; colors and paging are disabled and
+  # lines kept untruncated so the model sees clean, complete output.
+  # Returns nil when systemctl fails (unit vanished, no systemd session).
+  def self.unit_status_output(unit_name : String) : String?
+    {% if flag?(:fake_journal) %}
+      fake_unit_status_output(unit_name)
+    {% else %}
+      command = ["systemctl"] + Journalctl.user_flags +
+                ["status", unit_name, "--no-pager", "-l", "--full", "-n", "0"]
+      stdout = IO::Memory.new
+      stderr = IO::Memory.new
+      process = Process.run(
+        command[0],
+        args: command[1..],
+        output: stdout,
+        error: stderr,
+        env: {"SYSTEMD_COLORS" => "0", "LANG" => "C"},
+      )
+      output = stdout.to_s
+      return output if process.success? && !output.empty?
+      # systemctl exits non-zero for inactive/failed units while still
+      # printing the full status block, which is exactly what we want.
+      return output unless output.empty?
+      Log.warn { "systemctl status #{unit_name} produced no output: #{stderr.to_s[0..200]}" }
+      nil
+    {% end %}
+  end
+
   # Per-unit file/systemd flags gathered in one batched call. Used to
   # decide which action buttons make sense for a unit.
   record UnitFileFlags,
@@ -130,6 +161,22 @@ module SystemStatus
       "nginx.service"       => UnitFileFlags.new("enabled", true),
       "sshd.service"        => UnitFileFlags.new("enabled", true),
     }
+  end
+
+  # Deterministic `systemctl status` stand-in for demo builds: a real
+  # looking block for the broken unit, a minimal one for the rest.
+  private def self.fake_unit_status_output(unit_name : String) : String?
+    if unit_name == "fake-broken.service"
+      <<-STATUS
+        ● fake-broken.service - Fake failing service
+             Loaded: loaded (/etc/systemd/system/fake-broken.service; enabled; preset: enabled)
+             Active: failed (Result: exit-code) since Mon 2026-09-13 09:00:01 UTC; 4min 2s ago
+            Process: 998 ExecStart=/usr/bin/fake-broken --run (code=exited, status=1/FAILURE)
+              Main PID: 998 (code=exited, status=1/FAILURE)
+        STATUS
+    else
+      "● #{unit_name}\n     Loaded: loaded\n     Active: active (running)\n   Main PID: 1234\n"
+    end
   end
 
   # A small, deterministic snapshot for demo builds and fake-mode specs.

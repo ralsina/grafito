@@ -746,6 +746,14 @@ module Grafito
         str << "Unit file state: #{flags.try(&.file_state) || "unknown"}\n"
         str << "Can start: #{flags && !flags.can_start ? "no" : "yes"}\n"
         str << "Errors (priority <= 3) in recent entries: #{errors}\n"
+        status_output = SystemStatus.unit_status_output(unit_state.unit)
+        if status_output
+          str << "\nsystemctl status output:\n"
+          str << status_output
+          str << "\n" unless status_output.ends_with?("\n")
+        else
+          str << "\nsystemctl status output: unavailable\n"
+        end
         str << "\nRecent journal entries (last 6h, up to #{recent.size} lines):\n"
         recent.each do |entry|
           str << "[#{entry.formatted_timestamp_with_timezone}] [#{entry.formatted_priority}] #{entry.message}\n"
