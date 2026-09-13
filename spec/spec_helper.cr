@@ -18,7 +18,16 @@ def dispatch_request(method : String, path : String, body : String? = nil, heade
   Kemal::RouteHandler::INSTANCE.call(context)
   response.close
 
-  {status: response.status_code, body: response_io.to_s}
+  # Depending on how the route writes its response, the raw IO may
+  # contain the full HTTP head. Strip it so specs see just the body.
+  raw_body = response_io.to_s
+  body_text = if raw_body.starts_with?("HTTP/")
+                raw_body.split("\r\n\r\n", 2).last? || ""
+              else
+                raw_body
+              end
+
+  {status: response.status_code, body: body_text}
 end
 
 # Minimal AI provider used to enable AI-dependent UI in specs.

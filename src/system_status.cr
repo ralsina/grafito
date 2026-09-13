@@ -1,0 +1,222 @@
+# # System status
+#
+# The dashboard needs a snapshot of the machine's health: load, memory,
+# disk usage, uptime and the state of systemd units. This module gathers
+# that without adding dependencies: it reads a few files from `/proc` and
+# shells out to `systemctl` and `df`, the same way [journalctl.cr](journalctl.cr.html)
+# shells out to `journalctl`.
+#
+# When compiled with `-Dfake_journal` (the demo build) it returns a small
+# deterministic snapshot instead, so the dashboard works without systemd.
+
+require "json"
+require "log"
+require "time"
+
+{% if flag?(:fake_journal) %}
+  require "./fake_journal_data"
+{% end %}
+
+module SystemStatus
+  Log = ::Log.for(self)
+
+  # The state of a single systemd unit as reported by
+  # `systemctl list-units`.
+  record UnitState,
+    unit : String,
+    load_state : String,
+    active_state : String,
+    sub_state : String,
+    description : String do
+    include JSON::Serializable
+
+    def failed? : Bool
+      active_state == "failed"
+    end
+
+    def running? : Bool
+      active_state == "active"
+    end
+  end
+
+  # A point-in-time view of the whole machine. This is what the dashboard
+  # cards display and what the metrics sampler records over time.
+  record Snapshot,
+    timestamp : Time,
+    load1 : Float64,
+    mem_used_pct : Float64,
+    disk_used_pct : Float64,
+    uptime_sec : Int64,
+    units_total : Int32,
+    units_failed : Int32,
+    units : Array(UnitState) do
+    include JSON::Serializable
+  end
+
+  # Returns the current system snapshot. On the demo build this is fake
+  # data; otherwise it reads /proc and queries systemctl.
+  def self.snapshot : Snapshot
+    {% if flag?(:fake_journal) %}
+      fake_snapshot
+    {% else %}
+      real_snapshot
+    {% end %}
+  end
+
+  # Returns just the unit states (used by the unit-action endpoint to
+  # verify a unit exists before touching it).
+  def self.unit_states : Array(UnitState)
+    snapshot.units
+  end
+
+  # A small, deterministic snapshot for demo builds and fake-mode specs.
+  private def self.fake_snapshot : Snapshot
+    units = [
+      UnitState.new("cron.service", "loaded", "active", "exited", "Regular background program processing"),
+      UnitState.new("docker.service", "loaded", "active", "running", "Docker Application Container Engine"),
+      UnitState.new("fake-broken.service", "loaded", "failed", "failed", "Fake failing service"),
+      UnitState.new("nginx.service", "loaded", "active", "running", "A high performance web server"),
+      UnitState.new("sshd.service", "loaded", "active", "running", "OpenBSD Secure Shell server"),
+    ]
+    Snapshot.new(
+      timestamp: Time.local,
+      load1: 0.42,
+      mem_used_pct: 61.5,
+      disk_used_pct: 47.8,
+      uptime_sec: 123456,
+      units_total: units.size,
+      units_failed: units.count(&.failed?),
+      units: units,
+    )
+  end
+
+  private def self.real_snapshot : Snapshot
+    units = query_unit_states
+    Snapshot.new(
+      timestamp: Time.local,
+      load1: read_load1,
+      mem_used_pct: read_mem_used_pct,
+      disk_used_pct: read_disk_used_pct,
+      uptime_sec: read_uptime_sec,
+      units_total: units.size,
+      units_failed: units.count(&.failed?),
+      units: units,
+    )
+  end
+
+  # Reads the one-minute load average from /proc/loadavg.
+  private def self.read_load1 : Float64
+    first_field("/proc/loadavg").try(&.to_f?) || 0.0
+  rescue ex
+    Log.warn(exception: ex) { "Failed to read load average" }
+    0.0
+  end
+
+  # Reads uptime seconds from /proc/uptime.
+  private def self.read_uptime_sec : Int64
+    seconds = first_field("/proc/uptime").try(&.to_f?)
+    seconds ? seconds.to_i64 : 0i64
+  rescue ex
+    Log.warn(exception: ex) { "Failed to read uptime" }
+    0i64
+  end
+
+  # Computes memory usage percentage from /proc/meminfo, using
+  # MemAvailable (which accounts for caches) rather than MemFree.
+  private def self.read_mem_used_pct : Float64
+    values = Hash(String, Int64).new
+    File.each_line("/proc/meminfo") do |line|
+      parts = line.split
+      key = parts[0]?.try(&.chomp(":"))
+      value = parts[1]?.try(&.to_i64?)
+      values[key] = value if key && value
+    end
+    total = values["MemTotal"]?
+    available = values["MemAvailable"]?
+    if total && total > 0 && available
+      ((total - available).to_f / total * 100).clamp(0.0, 100.0)
+    else
+      0.0
+    end
+  rescue ex
+    Log.warn(exception: ex) { "Failed to read memory info" }
+    0.0
+  end
+
+  # Computes root filesystem usage via `df -k -P /`. POSIX output makes
+  # the column layout stable: field 5 is the capacity percentage.
+  private def self.read_disk_used_pct : Float64
+    stdout = IO::Memory.new
+    result = Process.run("df", args: ["-k", "-P", "/"], output: stdout)
+    unless result.normal_exit?
+      Log.warn { "df command failed with exit code #{result.system_exit_status}" }
+      return 0.0
+    end
+    stdout.to_s.each_line do |line|
+      fields = line.split
+      next unless fields.size >= 5 && fields[5]? == "/"
+      return fields[4].rchop("%").to_f?.try(&.clamp(0.0, 100.0)) || 0.0
+    end
+    Log.warn { "df output did not contain a '/' mount point" }
+    0.0
+  rescue ex
+    Log.warn(exception: ex) { "Failed to read disk usage" }
+    0.0
+  end
+
+  # Queries `systemctl list-units` and parses the plain output.
+  # Each line is: UNIT LOAD ACTIVE SUB DESCRIPTION.
+  private def self.query_unit_states : Array(UnitState)
+    command = ["systemctl"] + Journalctl.user_flags +
+              ["list-units", "--type=service", "--all", "--no-legend", "--plain"]
+    stdout = IO::Memory.new
+    result = Process.run(command[0], args: command[1..], output: stdout)
+    unless result.normal_exit?
+      Log.warn { "systemctl list-units failed with exit code #{result.system_exit_status}" }
+      return [] of UnitState
+    end
+
+    units = [] of UnitState
+    stdout.to_s.each_line do |line|
+      next if line.strip.empty?
+      # systemctl --plain pads columns with spaces; split on whitespace
+      # and rejoin the description, which may itself contain spaces.
+      fields = line.split
+      unit_name = fields[0]?
+      next unless unit_name && fields.size >= 4
+      next unless allowed_unit?(unit_name)
+      units << UnitState.new(
+        unit: unit_name,
+        load_state: fields[1],
+        active_state: fields[2],
+        sub_state: fields[3],
+        description: fields.size >= 5 ? fields[4..].join(" ") : "",
+      )
+    end
+    units.sort_by!(&.unit)
+    units
+  rescue ex
+    Log.warn(exception: ex) { "Failed to query systemd units" }
+    [] of UnitState
+  end
+
+  # Applies the --units restriction, if configured. Matches raw names,
+  # cleaned names (without .service) and substrings in both directions,
+  # mirroring the log filtering in journalctl.cr.
+  private def self.allowed_unit?(unit_name : String) : Bool
+    allowed = Grafito.allowed_units
+    return true unless allowed
+
+    cleaned = unit_name.gsub(/\.service$/, "")
+    allowed.any? do |candidate|
+      candidate == unit_name || candidate == cleaned ||
+        unit_name.includes?(candidate) || cleaned.includes?(candidate) ||
+        candidate.includes?(cleaned)
+    end
+  end
+
+  # Returns the first whitespace-separated field of a file, or nil.
+  private def self.first_field(path : String) : String?
+    File.read(path).split.first?
+  end
+end

@@ -33,6 +33,9 @@
 
 require "./grafito"
 require "./ai/config"
+require "./gotify/client"
+require "./gotify/rules"
+require "./metrics_store"
 require "baked_file_handler"
 require "baked_file_system"
 require "docopt-config"
@@ -70,6 +73,11 @@ DOC = <<-DOCOPT
     -t TIMEZONE, --timezone=TIMEZONE  Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
     --base-path=PATH              Base path for deployment (e.g., /, /grafito) [default: /].
     --user                       Enable user systemd mode (use journalctl --user and systemctl --user) [default: false].
+    --dashboard=BOOL             Enable the server dashboard and metrics sampler (true/false) [default: true].
+    --data-dir=PATH              Directory for dashboard metrics history [default: /var/lib/grafito].
+    --sample-interval-sec=N      Dashboard metrics sampling interval in seconds [default: 30].
+    --retention-days=N           Days of dashboard metrics history to keep [default: 7].
+    --enable-actions             Allow start/stop/restart of whitelisted units from the dashboard [default: false].
     --idle-timeout-sec=TIMEOUT    Idle timeout in seconds after which to shut down. Primarily useful with systemd socket activation.
     -h --help                     Show this screen.
     --version                     Show version.
@@ -81,6 +89,16 @@ DOC = <<-DOCOPT
     GRAFITO_TIMEZONE              Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
     GRAFITO_BASE_PATH             Base path for deployment (e.g., /, /grafito) [default: /].
     GRAFITO_USER_MODE            Enable user systemd mode (true/false) [default: false].
+    GRAFITO_DASHBOARD            Enable the server dashboard (true/false) [default: true].
+    GRAFITO_DATA_DIR             Directory for dashboard metrics history [default: /var/lib/grafito].
+    GRAFITO_SAMPLE_INTERVAL_SEC  Dashboard metrics sampling interval in seconds [default: 30].
+    GRAFITO_RETENTION_DAYS       Days of dashboard metrics history to keep [default: 7].
+    GRAFITO_ENABLE_ACTIONS       Allow unit start/stop/restart from the dashboard (true/false) [default: false].
+    GRAFITO_GOTIFY_URL           Base URL of a Gotify server to enable push alerts.
+    GRAFITO_GOTIFY_TOKEN         Gotify application token (required with GRAFITO_GOTIFY_URL).
+    GRAFITO_GOTIFY_PRIORITY      Gotify message priority [default: 5].
+    GRAFITO_ALERT_DISK_PCT       Disk usage alert threshold in percent [default: 90].
+    GRAFITO_ALERT_ERRORS_PER_MIN Error-rate alert threshold (errors per minute) [default: 10].
     LISTEN_FDS                    Used for systemd socket activation. If set to 1, binds to the socket passed as fd 3.
   DOCOPT
 
@@ -154,6 +172,10 @@ def main
   user_mode_str = args["--user"].to_s
   Grafito.user_mode = (user_mode_str == "true")
   Grafito::Log.info { "User mode: #{Grafito.user_mode? ? "enabled" : "disabled"}" }
+
+  # Parse dashboard configuration. The dashboard itself, the metrics
+  # sampler and (optionally) Gotify alerts all hang off this switch.
+  setup_dashboard(args)
 
   # Register all Kemal routes (must be done after base_path is set)
   Grafito.register_routes
@@ -282,5 +304,58 @@ def setup_basic_auth(auth_user : String?, auth_pass : String?)
     Grafito::Log.warn { "Basic Authentication is DISABLED. To enable, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS environment variables." }
   end
 end
+
+# Applies the dashboard options and starts the metrics sampler (with
+# Gotify alert evaluation as the per-sample callback) when enabled.
+def setup_dashboard(args) : Nil
+  Grafito.dashboard_enabled = args["--dashboard"].to_s != "false"
+  Grafito.enable_actions = args["--enable-actions"].to_s == "true"
+  Grafito::Log.info { "Dashboard: #{Grafito.dashboard_enabled? ? "enabled" : "disabled"}" }
+
+  if Grafito.enable_actions?
+    if Grafito.allowed_units.nil?
+      Grafito::Log.warn { "Unit actions enabled but no --units whitelist configured; all actions will be refused" }
+    end
+    Grafito::Log.info { "Unit actions: enabled (whitelist-restricted)" }
+  end
+
+  return unless Grafito.dashboard_enabled?
+
+  interval = args["--sample-interval-sec"].to_s.to_i?
+  interval = 30 if interval.nil? || interval < 5
+  retention = args["--retention-days"].to_s.to_i?
+  retention = 7 if retention.nil? || retention < 1
+  data_dir = Grafito::MetricsStore.resolve_data_dir(args["--data-dir"].to_s)
+  Grafito::Log.info { "Metrics: sampling every #{interval}s into #{data_dir}, keeping #{retention} days" }
+  Grafito.metrics_store = Grafito::MetricsStore.start(data_dir, interval, retention) { |snapshot| evaluate_alerts(snapshot) }
+end
+
+# Evaluates the Gotify alert rules against a fresh system snapshot and
+# sends any debounced alerts. Called from the metrics sampler fiber; a
+# failure here must never take sampling down, so everything is guarded.
+def evaluate_alerts(snapshot : SystemStatus::Snapshot) : Nil
+  return unless Grafito::Gotify::Config.enabled?
+
+  # The error rate needs a journal query; skip the cost when there is
+  # no Gotify server configured.
+  error_count = Journalctl.query(since: "-1m", priority: "3", lines: 1000)
+  errors_per_min = error_count ? error_count.size.to_f : 0.0
+
+  client = Grafito::Gotify::Client.new
+  alerts = ALERT_RULES.evaluate(
+    disk_used_pct: snapshot.disk_used_pct,
+    failed_units: snapshot.units.select(&.failed?).map(&.unit),
+    errors_per_min: errors_per_min,
+  )
+  alerts.each do |alert|
+    Grafito::Gotify::Config::Log.info { "Sending alert '#{alert.rule}': #{alert.title}" }
+    client.send_notification(alert.title, alert.message)
+  end
+rescue ex
+  Grafito::Gotify::Config::Log.error(exception: ex) { "Alert evaluation failed" }
+end
+
+# Long-lived alert rules so the debounce state survives across samples.
+ALERT_RULES = Grafito::Gotify::Rules.new
 
 main()

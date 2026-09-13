@@ -389,6 +389,17 @@
           >
             <span class="material-icons" aria-hidden="true">download</span>
           </button>
+          <button
+            id="dashboard-toggle"
+            class="topbar-tool"
+            aria-pressed="false"
+            aria-label="Toggle server dashboard"
+            title="Toggle the server dashboard (status, services, history)"
+            onclick="toggleDashboard()"
+          >
+            <span class="material-icons" aria-hidden="true">dashboard</span>
+            <span class="topbar-tool-label">Dashboard</span>
+          </button>
           <label
             class="live-toggle"
             for="live-view"
@@ -458,6 +469,17 @@
         >
           <!-- Results will be displayed here -->
         </div>
+
+        <!-- Server dashboard (toggled by the Dashboard button). Polled
+             only while visible, refreshed on demand when opened. -->
+        <div
+          id="dashboard-view"
+          hidden
+          hx-get="dashboard"
+          hx-trigger="every 30s[!document.getElementById('dashboard-view').hidden]"
+          hx-target="this"
+          hx-swap="innerHTML"
+        ></div>
       </main>
 
       <aside id="minimap">
@@ -1449,6 +1471,12 @@
       }
 
       function setUnitFilterAndTrigger(unitName) {
+        // Coming from the dashboard's unit table: switch back to the
+        // log stream so the filter result is visible.
+        if (document.getElementById("dashboard-view") &&
+            !document.getElementById("dashboard-view").hidden) {
+          setDashboardVisible(false);
+        }
         const unitFilterInput = document.getElementById("unit-filter");
         if (unitFilterInput) {
           unitFilterInput.value = unitName;
@@ -1457,6 +1485,34 @@
         }
         return false; // Prevent default anchor link behavior
       }
+
+      // --- DASHBOARD TOGGLE ---
+      // Shows the server dashboard instead of the log stream. The
+      // dashboard polls /dashboard every 30s only while visible; the
+      // initial content is fetched on demand when it is opened.
+      function setDashboardVisible(visible) {
+        const dashboardView = document.getElementById("dashboard-view");
+        const results = document.getElementById("results");
+        const toggleButton = document.getElementById("dashboard-toggle");
+        if (!dashboardView || !results || !toggleButton) return;
+        dashboardView.hidden = !visible;
+        results.hidden = visible;
+        toggleButton.setAttribute("aria-pressed", visible ? "true" : "false");
+        if (visible) {
+          htmx.ajax("GET", buildUrl("dashboard"), {
+            target: "#dashboard-view",
+            swap: "innerHTML",
+          });
+        }
+      }
+
+      function toggleDashboard() {
+        const dashboardView = document.getElementById("dashboard-view");
+        if (dashboardView) {
+          setDashboardVisible(dashboardView.hidden);
+        }
+      }
+      // --- END DASHBOARD TOGGLE ---
 
       function setHostnameFilterAndTrigger(hostname) {
         const hostnameFilterInput = document.getElementById("hostname-filter");

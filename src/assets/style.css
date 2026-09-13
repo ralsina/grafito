@@ -576,6 +576,61 @@ html[data-ui="fieldnotes"] #mode-switcher {
 }
 
 /* =====================================================================
+   Server dashboard
+   ===================================================================== */
+#dashboard-view {
+  padding: 0.5rem 0 1rem;
+}
+.dashboard-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-bottom: 1em;
+}
+.dashboard-grid .stat {
+  min-width: 120px;
+  border: none;
+}
+.dashboard-history-svg {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  display: block;
+}
+.dashboard-units td,
+.dashboard-units th {
+  white-space: nowrap;
+}
+.dashboard-units td:last-child {
+  white-space: normal;
+}
+.dashboard-unit-failed {
+  --pico-table-row-stripped-background: rgba(240, 99, 90, 0.12);
+  background: rgba(240, 99, 90, 0.12);
+}
+.dashboard-unit-failed td {
+  border-left: 2px solid var(--err, #f0635a);
+}
+.tag-error {
+  background: rgba(240, 99, 90, 0.14);
+  color: var(--err, #f0635a);
+}
+.tag-warn {
+  background: rgba(233, 162, 59, 0.14);
+  color: var(--warn, #e9a23b);
+}
+.tag-muted {
+  opacity: 0.65;
+}
+.dashboard-action-cell {
+  white-space: nowrap;
+}
+.dashboard-action-cell .round-button {
+  display: inline-block;
+}
+
+/* =====================================================================
    Stream (results)
    ===================================================================== */
 #stream {

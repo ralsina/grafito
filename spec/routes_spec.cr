@@ -65,4 +65,112 @@ describe "Kemal routes" do
     response[:body].should contain("\"enabled\":")
     response[:body].should contain("\"current\":")
   end
+
+  it "GET /status returns a snapshot JSON payload" do
+    response = dispatch_request("GET", "/status")
+
+    response[:status].should eq(200)
+    body = JSON.parse(response[:body])
+    body["load1"].as_f?.should_not be_nil
+    body["mem_used_pct"].as_f?.should_not be_nil
+    body["disk_used_pct"].as_f?.should_not be_nil
+    body["uptime_sec"].as_i?.should_not be_nil
+    body["units"].as_a?.should_not be_nil
+    body["errors_last_hour"].as_i?.should_not be_nil
+  end
+
+  it "GET /status/history returns a points array" do
+    response = dispatch_request("GET", "/status/history?since=-1h")
+
+    response[:status].should eq(200)
+    JSON.parse(response[:body])["points"].as_a?.should_not be_nil
+  end
+
+  it "GET /status/history rejects an invalid since value" do
+    response = dispatch_request("GET", "/status/history?since=yesterday")
+
+    response[:status].should eq(400)
+    response[:body].should contain("Invalid 'since'")
+  end
+
+  it "GET /dashboard returns the dashboard fragment" do
+    response = dispatch_request("GET", "/dashboard")
+
+    response[:status].should eq(200)
+    response[:body].should contain("dashboard-grid")
+    response[:body].should contain("Services")
+  end
+
+  it "GET /status and /dashboard return 404 when the dashboard is disabled" do
+    Grafito.dashboard_enabled = false
+    begin
+      dispatch_request("GET", "/status")[:status].should eq(404)
+      dispatch_request("GET", "/dashboard")[:status].should eq(404)
+    ensure
+      Grafito.dashboard_enabled = true
+    end
+  end
+
+  it "POST unit actions returns 403 when actions are disabled" do
+    Grafito.enable_actions = false
+    begin
+      response = dispatch_request("POST", "/unit/sshd/restart")
+      response[:status].should eq(403)
+      response[:body].should contain("Unit actions are disabled")
+    ensure
+      Grafito.enable_actions = false
+    end
+  end
+
+  it "POST unit actions refuses units outside the whitelist" do
+    Grafito.enable_actions = true
+    Grafito.allowed_units = ["some-other-unit.service"]
+    begin
+      response = dispatch_request("POST", "/unit/sshd/restart")
+      response[:status].should eq(403)
+      response[:body].should contain("whitelist")
+    ensure
+      Grafito.enable_actions = false
+      Grafito.allowed_units = nil
+    end
+  end
+
+  it "POST unit actions returns 404 for a whitelisted but nonexistent unit" do
+    Grafito.enable_actions = true
+    Grafito.allowed_units = ["grafito-no-such-unit-xyz"]
+    begin
+      response = dispatch_request("POST", "/unit/grafito-no-such-unit-xyz/restart")
+      response[:status].should eq(404)
+      response[:body].should contain("not found")
+    ensure
+      Grafito.enable_actions = false
+      Grafito.allowed_units = nil
+    end
+  end
+
+  it "POST unit actions rejects an invalid action name" do
+    Grafito.enable_actions = true
+    Grafito.allowed_units = ["sshd"]
+    begin
+      response = dispatch_request("POST", "/unit/sshd/format")
+      response[:status].should eq(400)
+      response[:body].should contain("Invalid action")
+    ensure
+      Grafito.enable_actions = false
+      Grafito.allowed_units = nil
+    end
+  end
+
+  it "POST unit actions rejects unit names that look like flags" do
+    Grafito.enable_actions = true
+    Grafito.allowed_units = ["--dangerous"]
+    begin
+      response = dispatch_request("POST", "/unit/%2D%2Ddangerous/restart")
+      response[:status].should eq(400)
+      response[:body].should contain("Invalid unit name")
+    ensure
+      Grafito.enable_actions = false
+      Grafito.allowed_units = nil
+    end
+  end
 end

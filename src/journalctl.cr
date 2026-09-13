@@ -222,7 +222,8 @@ class Journalctl
 
   # Returns the `--user` flags to prepend to journalctl/systemctl commands
   # when user systemd mode is enabled, or an empty array otherwise.
-  private def self.user_flags : Array(String)
+  # Public so the dashboard's unit-action route reuses the same flags.
+  def self.user_flags : Array(String)
     Grafito.user_mode? ? ["--user"] : [] of String
   end
 

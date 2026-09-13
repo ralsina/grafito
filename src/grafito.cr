@@ -12,6 +12,12 @@
 require "./grafito_helpers"
 require "./journalctl"
 require "./timeline"
+require "./system_status"
+require "./metrics_store"
+require "./dashboard"
+require "./gotify/config"
+require "./gotify/client"
+require "./gotify/rules"
 require "./ai/config"
 require "./ai/provider"
 require "./ai/request"
@@ -50,6 +56,17 @@ module Grafito
 
   # User systemd mode - when enabled, use --user flag for journalctl/systemctl
   class_property? user_mode : Bool = false
+
+  # Server dashboard - when enabled, /status, /status/history and
+  # /dashboard are served and the metrics sampler runs.
+  class_property? dashboard_enabled : Bool = true
+
+  # Metrics sampler, nil when the dashboard is disabled (and in specs).
+  class_property metrics_store : MetricsStore? = nil
+
+  # When enabled, the dashboard's unit table offers start/stop/restart
+  # buttons restricted to the --units whitelist.
+  class_property? enable_actions : Bool = false
 
   # Helper to build route paths with proper base path handling
   private def self.route_path(path : String) : String
@@ -556,5 +573,178 @@ module Grafito
         {error: "AI request failed: #{ex.message}"}.to_json
       end
     end
+
+    # ## The `/status` endpoint
+    #
+    # Returns the current system snapshot (metrics + unit states) plus a
+    # bounded journal error count, as JSON.
+    #
+    # Example usage:
+    # ```text
+    # GET /status
+    # ```
+    get route_path("status") do |env|
+      unless Grafito.dashboard_enabled?
+        env.response.content_type = "application/json"
+        env.response.status_code = 404
+        next {error: "Dashboard is disabled"}.to_json
+      end
+
+      snapshot = SystemStatus.snapshot
+      env.response.content_type = "application/json"
+      {
+        timestamp:        snapshot.timestamp,
+        load1:            snapshot.load1,
+        mem_used_pct:     snapshot.mem_used_pct,
+        disk_used_pct:    snapshot.disk_used_pct,
+        uptime_sec:       snapshot.uptime_sec,
+        units_total:      snapshot.units_total,
+        units_failed:     snapshot.units_failed,
+        errors_last_hour: recent_error_count("-1h"),
+        units:            snapshot.units,
+      }.to_json
+    end
+
+    # ## The `/status/history` endpoint
+    #
+    # Returns the sampled metrics history as JSON. Accepts the usual
+    # relative `since` vocabulary (e.g. `?since=-1d`).
+    get route_path("status/history") do |env|
+      unless Grafito.dashboard_enabled?
+        env.response.content_type = "application/json"
+        env.response.status_code = 404
+        next {error: "Dashboard is disabled"}.to_json
+      end
+
+      since_text = optional_query_param(env, "since") || "-1h"
+      since = parse_since(since_text)
+      if since.nil?
+        env.response.content_type = "application/json"
+        env.response.status_code = 400
+        next {error: "Invalid 'since' parameter: #{since_text}"}.to_json
+      end
+
+      points = Grafito.metrics_store.try(&.history(since)) || [] of MetricsStore::MetricPoint
+      env.response.content_type = "application/json"
+      {points: points}.to_json
+    end
+
+    # ## The `/dashboard` endpoint
+    #
+    # Returns the dashboard HTML fragment for HTMX: health cards, history
+    # chart and the unit table. The frontend polls it every 30 seconds.
+    get route_path("dashboard") do |env|
+      unless Grafito.dashboard_enabled?
+        env.response.status_code = 404
+        next "Dashboard is disabled."
+      end
+      env.response.content_type = "text/html"
+      render_dashboard_fragment
+    end
+
+    # ## The unit action endpoint
+    #
+    # `POST /unit/<name>/<start|stop|restart>` runs systemctl for the
+    # named unit. Triple-gated: the dashboard must have actions enabled
+    # (`--enable-actions`), the unit must be in the `--units` whitelist,
+    # and the unit must actually exist. Returns the refreshed dashboard
+    # fragment so the htmx button updates the whole view.
+    post route_path("unit/:name/:action") do |env|
+      unless Grafito.dashboard_enabled? && Grafito.enable_actions?
+        env.response.status_code = 403
+        next "Unit actions are disabled. Start grafito with --enable-actions and a --units whitelist to allow them."
+      end
+
+      unit_name = env.params.url["name"]
+      action = env.params.url["action"]
+
+      unless {"start", "stop", "restart"}.includes?(action)
+        env.response.status_code = 400
+        next "Invalid action '#{HTML.escape(action)}'."
+      end
+
+      # Unit names come URL-decoded from the router and go straight into
+      # a Process.run argument array (no shell), but reject anything that
+      # could be mistaken for a flag.
+      if unit_name.empty? || unit_name.starts_with?('-') || !unit_name.matches?(/^[\w.@-]+$/)
+        env.response.status_code = 400
+        next "Invalid unit name."
+      end
+
+      unless action_allowed_for_unit?(unit_name)
+        env.response.status_code = 403
+        next "Unit '#{HTML.escape(unit_name)}' is not in the --units whitelist."
+      end
+
+      known_units = SystemStatus.unit_states.map(&.unit)
+      full_unit = known_units.includes?(unit_name) ? unit_name : "#{unit_name}.service"
+      unless known_units.includes?(full_unit)
+        env.response.status_code = 404
+        next "Unit '#{HTML.escape(unit_name)}' not found."
+      end
+
+      stdout = IO::Memory.new
+      stderr = IO::Memory.new
+      result = Process.run(
+        "systemctl",
+        args: Journalctl.user_flags + [action, full_unit],
+        output: stdout,
+        error: stderr,
+      )
+      unless result.normal_exit?
+        Log.error { "systemctl #{action} #{full_unit} failed: #{stderr.to_s[..200]}" }
+        env.response.status_code = 500
+        next "Failed to #{action} #{HTML.escape(full_unit)}."
+      end
+
+      Log.info { "systemctl #{action} #{full_unit} succeeded" }
+      env.response.content_type = "text/html"
+      render_dashboard_fragment
+    end
   end # register_routes
+
+  # Returns the dashboard HTML fragment used by both GET /dashboard and
+  # the unit-action POST responses.
+  private def self.render_dashboard_fragment : String
+    snapshot = SystemStatus.snapshot
+    history = Grafito.metrics_store.try(&.history(Time.utc - 6.hours)) || [] of MetricsStore::MetricPoint
+    Dashboard.render_html(snapshot, history, recent_error_count("-1h"), Grafito.enable_actions?)
+  end
+
+  # Counts journal entries at priority <= 3 (error or worse) since the
+  # given relative time. Bounded to 500 lines to keep dashboard refreshes
+  # cheap; the count is a signal, not an audit.
+  private def self.recent_error_count(since : String) : Int32
+    return 0 unless Grafito.dashboard_enabled?
+    logs = Journalctl.query(since: since, priority: "3", lines: 500)
+    logs ? logs.size : 0
+  end
+
+  # Parses the same relative time vocabulary the logs endpoint uses
+  # (-15m, -1h, -1d, -1M, -1y) into a Time.
+  private def self.parse_since(since_text : String) : Time?
+    match = since_text.strip.match(/^-?(\d+)([mhdMy])$/)
+    return unless match
+
+    amount = match[1].to_i
+    span = case match[2]
+           when "m" then Time::Span.new(minutes: amount)
+           when "h" then Time::Span.new(hours: amount)
+           when "d" then Time::Span.new(days: amount)
+           when "M" then Time::Span.new(days: amount * 30)
+           else          Time::Span.new(days: amount * 365) # "y"
+           end
+    Time.utc - span
+  end
+
+  # Checks that a unit is manageable: actions require an explicit
+  # --units whitelist, and the unit (raw or .service-suffixed) must be
+  # on it.
+  private def self.action_allowed_for_unit?(unit_name : String) : Bool
+    allowed = Grafito.allowed_units
+    return false unless allowed
+
+    cleaned = unit_name.gsub(/\.service$/, "")
+    allowed.any? { |candidate| candidate == unit_name || candidate == cleaned }
+  end
 end

@@ -101,6 +101,35 @@ uses [jimmy-proxy](https://github.com/Fadeleke57/jimmy-proxy) to expose
 ChatJimmy's free Llama 3.1 8B), point `GRAFITO_AI_ENDPOINT` at it and
 label it with `GRAFITO_AI_PROVIDER_NAME`.
 
+### Server Dashboard
+
+Besides the log stream, Grafito has an optional **server dashboard**:
+click the Dashboard button in the top bar (or open `/dashboard`)
+to see current system health, the state of your systemd units, and a
+small history chart of memory and disk usage.
+
+* **Metrics sampling**: a background fiber samples load, memory, disk
+  usage and unit states every `--sample-interval-sec` seconds (default
+  30) and stores the history as daily JSONL files under
+  `--data-dir` (default `/var/lib/grafito`), keeping `--retention-days`
+  days (default 7). No database, no extra services.
+* **JSON APIs**: `GET /status` (current snapshot + unit states) and
+  `GET /status/history?since=-1d` (sampled history).
+* **Unit actions** (opt-in): start Grafito with `--enable-actions` and a
+  `--units` whitelist (e.g. `--units nginx.service,grafito.service`) to
+  get start/stop/restart buttons in the dashboard's unit table. Actions
+  are refused without both options, and require the system user running
+  Grafito to have permission to manage those units (e.g. via polkit, or
+  `--user` mode for your own user units).
+* **Gotify push alerts** (opt-in): set `GRAFITO_GOTIFY_URL` and
+  `GRAFITO_GOTIFY_TOKEN` to get notified when a unit fails, when the
+  journal error rate exceeds `GRAFITO_ALERT_ERRORS_PER_MIN` per minute
+  (default 10), or when disk usage crosses `GRAFITO_ALERT_DISK_PCT`
+  percent (default 90). Each rule fires at most once every 10 minutes.
+
+Set `GRAFITO_DASHBOARD=false` (or `--dashboard=false`) to disable the
+dashboard, its endpoints and the sampler completely.
+
 ### Timezone Configuration
 
 Grafito displays timestamps in your local timezone by default, but you can configure it to use any timezone you prefer. This solves the issue of having to mentally convert UTC timestamps to your local time.
