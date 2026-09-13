@@ -129,6 +129,40 @@ describe "Kemal routes" do
     response[:body].should contain("No units match the filter.")
   end
 
+  it "GET /unit-details returns 400 without a name" do
+    response = dispatch_request("GET", "/unit-details")
+
+    response[:status].should eq(400)
+    response[:body].should contain("unit name")
+  end
+
+  it "GET /unit-details returns 404 for an unknown unit" do
+    response = dispatch_request("GET", "/unit-details?name=grafito-no-such-unit-xyz")
+
+    response[:status].should eq(404)
+    response[:body].should contain("not found")
+  end
+
+  it "GET /unit-details rejects names that look like flags" do
+    response = dispatch_request("GET", "/unit-details?name=%2D%2Ddangerous")
+
+    response[:status].should eq(400)
+    response[:body].should contain("unit name")
+  end
+
+  it "GET /unit-details renders the service panel fragment" do
+    # Uses the real unit list (plain mode) or the fake one (-Dfake_journal);
+    # both include at least one unit, but the name is unknown here, so
+    # just assert a valid unit renders its "View logs" call.
+    units = SystemStatus.snapshot.units
+    next if units.empty?
+
+    response = dispatch_request("GET", "/unit-details?name=#{URI.encode_path(units.first.unit)}")
+    response[:status].should eq(200)
+    response[:body].should contain("service-panel")
+    response[:body].should contain("View logs for this unit")
+  end
+
   it "GET /status and /dashboard return 404 when the dashboard is disabled" do
     Grafito.dashboard_enabled = false
     begin

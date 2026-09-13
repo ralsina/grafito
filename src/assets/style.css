@@ -607,8 +607,7 @@ body[data-view="dashboard"] #copy-link-button,
 body[data-view="dashboard"] #export-logs-button,
 body[data-view="dashboard"] .live-toggle,
 body[data-view="dashboard"] #stats-strip,
-body[data-view="dashboard"] #minimap,
-body[data-view="dashboard"] #side-panel {
+body[data-view="dashboard"] #minimap {
   display: none !important;
 }
 
@@ -662,6 +661,7 @@ body[data-view="dashboard"] #side-panel {
 /* Left-side state stripe, matching the log table's severity stripes. */
 .dashboard-units tbody tr {
   border-left: 5px solid var(--tag-color, transparent);
+  cursor: pointer;
 }
 .dashboard-units tbody tr.du-state-active {
   --tag-color: var(--ok);
@@ -716,6 +716,57 @@ body[data-view="dashboard"] #side-panel {
 }
 .dashboard-action-cell .round-button {
   display: inline-block;
+}
+/* Service detail panel (sidebar Detail tab in dashboard view). */
+.service-panel h4 {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+.service-panel-pills {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+.service-panel > p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 0.8rem;
+}
+.service-panel-info {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.8rem;
+}
+.service-panel-info > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.service-panel-info .stat-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+}
+.service-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+.service-panel-hint {
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-left: 0.25rem;
+}
+.service-panel-viewlogs {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
 }
 
 /* =====================================================================

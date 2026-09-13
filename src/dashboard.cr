@@ -240,6 +240,78 @@ module Dashboard
     end
   end
 
+  # Renders the service detail fragment for the right sidebar's Detail
+  # tab: unit identity and state pills, recent error count, unit actions
+  # (when enabled) and a call to jump into the unit's logs.
+  def unit_details_fragment(
+    unit_state : SystemStatus::UnitState,
+    enable_actions : Bool = false,
+    errors_last_hour : Int32 = 0,
+  ) : String
+    HTML.build do
+      div(class: "service-panel") do
+        tag("h4") do
+          text unit_state.unit
+        end
+        div(class: "service-panel-pills") do
+          html state_pill(unit_state.active_state)
+          html state_pill(unit_state.sub_state)
+        end
+        unless unit_state.description.empty?
+          tag("p") do
+            text unit_state.description
+          end
+        end
+
+        div(class: "service-panel-info") do
+          div do
+            span(class: "stat-label") { text "Load state" }
+            span { text unit_state.load_state }
+          end
+          div do
+            span(class: "stat-label") { text "Errors (1h)" }
+            span(class: errors_last_hour > 0 ? "stat-value stat-error" : "stat-value") do
+              text errors_last_hour.to_s
+            end
+          end
+        end
+
+        if enable_actions
+          div(class: "service-panel-actions") do
+            {"restart" => "restart_alt", "start" => "play_arrow", "stop" => "stop"}.each do |action, icon|
+              confirm_text = "#{action[0].upcase}#{action[1..]} unit #{unit_state.unit}?"
+              attributes = {
+                "class"        => "round-button",
+                "title"        => "#{action[0].upcase}#{action[1..]} #{unit_state.unit}",
+                "hx-post"      => "#{build_action_url(unit_state.unit, action)}?from=panel",
+                "hx-target"    => "#panel-detail-content",
+                "hx-swap"      => "innerHTML",
+                "hx-confirm"   => confirm_text,
+                "hx-indicator" => "#loading-spinner",
+              }
+              button(attributes) do
+                span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+                  text icon
+                end
+              end
+            end
+            span(class: "service-panel-hint") { text "start / stop / restart" }
+          end
+        end
+
+        button(
+          class: "service-panel-viewlogs",
+          onclick: "return setUnitFilterAndTrigger(#{unit_state.unit.to_json});",
+        ) do
+          span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+            text "article"
+          end
+          text " View logs for this unit"
+        end
+      end
+    end
+  end
+
   private def unit_row(unit_state : SystemStatus::UnitState, enable_actions : Bool) : String
     HTML.build do
       # The row class carries the state color as --tag-color, which the
@@ -247,7 +319,19 @@ module Dashboard
       # severity stripes. Failed rows keep an extra tint.
       row_class = "du-state-#{unit_state.active_state}"
       row_class = "#{row_class} dashboard-unit-failed" if unit_state.failed?
-      tr(class: row_class) do
+      # Clicking anywhere on the row opens the service panel (the
+      # sidebar's Detail tab), like clicking a log row opens the entry
+      # inspector.
+      row_attributes = {
+        "class"                     => row_class,
+        "title"                     => "Show details for #{unit_state.unit}",
+        "hx-get"                    => unit_details_url(unit_state.unit),
+        "hx-target"                 => "#panel-detail-content",
+        "hx-swap"                   => "innerHTML",
+        "hx-on:htmx:before-request" => "panelSpinner('panel-detail-content')",
+        "hx-on:htmx:after-request"  => "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
+      }
+      tr(row_attributes) do
         td(class: "dashboard-state-cell") do
           html state_pill(unit_state.active_state)
         end
@@ -258,8 +342,10 @@ module Dashboard
           text HTML.escape(unit_state.description)
         end
         td do
+          # The unit name keeps its direct behavior (jump into the unit's
+          # logs); stop propagation so it doesn't also open the panel.
           js_arg_unit_name = unit_state.unit.to_json
-          a(href: "#", onclick: "return setUnitFilterAndTrigger(#{js_arg_unit_name});") do
+          a(href: "#", onclick: "event.stopPropagation();return setUnitFilterAndTrigger(#{js_arg_unit_name});") do
             text HTML.escape(unit_state.unit)
           end
         end
@@ -268,6 +354,11 @@ module Dashboard
         end
       end
     end
+  end
+
+  private def unit_details_url(unit_name : String) : String
+    base = Grafito.base_path == "/" ? "" : Grafito.base_path
+    "#{base}/unit-details?name=#{URI.encode_path(unit_name)}"
   end
 
   # Renders a state or sub-state value as a pill matching the log view's

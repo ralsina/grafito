@@ -655,6 +655,43 @@ module Grafito
       render_dashboard_fragment(sort_by, sort_order, unit_filter, since_text)
     end
 
+    # ## The `/unit-details` endpoint
+    #
+    # Returns the service detail fragment for the right sidebar's Detail
+    # tab: state pills, recent error count, optional unit actions and a
+    # "view logs" call.
+    #
+    # Example usage:
+    # ```text
+    # GET /unit-details?name=nginx.service
+    # ```
+    get route_path("unit-details") do |env|
+      unless Grafito.dashboard_enabled?
+        env.response.status_code = 404
+        next "Dashboard is disabled."
+      end
+
+      name = optional_query_param(env, "name")
+      if name.nil? || name.empty? || name.starts_with?('-') || !name.matches?(/^[\w.@-]+$/)
+        halt env, status_code: 400, response: "Missing or invalid unit name."
+      end
+
+      unit_state = SystemStatus.unit_states.find do |unit|
+        unit.unit == name || unit.unit == "#{name}.service"
+      end
+      unless unit_state
+        env.response.status_code = 404
+        next "Unit '#{HTML.escape(name)}' not found."
+      end
+
+      env.response.content_type = "text/html"
+      Dashboard.unit_details_fragment(
+        unit_state,
+        Grafito.enable_actions?,
+        unit_error_count(unit_state.unit),
+      )
+    end
+
     # ## The unit action endpoint
     #
     # `POST /unit/<name>/<start|stop|restart>` runs systemctl for the
@@ -712,9 +749,30 @@ module Grafito
 
       Log.info { "systemctl #{action} #{full_unit} succeeded" }
       env.response.content_type = "text/html"
+      # Actions triggered from the sidebar refresh the panel instead of
+      # the whole dashboard; the dashboard catches up on its next poll.
+      if optional_query_param(env, "from") == "panel"
+        refreshed = SystemStatus.unit_states.find { |unit| unit.unit == full_unit }
+        if refreshed
+          next Dashboard.unit_details_fragment(
+            refreshed,
+            Grafito.enable_actions?,
+            unit_error_count(full_unit),
+          )
+        end
+      end
       render_dashboard_fragment
     end
   end # register_routes
+
+  # Counts journal entries at priority <= 3 (error or worse) for one
+  # unit since the given relative time. Bounded like the dashboard's
+  # global error count.
+  private def self.unit_error_count(unit_name : String, since : String = "-1h") : Int32
+    return 0 unless Grafito.dashboard_enabled?
+    logs = Journalctl.query(since: since, priority: "3", unit: unit_name, lines: 500)
+    logs ? logs.size : 0
+  end
 
   # Returns the dashboard HTML fragment used by both GET /dashboard and
   # the unit-action POST responses. Invalid since values fall back to
