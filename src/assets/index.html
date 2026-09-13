@@ -112,6 +112,29 @@
           <span class="topbar-tool-label">Dashboard</span>
         </button>
 
+        <!-- Service filter for the dashboard view, styled like the log
+             omnibox. Lives outside the swapped fragment so its value
+             survives auto-refreshes; requests include the dashboard
+             form for the current sort and time window. -->
+        <div class="omnibox" id="dashboard-filter-box">
+          <span class="omnibox-glyph" aria-hidden="true">⌕</span>
+          <input
+            type="search"
+            id="dashboard-unit-filter"
+            name="unit"
+            placeholder="Filter services…"
+            title="Filter the services table by unit name or description"
+            aria-label="Filter services"
+            autocomplete="off"
+            hx-get="dashboard"
+            hx-trigger="input changed delay:600ms"
+            hx-target="#dashboard-view"
+            hx-include="#dashboard-view form"
+            hx-swap="innerHTML"
+          />
+          <kbd>units</kbd>
+        </div>
+
         <div class="omnibox" id="search-omnibox">
           <span class="omnibox-glyph" aria-hidden="true">⌕</span>
           <div id="active-filters" class="active-filters" aria-label="Active filters"></div>
@@ -1548,12 +1571,14 @@
         }
       }
 
-      // Syncs the dataset from the rendered fragment's controls, so the
-      // poll URL always reflects what the user currently sees.
+      // Syncs the dataset from the current control values, so the poll
+      // URL always reflects what the user currently sees. The service
+      // filter lives in the topbar (outside the swapped fragment); the
+      // time window select is part of the fragment.
       function syncDashboardStateFromFragment() {
         const view = document.getElementById("dashboard-view");
         if (!view) return;
-        const unitInput = view.querySelector('input[name="unit"]');
+        const unitInput = document.getElementById("dashboard-unit-filter");
         const sinceSelect = view.querySelector('select[name="since"]');
         if (unitInput) view.dataset.unit = unitInput.value.trim();
         if (sinceSelect) view.dataset.since = sinceSelect.value;

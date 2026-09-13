@@ -283,8 +283,9 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   font-size: 0.72rem;
 }
 
-/* Omnibox / search */
-#search-omnibox {
+/* Omnibox / search (log omnibox + dashboard service filter) */
+#search-omnibox,
+#dashboard-filter-box {
   flex: 1;
   min-width: 220px;
   max-width: 560px;
@@ -298,10 +299,12 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   padding: 0.15rem 0.8rem;
   cursor: text;
 }
-#search-omnibox:not(:focus-within) input {
+#search-omnibox:not(:focus-within) input,
+#dashboard-filter-box:not(:focus-within) input {
   min-width: 12ch;
 }
-#search-omnibox:focus-within {
+#search-omnibox:focus-within,
+#dashboard-filter-box:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
 }
@@ -309,7 +312,8 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   color: var(--accent);
   font-weight: 600;
 }
-#search-omnibox input {
+#search-omnibox input,
+#dashboard-filter-box input {
   flex: 1;
   background: none;
   border: none;
@@ -322,11 +326,13 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   font-family: var(--font-mono);
   font-size: 0.85rem;
 }
-#search-omnibox input:focus {
+#search-omnibox input:focus,
+#dashboard-filter-box input:focus {
   box-shadow: none;
   border: none;
 }
-#search-omnibox kbd {
+#search-omnibox kbd,
+#dashboard-filter-box kbd {
   font-family: var(--font-mono);
   font-size: 0.62rem;
   text-transform: uppercase;
@@ -337,6 +343,16 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   border-radius: 5px;
   padding: 0.1rem 0.45rem;
   background: var(--panel);
+}
+#dashboard-filter-box {
+  display: none;
+  flex: none;
+  width: 280px;
+  min-width: 0;
+  max-width: none;
+}
+body[data-view="dashboard"] #dashboard-filter-box {
+  display: flex;
 }
 
 .topbar-select {
@@ -629,10 +645,6 @@ body[data-view="dashboard"] #side-panel {
 .services-header h4 {
   margin: 0;
   flex: none;
-}
-.services-header .dashboard-unit-filter {
-  flex: 0 1 300px;
-  margin: 0;
 }
 .dashboard-grid {
   display: flex;

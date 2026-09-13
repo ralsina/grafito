@@ -71,7 +71,6 @@ module Dashboard
           tag("h4") do
             text "Services (#{units.size})"
           end
-          html service_filter_input(unit_filter)
         end
 
         input(type: "hidden", name: "sort_by", value: sort_key)
@@ -132,26 +131,9 @@ module Dashboard
     end
   end
 
-  # The service filter input, rendered inside the services title row.
-  private def service_filter_input(unit_filter : String?) : String
-    HTML.build do
-      input({
-        "type"         => "search",
-        "name"         => "unit",
-        "class"        => "dashboard-unit-filter",
-        "value"        => normalize_filter(unit_filter),
-        "placeholder"  => "Filter services…",
-        "title"        => "Filter the services table by unit name or description",
-        "aria-label"   => "Filter services",
-        "hx-get"       => "dashboard",
-        "hx-trigger"   => "input changed delay:600ms",
-        "hx-target"    => "#dashboard-view",
-        "hx-swap"      => "innerHTML",
-        "hx-include"   => "closest form",
-        "hx-indicator" => "#loading-spinner",
-      })
-    end
-  end
+  # The service filter input lives in the page's topbar (outside this
+  # fragment, so it survives auto-refreshes); its value arrives here as
+  # the `unit` query parameter on every dashboard request.
 
   # Normalizes the unit filter to a plain string.
   private def normalize_filter(unit_filter : String?) : String
