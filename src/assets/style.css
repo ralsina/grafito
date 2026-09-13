@@ -765,19 +765,6 @@ body[data-view="dashboard"] #stats-strip {
   flex-wrap: wrap;
   margin-bottom: 0.8rem;
 }
-/* Icon-only action buttons matching the unit table's action cells. */
-.service-panel-actions .round-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.6rem;
-  height: 2.2rem;
-  padding: 0;
-  margin: 0;
-}
-.service-panel-actions .material-icons {
-  font-size: 1rem;
-}
 .service-panel-hint {
   font-size: 0.68rem;
   color: var(--muted);
@@ -993,7 +980,9 @@ tr.priority-7 {
 .log-row-hover-actions:hover .hover-action-cell {
   opacity: 1;
 }
-.hover-action-cell .round-button {
+.hover-action-cell .round-button,
+.dashboard-action-cell .round-button,
+.service-panel-actions .round-button {
   width: 1.7rem;
   height: 1.7rem;
   border-radius: 6px;
@@ -1007,14 +996,20 @@ tr.priority-7 {
   box-shadow: none;
   margin-bottom: 0;
 }
-html[data-ui="fieldnotes"] .hover-action-cell .round-button {
+html[data-ui="fieldnotes"] .hover-action-cell .round-button,
+html[data-ui="fieldnotes"] .dashboard-action-cell .round-button,
+html[data-ui="fieldnotes"] .service-panel-actions .round-button {
   border-radius: 999px;
 }
-.hover-action-cell .round-button:hover {
+.hover-action-cell .round-button:hover,
+.dashboard-action-cell .round-button:hover,
+.service-panel-actions .round-button:hover {
   color: var(--accent);
   border-color: var(--accent);
 }
-.hover-action-cell .material-icons {
+.hover-action-cell .material-icons,
+.dashboard-action-cell .material-icons,
+.service-panel-actions .material-icons {
   font-size: 0.9rem;
 }
 
