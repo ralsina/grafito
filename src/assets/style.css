@@ -578,6 +578,24 @@ html[data-ui="fieldnotes"] #mode-switcher {
 /* =====================================================================
    Server dashboard
    ===================================================================== */
+/* In dashboard view the log-specific chrome (search, filters, export
+   tools, live toggle, log stats, severity minimap, entry inspector) is
+   meaningless, so it is hidden; the topbar keeps brand + Dashboard. */
+body[data-view="dashboard"] #search-omnibox,
+body[data-view="dashboard"] #time-range-filter,
+body[data-view="dashboard"] #priority-filter,
+body[data-view="dashboard"] #filter-panel,
+body[data-view="dashboard"] #show-command-button,
+body[data-view="dashboard"] #clear-filters-btn,
+body[data-view="dashboard"] #copy-link-button,
+body[data-view="dashboard"] #export-logs-button,
+body[data-view="dashboard"] .live-toggle,
+body[data-view="dashboard"] #stats-strip,
+body[data-view="dashboard"] #minimap,
+body[data-view="dashboard"] #side-panel {
+  display: none !important;
+}
+
 #dashboard-view {
   padding: 0.5rem 0 1rem;
 }

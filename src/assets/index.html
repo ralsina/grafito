@@ -1499,6 +1499,13 @@
         dashboardView.hidden = !visible;
         results.hidden = visible;
         toggleButton.setAttribute("aria-pressed", visible ? "true" : "false");
+        // Switch the page chrome: log filters, export tools, the log
+        // stats strip and the minimap only make sense in log view.
+        if (visible) {
+          document.body.dataset.view = "dashboard";
+        } else {
+          delete document.body.dataset.view;
+        }
         if (visible) {
           htmx.ajax("GET", buildUrl("dashboard") + dashboardSortParams(), {
             target: "#dashboard-view",
