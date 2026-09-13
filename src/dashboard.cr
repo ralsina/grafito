@@ -294,6 +294,25 @@ module Dashboard
           end
         end
 
+        if Grafito.ai_provider
+          div(class: "service-panel-ai") do
+            button(
+              class: "service-panel-explain",
+              title: "Ask the AI to explain this unit's state and recent logs",
+              hx_post: unit_explain_url(unit_state.unit),
+              hx_target: "#service-ai-content",
+              hx_swap: "innerHTML",
+              hx_indicator: "#loading-spinner",
+            ) do
+              span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+                text "psychology"
+              end
+              text " Explain this unit (AI)"
+            end
+            div(id: "service-ai-content") { }
+          end
+        end
+
         button(
           class: "service-panel-viewlogs",
           onclick: "return setUnitFilterAndTrigger(#{unit_state.unit.to_json});",
@@ -305,6 +324,25 @@ module Dashboard
         end
       end
     end
+  end
+
+  # The AI explanation fragment swapped into #service-ai-content. The
+  # raw model output rides along hidden; page JavaScript renders it as
+  # markdown with marked after the swap.
+  def unit_ai_fragment(content : String) : String
+    HTML.build do
+      div(class: "service-ai-answer") do
+        div(class: "ai-answer-raw", style: "display: none") do
+          text content
+        end
+        div(class: "ai-answer-rendered ai-markdown-content") { }
+      end
+    end
+  end
+
+  private def unit_explain_url(unit_name : String) : String
+    base = Grafito.base_path == "/" ? "" : Grafito.base_path
+    "#{base}/unit-explain?name=#{URI.encode_path(unit_name)}"
   end
 
   private def unit_row(

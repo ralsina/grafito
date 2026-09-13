@@ -699,6 +699,73 @@ module Grafito
       )
     end
 
+    # ## The `/unit-explain` endpoint
+    #
+    # `POST /unit-explain?name=<unit>` asks the configured AI provider
+    # to explain the unit's current state using its recent journal
+    # entries. Returns an HTML fragment for the sidebar. 503 when no AI
+    # provider is configured, 404 for unknown units.
+    post route_path("unit-explain") do |env|
+      unless Grafito.dashboard_enabled?
+        env.response.status_code = 404
+        next "Dashboard is disabled."
+      end
+
+      provider = Grafito.ai_provider
+      unless provider
+        env.response.content_type = "application/json"
+        env.response.status_code = 503
+        next {error: "AI features are disabled. Configure a provider key to enable explanations."}.to_json
+      end
+
+      name = optional_query_param(env, "name")
+      if name.nil? || name.empty? || name.starts_with?('-') || !name.matches?(/^[\w.@-]+$/)
+        env.response.content_type = "text/html"
+        env.response.status_code = 400
+        next "Missing or invalid unit name."
+      end
+
+      unit_state = SystemStatus.unit_states.find do |unit|
+        unit.unit == name || unit.unit == "#{name}.service"
+      end
+      unless unit_state
+        env.response.content_type = "text/html"
+        env.response.status_code = 404
+        next "Unit '#{HTML.escape(name)}' not found."
+      end
+
+      flags = Grafito.enable_actions? ? SystemStatus.unit_flags_map[name]? : nil
+      recent = Journalctl.query(since: "-6h", unit: unit_state.unit, lines: 100) || [] of Journalctl::LogEntry
+      errors = recent.count { |entry| entry.priority.to_i? ? entry.priority.to_i <= 3 : false }
+
+      report = String.build do |str|
+        str << "Unit: #{unit_state.unit}\n"
+        str << "Description: #{unit_state.description}\n"
+        str << "Load state: #{unit_state.load_state}\n"
+        str << "Active state: #{unit_state.active_state} (#{unit_state.sub_state})\n"
+        str << "Unit file state: #{flags.try(&.file_state) || "unknown"}\n"
+        str << "Can start: #{flags && !flags.can_start ? "no" : "yes"}\n"
+        str << "Errors (priority <= 3) in recent entries: #{errors}\n"
+        str << "\nRecent journal entries (last 6h, up to #{recent.size} lines):\n"
+        recent.each do |entry|
+          str << "[#{entry.formatted_timestamp_with_timezone}] [#{entry.formatted_priority}] #{entry.message}\n"
+        end
+      end
+
+      begin
+        request = AI::Request.for_unit_diagnosis(report)
+        response = provider.complete(request)
+        Log.info { "AI unit explanation generated for #{unit_state.unit} (#{response.content.size} chars)" }
+        env.response.content_type = "text/html"
+        Dashboard.unit_ai_fragment(response.content)
+      rescue ex : Exception
+        Log.error(exception: ex) { "AI unit explanation failed for #{unit_state.unit}" }
+        env.response.content_type = "text/html"
+        # A 200 keeps htmx swapping so the user sees the failure inline.
+        Dashboard.unit_ai_fragment("AI request failed: #{ex.message}")
+      end
+    end
+
     # ## The unit action endpoint
     #
     # `POST /unit/<name>/<start|stop|restart|enable|disable>` runs

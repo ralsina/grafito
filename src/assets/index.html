@@ -1724,6 +1724,18 @@
           syncDashboardStateFromFragment();
           buildServicesMinimap();
         }
+        // The AI unit explanation arrives with the raw model output in
+        // a hidden div; render it as markdown once swapped in.
+        if (event.detail.target && event.detail.target.id === "service-ai-content") {
+          const container = document.getElementById("service-ai-content");
+          const raw = container && container.querySelector(".ai-answer-raw");
+          const out = container && container.querySelector(".ai-answer-rendered");
+          if (raw && out) {
+            out.innerHTML = window.marked
+              ? marked.parse(raw.textContent)
+              : "<pre>" + raw.textContent + "</pre>";
+          }
+        }
       });
       // --- END DASHBOARD SORTING + FILTERS ---
       // --- END DASHBOARD TOGGLE ---

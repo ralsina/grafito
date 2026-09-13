@@ -66,6 +66,38 @@ module Grafito::AI
       )
     end
 
+    # Convenience constructor for the dashboard's "explain this unit"
+    # use case. `unit_report` is a plain-text summary of the unit's
+    # state plus recent journal excerpts, assembled by the caller.
+    def self.for_unit_diagnosis(unit_report : String) : self
+      system_prompt = <<-SYSTEM
+        You are a systemd expert assistant embedded in a server dashboard
+        for a homelab administrator. You will receive the current state of
+        one systemd unit and excerpts of its recent journal entries.
+
+        Your job:
+        - Explain what the unit does and why it is in its current state.
+        - If it is failed or degraded: the likely causes based on the
+          journal excerpts, and concrete remediation commands.
+        - If it is healthy: whether anything in the recent entries needs
+          attention. Keep it short.
+        - Use only the provided information; say so when it is not
+          enough to reach a conclusion.
+
+        Format your response using simple markdown for readability:
+        - Use ## for section headers (not #)
+        - Use - for bullet lists
+        - Use `backticks` for commands, file paths and unit names
+        - Keep it concise and scannable
+        SYSTEM
+      new(
+        system_prompt: system_prompt,
+        user_prompt: "Here is the unit report:\n\n#{unit_report}\n\nExplain this unit's situation.",
+        max_tokens: 1024,
+        temperature: 0.5,
+      )
+    end
+
     # Build system prompt based on log priority
     private def self.build_system_prompt(priority : String) : String
       base = "You are a helpful AI assistant specializing in system log analysis."

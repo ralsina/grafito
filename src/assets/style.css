@@ -777,6 +777,26 @@ body[data-view="dashboard"] #stats-strip {
   color: var(--muted);
   margin-left: 0.25rem;
 }
+.service-panel-ai {
+  margin: 0.8rem 0;
+}
+.service-panel-explain {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-bottom: 0.5rem;
+}
+.service-ai-answer .ai-answer-rendered {
+  font-size: 0.82rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  max-height: 50vh;
+  overflow: auto;
+}
 .service-panel-error-message {
   background: color-mix(in srgb, var(--err) 10%, transparent);
   border: 1px solid var(--err);

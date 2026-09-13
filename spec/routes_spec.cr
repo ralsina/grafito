@@ -220,3 +220,48 @@ describe "Kemal routes" do
     end
   end
 end
+
+it "POST /unit-explain returns 503 without an AI provider" do
+  Grafito.ai_provider = nil
+  response = dispatch_request("POST", "/unit-explain?name=sshd.service")
+
+  response[:status].should eq(503)
+  response[:body].should contain("AI features are disabled")
+end
+
+it "POST /unit-explain returns 400 without a name" do
+  Grafito.ai_provider = FakeAIProvider.new
+  begin
+    response = dispatch_request("POST", "/unit-explain")
+    response[:status].should eq(400)
+    response[:body].should contain("unit name")
+  ensure
+    Grafito.ai_provider = nil
+  end
+end
+
+it "POST /unit-explain returns 404 for an unknown unit" do
+  Grafito.ai_provider = FakeAIProvider.new
+  begin
+    response = dispatch_request("POST", "/unit-explain?name=grafito-no-such-unit-xyz")
+    response[:status].should eq(404)
+    response[:body].should contain("not found")
+  ensure
+    Grafito.ai_provider = nil
+  end
+end
+
+it "POST /unit-explain returns an AI explanation fragment" do
+  Grafito.ai_provider = FakeAIProvider.new
+  units = SystemStatus.snapshot.units
+  next if units.empty?
+
+  begin
+    response = dispatch_request("POST", "/unit-explain?name=#{URI.encode_path(units.first.unit)}")
+    response[:status].should eq(200)
+    response[:body].should contain("service-ai-answer")
+    response[:body].should contain("fake explanation")
+  ensure
+    Grafito.ai_provider = nil
+  end
+end
