@@ -633,13 +633,17 @@ module Grafito
     #
     # Returns the dashboard HTML fragment for HTMX: health cards, history
     # chart and the unit table. The frontend polls it every 30 seconds.
+    # The unit table can be sorted with `sort_by` (unit, state, sub,
+    # description) and `sort_order` (asc/desc).
     get route_path("dashboard") do |env|
       unless Grafito.dashboard_enabled?
         env.response.status_code = 404
         next "Dashboard is disabled."
       end
+      sort_by = optional_query_param(env, "sort_by")
+      sort_order = optional_query_param(env, "sort_order")
       env.response.content_type = "text/html"
-      render_dashboard_fragment
+      render_dashboard_fragment(sort_by, sort_order)
     end
 
     # ## The unit action endpoint
@@ -705,10 +709,13 @@ module Grafito
 
   # Returns the dashboard HTML fragment used by both GET /dashboard and
   # the unit-action POST responses.
-  private def self.render_dashboard_fragment : String
+  private def self.render_dashboard_fragment(
+    sort_by : String? = nil,
+    sort_order : String? = nil,
+  ) : String
     snapshot = SystemStatus.snapshot
     history = Grafito.metrics_store.try(&.history(Time.utc - 6.hours)) || [] of MetricsStore::MetricPoint
-    Dashboard.render_html(snapshot, history, recent_error_count("-1h"), Grafito.enable_actions?)
+    Dashboard.render_html(snapshot, history, recent_error_count("-1h"), Grafito.enable_actions?, sort_by, sort_order)
   end
 
   # Counts journal entries at priority <= 3 (error or worse) since the

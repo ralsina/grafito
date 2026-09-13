@@ -64,6 +64,85 @@ describe Dashboard do
     html.should contain("hx-post")
     html.should contain("hx-confirm")
   end
+
+  it "renders clickable sort headers with a default ascending indicator" do
+    snapshot = SystemStatus.snapshot
+    html = Dashboard.render_html(snapshot, [] of Grafito::MetricsStore::MetricPoint, 0)
+    html.should contain("sortDashboard(&#39;unit&#39;)")
+    html.should contain("sortDashboard(&#39;state&#39;)")
+    html.should contain("sortDashboard(&#39;sub&#39;)")
+    html.should contain("sortDashboard(&#39;description&#39;)")
+    html.should contain("arrow_upward")
+    html.should_not contain("arrow_downward")
+  end
+
+  it "shows a descending indicator for the active sort column" do
+    snapshot = SystemStatus.snapshot
+    html = Dashboard.render_html(
+      snapshot,
+      [] of Grafito::MetricsStore::MetricPoint,
+      0,
+      sort_by: "state",
+      sort_order: "desc",
+    )
+    html.should contain("arrow_downward")
+    html.should_not contain("arrow_upward")
+  end
+
+  it "sorts units by the requested column and direction" do
+    snapshot = SystemStatus.snapshot
+    html = Dashboard.render_html(
+      snapshot,
+      [] of Grafito::MetricsStore::MetricPoint,
+      0,
+      sort_by: "unit",
+      sort_order: "desc",
+    )
+    names = dashboard_unit_names(html)
+    names.size.should be > 1
+    lowered = names.map(&.downcase)
+    descending = lowered.sort
+    descending.reverse!
+    lowered.should eq(descending)
+  end
+
+  it "sorts units by state when requested" do
+    snapshot = SystemStatus.snapshot
+    html = Dashboard.render_html(
+      snapshot,
+      [] of Grafito::MetricsStore::MetricPoint,
+      0,
+      sort_by: "state",
+      sort_order: "asc",
+    )
+    # The state column values appear in the tags inside each row; their
+    # order in the fragment must be non-decreasing.
+    states = html.scan(/<span class="tag[^"]*">([a-z]+)<\/span>/).map(&.[1])
+    states.should eq(states.sort)
+  end
+
+  it "ignores unknown sort columns" do
+    snapshot = SystemStatus.snapshot
+    html = Dashboard.render_html(
+      snapshot,
+      [] of Grafito::MetricsStore::MetricPoint,
+      0,
+      sort_by: "banana",
+      sort_order: "sideways",
+    )
+    # Falls back to the default: unit, ascending.
+    html.should contain("arrow_upward")
+    html.should_not contain("arrow_downward")
+    names = dashboard_unit_names(html)
+    lowered = names.map(&.downcase)
+    lowered.should eq(lowered.sort)
+  end
+end
+
+# Extracts the unit names of the dashboard table rows, in row order.
+# The rows are the only place that calls setUnitFilterAndTrigger().
+private def dashboard_unit_names(html : String) : Array(String)
+  html.scan(/setUnitFilterAndTrigger\(&quot;([^&]+)&quot;\)/).map(&.[1])
 end
 
 # Helper to build metric points relative to now.

@@ -1499,7 +1499,7 @@
         results.hidden = visible;
         toggleButton.setAttribute("aria-pressed", visible ? "true" : "false");
         if (visible) {
-          htmx.ajax("GET", buildUrl("dashboard"), {
+          htmx.ajax("GET", buildUrl("dashboard") + dashboardSortParams(), {
             target: "#dashboard-view",
             swap: "innerHTML",
           });
@@ -1512,6 +1512,53 @@
           setDashboardVisible(dashboardView.hidden);
         }
       }
+
+      // --- DASHBOARD SORTING ---
+      // The unit table is sorted server-side; the current choice is kept
+      // in #dashboard-view's dataset so the 30s auto-refresh polls (and
+      // reopening the dashboard) preserve it.
+      function dashboardSortParams() {
+        const view = document.getElementById("dashboard-view");
+        if (!view || !view.dataset.sortBy) return "";
+        const params = new URLSearchParams({
+          sort_by: view.dataset.sortBy,
+          sort_order: view.dataset.sortOrder || "asc",
+        });
+        return "?" + params.toString();
+      }
+
+      function updateDashboardPollUrl() {
+        const view = document.getElementById("dashboard-view");
+        if (view) {
+          view.setAttribute("hx-get", "dashboard" + dashboardSortParams());
+        }
+      }
+
+      function sortDashboard(sortBy) {
+        const view = document.getElementById("dashboard-view");
+        if (!view) return;
+        // Clicking the active column flips the direction; a new column
+        // starts ascending.
+        const flip =
+          view.dataset.sortBy === sortBy &&
+          (view.dataset.sortOrder || "asc") === "asc";
+        view.dataset.sortBy = sortBy;
+        view.dataset.sortOrder = flip ? "desc" : "asc";
+        updateDashboardPollUrl();
+        htmx.ajax("GET", buildUrl("dashboard") + dashboardSortParams(), {
+          target: "#dashboard-view",
+          swap: "innerHTML",
+        });
+      }
+
+      // Keep the poll URL in sync after every dashboard swap (covers
+      // sorting done in a previous page session and the initial load).
+      document.body.addEventListener("htmx:afterSwap", function (event) {
+        if (event.detail.target && event.detail.target.id === "dashboard-view") {
+          updateDashboardPollUrl();
+        }
+      });
+      // --- END DASHBOARD SORTING ---
       // --- END DASHBOARD TOGGLE ---
 
       function setHostnameFilterAndTrigger(hostname) {

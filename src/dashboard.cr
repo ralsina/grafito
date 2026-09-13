@@ -28,12 +28,21 @@ module Dashboard
 
   # Renders the dashboard fragment. `history` may be empty (e.g. the
   # sampler just started); `errors_last_hour` comes from the journal.
+  # `sort_by`/`sort_order` control the unit table ordering.
   def render_html(
     snapshot : SystemStatus::Snapshot,
     history : Array(Grafito::MetricsStore::MetricPoint),
     errors_last_hour : Int32,
     enable_actions : Bool = false,
+    sort_by : String? = nil,
+    sort_order : String? = nil,
   ) : String
+    # Units arrive sorted by name from SystemStatus; apply the requested
+    # column sort on top (defaulting to name, ascending).
+    sort_key = normalize_sort_key(sort_by)
+    ascending = normalize_sort_order(sort_order) == "asc"
+    units = sort_units(snapshot.units, sort_key, ascending)
+
     HTML.build do
       div(class: "dashboard-grid") do
         html card("Uptime", format_uptime(snapshot.uptime_sec))
@@ -57,26 +66,88 @@ module Dashboard
       table(class: "striped dashboard-units") do
         thead do
           tr do
-            th { text "Unit" }
-            th { text "State" }
-            th { text "Sub" }
-            th { text "Description" }
+            html sortable_header("Unit", "unit", sort_key, ascending)
+            html sortable_header("State", "state", sort_key, ascending)
+            html sortable_header("Sub", "sub", sort_key, ascending)
+            html sortable_header("Description", "description", sort_key, ascending)
             if enable_actions
               th { text "Actions" }
             end
           end
         end
         tbody do
-          if snapshot.units.empty?
+          if units.empty?
             td(colspan: enable_actions ? "5" : "4", style: "text-align: center; padding: 1em;") do
               text "No systemd units found."
             end
           else
-            snapshot.units.each do |unit_state|
+            units.each do |unit_state|
               html unit_row(unit_state, enable_actions)
             end
           end
         end
+      end
+    end
+  end
+
+  # Maps a requested sort column to a known key, defaulting to "unit".
+  private def normalize_sort_key(sort_by : String?) : String
+    case sort_by
+    when "state"       then "state"
+    when "sub"         then "sub"
+    when "description" then "description"
+    else                    "unit"
+    end
+  end
+
+  # Normalizes the requested order, defaulting to ascending.
+  private def normalize_sort_order(sort_order : String?) : String
+    sort_order == "desc" ? "desc" : "asc"
+  end
+
+  # Sorts units by the given key, case-insensitively. Failed units are
+  # kept together by their own state value, like any other sort.
+  private def sort_units(
+    units : Array(SystemStatus::UnitState),
+    sort_key : String,
+    ascending : Bool,
+  ) : Array(SystemStatus::UnitState)
+    sorted = units.sort_by do |unit_state|
+      value = case sort_key
+              when "state"       then unit_state.active_state
+              when "sub"         then unit_state.sub_state
+              when "description" then unit_state.description
+              else                    unit_state.unit
+              end
+      value.downcase
+    end
+    ascending ? sorted : sorted.reverse
+  end
+
+  # A clickable table header for one sortable column. The click goes
+  # through sortDashboard() in the page JavaScript, which remembers the
+  # choice across the 30s auto-refresh polls. The active column shows a
+  # direction arrow, mirroring the log table's sort indicators.
+  private def sortable_header(
+    label : String,
+    key : String,
+    current_sort_key : String,
+    ascending : Bool,
+  ) : String
+    indicator = if current_sort_key == key
+                  icon = ascending ? "arrow_upward" : "arrow_downward"
+                  %q( <span class="material-icons" aria-hidden="true" style="font-size: inherit; vertical-align: middle;">) + icon + "</span>"
+                else
+                  ""
+                end
+    HTML.build do
+      th({
+        "style"   => "cursor: pointer; vertical-align: middle;",
+        "onclick" => "sortDashboard('#{key}')",
+        "title"   => "Sort by #{label.downcase}",
+      }) do
+        text label
+        html indicator
       end
     end
   end

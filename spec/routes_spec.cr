@@ -101,6 +101,13 @@ describe "Kemal routes" do
     response[:body].should contain("Services")
   end
 
+  it "GET /dashboard accepts sort parameters" do
+    response = dispatch_request("GET", "/dashboard?sort_by=state&sort_order=desc")
+
+    response[:status].should eq(200)
+    response[:body].should contain("arrow_downward")
+  end
+
   it "GET /status and /dashboard return 404 when the dashboard is disabled" do
     Grafito.dashboard_enabled = false
     begin
