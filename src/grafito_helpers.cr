@@ -226,7 +226,14 @@ module Grafito
           # Align chart buckets to the timezone the table displays.
           timeline_location = logs.first.convert_to_timezone(logs.first.timestamp).location
           timeline_data = Timeline.generate_frequency_timeline(logs, location: timeline_location)
-          svg_timeline_html = Timeline.generate_svg_timeline(timeline_data)
+          # Overlay system metrics over the same span so log activity
+          # can be correlated with memory/load. Missing metrics (sampler
+          # disabled, span before the first sample) simply render no
+          # overlay lines.
+          oldest_log = logs.min_of(&.timestamp)
+          metric_points = Grafito.metrics_store.try(&.history(oldest_log - 1.minute)) ||
+                          [] of Grafito::MetricsStore::MetricPoint
+          svg_timeline_html = Timeline.generate_svg_timeline(timeline_data, metrics: metric_points)
           div(style: "margin-bottom: 1em;") do
             html svg_timeline_html
           end

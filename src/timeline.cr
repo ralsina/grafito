@@ -9,8 +9,9 @@
 # that happen to have data.
 
 require "time"
-require "html"         # For HTML.escape
-require "./journalctl" # For Journalctl::LogEntry type
+require "html"            # For HTML.escape
+require "./journalctl"    # For Journalctl::LogEntry type
+require "./metrics_store" # For the optional metrics overlay
 
 module Timeline
   extend self
@@ -122,6 +123,7 @@ module Timeline
     padding : Int32 = 10,
     bar_color : String = "steelblue",
     font_family : String = "monospace",
+    metrics : Array(Grafito::MetricsStore::MetricPoint) = [] of Grafito::MetricsStore::MetricPoint,
   ) : String
     svg = IO::Memory.new
 
@@ -158,10 +160,35 @@ module Timeline
     actual_bar_width = (slot_width * 0.8).clamp(1.0, 60.0)
     bar_margin = (slot_width - actual_bar_width) / 2
 
+    # Subtle system-metrics overlay (memory %, load) so the reader can
+    # correlate system load with log activity. Drawn behind the bars;
+    # points outside the bucket span are dropped.
+    window_start = timeline_data[0][:start_time]
+    window_end = timeline_data.last[:start_time] + interval.seconds
+    window_span = [(window_end - window_start).total_seconds, 1.0].max
+    in_window = metrics.select { |metric| metric.ts >= window_start && metric.ts <= window_end }
+    max_load = in_window.empty? ? 0.0 : in_window.max_of(&.load1)
+    if !in_window.empty? && max_load > 0
+      metric_x = ->(metric_ts : Time) {
+        padding + ((metric_ts - window_start).total_seconds / window_span) * chart_width
+      }
+      mem_coords = in_window.map do |metric|
+        y = chart_top + (1.0 - metric.mem_used_pct.clamp(0.0, 100.0) / 100.0) * chart_height
+        "#{metric_x.call(metric.ts).round(2)},#{y.round(2)}"
+      end
+      load_coords = in_window.map do |metric|
+        y = chart_bottom - (metric.load1 / max_load) * chart_height
+        "#{metric_x.call(metric.ts).round(2)},#{y.clamp(chart_top, chart_bottom).round(2)}"
+      end
+      svg << %(  <polyline class="tl-metric-line" stroke="var(--ok, #58a6ff)" points="#{mem_coords.join(" ")}" />)
+      svg << %(  <polyline class="tl-metric-line" stroke="var(--muted, #999)" stroke-dasharray="3 3" points="#{load_coords.join(" ")}" />)
+    end
+
     svg << %(<svg width="100%" height="#{height}" viewBox="0 0 #{width} #{height}" xmlns="http://www.w3.org/2000/svg" role="img" data-interval="#{interval.to_i}">)
     svg << %(  <style>)
     svg << %(    .tl-bar rect { fill: #{bar_color}; })
     svg << %(    .tl-label { fill: #999; font-family: #{font_family}; font-size: 12px; })
+    svg << %(    .tl-metric-line { fill: none; stroke-width: 1.25; opacity: 0.55; })
     svg << %(  </style>)
 
     timeline_data.each_with_index do |point, index|
@@ -214,6 +241,10 @@ module Timeline
     last_point = timeline_data.last
     last_end = last_point[:start_time] + interval_for_labels.seconds
     svg << %(  <text x="#{(width - padding).round(2)}" y="#{label_y}" class="tl-label" text-anchor="end">#{bucket_label(last_end, interval_for_labels)}</text>)
+    if !in_window.empty? && max_load > 0
+      legend_x = width / 2
+      svg << %(  <text x="#{legend_x}" y="#{label_y}" class="tl-label" text-anchor="middle" opacity="0.8">— memory %   - - load (scaled)</text>)
+    end
 
     svg << %(</svg>)
     svg.to_s
