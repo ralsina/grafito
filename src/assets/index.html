@@ -1698,6 +1698,13 @@
       window.showLogPanel = function (tab) {
         const panel = document.getElementById("side-panel");
         if (!panel) return;
+        // The service panel (dashboard) only has a Detail view — hide
+        // the log-entry tabs while it is showing.
+        const serviceMode = !!document.querySelector(
+          "#panel-detail-content .service-panel"
+        );
+        panel.classList.toggle("service-view", serviceMode);
+        if (serviceMode && tab !== "detail") tab = "detail";
         panel.classList.add("open");
         document
           .querySelectorAll("#side-panel-tabs .insp-tab")

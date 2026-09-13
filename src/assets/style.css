@@ -718,6 +718,13 @@ body[data-view="dashboard"] #minimap {
   display: inline-block;
 }
 /* Service detail panel (sidebar Detail tab in dashboard view). */
+/* In service mode the log-entry tabs (Context, AI) don't apply. */
+#side-panel.service-view .insp-tab[data-tab="context"],
+#side-panel.service-view .insp-tab[data-tab="ai"],
+#side-panel.service-view .insp-pane[data-pane="context"],
+#side-panel.service-view .insp-pane[data-pane="ai"] {
+  display: none !important;
+}
 .service-panel h4 {
   margin: 0 0 0.6rem;
   font-family: var(--font-mono);
