@@ -249,19 +249,23 @@ select:focus {
   white-space: nowrap;
 }
 .brand-mark {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
   align-self: center;
   background: var(--accent);
-  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  /* The pencil from favicon.svg, tinted with the theme accent. */
+  -webkit-mask: url("favicon.svg") center / contain no-repeat;
+  mask: url("favicon.svg") center / contain no-repeat;
 }
 html[data-ui="graphite"] .brand-mark {
-  clip-path: none;
+  -webkit-mask: none;
+  mask: none;
   border-radius: 50%;
   box-shadow: 0 0 10px var(--accent);
 }
 html[data-ui="fieldnotes"] .brand-mark {
-  clip-path: none;
+  -webkit-mask: none;
+  mask: none;
   width: 8px;
   height: 8px;
   border-radius: 50%;
