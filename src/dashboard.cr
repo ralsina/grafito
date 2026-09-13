@@ -39,7 +39,7 @@ module Dashboard
     sort_order : String? = nil,
     unit_filter : String? = nil,
     since_text : String? = nil,
-    enablement : Hash(String, String) = {} of String => String,
+    unit_flags : Hash(String, SystemStatus::UnitFileFlags) = {} of String => SystemStatus::UnitFileFlags,
   ) : String
     # Units arrive sorted by name from SystemStatus; apply the requested
     # column sort on top (defaulting to name, ascending).
@@ -91,7 +91,7 @@ module Dashboard
               end
             else
               units.each do |unit_state|
-                html unit_row(unit_state, enable_actions, enablement)
+                html unit_row(unit_state, enable_actions, unit_flags)
               end
             end
           end
@@ -248,7 +248,12 @@ module Dashboard
     unit_state : SystemStatus::UnitState,
     enable_actions : Bool = false,
     errors_last_hour : Int32 = 0,
+    unit_flags : Hash(String, SystemStatus::UnitFileFlags) = {} of String => SystemStatus::UnitFileFlags,
   ) : String
+    flags = unit_flags[unit_state.unit]?
+    can_start = flags.nil? ? true : flags.can_start
+    lifecycle = lifecycle_actions(unit_state, can_start)
+    enablement = enablement_action(unit_state, flags)
     HTML.build do
       div(class: "service-panel") do
         tag("h4") do
@@ -279,24 +284,12 @@ module Dashboard
 
         if enable_actions
           div(class: "service-panel-actions") do
-            case unit_state.active_state
-            when "active", "activating", "reloading"
-              html action_button(unit_state.unit, "restart", "restart_alt", "#panel-detail-content", true)
-              html action_button(unit_state.unit, "stop", "stop", "#panel-detail-content", true)
-            when "failed"
-              html action_button(unit_state.unit, "start", "play_arrow", "#panel-detail-content", true)
-              html action_button(unit_state.unit, "restart", "restart_alt", "#panel-detail-content", true)
-            else
-              html action_button(unit_state.unit, "start", "play_arrow", "#panel-detail-content", true)
+            lifecycle.each do |item|
+              html action_button(unit_state.unit, item[:action], item[:icon], "#panel-detail-content", true)
             end
-
-            case SystemStatus.enabled_state(unit_state.unit)
-            when "enabled"
-              html action_button(unit_state.unit, "disable", "link_off", "#panel-detail-content", true)
-            when "disabled"
-              html action_button(unit_state.unit, "enable", "link", "#panel-detail-content", true)
+            if enablement
+              html action_button(unit_state.unit, enablement[:action], enablement[:icon], "#panel-detail-content", true)
             end
-
             span(class: "service-panel-hint") { text "systemctl actions" }
           end
         end
@@ -317,7 +310,7 @@ module Dashboard
   private def unit_row(
     unit_state : SystemStatus::UnitState,
     enable_actions : Bool,
-    enablement : Hash(String, String),
+    unit_flags : Hash(String, SystemStatus::UnitFileFlags),
   ) : String
     HTML.build do
       # The row class carries the state color as --tag-color, which the
@@ -358,7 +351,7 @@ module Dashboard
           end
         end
         if enable_actions
-          html action_cell(unit_state, enablement)
+          html action_cell(unit_state, unit_flags)
         end
       end
     end
@@ -371,39 +364,64 @@ module Dashboard
   # nothing because everything would fail.
   private def action_cell(
     unit_state : SystemStatus::UnitState,
-    enablement : Hash(String, String),
+    unit_flags : Hash(String, SystemStatus::UnitFileFlags),
   ) : String
     unit_name = unit_state.unit
-    if unit_name.ends_with?("@.service") || enablement[unit_name]? == "masked"
+    flags = unit_flags[unit_name]?
+    if unit_name.ends_with?("@.service") || flags.try(&.file_state) == "masked"
       # Templates can't be operated on without an instance, and masked
       # units refuse everything: no buttons instead of guaranteed
       # failures.
       return HTML.build { tag("td") { } }
     end
+    # CanStart is systemd's own verdict on whether the unit may be
+    # started (RefuseManualStart, not-found, templates, masked...).
+    can_start = flags.nil? ? true : flags.can_start
 
+    HTML.build do
+      td(class: "dashboard-action-cell") do
+        lifecycle_actions(unit_state, can_start).each do |item|
+          html action_button(unit_name, item[:action], item[:icon], "#dashboard-view", false)
+        end
+        if enablement = enablement_action(unit_state, flags)
+          html action_button(unit_name, enablement[:action], enablement[:icon], "#dashboard-view", false)
+        end
+      end
+    end
+  end
+
+  # The lifecycle actions that make sense for a unit in its current
+  # state: start an inactive unit, stop/restart an active one, recover a
+  # failed one. CanStart=no (RefuseManualStart, not-found, masked...)
+  # removes the start-flavored buttons entirely. Computed before any
+  # HTML.build block, where module helpers aren't reachable.
+  private def lifecycle_actions(
+    unit_state : SystemStatus::UnitState,
+    can_start : Bool,
+  ) : Array(NamedTuple(action: String, icon: String))
     actions = [] of NamedTuple(action: String, icon: String)
     case unit_state.active_state
     when "active", "activating", "reloading"
       actions << {action: "stop", icon: "stop"}
-      actions << {action: "restart", icon: "restart_alt"}
+      actions << {action: "restart", icon: "restart_alt"} if can_start
     when "failed"
-      actions << {action: "start", icon: "play_arrow"}
-      actions << {action: "restart", icon: "restart_alt"}
+      actions << {action: "start", icon: "play_arrow"} if can_start
+      actions << {action: "restart", icon: "restart_alt"} if can_start
     else
-      actions << {action: "start", icon: "play_arrow"}
+      actions << {action: "start", icon: "play_arrow"} if can_start
     end
-    enabled_state = enablement[unit_name]?
-    case enabled_state
-    when "enabled"  then actions << {action: "disable", icon: "link_off"}
-    when "disabled" then actions << {action: "enable", icon: "link"}
-    end
+    actions
+  end
 
-    HTML.build do
-      td(class: "dashboard-action-cell") do
-        actions.each do |item|
-          html action_button(unit_name, item[:action], item[:icon], "#dashboard-view", false)
-        end
-      end
+  # The enablement action that applies to the unit's unit file state,
+  # or nil when none does (static, masked, generated, unknown...).
+  private def enablement_action(
+    unit_state : SystemStatus::UnitState,
+    flags : SystemStatus::UnitFileFlags?,
+  ) : NamedTuple(action: String, icon: String)?
+    case flags.try(&.file_state)
+    when "enabled"  then {action: "disable", icon: "link_off"}
+    when "disabled" then {action: "enable", icon: "link"}
     end
   end
 

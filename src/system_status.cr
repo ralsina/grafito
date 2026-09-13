@@ -69,82 +69,67 @@ module SystemStatus
     snapshot.units
   end
 
-  # Returns the enablement state for every unit in one batched
-  # `systemctl show` call: {unit name => "enabled"/"disabled"/"static"/
-  # "masked"/...}. Units with no unit file state (e.g. generated ones)
-  # are omitted, and the dashboard hides enable/disable for them.
-  def self.enablement_map : Hash(String, String)
+  # Per-unit file/systemd flags gathered in one batched call. Used to
+  # decide which action buttons make sense for a unit.
+  record UnitFileFlags,
+    file_state : String,
+    can_start : Bool
+
+  # Returns the enablement and startability for every unit in one
+  # batched `systemctl show` call: {unit name => UnitFileFlags}.
+  # Units with no unit file state (e.g. generated ones) are omitted,
+  # and the dashboard hides enable/disable for them.
+  def self.unit_flags_map : Hash(String, UnitFileFlags)
     {% if flag?(:fake_journal) %}
-      fake_enablement_map
+      fake_unit_flags_map
     {% else %}
       unit_names = snapshot.units.map(&.unit)
-      return {} of String => String if unit_names.empty?
+      return {} of String => UnitFileFlags if unit_names.empty?
 
       command = ["systemctl"] + Journalctl.user_flags +
-                ["show", "-p", "Id", "-p", "UnitFileState"] + unit_names
+                ["show", "-p", "Id", "-p", "UnitFileState", "-p", "CanStart"] + unit_names
       stdout = IO::Memory.new
       Process.run(command[0], args: command[1..], output: stdout)
 
-      states = Hash(String, String).new
-      current : String? = nil
+      states = Hash(String, UnitFileFlags).new
+      current_id : String? = nil
+      current_file_state = ""
+      current_can_start = true
+      flush = -> do
+        if current_id
+          states[current_id] = UnitFileFlags.new(current_file_state, current_can_start)
+        end
+      end
       stdout.to_s.each_line do |line|
         case
         when line.starts_with?("Id=")
-          current = line[3..]
+          flush.call
+          current_id = line[3..]
+          current_file_state = ""
+          current_can_start = true
         when line.starts_with?("UnitFileState=")
-          if current_id = current
-            state = line["UnitFileState=".size..].strip.downcase
-            states[current_id] = state unless state.empty?
-          end
+          current_file_state = line["UnitFileState=".size..].strip.downcase
+        when line.starts_with?("CanStart=")
+          current_can_start = line["CanStart=".size..].strip.downcase != "no"
         end
       end
+      flush.call
       states
     {% end %}
   rescue ex
-    Log.warn(exception: ex) { "Failed to read batched enablement states" }
-    {} of String => String
+    Log.warn(exception: ex) { "Failed to read batched unit flags" }
+    {} of String => UnitFileFlags
   end
 
-  # Deterministic enablement states for the demo build.
-  private def self.fake_enablement_map : Hash(String, String)
+  # Deterministic unit flags for the demo build.
+  private def self.fake_unit_flags_map : Hash(String, UnitFileFlags)
     {
-      "cron.service"        => "static",
-      "fake-broken.service" => "disabled",
-      "docker.service"      => "enabled",
-      "nginx.service"       => "enabled",
-      "sshd.service"        => "enabled",
+      "cron.service"        => UnitFileFlags.new("static", true),
+      "fake-broken.service" => UnitFileFlags.new("disabled", true),
+      "docker.service"      => UnitFileFlags.new("enabled", true),
+      "nginx.service"       => UnitFileFlags.new("enabled", true),
+      "sshd.service"        => UnitFileFlags.new("enabled", true),
     }
-  end
-
-  # Returns the unit's enablement state as reported by
-  # `systemctl is-enabled` ("enabled", "disabled", "static", ...), or
-  # nil when it cannot be determined. Note that is-enabled exits
-  # non-zero for disabled units, so the exit status is ignored and the
-  # output word is the answer.
-  def self.enabled_state(unit_name : String) : String?
-    {% if flag?(:fake_journal) %}
-      fake_enabled_state(unit_name)
-    {% else %}
-      command = ["systemctl"] + Journalctl.user_flags + ["is-enabled", unit_name]
-      stdout = IO::Memory.new
-      Process.run(command[0], args: command[1..], output: stdout)
-      state = stdout.to_s.strip.downcase
-      state.empty? ? nil : state
-    {% end %}
-  rescue ex
-    Log.warn(exception: ex) { "Failed to read enablement state for #{unit_name}" }
-    nil
-  end
-
-  # Deterministic enablement states for the demo build.
-  private def self.fake_enabled_state(unit_name : String) : String?
-    case unit_name
-    when "cron.service"        then "static"
-    when "fake-broken.service" then "disabled"
-    when "docker.service"      then "enabled"
-    when "nginx.service"       then "enabled"
-    when "sshd.service"        then "enabled"
-    end
   end
 
   # A small, deterministic snapshot for demo builds and fake-mode specs.

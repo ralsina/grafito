@@ -656,9 +656,9 @@ module Grafito
       sort_order = optional_query_param(env, "sort_order")
       unit_filter = optional_query_param(env, "unit")
       since_text = optional_query_param(env, "since")
-      enablement = Grafito.enable_actions? ? SystemStatus.enablement_map : {} of String => String
+      unit_flags = Grafito.enable_actions? ? SystemStatus.unit_flags_map : {} of String => SystemStatus::UnitFileFlags
       env.response.content_type = "text/html"
-      render_dashboard_fragment(sort_by, sort_order, unit_filter, since_text, enablement)
+      render_dashboard_fragment(sort_by, sort_order, unit_filter, since_text, unit_flags)
     end
 
     # ## The `/unit-details` endpoint
@@ -695,6 +695,7 @@ module Grafito
         unit_state,
         Grafito.enable_actions?,
         unit_error_count(unit_state.unit),
+        Grafito.enable_actions? ? SystemStatus.unit_flags_map : {} of String => SystemStatus::UnitFileFlags,
       )
     end
 
@@ -775,6 +776,7 @@ module Grafito
             refreshed,
             Grafito.enable_actions?,
             unit_error_count(full_unit),
+            Grafito.enable_actions? ? SystemStatus.unit_flags_map : {} of String => SystemStatus::UnitFileFlags,
           )
         end
       end
@@ -799,7 +801,7 @@ module Grafito
     sort_order : String? = nil,
     unit_filter : String? = nil,
     since_text : String? = nil,
-    enablement : Hash(String, String) = {} of String => String,
+    unit_flags : Hash(String, SystemStatus::UnitFileFlags) = {} of String => SystemStatus::UnitFileFlags,
   ) : String
     snapshot = SystemStatus.snapshot
     since_time = parse_since(since_text.to_s) || DEFAULT_DASHBOARD_SINCE
@@ -814,7 +816,7 @@ module Grafito
       sort_order,
       unit_filter,
       since_text,
-      enablement,
+      unit_flags,
     )
   end
 

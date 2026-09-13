@@ -232,7 +232,11 @@ describe Dashboard do
         fail "fake units missing from the fake snapshot"
       end
 
-      html = Dashboard.unit_details_fragment(broken, enable_actions: true)
+      html = Dashboard.unit_details_fragment(
+        broken,
+        enable_actions: true,
+        unit_flags: SystemStatus.unit_flags_map,
+      )
       # A failed, disabled unit: start + restart (recovery) + enable.
       html.should contain("/start?from=panel")
       html.should contain("/restart?from=panel")
@@ -240,7 +244,11 @@ describe Dashboard do
       html.should_not contain("/stop?from=panel")
       html.should_not contain("/disable?from=panel")
 
-      running_html = Dashboard.unit_details_fragment(running, enable_actions: true)
+      running_html = Dashboard.unit_details_fragment(
+        running,
+        enable_actions: true,
+        unit_flags: SystemStatus.unit_flags_map,
+      )
       # An active, enabled unit: stop/restart + disable, no start/enable.
       running_html.should contain("/stop?from=panel")
       running_html.should contain("/restart?from=panel")
@@ -266,7 +274,7 @@ describe Dashboard do
         [] of Grafito::MetricsStore::MetricPoint,
         0,
         enable_actions: true,
-        enablement: SystemStatus.enablement_map,
+        unit_flags: SystemStatus.unit_flags_map,
       )
       # A failed, disabled unit: start + enable, no stop.
       html.should contain("/unit/fake-broken.service/start")
@@ -280,6 +288,63 @@ describe Dashboard do
       # A static unit: no enablement buttons.
       html.should_not contain("/unit/cron.service/enable")
       html.should_not contain("/unit/cron.service/disable")
+    end
+
+    it "offers no actions for templates and masked units" do
+      units = [
+        SystemStatus::UnitState.new("some@.service", "loaded", "inactive", "dead", "A template unit"),
+        SystemStatus::UnitState.new("masked.service", "loaded", "inactive", "dead", "A masked unit"),
+      ]
+      snapshot = SystemStatus::Snapshot.new(
+        timestamp: Time.local,
+        load1: 1.0,
+        mem_used_pct: 50.0,
+        disk_used_pct: 50.0,
+        uptime_sec: 3600,
+        units_total: units.size,
+        units_failed: 0,
+        units: units,
+      )
+      html = Dashboard.render_html(
+        snapshot,
+        [] of Grafito::MetricsStore::MetricPoint,
+        0,
+        enable_actions: true,
+        unit_flags: {
+          "masked.service" => SystemStatus::UnitFileFlags.new("masked", false),
+        },
+      )
+      html.should contain(">some@.service</a>")
+      html.should contain(">masked.service</a>")
+      html.should_not contain("hx-post")
+    end
+
+    it "hides start and restart when systemd says CanStart=no" do
+      units = [
+        SystemStatus::UnitState.new("blocked.service", "loaded", "inactive", "dead", "Refuses manual start"),
+      ]
+      snapshot = SystemStatus::Snapshot.new(
+        timestamp: Time.local,
+        load1: 1.0,
+        mem_used_pct: 50.0,
+        disk_used_pct: 50.0,
+        uptime_sec: 3600,
+        units_total: units.size,
+        units_failed: 0,
+        units: units,
+      )
+      html = Dashboard.render_html(
+        snapshot,
+        [] of Grafito::MetricsStore::MetricPoint,
+        0,
+        enable_actions: true,
+        unit_flags: {
+          "blocked.service" => SystemStatus::UnitFileFlags.new("disabled", false),
+        },
+      )
+      html.should contain(">blocked.service</a>")
+      html.should_not contain("/blocked.service/start")
+      html.should contain("/blocked.service/enable")
     end
   {% end %}
 end
