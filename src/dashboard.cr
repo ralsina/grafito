@@ -39,6 +39,7 @@ module Dashboard
     sort_order : String? = nil,
     unit_filter : String? = nil,
     since_text : String? = nil,
+    enablement : Hash(String, String) = {} of String => String,
   ) : String
     # Units arrive sorted by name from SystemStatus; apply the requested
     # column sort on top (defaulting to name, ascending).
@@ -90,7 +91,7 @@ module Dashboard
               end
             else
               units.each do |unit_state|
-                html unit_row(unit_state, enable_actions)
+                html unit_row(unit_state, enable_actions, enablement)
               end
             end
           end
@@ -277,7 +278,27 @@ module Dashboard
         end
 
         if enable_actions
-          html panel_actions(unit_state)
+          div(class: "service-panel-actions") do
+            case unit_state.active_state
+            when "active", "activating", "reloading"
+              html action_button(unit_state.unit, "restart", "restart_alt", "#panel-detail-content", true)
+              html action_button(unit_state.unit, "stop", "stop", "#panel-detail-content", true)
+            when "failed"
+              html action_button(unit_state.unit, "start", "play_arrow", "#panel-detail-content", true)
+              html action_button(unit_state.unit, "restart", "restart_alt", "#panel-detail-content", true)
+            else
+              html action_button(unit_state.unit, "start", "play_arrow", "#panel-detail-content", true)
+            end
+
+            case SystemStatus.enabled_state(unit_state.unit)
+            when "enabled"
+              html action_button(unit_state.unit, "disable", "link_off", "#panel-detail-content", true)
+            when "disabled"
+              html action_button(unit_state.unit, "enable", "link", "#panel-detail-content", true)
+            end
+
+            span(class: "service-panel-hint") { text "systemctl actions" }
+          end
         end
 
         button(
@@ -293,7 +314,11 @@ module Dashboard
     end
   end
 
-  private def unit_row(unit_state : SystemStatus::UnitState, enable_actions : Bool) : String
+  private def unit_row(
+    unit_state : SystemStatus::UnitState,
+    enable_actions : Bool,
+    enablement : Hash(String, String),
+  ) : String
     HTML.build do
       # The row class carries the state color as --tag-color, which the
       # CSS turns into the left-side stripe, like the log view's
@@ -333,55 +358,73 @@ module Dashboard
           end
         end
         if enable_actions
-          html action_cell(unit_state.unit)
+          html action_cell(unit_state, enablement)
         end
       end
     end
   end
 
-  # Contextual action buttons for the service panel. Lifecycle buttons
-  # depend on the unit's current state (start an inactive unit,
-  # stop/restart an active one); the enablement button depends on
-  # `systemctl is-enabled` (enable a disabled unit, disable an enabled
-  # one; static/indirect units get neither).
-  private def panel_actions(unit_state : SystemStatus::UnitState) : String
+  # State-appropriate action buttons for one unit row, wrapped in their
+  # table cell. Like the panel: start an inactive unit, stop/restart an
+  # active one, recover a failed one, and enable/disable according to
+  # its unit file state. Templates (foo@.service) and masked units offer
+  # nothing because everything would fail.
+  private def action_cell(
+    unit_state : SystemStatus::UnitState,
+    enablement : Hash(String, String),
+  ) : String
+    unit_name = unit_state.unit
+    if unit_name.ends_with?("@.service") || enablement[unit_name]? == "masked"
+      # Templates can't be operated on without an instance, and masked
+      # units refuse everything: no buttons instead of guaranteed
+      # failures.
+      return HTML.build { tag("td") { } }
+    end
+
+    actions = [] of NamedTuple(action: String, icon: String)
+    case unit_state.active_state
+    when "active", "activating", "reloading"
+      actions << {action: "stop", icon: "stop"}
+      actions << {action: "restart", icon: "restart_alt"}
+    when "failed"
+      actions << {action: "start", icon: "play_arrow"}
+      actions << {action: "restart", icon: "restart_alt"}
+    else
+      actions << {action: "start", icon: "play_arrow"}
+    end
+    enabled_state = enablement[unit_name]?
+    case enabled_state
+    when "enabled"  then actions << {action: "disable", icon: "link_off"}
+    when "disabled" then actions << {action: "enable", icon: "link"}
+    end
+
     HTML.build do
-      div(class: "service-panel-actions") do
-        case unit_state.active_state
-        when "active"
-          html panel_action_button(unit_state.unit, "restart", "restart_alt")
-          html panel_action_button(unit_state.unit, "stop", "stop")
-        when "activating", "reloading"
-          html panel_action_button(unit_state.unit, "restart", "restart_alt")
-          html panel_action_button(unit_state.unit, "stop", "stop")
-        else
-          html panel_action_button(unit_state.unit, "start", "play_arrow")
+      td(class: "dashboard-action-cell") do
+        actions.each do |item|
+          html action_button(unit_name, item[:action], item[:icon], "#dashboard-view", false)
         end
-
-        case SystemStatus.enabled_state(unit_state.unit)
-        when "enabled"
-          html panel_action_button(unit_state.unit, "disable", "link_off")
-        when "disabled"
-          html panel_action_button(unit_state.unit, "enable", "link")
-        end
-
-        span(class: "service-panel-hint") { text "systemctl actions" }
       end
     end
   end
 
-  # One action button in the service panel: icon-only, matching the
-  # unit table's action cells (the tooltip names the action), posting
-  # to the unit action endpoint and swapping the refreshed panel in.
-  private def panel_action_button(unit_name : String, action : String, icon : String) : String
+  # One icon-only action button. `target` decides what gets refreshed:
+  # the whole dashboard (table) or just the service panel. `from_panel`
+  # tells the action endpoint to answer with a refreshed panel.
+  private def action_button(
+    unit_name : String,
+    action : String,
+    icon : String,
+    target : String,
+    from_panel : Bool,
+  ) : String
     HTML.build do
       confirm_text = "#{action[0].upcase}#{action[1..]} unit #{unit_name}?"
       attributes = {
         "class"        => "round-button",
         "title"        => "#{action[0].upcase}#{action[1..]} #{unit_name}",
         "aria-label"   => "#{action[0].upcase}#{action[1..]} #{unit_name}",
-        "hx-post"      => "#{build_action_url(unit_name, action)}?from=panel",
-        "hx-target"    => "#panel-detail-content",
+        "hx-post"      => "#{build_action_url(unit_name, action)}#{from_panel ? "?from=panel" : ""}",
+        "hx-target"    => target,
         "hx-swap"      => "innerHTML",
         "hx-confirm"   => confirm_text,
         "hx-indicator" => "#loading-spinner",
@@ -435,29 +478,6 @@ module Dashboard
 
   # Start/stop/restart buttons. htmx's hx-confirm attribute supplies the
   # confirmation dialog; the POST swaps the refreshed dashboard in.
-  private def action_cell(unit_name : String) : String
-    HTML.build do
-      td(class: "dashboard-action-cell") do
-        {"restart" => "restart_alt", "start" => "play_arrow", "stop" => "stop"}.each do |action, icon|
-          confirm_text = "#{action[0].upcase}#{action[1..]} unit #{unit_name}?"
-          attributes = {
-            "class"        => "round-button",
-            "title"        => "#{action[0].upcase}#{action[1..]} #{unit_name}",
-            "hx-post"      => build_action_url(unit_name, action),
-            "hx-target"    => "#dashboard-view",
-            "hx-swap"      => "innerHTML",
-            "hx-confirm"   => confirm_text,
-            "hx-indicator" => "#loading-spinner",
-          }
-          button(attributes) do
-            span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
-              text icon
-            end
-          end
-        end
-      end
-    end
-  end
 
   private def build_action_url(unit_name : String, action : String) : String
     base = Grafito.base_path == "/" ? "" : Grafito.base_path

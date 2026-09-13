@@ -69,6 +69,53 @@ module SystemStatus
     snapshot.units
   end
 
+  # Returns the enablement state for every unit in one batched
+  # `systemctl show` call: {unit name => "enabled"/"disabled"/"static"/
+  # "masked"/...}. Units with no unit file state (e.g. generated ones)
+  # are omitted, and the dashboard hides enable/disable for them.
+  def self.enablement_map : Hash(String, String)
+    {% if flag?(:fake_journal) %}
+      fake_enablement_map
+    {% else %}
+      unit_names = snapshot.units.map(&.unit)
+      return {} of String => String if unit_names.empty?
+
+      command = ["systemctl"] + Journalctl.user_flags +
+                ["show", "-p", "Id", "-p", "UnitFileState"] + unit_names
+      stdout = IO::Memory.new
+      Process.run(command[0], args: command[1..], output: stdout)
+
+      states = Hash(String, String).new
+      current : String? = nil
+      stdout.to_s.each_line do |line|
+        case
+        when line.starts_with?("Id=")
+          current = line[3..]
+        when line.starts_with?("UnitFileState=")
+          if current_id = current
+            state = line["UnitFileState=".size..].strip.downcase
+            states[current_id] = state unless state.empty?
+          end
+        end
+      end
+      states
+    {% end %}
+  rescue ex
+    Log.warn(exception: ex) { "Failed to read batched enablement states" }
+    {} of String => String
+  end
+
+  # Deterministic enablement states for the demo build.
+  private def self.fake_enablement_map : Hash(String, String)
+    {
+      "cron.service"        => "static",
+      "fake-broken.service" => "disabled",
+      "docker.service"      => "enabled",
+      "nginx.service"       => "enabled",
+      "sshd.service"        => "enabled",
+    }
+  end
+
   # Returns the unit's enablement state as reported by
   # `systemctl is-enabled` ("enabled", "disabled", "static", ...), or
   # nil when it cannot be determined. Note that is-enabled exits

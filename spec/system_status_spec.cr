@@ -233,11 +233,11 @@ describe Dashboard do
       end
 
       html = Dashboard.unit_details_fragment(broken, enable_actions: true)
-      # A failed, disabled unit: start + enable, no stop/restart/disable.
+      # A failed, disabled unit: start + restart (recovery) + enable.
       html.should contain("/start?from=panel")
+      html.should contain("/restart?from=panel")
       html.should contain("/enable?from=panel")
       html.should_not contain("/stop?from=panel")
-      html.should_not contain("/restart?from=panel")
       html.should_not contain("/disable?from=panel")
 
       running_html = Dashboard.unit_details_fragment(running, enable_actions: true)
@@ -257,6 +257,29 @@ describe Dashboard do
       end
       html = Dashboard.unit_details_fragment(broken, enable_actions: false)
       html.should_not contain("service-panel-actions")
+    end
+
+    it "shows contextual table actions per unit state and enablement" do
+      snapshot = SystemStatus.snapshot
+      html = Dashboard.render_html(
+        snapshot,
+        [] of Grafito::MetricsStore::MetricPoint,
+        0,
+        enable_actions: true,
+        enablement: SystemStatus.enablement_map,
+      )
+      # A failed, disabled unit: start + enable, no stop.
+      html.should contain("/unit/fake-broken.service/start")
+      html.should contain("/unit/fake-broken.service/enable")
+      html.should_not contain("/unit/fake-broken.service/stop")
+      # An active, enabled unit: stop/restart + disable, no start.
+      html.should contain("/unit/docker.service/stop")
+      html.should contain("/unit/docker.service/restart")
+      html.should contain("/unit/docker.service/disable")
+      html.should_not contain("/unit/docker.service/start")
+      # A static unit: no enablement buttons.
+      html.should_not contain("/unit/cron.service/enable")
+      html.should_not contain("/unit/cron.service/disable")
     end
   {% end %}
 end
