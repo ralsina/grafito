@@ -685,9 +685,11 @@ module Grafito
       end
 
       env.response.content_type = "text/html"
+      # Actions in the panel only make sense for whitelisted units.
+      panel_actions = Grafito.enable_actions? && action_allowed_for_unit?(unit_state.unit)
       Dashboard.unit_details_fragment(
         unit_state,
-        Grafito.enable_actions?,
+        panel_actions,
         unit_error_count(unit_state.unit),
       )
     end
@@ -708,7 +710,9 @@ module Grafito
       unit_name = env.params.url["name"]
       action = env.params.url["action"]
 
-      unless {"start", "stop", "restart"}.includes?(action)
+      # Lifecycle and enablement actions; the list is a whitelist too,
+      # so anything else is rejected before reaching systemctl.
+      unless {"start", "stop", "restart", "enable", "disable"}.includes?(action)
         env.response.status_code = 400
         next "Invalid action '#{HTML.escape(action)}'."
       end
@@ -754,9 +758,10 @@ module Grafito
       if optional_query_param(env, "from") == "panel"
         refreshed = SystemStatus.unit_states.find { |unit| unit.unit == full_unit }
         if refreshed
+          panel_actions = Grafito.enable_actions? && action_allowed_for_unit?(full_unit)
           next Dashboard.unit_details_fragment(
             refreshed,
-            Grafito.enable_actions?,
+            panel_actions,
             unit_error_count(full_unit),
           )
         end
@@ -796,6 +801,7 @@ module Grafito
       sort_order,
       unit_filter,
       since_text,
+      Grafito.allowed_units,
     )
   end
 

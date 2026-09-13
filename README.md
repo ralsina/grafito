@@ -117,10 +117,13 @@ small history chart of memory and disk usage.
   `GET /status/history?since=-1d` (sampled history).
 * **Unit actions** (opt-in): start Grafito with `--enable-actions` and a
   `--units` whitelist (e.g. `--units nginx.service,grafito.service`) to
-  get start/stop/restart buttons in the dashboard's unit table. Actions
-  are refused without both options, and require the system user running
-  Grafito to have permission to manage those units (e.g. via polkit, or
-  `--user` mode for your own user units).
+  get action buttons in the dashboard — start/stop/restart in the unit
+  table, and contextual start/stop/restart plus enable/disable in the
+  service panel (based on the unit's current state and
+  `systemctl is-enabled`). Actions are refused without both options,
+  and require the system user running Grafito to have permission to
+  manage those units (e.g. via polkit, or `--user` mode for your own
+  user units).
 * **Gotify push alerts** (opt-in): set `GRAFITO_GOTIFY_URL` and
   `GRAFITO_GOTIFY_TOKEN` to get notified when a unit fails, when the
   journal error rate exceeds `GRAFITO_ALERT_ERRORS_PER_MIN` per minute

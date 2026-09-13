@@ -39,6 +39,7 @@ module Dashboard
     sort_order : String? = nil,
     unit_filter : String? = nil,
     since_text : String? = nil,
+    allowed_units : Array(String)? = nil,
   ) : String
     # Units arrive sorted by name from SystemStatus; apply the requested
     # column sort on top (defaulting to name, ascending).
@@ -90,7 +91,7 @@ module Dashboard
               end
             else
               units.each do |unit_state|
-                html unit_row(unit_state, enable_actions)
+                html unit_row(unit_state, enable_actions, allowed_units)
               end
             end
           end
@@ -277,26 +278,7 @@ module Dashboard
         end
 
         if enable_actions
-          div(class: "service-panel-actions") do
-            {"restart" => "restart_alt", "start" => "play_arrow", "stop" => "stop"}.each do |action, icon|
-              confirm_text = "#{action[0].upcase}#{action[1..]} unit #{unit_state.unit}?"
-              attributes = {
-                "class"        => "round-button",
-                "title"        => "#{action[0].upcase}#{action[1..]} #{unit_state.unit}",
-                "hx-post"      => "#{build_action_url(unit_state.unit, action)}?from=panel",
-                "hx-target"    => "#panel-detail-content",
-                "hx-swap"      => "innerHTML",
-                "hx-confirm"   => confirm_text,
-                "hx-indicator" => "#loading-spinner",
-              }
-              button(attributes) do
-                span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
-                  text icon
-                end
-              end
-            end
-            span(class: "service-panel-hint") { text "start / stop / restart" }
-          end
+          html panel_actions(unit_state)
         end
 
         button(
@@ -312,7 +294,11 @@ module Dashboard
     end
   end
 
-  private def unit_row(unit_state : SystemStatus::UnitState, enable_actions : Bool) : String
+  private def unit_row(
+    unit_state : SystemStatus::UnitState,
+    enable_actions : Bool,
+    allowed_units : Array(String)?,
+  ) : String
     HTML.build do
       # The row class carries the state color as --tag-color, which the
       # CSS turns into the left-side stripe, like the log view's
@@ -349,9 +335,74 @@ module Dashboard
             text HTML.escape(unit_state.unit)
           end
         end
-        if enable_actions
+        if enable_actions && unit_in_whitelist?(unit_state.unit, allowed_units)
           html action_cell(unit_state.unit)
         end
+      end
+    end
+  end
+
+  # Whitelist check for the table's action buttons: nil means no
+  # restriction, otherwise the unit (raw or cleaned) must be listed.
+  private def unit_in_whitelist?(unit_name : String, allowed_units : Array(String)?) : Bool
+    return true unless allowed_units
+
+    cleaned = unit_name.gsub(/\.service$/, "")
+    allowed_units.any? do |candidate|
+      candidate == unit_name || candidate == cleaned
+    end
+  end
+
+  # Contextual action buttons for the service panel. Lifecycle buttons
+  # depend on the unit's current state (start an inactive unit,
+  # stop/restart an active one); the enablement button depends on
+  # `systemctl is-enabled` (enable a disabled unit, disable an enabled
+  # one; static/indirect units get neither).
+  private def panel_actions(unit_state : SystemStatus::UnitState) : String
+    HTML.build do
+      div(class: "service-panel-actions") do
+        case unit_state.active_state
+        when "active"
+          html panel_action_button(unit_state.unit, "restart", "restart_alt")
+          html panel_action_button(unit_state.unit, "stop", "stop")
+        when "activating", "reloading"
+          html panel_action_button(unit_state.unit, "restart", "restart_alt")
+          html panel_action_button(unit_state.unit, "stop", "stop")
+        else
+          html panel_action_button(unit_state.unit, "start", "play_arrow")
+        end
+
+        case SystemStatus.enabled_state(unit_state.unit)
+        when "enabled"
+          html panel_action_button(unit_state.unit, "disable", "link_off")
+        when "disabled"
+          html panel_action_button(unit_state.unit, "enable", "link")
+        end
+
+        span(class: "service-panel-hint") { text "systemctl actions" }
+      end
+    end
+  end
+
+  # One action button in the service panel: posts to the unit action
+  # endpoint and swaps the refreshed panel in.
+  private def panel_action_button(unit_name : String, action : String, icon : String) : String
+    HTML.build do
+      confirm_text = "#{action[0].upcase}#{action[1..]} unit #{unit_name}?"
+      attributes = {
+        "class"        => "round-button",
+        "title"        => "#{action[0].upcase}#{action[1..]} #{unit_name}",
+        "hx-post"      => "#{build_action_url(unit_name, action)}?from=panel",
+        "hx-target"    => "#panel-detail-content",
+        "hx-swap"      => "innerHTML",
+        "hx-confirm"   => confirm_text,
+        "hx-indicator" => "#loading-spinner",
+      }
+      button(attributes) do
+        span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+          text icon
+        end
+        text " #{action}"
       end
     end
   end

@@ -69,6 +69,37 @@ module SystemStatus
     snapshot.units
   end
 
+  # Returns the unit's enablement state as reported by
+  # `systemctl is-enabled` ("enabled", "disabled", "static", ...), or
+  # nil when it cannot be determined. Note that is-enabled exits
+  # non-zero for disabled units, so the exit status is ignored and the
+  # output word is the answer.
+  def self.enabled_state(unit_name : String) : String?
+    {% if flag?(:fake_journal) %}
+      fake_enabled_state(unit_name)
+    {% else %}
+      command = ["systemctl"] + Journalctl.user_flags + ["is-enabled", unit_name]
+      stdout = IO::Memory.new
+      Process.run(command[0], args: command[1..], output: stdout)
+      state = stdout.to_s.strip.downcase
+      state.empty? ? nil : state
+    {% end %}
+  rescue ex
+    Log.warn(exception: ex) { "Failed to read enablement state for #{unit_name}" }
+    nil
+  end
+
+  # Deterministic enablement states for the demo build.
+  private def self.fake_enabled_state(unit_name : String) : String?
+    case unit_name
+    when "cron.service"        then "static"
+    when "fake-broken.service" then "disabled"
+    when "docker.service"      then "enabled"
+    when "nginx.service"       then "enabled"
+    when "sshd.service"        then "enabled"
+    end
+  end
+
   # A small, deterministic snapshot for demo builds and fake-mode specs.
   private def self.fake_snapshot : Snapshot
     units = [
@@ -166,6 +197,10 @@ module SystemStatus
 
   # Queries `systemctl list-units` and parses the plain output.
   # Each line is: UNIT LOAD ACTIVE SUB DESCRIPTION.
+  #
+  # Note: the --units whitelist does NOT apply here. It gates what may
+  # be controlled (unit actions) and which logs are visible, but the
+  # dashboard shows the state of every unit on the machine.
   private def self.query_unit_states : Array(UnitState)
     command = ["systemctl"] + Journalctl.user_flags +
               ["list-units", "--type=service", "--all", "--no-legend", "--plain"]
@@ -184,7 +219,6 @@ module SystemStatus
       fields = line.split
       unit_name = fields[0]?
       next unless unit_name && fields.size >= 4
-      next unless allowed_unit?(unit_name)
       units << UnitState.new(
         unit: unit_name,
         load_state: fields[1],
@@ -198,21 +232,6 @@ module SystemStatus
   rescue ex
     Log.warn(exception: ex) { "Failed to query systemd units" }
     [] of UnitState
-  end
-
-  # Applies the --units restriction, if configured. Matches raw names,
-  # cleaned names (without .service) and substrings in both directions,
-  # mirroring the log filtering in journalctl.cr.
-  private def self.allowed_unit?(unit_name : String) : Bool
-    allowed = Grafito.allowed_units
-    return true unless allowed
-
-    cleaned = unit_name.gsub(/\.service$/, "")
-    allowed.any? do |candidate|
-      candidate == unit_name || candidate == cleaned ||
-        unit_name.includes?(candidate) || cleaned.includes?(candidate) ||
-        candidate.includes?(cleaned)
-    end
   end
 
   # Returns the first whitespace-separated field of a file, or nil.

@@ -67,6 +67,18 @@ describe Dashboard do
     html.should contain("hx-confirm")
   end
 
+  it "hides table action buttons for units outside the whitelist" do
+    snapshot = SystemStatus.snapshot
+    html = Dashboard.render_html(
+      snapshot,
+      [] of Grafito::MetricsStore::MetricPoint,
+      0,
+      enable_actions: true,
+      allowed_units: ["grafito-no-such-unit-xyz"],
+    )
+    html.should_not contain("hx-post")
+  end
+
   it "renders clickable sort headers with a default ascending indicator" do
     snapshot = SystemStatus.snapshot
     html = Dashboard.render_html(snapshot, [] of Grafito::MetricsStore::MetricPoint, 0)
@@ -222,6 +234,43 @@ describe Dashboard do
     html = filter_spec_fragment("grafito-no-such-unit-xyz")
     html.should contain("No units match the filter.")
   end
+
+  {% if flag?(:fake_journal) %}
+    it "shows contextual panel actions based on state and enablement" do
+      snapshot = SystemStatus.snapshot
+      broken = snapshot.units.find(&.unit.==("fake-broken.service"))
+      running = snapshot.units.find(&.unit.==("docker.service"))
+      if broken.nil? || running.nil?
+        fail "fake units missing from the fake snapshot"
+      end
+
+      html = Dashboard.unit_details_fragment(broken, enable_actions: true)
+      # A failed, disabled unit: start + enable, no stop/restart/disable.
+      html.should contain("> start")
+      html.should contain("> enable")
+      html.should_not contain("> stop")
+      html.should_not contain("> restart")
+      html.should_not contain("> disable")
+
+      running_html = Dashboard.unit_details_fragment(running, enable_actions: true)
+      # An active, enabled unit: stop/restart + disable, no start/enable.
+      running_html.should contain("> stop")
+      running_html.should contain("> restart")
+      running_html.should contain("> disable")
+      running_html.should_not contain("> start")
+      running_html.should_not contain("> enable")
+    end
+
+    it "omits panel actions when they are disabled" do
+      snapshot = SystemStatus.snapshot
+      broken = snapshot.units.find(&.unit.==("fake-broken.service"))
+      if broken.nil?
+        fail "fake-broken.service missing from the fake snapshot"
+      end
+      html = Dashboard.unit_details_fragment(broken, enable_actions: false)
+      html.should_not contain("service-panel-actions")
+    end
+  {% end %}
 end
 
 # A small deterministic snapshot for the filter specs, independent of
