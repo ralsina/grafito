@@ -2,7 +2,9 @@
 <span class=material-icons style=vertical-align:middle;font-size:1rem>content_copy</span>
 Copy</button><form method=dialog style=display:inline><button class=secondary>Close</button></form></footer></article></dialog><div id=app-shell><header id=topbar><div class=brand><span class=brand-mark aria-hidden=true></span>
 <a href=https://grafito.ralsina.me class=grafito-title-link title="Grafito home">grafito</a>
-<span class=brand-sub id=brand-sub>log viewer</span></div><div class=omnibox id=search-omnibox><span class=omnibox-glyph aria-hidden=true>⌕</span><div id=active-filters class=active-filters aria-label="Active filters"></div><input type=search id=search-box aria-label="Search log messages" placeholder="Search logs… (journalctl -g)" title="Enter text to search in log messages (uses journalctl -g). Type unit:, tag:, hostname: or prio: followed by a value and press space to turn it into a filter." hx-get=logs hx-trigger="input changed delay:600ms" hx-target=#results name=q class=log-filter hx-indicator=#loading-spinner hx-include=.log-filter>
+<span class=brand-sub id=brand-sub>log viewer</span></div><button id=dashboard-toggle class=topbar-tool aria-pressed=false aria-label="Toggle server dashboard" title="Toggle the server dashboard (status, services, history)" onclick=toggleDashboard()>
+<span class=material-icons aria-hidden=true>dashboard</span>
+<span class=topbar-tool-label>Dashboard</span></button><div class=omnibox id=search-omnibox><span class=omnibox-glyph aria-hidden=true>⌕</span><div id=active-filters class=active-filters aria-label="Active filters"></div><input type=search id=search-box aria-label="Search log messages" placeholder="Search logs… (journalctl -g)" title="Enter text to search in log messages (uses journalctl -g). Type unit:, tag:, hostname: or prio: followed by a value and press space to turn it into a filter." hx-get=logs hx-trigger="input changed delay:600ms" hx-target=#results name=q class=log-filter hx-indicator=#loading-spinner hx-include=.log-filter>
 <kbd>grep</kbd></div><select id=time-range-filter name=since class="log-filter topbar-select" title="Filter logs by time range" hx-get=logs hx-trigger=change hx-target=#results hx-indicator=#loading-spinner hx-include=.log-filter><option value>Any time<option value=-15m>15 min<option value=-1h>1 hour<option value=-1d>24 hours<option value=-7d>Week<option value=-1M>Month<option value=-3M>3 months<option value=-1y>Year</select>
 <select id=priority-filter name=priority class="log-filter topbar-select" title="Filter logs by priority level (show this severity and worse)" hx-get=logs hx-trigger=change hx-target=#results hx-indicator=#loading-spinner hx-include=.log-filter><option value=0>Emergency<option value=1>Alert<option value=2>Critical<option value=3>Error<option value=4>Warning<option value=5 selected>Notice<option value=6>Info<option value=7>Debug</select><details id=filter-panel><summary role=button class=topbar-tool title="Advanced filters: unit, tag, hostname, columns, AI"><span class=material-icons aria-hidden=true>tune</span>
 <span class=topbar-tool-label>Filters</span></summary><div id=filter-panel-content><div class=filter-panel-section><h4>Filter by</h4><input id=unit-filter name=unit list=unit-suggestions placeholder="Unit (e.g., docker)" title="Filter logs by systemd unit (e.g., nginx)" hx-get=logs hx-trigger="input changed delay:600ms, immediateUnitFilterUpdate" hx-target=#results class=log-filter hx-indicator=#loading-spinner hx-include=.log-filter>
@@ -31,10 +33,6 @@ Message</label></div></div><div class=filter-panel-section><h4>AI provider</h4><
 </button>
 <button id=export-logs-button class="topbar-tool icon-only" aria-label="Export logs" title="Export current logs as text" onclick=exportLogsAsText()>
 <span class=material-icons aria-hidden=true>download</span>
-</button>
-<button id=dashboard-toggle class=topbar-tool aria-pressed=false aria-label="Toggle server dashboard" title="Toggle the server dashboard (status, services, history)" onclick=toggleDashboard()>
-<span class=material-icons aria-hidden=true>dashboard</span>
-<span class=topbar-tool-label>Dashboard</span>
 </button>
 <label class=live-toggle for=live-view title="Toggle live log updates every 10 seconds"><input type=checkbox id=live-view name=live-view role=switch class=log-filter>
 <span class=live-dot aria-hidden=true></span>

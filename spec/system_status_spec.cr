@@ -74,6 +74,10 @@ describe Dashboard do
     html.should contain("sortDashboard(&#39;description&#39;)")
     html.should contain("arrow_upward")
     html.should_not contain("arrow_downward")
+    # The Unit column is the rightmost data column: its header comes last.
+    description_index = html.index("Sort by description") || 0
+    unit_index = html.index("Sort by unit") || html.size
+    description_index.should be < unit_index
   end
 
   it "shows a descending indicator for the active sort column" do

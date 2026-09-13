@@ -66,10 +66,10 @@ module Dashboard
       table(class: "striped dashboard-units") do
         thead do
           tr do
-            html sortable_header("Unit", "unit", sort_key, ascending)
             html sortable_header("State", "state", sort_key, ascending)
             html sortable_header("Sub", "sub", sort_key, ascending)
             html sortable_header("Description", "description", sort_key, ascending)
+            html sortable_header("Unit", "unit", sort_key, ascending)
             if enable_actions
               th { text "Actions" }
             end
@@ -168,12 +168,6 @@ module Dashboard
     HTML.build do
       tr(class: unit_state.failed? ? "dashboard-unit-failed" : "") do
         td do
-          js_arg_unit_name = unit_state.unit.to_json
-          a(href: "#", onclick: "return setUnitFilterAndTrigger(#{js_arg_unit_name});") do
-            text HTML.escape(unit_state.unit)
-          end
-        end
-        td do
           span_class = case unit_state.active_state
                        when "active"                  then "tag"
                        when "failed"                  then "tag tag-error"
@@ -187,6 +181,12 @@ module Dashboard
         end
         td do
           text HTML.escape(unit_state.description)
+        end
+        td do
+          js_arg_unit_name = unit_state.unit.to_json
+          a(href: "#", onclick: "return setUnitFilterAndTrigger(#{js_arg_unit_name});") do
+            text HTML.escape(unit_state.unit)
+          end
         end
         if enable_actions
           html action_cell(unit_state.unit)

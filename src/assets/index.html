@@ -100,6 +100,18 @@
           <span class="brand-sub" id="brand-sub">log viewer</span>
         </div>
 
+        <button
+          id="dashboard-toggle"
+          class="topbar-tool"
+          aria-pressed="false"
+          aria-label="Toggle server dashboard"
+          title="Toggle the server dashboard (status, services, history)"
+          onclick="toggleDashboard()"
+        >
+          <span class="material-icons" aria-hidden="true">dashboard</span>
+          <span class="topbar-tool-label">Dashboard</span>
+        </button>
+
         <div class="omnibox" id="search-omnibox">
           <span class="omnibox-glyph" aria-hidden="true">⌕</span>
           <div id="active-filters" class="active-filters" aria-label="Active filters"></div>
@@ -388,17 +400,6 @@
             onclick="exportLogsAsText()"
           >
             <span class="material-icons" aria-hidden="true">download</span>
-          </button>
-          <button
-            id="dashboard-toggle"
-            class="topbar-tool"
-            aria-pressed="false"
-            aria-label="Toggle server dashboard"
-            title="Toggle the server dashboard (status, services, history)"
-            onclick="toggleDashboard()"
-          >
-            <span class="material-icons" aria-hidden="true">dashboard</span>
-            <span class="topbar-tool-label">Dashboard</span>
           </button>
           <label
             class="live-toggle"
