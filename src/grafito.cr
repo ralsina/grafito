@@ -57,6 +57,11 @@ module Grafito
   # User systemd mode - when enabled, use --user flag for journalctl/systemctl
   class_property? user_mode : Bool = false
 
+  # Whether basic-auth credentials are configured. Unit actions require
+  # them: there is no reason to expose state-changing endpoints on an
+  # unauthenticated server.
+  class_property? auth_configured : Bool = false
+
   # Server dashboard - when enabled, /status, /status/history and
   # /dashboard are served and the metrics sampler runs.
   class_property? dashboard_enabled : Bool = true
@@ -702,9 +707,9 @@ module Grafito
     # requests, the refreshed service panel) so the htmx button updates
     # the view.
     post route_path("unit/:name/:action") do |env|
-      unless Grafito.dashboard_enabled? && Grafito.enable_actions?
+      unless Grafito.dashboard_enabled? && Grafito.enable_actions? && Grafito.auth_configured?
         env.response.status_code = 403
-        next "Unit actions are disabled. Start grafito with --enable-actions to allow them."
+        next "Unit actions are disabled. Start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS) to allow them."
       end
 
       unit_name = env.params.url["name"]

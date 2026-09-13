@@ -115,15 +115,18 @@ small history chart of memory and disk usage.
   days (default 7). No database, no extra services.
 * **JSON APIs**: `GET /status` (current snapshot + unit states) and
   `GET /status/history?since=-1d` (sampled history).
-* **Unit actions** (opt-in): start Grafito with `--enable-actions` to
-  get action buttons in the dashboard — start/stop/restart in the unit
-  table, and contextual start/stop/restart plus enable/disable in the
-  service panel (based on the unit's current state and
-  `systemctl is-enabled`). What an action may actually do is decided
-  by systemd for the user Grafito runs as: run it as yourself (with
-  polkit rights or `--user` mode for your own units) and they work;
-  run it as a restricted service user and failed actions say so.
-  Each action asks for confirmation and is logged.
+* **Unit actions** (opt-in, auth required): start Grafito with
+  `--enable-actions` to get action buttons in the dashboard —
+  start/stop/restart in the unit table, and contextual
+  start/stop/restart plus enable/disable in the service panel (based on
+  the unit's current state and `systemctl is-enabled`). Actions require
+  authentication to be configured (`GRAFITO_AUTH_USER` and
+  `GRAFITO_AUTH_PASS`); without credentials they are disabled with a
+  warning at startup. What an action may actually do is decided by
+  systemd for the user Grafito runs as: run it as yourself (with polkit
+  rights or `--user` mode for your own units) and they work; run it as
+  a restricted service user and failed actions say so. Each action asks
+  for confirmation and is logged.
 * **Gotify push alerts** (opt-in): set `GRAFITO_GOTIFY_URL` and
   `GRAFITO_GOTIFY_TOKEN` to get notified when a unit fails, when the
   journal error rate exceeds `GRAFITO_ALERT_ERRORS_PER_MIN` per minute

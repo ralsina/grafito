@@ -77,7 +77,7 @@ DOC = <<-DOCOPT
     --data-dir=PATH              Directory for dashboard metrics history [default: /var/lib/grafito].
     --sample-interval-sec=N      Dashboard metrics sampling interval in seconds [default: 30].
     --retention-days=N           Days of dashboard metrics history to keep [default: 7].
-    --enable-actions             Allow start/stop/restart of whitelisted units from the dashboard [default: false].
+    --enable-actions             Allow start/stop/restart/enable/disable of units from the dashboard (requires authentication) [default: false].
     --idle-timeout-sec=TIMEOUT    Idle timeout in seconds after which to shut down. Primarily useful with systemd socket activation.
     -h --help                     Show this screen.
     --version                     Show version.
@@ -173,6 +173,12 @@ def main
   Grafito.user_mode = (user_mode_str == "true")
   Grafito::Log.info { "User mode: #{Grafito.user_mode? ? "enabled" : "disabled"}" }
 
+  # Read credentials and configure authentication first: the dashboard
+  # setup needs to know whether actions may be enabled.
+  auth_user = ENV["GRAFITO_AUTH_USER"]?
+  auth_pass = ENV["GRAFITO_AUTH_PASS"]?
+  setup_basic_auth(auth_user, auth_pass)
+
   # Parse dashboard configuration. The dashboard itself, the metrics
   # sampler and (optionally) Gotify alerts all hang off this switch.
   setup_dashboard(args)
@@ -180,14 +186,8 @@ def main
   # Register all Kemal routes (must be done after base_path is set)
   Grafito.register_routes
 
-  # Read credentials and realm from environment variables
-  auth_user = ENV["GRAFITO_AUTH_USER"]?
-  auth_pass = ENV["GRAFITO_AUTH_PASS"]?
-
   # Initialize AI provider using the abstraction layer
   setup_ai_provider
-
-  setup_basic_auth(auth_user, auth_pass)
 
   # The `BakedFileHandler` is a custom handler that serves files that are baked
   # into the application. In our case, the Assets class we defined above.
@@ -294,6 +294,7 @@ def setup_basic_auth(auth_user : String?, auth_pass : String?)
   if auth_user && auth_pass
     Grafito::Log.info { "Basic Authentication enabled. User: #{auth_user}" }
     basic_auth auth_user, auth_pass
+    Grafito.auth_configured = true
   elsif auth_user || auth_pass
     # Only one of the credentials was set - this is a misconfiguration.
     # Exit with an error code to prevent running in an insecure state.
@@ -313,7 +314,14 @@ def setup_dashboard(args) : Nil
   Grafito::Log.info { "Dashboard: #{Grafito.dashboard_enabled? ? "enabled" : "disabled"}" }
 
   if Grafito.enable_actions?
-    Grafito::Log.info { "Unit actions: enabled (permitted by the user grafito runs as and polkit)" }
+    # State-changing endpoints on an unauthenticated server are a bad
+    # idea, full stop: actions require credentials.
+    if Grafito.auth_configured?
+      Grafito::Log.info { "Unit actions: enabled (permitted by the user grafito runs as and polkit)" }
+    else
+      Grafito.enable_actions = false
+      Grafito::Log.warn { "Unit actions disabled: authentication is not configured (set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS)" }
+    end
   end
 
   return unless Grafito.dashboard_enabled?
