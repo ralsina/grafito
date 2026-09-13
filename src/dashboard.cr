@@ -297,12 +297,14 @@ module Dashboard
         if Grafito.ai_provider
           div(class: "service-panel-ai") do
             button(
-              class: "service-panel-explain",
-              title: "Ask the AI to explain this unit's state and recent logs",
-              hx_post: unit_explain_url(unit_state.unit),
-              hx_target: "#service-ai-content",
-              hx_swap: "innerHTML",
-              hx_indicator: "#loading-spinner",
+              {
+                "class"        => "service-panel-explain",
+                "title"        => "Ask the AI to explain this unit's state and recent logs",
+                "hx-post"      => unit_explain_url(unit_state.unit),
+                "hx-target"    => "#service-ai-content",
+                "hx-swap"      => "innerHTML",
+                "hx-indicator" => "#loading-spinner",
+              }
             ) do
               span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
                 text "psychology"
