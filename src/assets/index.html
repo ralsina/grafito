@@ -108,8 +108,8 @@
           title="Toggle the server dashboard (status, services, history)"
           onclick="toggleDashboard()"
         >
-          <span class="material-icons" aria-hidden="true">dashboard</span>
-          <span class="topbar-tool-label">Dashboard</span>
+          <span class="material-icons" id="dashboard-toggle-icon" aria-hidden="true">dashboard</span>
+          <span class="topbar-tool-label" id="dashboard-toggle-label">Dashboard</span>
         </button>
 
         <!-- Service filter for the dashboard view, styled like the log
@@ -1522,6 +1522,14 @@
         dashboardView.hidden = !visible;
         results.hidden = visible;
         toggleButton.setAttribute("aria-pressed", visible ? "true" : "false");
+        // The button shows the view it switches TO, not the current one.
+        const icon = document.getElementById("dashboard-toggle-icon");
+        const label = document.getElementById("dashboard-toggle-label");
+        if (icon) icon.textContent = visible ? "receipt_long" : "dashboard";
+        if (label) label.textContent = visible ? "Logs" : "Dashboard";
+        toggleButton.title = visible
+          ? "Back to the log stream"
+          : "Toggle the server dashboard (status, services, history)";
         // Switch the page chrome: log filters, export tools, the log
         // stats strip and the minimap only make sense in log view.
         if (visible) {
@@ -1530,7 +1538,7 @@
           delete document.body.dataset.view;
         }
         if (visible) {
-          htmx.ajax("GET", buildUrl("dashboard") + dashboardSortParams(), {
+          htmx.ajax("GET", buildUrl("dashboard") + dashboardQueryParams(), {
             target: "#dashboard-view",
             swap: "innerHTML",
           });
