@@ -319,10 +319,12 @@ module Dashboard
         td(class: "dashboard-sub-cell") do
           html state_pill(unit_state.sub_state)
         end
-        td do
+        description_attrs = {} of String => String
+        description_attrs["title"] = unit_state.description unless unit_state.description.empty?
+        td(description_attrs) do
           text HTML.escape(unit_state.description)
         end
-        td do
+        td(title: unit_state.unit) do
           # The unit name keeps its direct behavior (jump into the unit's
           # logs); stop propagation so it doesn't also open the panel.
           js_arg_unit_name = unit_state.unit.to_json

@@ -657,8 +657,15 @@ body[data-view="dashboard"] #stats-strip {
 .dashboard-units th {
   white-space: nowrap;
 }
-.dashboard-units td:last-child {
-  white-space: normal;
+/* Long descriptions and template unit names (systemd-fsck@dev-…, with
+   \x2d escapes and no break points) must not stretch the table: clip
+   them with an ellipsis. The full text remains in the cell tooltip and
+   in the service panel. Columns: State, Sub, Description, Unit. */
+.dashboard-units tbody td:nth-child(3),
+.dashboard-units tbody td:nth-child(4) {
+  max-width: 36ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* Left-side state stripe, matching the log table's severity stripes. */
 .dashboard-units tbody tr {
