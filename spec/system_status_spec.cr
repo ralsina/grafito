@@ -55,7 +55,9 @@ describe Dashboard do
     snapshot = SystemStatus.snapshot
     html = Dashboard.render_html(snapshot, [] of Grafito::MetricsStore::MetricPoint, 3)
     html.should contain("Uptime")
-    html.should contain("Services (#{snapshot.units_total})")
+    # The unit count is a card in the stats strip, not a heading.
+    html.should contain(">Services</span>")
+    html.should contain("<span class=\"stat-value\">#{snapshot.units_total}</span>")
   end
 
   it "renders action buttons when actions are enabled" do
@@ -147,7 +149,6 @@ describe Dashboard do
     html = Dashboard.render_html(snapshot, [] of Grafito::MetricsStore::MetricPoint, 0)
     html.should contain("dashboard-window-select")
     html.should contain("dashboard-history")
-    html.should contain("services-header")
     # The service filter input lives in the page topbar, not here; the
     # fragment form still wraps everything for self-contained requests.
     html.should contain("dashboard-form")

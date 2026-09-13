@@ -635,17 +635,6 @@ body[data-view="dashboard"] #side-panel {
   background: var(--bg);
   z-index: 5;
 }
-.services-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin: 1em 0 0.5rem;
-}
-.services-header h4 {
-  margin: 0;
-  flex: none;
-}
 .dashboard-grid {
   display: flex;
   flex-wrap: wrap;

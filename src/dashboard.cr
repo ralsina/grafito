@@ -57,6 +57,7 @@ module Dashboard
           html card("Memory", "#{snapshot.mem_used_pct.round(1)}%", warn: snapshot.mem_used_pct >= 90.0)
           html card("Disk", "#{snapshot.disk_used_pct.round(1)}%", warn: snapshot.disk_used_pct >= 90.0)
           html card("Failed units", snapshot.units_failed.to_s, warn: snapshot.units_failed > 0)
+          html card("Services", units.size.to_s)
           html card("Errors (#{window_label(since_text)})", errors_last_hour.to_s, warn: errors_last_hour > 20)
         end
 
@@ -65,12 +66,6 @@ module Dashboard
             html generate_svg_history(history)
           end
           html window_select(since_text)
-        end
-
-        div(class: "services-header") do
-          tag("h4") do
-            text "Services (#{units.size})"
-          end
         end
 
         input(type: "hidden", name: "sort_by", value: sort_key)
