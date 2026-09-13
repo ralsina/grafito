@@ -606,10 +606,12 @@ body[data-view="dashboard"] #clear-filters-btn,
 body[data-view="dashboard"] #copy-link-button,
 body[data-view="dashboard"] #export-logs-button,
 body[data-view="dashboard"] .live-toggle,
-body[data-view="dashboard"] #stats-strip,
-body[data-view="dashboard"] #minimap {
+body[data-view="dashboard"] #stats-strip {
   display: none !important;
 }
+/* In dashboard view the minimap rail stays: it shows the services
+   minimap (one tick per unit, colored by state) instead of the log
+   severity one. */
 
 #dashboard-view {
   padding: 0.5rem 0 1rem;

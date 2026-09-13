@@ -1253,6 +1253,9 @@
             updateStatsAndMinimap();
           }
         });
+        // The log minimap builder lives in this closure; expose it so
+        // the dashboard code can restore the log view when leaving.
+        window.updateStatsAndMinimap = updateStatsAndMinimap;
 
         // --- Minimap interaction: hover previews, click jumps ---
         const minimapTop = document.getElementById("minimap-top");
@@ -1301,9 +1304,13 @@
             const tick = event.target.closest("i");
             if (!tick) return;
             const index = Number(tick.dataset.rowIndex || 0);
-            const row = document.querySelectorAll(
-              "#results table tbody tr.log-row-hover-actions"
-            )[index];
+            // The same rail serves both views: log severities and, in
+            // dashboard view, unit states.
+            const rowSelector =
+              document.body.dataset.view === "dashboard"
+                ? "#dashboard-view tbody tr"
+                : "#results table tbody tr.log-row-hover-actions";
+            const row = document.querySelectorAll(rowSelector)[index];
             if (!row) return;
             row.scrollIntoView({ behavior: "smooth", block: "center" });
             row.classList.remove("row-flash");
@@ -1581,6 +1588,7 @@
           document.body.dataset.view = "dashboard";
         } else {
           delete document.body.dataset.view;
+          restoreLogsMinimap();
         }
         if (visible) {
           htmx.ajax("GET", buildUrl("dashboard") + dashboardQueryParams(), {
@@ -1655,11 +1663,62 @@
         });
       }
 
+      // --- DASHBOARD SERVICES MINIMAP ---
+      // In dashboard view the same rail that shows log severities shows
+      // one tick per unit row, colored by state (mapped onto the log
+      // severity palette: failed=error red, activating=warning amber,
+      // active=notice green, inactive=debug gray). Ticks carry the
+      // hover-preview data and click-to-scroll, like the log minimap.
+      function buildServicesMinimap() {
+        const track = document.getElementById("minimap-track");
+        if (!track) return;
+        const rows = document.querySelectorAll("#dashboard-view tbody tr");
+        track.innerHTML = "";
+        const maxTicks = 240;
+        const step = Math.max(1, Math.ceil(rows.length / maxTicks));
+        const priorityByState = {
+          active: "5",
+          failed: "0",
+          activating: "4",
+          reloading: "4",
+          inactive: "7",
+        };
+        for (let index = 0; index < rows.length; index += step) {
+          const row = rows[index];
+          const stateMatch = row.className.match(/du-state-([a-z]+)/);
+          const state = stateMatch ? stateMatch[1] : "inactive";
+          const unitLink = row.querySelector("td a");
+          const cells = row.querySelectorAll("td");
+          const tick = document.createElement("i");
+          tick.dataset.rowIndex = String(index);
+          tick.dataset.priority = priorityByState[state] || "7";
+          // The tooltip template reads ts as the title line: use the
+          // unit name there, with the state and description after it.
+          tick.dataset.ts = unitLink ? unitLink.textContent.trim() : "";
+          tick.dataset.pri = cells[0] ? cells[0].textContent.trim() : state;
+          tick.dataset.msg = cells[2]
+            ? cells[2].textContent.trim().slice(0, 140)
+            : "";
+          track.appendChild(tick);
+        }
+        const label = document.querySelector("#minimap .minimap-label");
+        if (label) label.textContent = "units";
+      }
+
+      // Restores the log severity minimap when leaving the dashboard.
+      function restoreLogsMinimap() {
+        const label = document.querySelector("#minimap .minimap-label");
+        if (label) label.textContent = "60 min";
+        if (window.updateStatsAndMinimap) window.updateStatsAndMinimap();
+      }
+      // --- END DASHBOARD SERVICES MINIMAP ---
+
       // Keep the poll URL and dataset in sync after every dashboard
       // swap (covers filtering, the time window, and the initial load).
       document.body.addEventListener("htmx:afterSwap", function (event) {
         if (event.detail.target && event.detail.target.id === "dashboard-view") {
           syncDashboardStateFromFragment();
+          buildServicesMinimap();
         }
       });
       // --- END DASHBOARD SORTING + FILTERS ---
