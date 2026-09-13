@@ -47,47 +47,57 @@ module Dashboard
     units = sort_units(filter_units(snapshot.units, unit_filter), sort_key, ascending)
 
     HTML.build do
-      html dashboard_filters(unit_filter, since_text, sort_key, ascending)
-
-      div(class: "dashboard-grid") do
-        html card("Uptime", format_uptime(snapshot.uptime_sec))
-        html card("Load (1m)", snapshot.load1.round(2).to_s)
-        html card("Memory", "#{snapshot.mem_used_pct.round(1)}%", warn: snapshot.mem_used_pct >= 90.0)
-        html card("Disk", "#{snapshot.disk_used_pct.round(1)}%", warn: snapshot.disk_used_pct >= 90.0)
-        html card("Failed units", snapshot.units_failed.to_s, warn: snapshot.units_failed > 0)
-        html card("Errors (#{window_label(since_text)})", errors_last_hour.to_s, warn: errors_last_hour > 20)
-      end
-
-      if history.size >= 2
-        div(style: "margin: 1em 0;") do
-          html generate_svg_history(history)
+      # One form wrapping the whole fragment so each control's
+      # hx-include="closest form" sends the complete state (filter,
+      # window, sort) with every request.
+      tag("form", {"class" => "dashboard-form", "onsubmit" => "return false"}) do
+        div(class: "dashboard-grid") do
+          html card("Uptime", format_uptime(snapshot.uptime_sec))
+          html card("Load (1m)", snapshot.load1.round(2).to_s)
+          html card("Memory", "#{snapshot.mem_used_pct.round(1)}%", warn: snapshot.mem_used_pct >= 90.0)
+          html card("Disk", "#{snapshot.disk_used_pct.round(1)}%", warn: snapshot.disk_used_pct >= 90.0)
+          html card("Failed units", snapshot.units_failed.to_s, warn: snapshot.units_failed > 0)
+          html card("Errors (#{window_label(since_text)})", errors_last_hour.to_s, warn: errors_last_hour > 20)
         end
-      end
 
-      tag("h4") do
-        text "Services (#{units.size})"
-      end
+        div(class: "dashboard-history") do
+          if history.size >= 2
+            html generate_svg_history(history)
+          end
+          html window_select(since_text)
+        end
 
-      table(class: "striped dashboard-units") do
-        thead do
-          tr do
-            html sortable_header("State", "state", sort_key, ascending)
-            html sortable_header("Sub", "sub", sort_key, ascending)
-            html sortable_header("Description", "description", sort_key, ascending)
-            html sortable_header("Unit", "unit", sort_key, ascending)
-            if enable_actions
-              th { text "Actions" }
+        div(class: "services-header") do
+          tag("h4") do
+            text "Services (#{units.size})"
+          end
+          html service_filter_input(unit_filter)
+        end
+
+        input(type: "hidden", name: "sort_by", value: sort_key)
+        input(type: "hidden", name: "sort_order", value: ascending ? "asc" : "desc")
+
+        table(class: "striped dashboard-units") do
+          thead do
+            tr do
+              html sortable_header("State", "state", sort_key, ascending)
+              html sortable_header("Sub", "sub", sort_key, ascending)
+              html sortable_header("Description", "description", sort_key, ascending)
+              html sortable_header("Unit", "unit", sort_key, ascending)
+              if enable_actions
+                th { text "Actions" }
+              end
             end
           end
-        end
-        tbody do
-          if units.empty?
-            td(colspan: enable_actions ? "5" : "4", style: "text-align: center; padding: 1em;") do
-              text normalize_filter(unit_filter).empty? ? "No systemd units found." : "No units match the filter."
-            end
-          else
-            units.each do |unit_state|
-              html unit_row(unit_state, enable_actions)
+          tbody do
+            if units.empty?
+              td(colspan: enable_actions ? "5" : "4", style: "text-align: center; padding: 1em;") do
+                text normalize_filter(unit_filter).empty? ? "No systemd units found." : "No units match the filter."
+              end
+            else
+              units.each do |unit_state|
+                html unit_row(unit_state, enable_actions)
+              end
             end
           end
         end
@@ -95,53 +105,51 @@ module Dashboard
     end
   end
 
-  # The dashboard's own control bar: a service filter and the time
-  # window, plus hidden fields carrying the current sort so every
-  # request is self-contained. htmx re-processes these attributes after
-  # each swap, so the controls keep working across auto-refreshes.
-  private def dashboard_filters(
-    unit_filter : String?,
-    since_text : String?,
-    sort_key : String,
-    ascending : Bool,
-  ) : String
+  # The time window selector, overlaid on the top-right corner of the
+  # history chart: the chart is the time control's natural home.
+  private def window_select(since_text : String?) : String
     HTML.build do
-      div(class: "dashboard-filters") do
-        input({
-          "type"         => "search",
-          "name"         => "unit",
-          "class"        => "dashboard-unit-filter",
-          "value"        => normalize_filter(unit_filter),
-          "placeholder"  => "Filter services…",
-          "title"        => "Filter the services table by unit name or description",
-          "hx-get"       => "dashboard",
-          "hx-trigger"   => "input changed delay:600ms",
-          "hx-target"    => "#dashboard-view",
-          "hx-swap"      => "innerHTML",
-          "hx-include"   => "closest div",
-          "hx-indicator" => "#loading-spinner",
-        })
-        tag("select", {
-          "name"         => "since",
-          "title"        => "Time window for the history chart and error count",
-          "hx-get"       => "dashboard",
-          "hx-trigger"   => "change",
-          "hx-target"    => "#dashboard-view",
-          "hx-swap"      => "innerHTML",
-          "hx-include"   => "closest div",
-          "hx-indicator" => "#loading-spinner",
-        }) do
-          {"-15m" => "Last 15 minutes", "-1h" => "Last hour", "-6h" => "Last 6 hours", "-12h" => "Last 12 hours", "-1d" => "Last 24 hours", "-7d" => "Last 7 days"}.each do |value, label|
-            attributes = {"value" => value}
-            attributes["selected"] = "selected" if value == normalize_window(since_text)
-            tag("option", attributes) do
-              text label
-            end
+      tag("select", {
+        "name"         => "since",
+        "class"        => "dashboard-window-select",
+        "title"        => "Time window for the history chart and error count",
+        "aria-label"   => "Time window for the history chart and error count",
+        "hx-get"       => "dashboard",
+        "hx-trigger"   => "change",
+        "hx-target"    => "#dashboard-view",
+        "hx-swap"      => "innerHTML",
+        "hx-include"   => "closest form",
+        "hx-indicator" => "#loading-spinner",
+      }) do
+        {"-15m" => "15m", "-1h" => "1h", "-6h" => "6h", "-12h" => "12h", "-1d" => "24h", "-7d" => "7d"}.each do |value, label|
+          attributes = {"value" => value}
+          attributes["selected"] = "selected" if value == normalize_window(since_text)
+          tag("option", attributes) do
+            text label
           end
         end
-        input(type: "hidden", name: "sort_by", value: sort_key)
-        input(type: "hidden", name: "sort_order", value: ascending ? "asc" : "desc")
       end
+    end
+  end
+
+  # The service filter input, rendered inside the services title row.
+  private def service_filter_input(unit_filter : String?) : String
+    HTML.build do
+      input({
+        "type"         => "search",
+        "name"         => "unit",
+        "class"        => "dashboard-unit-filter",
+        "value"        => normalize_filter(unit_filter),
+        "placeholder"  => "Filter services…",
+        "title"        => "Filter the services table by unit name or description",
+        "aria-label"   => "Filter services",
+        "hx-get"       => "dashboard",
+        "hx-trigger"   => "input changed delay:600ms",
+        "hx-target"    => "#dashboard-view",
+        "hx-swap"      => "innerHTML",
+        "hx-include"   => "closest form",
+        "hx-indicator" => "#loading-spinner",
+      })
     end
   end
 

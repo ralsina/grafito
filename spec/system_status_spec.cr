@@ -142,12 +142,16 @@ describe Dashboard do
     lowered.should eq(lowered.sort)
   end
 
-  it "renders a filter input and time window select" do
+  it "renders a filter input and a time window select on the chart" do
     snapshot = SystemStatus.snapshot
     html = Dashboard.render_html(snapshot, [] of Grafito::MetricsStore::MetricPoint, 0)
-    html.should contain("dashboard-filters")
-    html.should contain("Filter services")
-    html.should contain("Last 6 hours")
+    html.should contain("dashboard-window-select")
+    html.should contain("dashboard-unit-filter")
+    html.should contain("dashboard-history")
+    html.should contain("services-header")
+    # Compact labels for the overlay selector; 6h is the default.
+    html.should contain(">6h</option>")
+    html.should contain(">15m</option>")
   end
 
   it "marks the selected time window and labels the errors card" do

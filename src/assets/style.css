@@ -599,20 +599,39 @@ body[data-view="dashboard"] #side-panel {
 #dashboard-view {
   padding: 0.5rem 0 1rem;
 }
-.dashboard-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-.dashboard-filters input[type="search"] {
-  flex: 1;
-  max-width: 320px;
+.dashboard-form {
   margin: 0;
 }
-.dashboard-filters select {
+.dashboard-history {
+  position: relative;
+  margin: 1em 0;
+}
+/* The time window selector lives on the timeline itself, overlaid on
+   the chart's top-right corner. */
+.dashboard-window-select {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   width: auto;
+  margin: 0;
+  padding: 0.2rem 1.6rem 0.2rem 0.5rem;
+  font-size: 0.8rem;
+  background: var(--bg);
+  z-index: 5;
+}
+.services-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1em 0 0.5rem;
+}
+.services-header h4 {
+  margin: 0;
+  flex: none;
+}
+.services-header .dashboard-unit-filter {
+  flex: 0 1 300px;
   margin: 0;
 }
 .dashboard-grid {

@@ -1553,8 +1553,8 @@
       function syncDashboardStateFromFragment() {
         const view = document.getElementById("dashboard-view");
         if (!view) return;
-        const unitInput = view.querySelector('.dashboard-filters input[name="unit"]');
-        const sinceSelect = view.querySelector('.dashboard-filters select[name="since"]');
+        const unitInput = view.querySelector('input[name="unit"]');
+        const sinceSelect = view.querySelector('select[name="since"]');
         if (unitInput) view.dataset.unit = unitInput.value.trim();
         if (sinceSelect) view.dataset.since = sinceSelect.value;
         updateDashboardPollUrl();
