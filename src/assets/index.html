@@ -1090,6 +1090,32 @@
           }
         });
 
+        // --- Restore Dashboard View from URL Parameters ---
+        // A reload (or shared link) with view=dashboard reopens the
+        // dashboard with its filter, time window and sort.
+        if (params.get("view") === "dashboard") {
+          const dashboardView = document.getElementById("dashboard-view");
+          const dashboardFilter = document.getElementById(
+            "dashboard-unit-filter"
+          );
+          if (dashboardView && dashboardFilter) {
+            const dashUnit = params.get("dash_unit");
+            if (dashUnit) {
+              dashboardView.dataset.unit = dashUnit;
+              dashboardFilter.value = dashUnit;
+            }
+            const dashSince = params.get("dash_since");
+            if (dashSince) dashboardView.dataset.since = dashSince;
+            const dashSortBy = params.get("dash_sort_by");
+            if (dashSortBy) {
+              dashboardView.dataset.sortBy = dashSortBy;
+              dashboardView.dataset.sortOrder =
+                params.get("dash_sort_order") || "asc";
+            }
+            setDashboardVisible(true);
+          }
+        }
+
         // Clear All Filters Button Functionality
         const clearFiltersButton =
           document.getElementById("clear-filters-btn");
@@ -1427,6 +1453,25 @@
 
       function updateBrowserURL() {
         const params = buildFilterURLSearchParams();
+        // Persist the dashboard view and its state so reloads and
+        // shared links land back on the dashboard as it was.
+        const dashboardView = document.getElementById("dashboard-view");
+        if (dashboardView && !dashboardView.hidden) {
+          params.set("view", "dashboard");
+          if (dashboardView.dataset.unit) {
+            params.set("dash_unit", dashboardView.dataset.unit);
+          }
+          if (dashboardView.dataset.since) {
+            params.set("dash_since", dashboardView.dataset.since);
+          }
+          if (dashboardView.dataset.sortBy) {
+            params.set("dash_sort_by", dashboardView.dataset.sortBy);
+            params.set(
+              "dash_sort_order",
+              dashboardView.dataset.sortOrder || "asc"
+            );
+          }
+        }
         renderActiveFilterChips();
 
         let queryString = params.toString();
