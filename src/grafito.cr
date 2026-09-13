@@ -68,6 +68,9 @@ module Grafito
   # buttons restricted to the --units whitelist.
   class_property? enable_actions : Bool = false
 
+  # Default time window for the dashboard history chart and error count.
+  DEFAULT_DASHBOARD_SINCE = Time.utc - 6.hours
+
   # Helper to build route paths with proper base path handling
   private def self.route_path(path : String) : String
     if base_path == "/"
@@ -633,8 +636,12 @@ module Grafito
     #
     # Returns the dashboard HTML fragment for HTMX: health cards, history
     # chart and the unit table. The frontend polls it every 30 seconds.
-    # The unit table can be sorted with `sort_by` (unit, state, sub,
-    # description) and `sort_order` (asc/desc).
+    # Parameters:
+    # * `sort_by` (unit, state, sub, description) and `sort_order`
+    #   (asc/desc) control the unit table ordering.
+    # * `unit` filters the unit table by name or description.
+    # * `since` sets the time window for the history chart and the
+    #   error count (e.g. -15m, -1h, -6h, -1d, -7d; default -6h).
     get route_path("dashboard") do |env|
       unless Grafito.dashboard_enabled?
         env.response.status_code = 404
@@ -642,8 +649,10 @@ module Grafito
       end
       sort_by = optional_query_param(env, "sort_by")
       sort_order = optional_query_param(env, "sort_order")
+      unit_filter = optional_query_param(env, "unit")
+      since_text = optional_query_param(env, "since")
       env.response.content_type = "text/html"
-      render_dashboard_fragment(sort_by, sort_order)
+      render_dashboard_fragment(sort_by, sort_order, unit_filter, since_text)
     end
 
     # ## The unit action endpoint
@@ -708,14 +717,28 @@ module Grafito
   end # register_routes
 
   # Returns the dashboard HTML fragment used by both GET /dashboard and
-  # the unit-action POST responses.
+  # the unit-action POST responses. Invalid since values fall back to
+  # the default 6-hour window.
   private def self.render_dashboard_fragment(
     sort_by : String? = nil,
     sort_order : String? = nil,
+    unit_filter : String? = nil,
+    since_text : String? = nil,
   ) : String
     snapshot = SystemStatus.snapshot
-    history = Grafito.metrics_store.try(&.history(Time.utc - 6.hours)) || [] of MetricsStore::MetricPoint
-    Dashboard.render_html(snapshot, history, recent_error_count("-1h"), Grafito.enable_actions?, sort_by, sort_order)
+    since_time = parse_since(since_text.to_s) || DEFAULT_DASHBOARD_SINCE
+    history = Grafito.metrics_store.try(&.history(since_time)) || [] of MetricsStore::MetricPoint
+    errors = recent_error_count(since_text.presence || "-6h")
+    Dashboard.render_html(
+      snapshot,
+      history,
+      errors,
+      Grafito.enable_actions?,
+      sort_by,
+      sort_order,
+      unit_filter,
+      since_text,
+    )
   end
 
   # Counts journal entries at priority <= 3 (error or worse) since the

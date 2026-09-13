@@ -27,8 +27,9 @@ module Dashboard
   Log = ::Log.for(self)
 
   # Renders the dashboard fragment. `history` may be empty (e.g. the
-  # sampler just started); `errors_last_hour` comes from the journal.
-  # `sort_by`/`sort_order` control the unit table ordering.
+  # sampler just started). `sort_by`/`sort_order` control the unit table
+  # ordering, `unit_filter` narrows the table, and `since_text` is the
+  # selected time window (used by the history chart and error count).
   def render_html(
     snapshot : SystemStatus::Snapshot,
     history : Array(Grafito::MetricsStore::MetricPoint),
@@ -36,21 +37,25 @@ module Dashboard
     enable_actions : Bool = false,
     sort_by : String? = nil,
     sort_order : String? = nil,
+    unit_filter : String? = nil,
+    since_text : String? = nil,
   ) : String
     # Units arrive sorted by name from SystemStatus; apply the requested
     # column sort on top (defaulting to name, ascending).
     sort_key = normalize_sort_key(sort_by)
     ascending = normalize_sort_order(sort_order) == "asc"
-    units = sort_units(snapshot.units, sort_key, ascending)
+    units = sort_units(filter_units(snapshot.units, unit_filter), sort_key, ascending)
 
     HTML.build do
+      html dashboard_filters(unit_filter, since_text, sort_key, ascending)
+
       div(class: "dashboard-grid") do
         html card("Uptime", format_uptime(snapshot.uptime_sec))
         html card("Load (1m)", snapshot.load1.round(2).to_s)
         html card("Memory", "#{snapshot.mem_used_pct.round(1)}%", warn: snapshot.mem_used_pct >= 90.0)
         html card("Disk", "#{snapshot.disk_used_pct.round(1)}%", warn: snapshot.disk_used_pct >= 90.0)
         html card("Failed units", snapshot.units_failed.to_s, warn: snapshot.units_failed > 0)
-        html card("Errors (1h)", errors_last_hour.to_s, warn: errors_last_hour > 20)
+        html card("Errors (#{window_label(since_text)})", errors_last_hour.to_s, warn: errors_last_hour > 20)
       end
 
       if history.size >= 2
@@ -60,7 +65,7 @@ module Dashboard
       end
 
       tag("h4") do
-        text "Services (#{snapshot.units_total})"
+        text "Services (#{units.size})"
       end
 
       table(class: "striped dashboard-units") do
@@ -78,7 +83,7 @@ module Dashboard
         tbody do
           if units.empty?
             td(colspan: enable_actions ? "5" : "4", style: "text-align: center; padding: 1em;") do
-              text "No systemd units found."
+              text normalize_filter(unit_filter).empty? ? "No systemd units found." : "No units match the filter."
             end
           else
             units.each do |unit_state|
@@ -87,6 +92,90 @@ module Dashboard
           end
         end
       end
+    end
+  end
+
+  # The dashboard's own control bar: a service filter and the time
+  # window, plus hidden fields carrying the current sort so every
+  # request is self-contained. htmx re-processes these attributes after
+  # each swap, so the controls keep working across auto-refreshes.
+  private def dashboard_filters(
+    unit_filter : String?,
+    since_text : String?,
+    sort_key : String,
+    ascending : Bool,
+  ) : String
+    HTML.build do
+      div(class: "dashboard-filters") do
+        input({
+          "type"         => "search",
+          "name"         => "unit",
+          "class"        => "dashboard-unit-filter",
+          "value"        => normalize_filter(unit_filter),
+          "placeholder"  => "Filter services…",
+          "title"        => "Filter the services table by unit name or description",
+          "hx-get"       => "dashboard",
+          "hx-trigger"   => "input changed delay:600ms",
+          "hx-target"    => "#dashboard-view",
+          "hx-swap"      => "innerHTML",
+          "hx-include"   => "closest div",
+          "hx-indicator" => "#loading-spinner",
+        })
+        tag("select", {
+          "name"         => "since",
+          "title"        => "Time window for the history chart and error count",
+          "hx-get"       => "dashboard",
+          "hx-trigger"   => "change",
+          "hx-target"    => "#dashboard-view",
+          "hx-swap"      => "innerHTML",
+          "hx-include"   => "closest div",
+          "hx-indicator" => "#loading-spinner",
+        }) do
+          {"-15m" => "Last 15 minutes", "-1h" => "Last hour", "-6h" => "Last 6 hours", "-12h" => "Last 12 hours", "-1d" => "Last 24 hours", "-7d" => "Last 7 days"}.each do |value, label|
+            attributes = {"value" => value}
+            attributes["selected"] = "selected" if value == normalize_window(since_text)
+            tag("option", attributes) do
+              text label
+            end
+          end
+        end
+        input(type: "hidden", name: "sort_by", value: sort_key)
+        input(type: "hidden", name: "sort_order", value: ascending ? "asc" : "desc")
+      end
+    end
+  end
+
+  # Normalizes the unit filter to a plain string.
+  private def normalize_filter(unit_filter : String?) : String
+    (unit_filter || "").strip
+  end
+
+  # Maps the time window to a known value, defaulting to 6 hours.
+  private def normalize_window(since_text : String?) : String
+    window = since_text.try(&.strip) || ""
+    case window
+    when "-15m", "-1h", "-12h", "-1d", "-7d" then window
+    else                                          "-6h"
+    end
+  end
+
+  # Short label for the errors card, derived from the window.
+  private def window_label(since_text : String?) : String
+    normalize_window(since_text).lstrip('-')
+  end
+
+  # Narrows the unit table to units whose name or description contains
+  # the filter text (case-insensitive). An empty filter keeps everyone.
+  private def filter_units(
+    units : Array(SystemStatus::UnitState),
+    unit_filter : String?,
+  ) : Array(SystemStatus::UnitState)
+    filter = normalize_filter(unit_filter).downcase
+    return units if filter.empty?
+
+    units.select do |unit_state|
+      unit_state.unit.downcase.includes?(filter) ||
+        unit_state.description.downcase.includes?(filter)
     end
   end
 

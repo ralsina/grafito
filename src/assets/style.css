@@ -599,6 +599,22 @@ body[data-view="dashboard"] #side-panel {
 #dashboard-view {
   padding: 0.5rem 0 1rem;
 }
+.dashboard-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.dashboard-filters input[type="search"] {
+  flex: 1;
+  max-width: 320px;
+  margin: 0;
+}
+.dashboard-filters select {
+  width: auto;
+  margin: 0;
+}
 .dashboard-grid {
   display: flex;
   flex-wrap: wrap;

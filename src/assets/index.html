@@ -1521,25 +1521,43 @@
         }
       }
 
-      // --- DASHBOARD SORTING ---
-      // The unit table is sorted server-side; the current choice is kept
-      // in #dashboard-view's dataset so the 30s auto-refresh polls (and
-      // reopening the dashboard) preserve it.
-      function dashboardSortParams() {
+      // --- DASHBOARD SORTING + FILTERS ---
+      // The unit table sorting, the service filter and the time window
+      // are all applied server-side; the current values are kept in
+      // #dashboard-view's dataset so the 30s auto-refresh polls (and
+      // reopening the dashboard) preserve them.
+      function dashboardQueryParams() {
         const view = document.getElementById("dashboard-view");
-        if (!view || !view.dataset.sortBy) return "";
-        const params = new URLSearchParams({
-          sort_by: view.dataset.sortBy,
-          sort_order: view.dataset.sortOrder || "asc",
-        });
-        return "?" + params.toString();
+        if (!view) return "";
+        const params = new URLSearchParams();
+        if (view.dataset.sortBy) params.set("sort_by", view.dataset.sortBy);
+        if (view.dataset.sortOrder) params.set("sort_order", view.dataset.sortOrder);
+        if (view.dataset.unit) params.set("unit", view.dataset.unit);
+        if (view.dataset.since) params.set("since", view.dataset.since);
+        const qs = params.toString();
+        return qs ? "?" + qs : "";
       }
+
+      // Kept as an alias for the sort-specific call sites.
+      const dashboardSortParams = dashboardQueryParams;
 
       function updateDashboardPollUrl() {
         const view = document.getElementById("dashboard-view");
         if (view) {
-          view.setAttribute("hx-get", "dashboard" + dashboardSortParams());
+          view.setAttribute("hx-get", "dashboard" + dashboardQueryParams());
         }
+      }
+
+      // Syncs the dataset from the rendered fragment's controls, so the
+      // poll URL always reflects what the user currently sees.
+      function syncDashboardStateFromFragment() {
+        const view = document.getElementById("dashboard-view");
+        if (!view) return;
+        const unitInput = view.querySelector('.dashboard-filters input[name="unit"]');
+        const sinceSelect = view.querySelector('.dashboard-filters select[name="since"]');
+        if (unitInput) view.dataset.unit = unitInput.value.trim();
+        if (sinceSelect) view.dataset.since = sinceSelect.value;
+        updateDashboardPollUrl();
       }
 
       function sortDashboard(sortBy) {
@@ -1553,20 +1571,20 @@
         view.dataset.sortBy = sortBy;
         view.dataset.sortOrder = flip ? "desc" : "asc";
         updateDashboardPollUrl();
-        htmx.ajax("GET", buildUrl("dashboard") + dashboardSortParams(), {
+        htmx.ajax("GET", buildUrl("dashboard") + dashboardQueryParams(), {
           target: "#dashboard-view",
           swap: "innerHTML",
         });
       }
 
-      // Keep the poll URL in sync after every dashboard swap (covers
-      // sorting done in a previous page session and the initial load).
+      // Keep the poll URL and dataset in sync after every dashboard
+      // swap (covers filtering, the time window, and the initial load).
       document.body.addEventListener("htmx:afterSwap", function (event) {
         if (event.detail.target && event.detail.target.id === "dashboard-view") {
-          updateDashboardPollUrl();
+          syncDashboardStateFromFragment();
         }
       });
-      // --- END DASHBOARD SORTING ---
+      // --- END DASHBOARD SORTING + FILTERS ---
       // --- END DASHBOARD TOGGLE ---
 
       function setHostnameFilterAndTrigger(hostname) {

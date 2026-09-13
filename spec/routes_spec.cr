@@ -108,6 +108,27 @@ describe "Kemal routes" do
     response[:body].should contain("arrow_downward")
   end
 
+  it "GET /dashboard accepts a time window parameter" do
+    response = dispatch_request("GET", "/dashboard?since=-15m")
+
+    response[:status].should eq(200)
+    response[:body].should contain("Errors (15m)")
+  end
+
+  it "GET /dashboard falls back to the default window on bad since" do
+    response = dispatch_request("GET", "/dashboard?since=yesterday")
+
+    response[:status].should eq(200)
+    response[:body].should contain("Errors (6h)")
+  end
+
+  it "GET /dashboard accepts a unit filter parameter" do
+    response = dispatch_request("GET", "/dashboard?unit=grafito-no-such-unit-xyz")
+
+    response[:status].should eq(200)
+    response[:body].should contain("No units match the filter.")
+  end
+
   it "GET /status and /dashboard return 404 when the dashboard is disabled" do
     Grafito.dashboard_enabled = false
     begin

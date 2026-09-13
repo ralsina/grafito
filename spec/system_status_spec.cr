@@ -141,6 +141,91 @@ describe Dashboard do
     lowered = names.map(&.downcase)
     lowered.should eq(lowered.sort)
   end
+
+  it "renders a filter input and time window select" do
+    snapshot = SystemStatus.snapshot
+    html = Dashboard.render_html(snapshot, [] of Grafito::MetricsStore::MetricPoint, 0)
+    html.should contain("dashboard-filters")
+    html.should contain("Filter services")
+    html.should contain("Last 6 hours")
+  end
+
+  it "marks the selected time window and labels the errors card" do
+    snapshot = SystemStatus.snapshot
+    html = Dashboard.render_html(
+      snapshot,
+      [] of Grafito::MetricsStore::MetricPoint,
+      3,
+      since_text: "-15m",
+    )
+    html.should contain("Errors (15m)")
+    selected_options = html.scan(/<option[^>]*selected[^>]*>/).map(&.[0])
+    selected_options.size.should eq(1)
+    selected_options.first.should contain("-15m")
+  end
+
+  it "falls back to the default window for unknown since values" do
+    snapshot = SystemStatus.snapshot
+    html = Dashboard.render_html(
+      snapshot,
+      [] of Grafito::MetricsStore::MetricPoint,
+      3,
+      since_text: "last week",
+    )
+    html.should contain("Errors (6h)")
+    selected_options = html.scan(/<option[^>]*selected[^>]*>/).map(&.[0])
+    selected_options.size.should eq(1)
+    selected_options.first.should contain("-6h")
+  end
+
+  it "filters units by name or description" do
+    names = dashboard_unit_names(filter_spec_fragment("docker"))
+    names.size.should be > 0
+    names.each do |name|
+      (name.downcase.includes?("docker")).should be_true
+    end
+
+    # A description match also counts.
+    by_description = dashboard_unit_names(filter_spec_fragment("secure shell"))
+    by_description.should contain("sshd.service")
+  end
+
+  it "reports an empty result for a filter nothing matches" do
+    html = filter_spec_fragment("grafito-no-such-unit-xyz")
+    html.should contain("No units match the filter.")
+  end
+end
+
+# A small deterministic snapshot for the filter specs, independent of
+# the real system's unit list.
+private def filter_spec_snapshot : SystemStatus::Snapshot
+  units = [
+    SystemStatus::UnitState.new("cron.service", "loaded", "active", "exited", "Regular background program processing"),
+    SystemStatus::UnitState.new("docker.service", "loaded", "active", "running", "Docker Application Container Engine"),
+    SystemStatus::UnitState.new("fake-broken.service", "loaded", "failed", "failed", "Fake failing service"),
+    SystemStatus::UnitState.new("nginx.service", "loaded", "active", "running", "A high performance web server"),
+    SystemStatus::UnitState.new("sshd.service", "loaded", "active", "running", "OpenBSD Secure Shell server"),
+  ]
+  SystemStatus::Snapshot.new(
+    timestamp: Time.local,
+    load1: 1.0,
+    mem_used_pct: 50.0,
+    disk_used_pct: 50.0,
+    uptime_sec: 3600,
+    units_total: units.size,
+    units_failed: 1,
+    units: units,
+  )
+end
+
+# Renders the dashboard for the deterministic snapshot with a filter.
+private def filter_spec_fragment(unit_filter : String) : String
+  Dashboard.render_html(
+    filter_spec_snapshot,
+    [] of Grafito::MetricsStore::MetricPoint,
+    0,
+    unit_filter: unit_filter,
+  )
 end
 
 # Extracts the unit names of the dashboard table rows, in row order.
