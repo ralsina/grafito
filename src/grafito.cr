@@ -881,18 +881,51 @@ module Grafito
     snapshot = SystemStatus.snapshot
     since_time = parse_since(since_text.to_s) || DEFAULT_DASHBOARD_SINCE
     history = Grafito.metrics_store.try(&.history(since_time)) || [] of MetricsStore::MetricPoint
-    errors = recent_error_count(since_text.presence || "-6h")
+    error_logs = dashboard_error_logs(since_text.presence || "-6h")
     Dashboard.render_html(
       snapshot,
       history,
-      errors,
+      error_logs.size,
       Grafito.enable_actions?,
       sort_by,
       sort_order,
       unit_filter,
       since_text,
       unit_flags,
+      error_buckets(error_logs, history),
     )
+  end
+
+  # Journal entries at priority <= 3 (error or worse) since the given
+  # relative time. Bounded to 500 lines to keep dashboard refreshes
+  # cheap; the count is a signal, not an audit.
+  private def self.dashboard_error_logs(since : String) : Array(Journalctl::LogEntry)
+    return [] of Journalctl::LogEntry unless Grafito.dashboard_enabled?
+    Journalctl.query(since: since, priority: "3", lines: 500) || [] of Journalctl::LogEntry
+  end
+
+  # Buckets error entries over the exact time span covered by the
+  # metrics history, so the error area lines up pixel-for-pixel with
+  # the load/memory lines in the overlay chart.
+  private def self.error_buckets(
+    logs : Array(Journalctl::LogEntry),
+    history : Array(MetricsStore::MetricPoint),
+  ) : Array(Tuple(Time, Int32))
+    return [] of Tuple(Time, Int32) if history.size < 2
+    oldest = history.first.ts
+    span_sec = [(history.last.ts - oldest).total_seconds, 1.0].max
+    bucket_count = 60
+    bucket_sec = span_sec / bucket_count
+    buckets = Array.new(bucket_count) { |index| {oldest + Time::Span.new(seconds: (index * bucket_sec).to_i), 0} }
+    logs.each do |entry|
+      offset = (entry.timestamp - oldest).total_seconds
+      next if offset < 0
+      index = (offset / bucket_sec).to_i
+      next if index >= bucket_count
+      start_time, count = buckets[index]
+      buckets[index] = {start_time, count + 1}
+    end
+    buckets
   end
 
   # Counts journal entries at priority <= 3 (error or worse) since the

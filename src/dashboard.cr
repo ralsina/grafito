@@ -40,6 +40,7 @@ module Dashboard
     unit_filter : String? = nil,
     since_text : String? = nil,
     unit_flags : Hash(String, SystemStatus::UnitFileFlags) = {} of String => SystemStatus::UnitFileFlags,
+    error_buckets : Array(Tuple(Time, Int32)) = [] of Tuple(Time, Int32),
   ) : String
     # Units arrive sorted by name from SystemStatus; apply the requested
     # column sort on top (defaulting to name, ascending).
@@ -64,7 +65,7 @@ module Dashboard
 
         div(class: "dashboard-history") do
           if history.size >= 2
-            html generate_svg_history(history)
+            html generate_svg_history(history, error_buckets)
           end
           html window_select(since_text)
         end
@@ -556,10 +557,14 @@ module Dashboard
     end
   end
 
-  # Renders memory and disk usage over time as a small SVG line chart.
-  # Both series share the same 0-100% scale, which makes them directly
-  # comparable without any y-axis beyond 0/50/100 marks.
-  def generate_svg_history(points : Array(Grafito::MetricsStore::MetricPoint)) : String
+  # Renders memory and disk usage over time as a small SVG line chart,
+  # with the error frequency over the same time span overlaid as a
+  # translucent filled area behind the lines. Both percentage series
+  # share the same 0-100% scale; the error area scales to its own max.
+  def generate_svg_history(
+    points : Array(Grafito::MetricsStore::MetricPoint),
+    error_buckets : Array(Tuple(Time, Int32)) = [] of Tuple(Time, Int32),
+  ) : String
     svg = IO::Memory.new
     width = 800.0
     height = 120.0
@@ -567,13 +572,44 @@ module Dashboard
     span_sec = [(points.last.ts - oldest).total_seconds, 1.0].max
 
     svg << %(<svg width="100%" height="#{height.to_i}" viewBox="0 0 #{width.to_i} #{height.to_i}" )
-    svg << %(preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" role="img" class="dashboard-history-svg">)
+    svg << %(preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" role="img" class="dashboard-history-svg" )
+    svg << %(aria-label="Memory, disk and error frequency over the selected time window">)
+    has_errors = !error_buckets.empty? && error_buckets.max_of(&.[1]) > 0
+    if has_errors
+      svg << %(  <polygon fill="var(--err, darkorange)" fill-opacity="0.25" stroke="none" points="#{error_area_points(error_buckets, oldest, span_sec, width, height)}" />)
+    end
     svg << %(  <polyline fill="none" stroke="var(--info, steelblue)" stroke-width="2" points="#{polyline_points(points, oldest, span_sec, width, height, &.mem_used_pct)}" />)
     svg << %(  <polyline fill="none" stroke="var(--err, darkorange)" stroke-width="2" points="#{polyline_points(points, oldest, span_sec, width, height, &.disk_used_pct)}" />)
     svg << %(  <text x="8" y="#{(height - 8).to_i}" class="tl-label">#{points.first.ts.to_s("%m-%d %H:%M")}</text>)
     svg << %(  <text x="#{(width - 8).to_i}" y="#{(height - 8).to_i}" text-anchor="end" class="tl-label">#{points.last.ts.to_s("%m-%d %H:%M")}</text>)
+    if has_errors
+      svg << %(  <text x="8" y="14" class="tl-label">error frequency (shaded)</text>)
+    end
     svg << %(</svg>)
     svg.to_s
+  end
+
+  # Builds the polygon for the overlaid error-frequency area: same x
+  # mapping as the line series, y scaled so the bucket maximum reaches
+  # the top of the chart. Closed along the bottom edge.
+  private def error_area_points(
+    buckets : Array(Tuple(Time, Int32)),
+    oldest : Time,
+    span_sec : Float64,
+    width : Float64,
+    height : Float64,
+  ) : String
+    padding = 8.0
+    usable = height - 2 * padding
+    max_count = buckets.max_of(&.[1]).to_f
+    return "" if max_count.zero?
+    coords = buckets.map do |bucket_time, count|
+      x = padding + ((bucket_time - oldest).total_seconds / span_sec) * (width - 2 * padding)
+      y = padding + (1.0 - count.to_f / max_count) * usable
+      "#{x.round(1)},#{y.round(1)}"
+    end
+    baseline = (height - padding).round(1)
+    "#{padding.round(1)},#{baseline} #{coords.join(" ")} #{(width - padding).round(1)},#{baseline}"
   end
 
   # Builds the x/y point list for one series: x spans the time range,
