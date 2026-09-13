@@ -154,8 +154,10 @@ module Dashboard
     normalize_window(since_text).lstrip('-')
   end
 
-  # Narrows the unit table to units whose name or description contains
-  # the filter text (case-insensitive). An empty filter keeps everyone.
+  # Narrows the unit table to units where the filter text matches any
+  # displayed column: name, description, state or sub-state. So typing
+  # "failed" lists failed units, "running" lists live ones, etc. An
+  # empty filter keeps everyone.
   private def filter_units(
     units : Array(SystemStatus::UnitState),
     unit_filter : String?,
@@ -164,8 +166,8 @@ module Dashboard
     return units if filter.empty?
 
     units.select do |unit_state|
-      unit_state.unit.downcase.includes?(filter) ||
-        unit_state.description.downcase.includes?(filter)
+      [unit_state.unit, unit_state.description, unit_state.active_state, unit_state.sub_state]
+        .any?(&.downcase.includes?(filter))
     end
   end
 

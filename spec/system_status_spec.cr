@@ -185,16 +185,25 @@ describe Dashboard do
     selected_options.first.should contain("-6h")
   end
 
-  it "filters units by name or description" do
+  it "filters units by any displayed column" do
+    # Name match.
     names = dashboard_unit_names(filter_spec_fragment("docker"))
     names.size.should be > 0
     names.each do |name|
       (name.downcase.includes?("docker")).should be_true
     end
 
-    # A description match also counts.
+    # Description match.
     by_description = dashboard_unit_names(filter_spec_fragment("secure shell"))
     by_description.should contain("sshd.service")
+
+    # State match: "failed" returns exactly the failed unit.
+    failed = dashboard_unit_names(filter_spec_fragment("failed"))
+    failed.should eq(["fake-broken.service"])
+
+    # Sub-state match: "running" returns every running unit.
+    running = dashboard_unit_names(filter_spec_fragment("running"))
+    running.sort.should eq(["docker.service", "nginx.service", "sshd.service"])
   end
 
   it "reports an empty result for a filter nothing matches" do
