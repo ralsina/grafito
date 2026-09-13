@@ -1547,11 +1547,15 @@
       }
 
       function setUnitFilterAndTrigger(unitName) {
-        // Coming from the dashboard's unit table: switch back to the
-        // log stream so the filter result is visible.
+        // Coming from the dashboard (unit table link or the sidebar's
+        // "view logs" call): switch back to the log stream and close
+        // the sidebar, which has served its purpose.
         if (document.getElementById("dashboard-view") &&
             !document.getElementById("dashboard-view").hidden) {
           setDashboardVisible(false);
+        }
+        if (window.closeLogPanel) {
+          closeLogPanel();
         }
         const unitFilterInput = document.getElementById("unit-filter");
         if (unitFilterInput) {
