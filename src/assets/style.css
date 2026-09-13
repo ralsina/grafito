@@ -783,6 +783,16 @@ body[data-view="dashboard"] #stats-strip {
   color: var(--muted);
   margin-left: 0.25rem;
 }
+.service-panel-error-message {
+  background: color-mix(in srgb, var(--err) 10%, transparent);
+  border: 1px solid var(--err);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--txt);
+  margin: 0;
+}
 .service-panel-viewlogs {
   width: 100%;
   display: flex;

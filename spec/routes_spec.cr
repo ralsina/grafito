@@ -184,55 +184,36 @@ describe "Kemal routes" do
     end
   end
 
-  it "POST unit actions refuses units outside the whitelist" do
+  it "POST unit actions returns 404 for a nonexistent unit" do
     Grafito.enable_actions = true
-    Grafito.allowed_units = ["some-other-unit.service"]
-    begin
-      response = dispatch_request("POST", "/unit/sshd/restart")
-      response[:status].should eq(403)
-      response[:body].should contain("whitelist")
-    ensure
-      Grafito.enable_actions = false
-      Grafito.allowed_units = nil
-    end
-  end
-
-  it "POST unit actions returns 404 for a whitelisted but nonexistent unit" do
-    Grafito.enable_actions = true
-    Grafito.allowed_units = ["grafito-no-such-unit-xyz"]
     begin
       response = dispatch_request("POST", "/unit/grafito-no-such-unit-xyz/restart")
       response[:status].should eq(404)
       response[:body].should contain("not found")
     ensure
       Grafito.enable_actions = false
-      Grafito.allowed_units = nil
     end
   end
 
   it "POST unit actions rejects an invalid action name" do
     Grafito.enable_actions = true
-    Grafito.allowed_units = ["sshd"]
     begin
       response = dispatch_request("POST", "/unit/sshd/format")
       response[:status].should eq(400)
       response[:body].should contain("Invalid action")
     ensure
       Grafito.enable_actions = false
-      Grafito.allowed_units = nil
     end
   end
 
   it "POST unit actions rejects unit names that look like flags" do
     Grafito.enable_actions = true
-    Grafito.allowed_units = ["--dangerous"]
     begin
       response = dispatch_request("POST", "/unit/%2D%2Ddangerous/restart")
       response[:status].should eq(400)
       response[:body].should contain("Invalid unit name")
     ensure
       Grafito.enable_actions = false
-      Grafito.allowed_units = nil
     end
   end
 end

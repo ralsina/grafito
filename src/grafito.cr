@@ -685,26 +685,26 @@ module Grafito
       end
 
       env.response.content_type = "text/html"
-      # Actions in the panel only make sense for whitelisted units.
-      panel_actions = Grafito.enable_actions? && action_allowed_for_unit?(unit_state.unit)
       Dashboard.unit_details_fragment(
         unit_state,
-        panel_actions,
+        Grafito.enable_actions?,
         unit_error_count(unit_state.unit),
       )
     end
 
     # ## The unit action endpoint
     #
-    # `POST /unit/<name>/<start|stop|restart>` runs systemctl for the
-    # named unit. Triple-gated: the dashboard must have actions enabled
-    # (`--enable-actions`), the unit must be in the `--units` whitelist,
-    # and the unit must actually exist. Returns the refreshed dashboard
-    # fragment so the htmx button updates the whole view.
+    # `POST /unit/<name>/<start|stop|restart|enable|disable>` runs
+    # systemctl for the named unit. Gated by `--enable-actions`; what an
+    # action is actually allowed to do is decided by systemd/polkit for
+    # the user Grafito runs as — failures are surfaced verbatim.
+    # Returns the refreshed dashboard fragment (or, for `from=panel`
+    # requests, the refreshed service panel) so the htmx button updates
+    # the view.
     post route_path("unit/:name/:action") do |env|
       unless Grafito.dashboard_enabled? && Grafito.enable_actions?
         env.response.status_code = 403
-        next "Unit actions are disabled. Start grafito with --enable-actions and a --units whitelist to allow them."
+        next "Unit actions are disabled. Start grafito with --enable-actions to allow them."
       end
 
       unit_name = env.params.url["name"]
@@ -725,11 +725,6 @@ module Grafito
         next "Invalid unit name."
       end
 
-      unless action_allowed_for_unit?(unit_name)
-        env.response.status_code = 403
-        next "Unit '#{HTML.escape(unit_name)}' is not in the --units whitelist."
-      end
-
       known_units = SystemStatus.unit_states.map(&.unit)
       full_unit = known_units.includes?(unit_name) ? unit_name : "#{unit_name}.service"
       unless known_units.includes?(full_unit)
@@ -746,9 +741,21 @@ module Grafito
         error: stderr,
       )
       unless result.normal_exit?
-        Log.error { "systemctl #{action} #{full_unit} failed: #{stderr.to_s[..200]}" }
+        # Authorization and other failures come from systemd itself;
+        # surface them instead of a generic message. Panel requests get
+        # an error fragment swapped into the sidebar (htmx ignores error
+        # statuses, so a success status is needed to show it).
+        from_panel = optional_query_param(env, "from") == "panel"
+        message = stderr.to_s.strip
+        message = "systemctl #{action} #{full_unit} failed." if message.empty?
+        Log.error { "systemctl #{action} #{full_unit} failed: #{message[0..200]}" }
+        if from_panel
+          env.response.status_code = 200
+          env.response.content_type = "text/html"
+          next Dashboard.action_error_fragment(action, full_unit, message)
+        end
         env.response.status_code = 500
-        next "Failed to #{action} #{HTML.escape(full_unit)}."
+        next HTML.escape(message)
       end
 
       Log.info { "systemctl #{action} #{full_unit} succeeded" }
@@ -758,10 +765,9 @@ module Grafito
       if optional_query_param(env, "from") == "panel"
         refreshed = SystemStatus.unit_states.find { |unit| unit.unit == full_unit }
         if refreshed
-          panel_actions = Grafito.enable_actions? && action_allowed_for_unit?(full_unit)
           next Dashboard.unit_details_fragment(
             refreshed,
-            panel_actions,
+            Grafito.enable_actions?,
             unit_error_count(full_unit),
           )
         end
@@ -801,7 +807,6 @@ module Grafito
       sort_order,
       unit_filter,
       since_text,
-      Grafito.allowed_units,
     )
   end
 
@@ -829,16 +834,5 @@ module Grafito
            else          Time::Span.new(days: amount * 365) # "y"
            end
     Time.utc - span
-  end
-
-  # Checks that a unit is manageable: actions require an explicit
-  # --units whitelist, and the unit (raw or .service-suffixed) must be
-  # on it.
-  private def self.action_allowed_for_unit?(unit_name : String) : Bool
-    allowed = Grafito.allowed_units
-    return false unless allowed
-
-    cleaned = unit_name.gsub(/\.service$/, "")
-    allowed.any? { |candidate| candidate == unit_name || candidate == cleaned }
   end
 end

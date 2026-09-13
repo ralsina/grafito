@@ -68,7 +68,7 @@ DOC = <<-DOCOPT
   Options:
     -p PORT, --port=PORT          Port to listen on [default: 3000].
     -b ADDRESS, --bind=ADDRESS    Address to bind to [default: 127.0.0.1].
-    -U UNITS, --units=UNITS       Comma-separated list of systemd units to show (restricts access).
+    -U UNITS, --units=UNITS       Comma-separated list of systemd units to show in the logs (restricts visibility).
     --log-level=LEVEL             Set log level (debug, info, warn, error, fatal) [default: info].
     -t TIMEZONE, --timezone=TIMEZONE  Timezone for timestamps (e.g., America/New_York, Europe/London, GMT+5, local) [default: local].
     --base-path=PATH              Base path for deployment (e.g., /, /grafito) [default: /].
@@ -313,10 +313,7 @@ def setup_dashboard(args) : Nil
   Grafito::Log.info { "Dashboard: #{Grafito.dashboard_enabled? ? "enabled" : "disabled"}" }
 
   if Grafito.enable_actions?
-    if Grafito.allowed_units.nil?
-      Grafito::Log.warn { "Unit actions enabled but no --units whitelist configured; all actions will be refused" }
-    end
-    Grafito::Log.info { "Unit actions: enabled (whitelist-restricted)" }
+    Grafito::Log.info { "Unit actions: enabled (permitted by the user grafito runs as and polkit)" }
   end
 
   return unless Grafito.dashboard_enabled?

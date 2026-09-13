@@ -39,7 +39,6 @@ module Dashboard
     sort_order : String? = nil,
     unit_filter : String? = nil,
     since_text : String? = nil,
-    allowed_units : Array(String)? = nil,
   ) : String
     # Units arrive sorted by name from SystemStatus; apply the requested
     # column sort on top (defaulting to name, ascending).
@@ -91,7 +90,7 @@ module Dashboard
               end
             else
               units.each do |unit_state|
-                html unit_row(unit_state, enable_actions, allowed_units)
+                html unit_row(unit_state, enable_actions)
               end
             end
           end
@@ -294,11 +293,7 @@ module Dashboard
     end
   end
 
-  private def unit_row(
-    unit_state : SystemStatus::UnitState,
-    enable_actions : Bool,
-    allowed_units : Array(String)?,
-  ) : String
+  private def unit_row(unit_state : SystemStatus::UnitState, enable_actions : Bool) : String
     HTML.build do
       # The row class carries the state color as --tag-color, which the
       # CSS turns into the left-side stripe, like the log view's
@@ -335,21 +330,10 @@ module Dashboard
             text HTML.escape(unit_state.unit)
           end
         end
-        if enable_actions && unit_in_whitelist?(unit_state.unit, allowed_units)
+        if enable_actions
           html action_cell(unit_state.unit)
         end
       end
-    end
-  end
-
-  # Whitelist check for the table's action buttons: nil means no
-  # restriction, otherwise the unit (raw or cleaned) must be listed.
-  private def unit_in_whitelist?(unit_name : String, allowed_units : Array(String)?) : Bool
-    return true unless allowed_units
-
-    cleaned = unit_name.gsub(/\.service$/, "")
-    allowed_units.any? do |candidate|
-      candidate == unit_name || candidate == cleaned
     end
   end
 
@@ -403,6 +387,22 @@ module Dashboard
       button(attributes) do
         span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
           text icon
+        end
+      end
+    end
+  end
+
+  # Renders a failed unit action as an error block for the service
+  # panel. The message is systemd's own (e.g. "Access denied"), shown
+  # verbatim so the user can act on it.
+  def action_error_fragment(action : String, unit_name : String, message : String) : String
+    HTML.build do
+      div(class: "service-panel service-panel-error") do
+        tag("h4") do
+          text "#{action[0].upcase}#{action[1..]} failed: #{unit_name}"
+        end
+        tag("pre", class: "service-panel-error-message") do
+          text message
         end
       end
     end

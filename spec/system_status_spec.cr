@@ -67,18 +67,6 @@ describe Dashboard do
     html.should contain("hx-confirm")
   end
 
-  it "hides table action buttons for units outside the whitelist" do
-    snapshot = SystemStatus.snapshot
-    html = Dashboard.render_html(
-      snapshot,
-      [] of Grafito::MetricsStore::MetricPoint,
-      0,
-      enable_actions: true,
-      allowed_units: ["grafito-no-such-unit-xyz"],
-    )
-    html.should_not contain("hx-post")
-  end
-
   it "renders clickable sort headers with a default ascending indicator" do
     snapshot = SystemStatus.snapshot
     html = Dashboard.render_html(snapshot, [] of Grafito::MetricsStore::MetricPoint, 0)
