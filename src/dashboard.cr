@@ -904,7 +904,9 @@ module Dashboard
   # Journal entries over the given relative time for the dashboard
   # chart: all severities, bounded to 5000 entries to keep refreshes
   # cheap; the chart is a signal, not an audit.
-  private def self.dashboard_journal_entries(since : String) : Array(Journalctl::LogEntry)
+  # Public: other views (e.g. the process monitor) reuse the same
+  # combo chart data pipeline.
+  def self.dashboard_journal_entries(since : String) : Array(Journalctl::LogEntry)
     return [] of Journalctl::LogEntry unless Grafito.dashboard_enabled?
     Journalctl.query(since: since, lines: 5000) || [] of Journalctl::LogEntry
   end
@@ -913,7 +915,9 @@ module Dashboard
   # covered by the metrics history, so the stacked severity bars line
   # up pixel-for-pixel with the load/memory lines in the combined
   # chart.
-  private def self.severity_buckets(
+  # Public: other views (e.g. the process monitor) reuse the same
+  # combo chart data pipeline.
+  def self.severity_buckets(
     logs : Array(Journalctl::LogEntry),
     history : Array(Grafito::MetricsStore::MetricPoint),
   ) : Array(Timeline::TimelinePoint)
@@ -956,7 +960,9 @@ module Dashboard
 
   # Parses the same relative time vocabulary the logs endpoint uses
   # (-15m, -1h, -1d, -1M, -1y) into a Time.
-  private def self.parse_since(since_text : String) : Time?
+  # Public: other views (e.g. the process monitor) reuse the same
+  # combo chart data pipeline.
+  def self.parse_since(since_text : String) : Time?
     match = since_text.strip.match(/^-?(\d+)([mhdMy])$/)
     return unless match
 

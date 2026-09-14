@@ -45,6 +45,8 @@ module ProcessDashboard
 
   # Renders the process view fragment. `limit` is "all" (unpadded list)
   # or anything else (capped to ROW_CAP rows after sorting/filtering).
+  # `history` and `severity_buckets` feed the same combo chart the log
+  # stream and dashboard show; both default to empty (no chart).
   def render_html(
     snapshot : ProcessStatus::Snapshot,
     enable_actions : Bool = false,
@@ -52,6 +54,8 @@ module ProcessDashboard
     sort_order : String? = nil,
     filter : String? = nil,
     limit : String? = nil,
+    history : Array(Grafito::MetricsStore::MetricPoint) = [] of Grafito::MetricsStore::MetricPoint,
+    severity_buckets : Array(Timeline::TimelinePoint) = [] of Timeline::TimelinePoint,
   ) : String
     sorted = sort_processes(snapshot.processes, sort_by, sort_order)
     needle = filter.to_s.strip.downcase
@@ -69,17 +73,22 @@ module ProcessDashboard
         html card("Tasks", "#{snapshot.tasks_total} (#{snapshot.tasks_running} R)")
         html card("Memory", memory_label(snapshot), warn: mem_used_pct(snapshot) > 90)
         html card("Load", format_load(snapshot.load1), warn: snapshot.load1 > snapshot.cpu_count)
+        unless snapshot.core_pcts.empty?
+          div(class: "stat proc-meters") do
+            span(class: "stat-label") { text "Per core" }
+            div(class: "proc-squares") do
+              snapshot.core_pcts.each_with_index do |pct, core_index|
+                html core_meter(core_index, pct)
+              end
+            end
+          end
+        end
       end
 
-      div(class: "proc-meters") do
-        if snapshot.core_pcts.empty?
-          span(class: "proc-meters-hint") do
-            text "CPU meters appear after the first refresh"
-          end
-        else
-          snapshot.core_pcts.each_with_index do |pct, core_index|
-            html core_meter(core_index, pct)
-          end
+      div(class: "dashboard-history proc-history") do
+        if history.size >= 2
+          html Timeline.combined_legend
+          html Timeline.generate_combined_svg(history, severity_buckets)
         end
       end
 
@@ -270,18 +279,17 @@ module ProcessDashboard
     end
   end
 
-  # One htop-style CPU meter: a vertical label and a bar. The exact
-  # percentage lives in the tooltip; the color banding (blue/amber/red)
-  # carries the coarse signal at a glance.
+  # One CPU-meter cell: a solid colored square, no numbers. The color
+  # banding (blue/amber/red) carries the coarse signal and the tooltip
+  # the exact value; the cells form a 2-tall grid inside a summary
+  # card, so a 16-core machine is 8 columns wide.
   private def core_meter(core_index : Int32, pct : Float64) : String
-    fill_class = pct >= 80 ? "proc-bar-high" : (pct >= 30 ? "proc-bar-mid" : "proc-bar-low")
+    fill_class = pct >= 80 ? "proc-square-high" : (pct >= 30 ? "proc-square-mid" : "proc-square-low")
     HTML.build do
-      div(class: "proc-meter", title: "Core #{core_index}: #{pct.round(1)}%") do
-        span(class: "proc-meter-label") { text core_index.to_s }
-        div(class: "proc-meter-track") do
-          div(class: "proc-bar-fill #{fill_class}", style: "height: #{pct.round(1)}%;") { }
-        end
-      end
+      span(
+        class: "proc-square #{fill_class}",
+        title: "Core #{core_index}: #{pct.round(1)}%",
+      ) { }
     end
   end
 
@@ -491,6 +499,35 @@ module ProcessDashboard
     end
   end
 
+  # The journal query behind the severity chart is the expensive part
+  # of the fragment, and the process view polls every few seconds: the
+  # entries are cached briefly so polls stay cheap while the chart
+  # still moves.
+  CHART_ENTRY_TTL = 60.seconds
+
+  private CHART_CACHE_LOCK = Mutex.new
+  private CHART_CACHE      = {} of String => {entries: Array(Journalctl::LogEntry), at: Time}
+
+  # Severity buckets over the dashboard's default window, matching the
+  # combo chart in the log stream and the server dashboard.
+  private def self.chart_data : Tuple(Array(Grafito::MetricsStore::MetricPoint), Array(Timeline::TimelinePoint))
+    history = Grafito.metrics_store.try(&.history(Dashboard::DEFAULT_DASHBOARD_SINCE)) ||
+              [] of Grafito::MetricsStore::MetricPoint
+    buckets = Dashboard.severity_buckets(cached_journal_entries, history)
+    {history, buckets}
+  end
+
+  private def self.cached_journal_entries : Array(Journalctl::LogEntry)
+    key = "-6h"
+    CHART_CACHE_LOCK.synchronize do
+      cached = CHART_CACHE[key]?
+      return cached[:entries] if cached && (Time.local - cached[:at]) < CHART_ENTRY_TTL
+      entries = Dashboard.dashboard_journal_entries(key)
+      CHART_CACHE[key] = {entries: entries, at: Time.local}
+      entries
+    end
+  end
+
   # Route helpers of the enclosing Grafito module, re-exposed here so
   # the route bodies below can use them verbatim.
   private def self.optional_query_param(env : HTTP::Server::Context, key : String) : String?
@@ -505,6 +542,7 @@ module ProcessDashboard
   # filter parameters, used by the kill endpoints so the table does not
   # jump back to the default ordering.
   private def self.render_process_fragment(env : HTTP::Server::Context) : String
+    history, buckets = chart_data
     ProcessDashboard.render_html(
       ProcessStatus.snapshot,
       Grafito.enable_actions?,
@@ -512,6 +550,8 @@ module ProcessDashboard
       optional_query_param(env, "sort_order"),
       optional_query_param(env, "filter"),
       optional_query_param(env, "limit"),
+      history,
+      buckets,
     )
   end
 
@@ -535,6 +575,7 @@ module ProcessDashboard
         next "Process view is disabled."
       end
       env.response.content_type = "text/html"
+      history, buckets = chart_data
       ProcessDashboard.render_html(
         ProcessStatus.snapshot,
         Grafito.enable_actions?,
@@ -542,6 +583,8 @@ module ProcessDashboard
         optional_query_param(env, "sort_order"),
         optional_query_param(env, "filter"),
         optional_query_param(env, "limit"),
+        history,
+        buckets,
       )
     end
 

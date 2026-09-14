@@ -2027,44 +2027,47 @@ html[data-ui="mission"] #results table tbody tr:hover {
 #processes-view {
   padding: 0.5rem 0 1rem;
 }
+.proc-history {
+  margin-top: 0.6rem;
+}
+.proc-history svg {
+  width: 100%;
+  height: auto;
+}
+/* The per-core meters live in a fifth summary card, so they must be
+   small enough to share the row with the CPU/Tasks/Memory/Load cards. */
+/* Per-core load cells: a 2-tall grid of solid colored squares inside
+   a summary card (column-major, so core 0/1 stack in the first
+   column). No numbers — the color banding is the signal and each
+   cell's tooltip carries the exact value. */
 .proc-meters {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin: 0.8rem 0 0.4rem;
+  flex-direction: column;
+  gap: 0.35rem;
 }
-.proc-meters-hint {
-  color: var(--muted);
-  font-size: 0.75rem;
+.proc-squares {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0.2rem;
+  justify-content: start;
 }
-.proc-meter {
-  display: flex;
-  align-items: stretch;
-  gap: 0.15rem;
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  color: var(--muted);
+.proc-square {
+  width: 0.62rem;
+  height: 0.62rem;
+  border-radius: 2px;
 }
-.proc-meter-label {
-  align-self: center;
-  min-width: 0.9rem;
-  text-align: right;
+.proc-square-low {
+  background: var(--accent);
+  opacity: 0.55;
 }
-.proc-meter-track {
-  position: relative;
-  width: 0.55rem;
-  height: 1.9rem;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--panel);
-  overflow: hidden;
+.proc-square-mid {
+  background: #d9a13c;
 }
-.proc-meter-track .proc-bar-fill {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+.proc-square-high {
+  background: var(--err, #d9534f);
 }
+
 .proc-toolbar {
   display: flex;
   align-items: center;
