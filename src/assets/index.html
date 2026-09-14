@@ -768,10 +768,11 @@
       // Mutual exclusion, the switcher highlight, URL persistence and
       // restore, and the on-demand fetch are all generic below.
       const VIEWS = {
-        logs: {},
+        logs: { minimap: "log" },
         dashboard: {
           element: "dashboard-view",
           endpoint: "dashboard",
+          minimap: "services",
           query: dashboardQueryParams,
           urlState: function (params, view) {
             if (view.dataset.unit) params.set("dash_unit", view.dataset.unit);
@@ -805,10 +806,11 @@
             return true;
           },
         },
-        compose: { element: "compose-view", endpoint: "compose" },
+        compose: { element: "compose-view", endpoint: "compose", minimap: null },
         processes: {
           element: "processes-view",
           endpoint: "processes",
+          minimap: null,
           query: processesQueryParams,
           urlState: function (params, view) {
             if (view.dataset.sortBy) {
@@ -867,6 +869,15 @@
           });
       }
 
+      // The rail's content differs per view (log severities, unit
+      // states); views without a minimap hide the rail entirely so no
+      // stale ticks from another view linger there.
+      function updateMinimapForView(view) {
+        const config = VIEWS[view] || {};
+        document.body.classList.toggle("minimap-hidden", !config.minimap);
+        if (config.minimap === "log") restoreLogsMinimap();
+      }
+
       // The one function every caller uses to show or hide a view.
       // Opening a view hides every other one; closing the last open
       // view returns to the log stream.
@@ -886,10 +897,10 @@
           if (open === "logs") {
             results.hidden = false;
             delete document.body.dataset.view;
-            restoreLogsMinimap();
           } else {
             document.body.dataset.view = open;
           }
+          updateMinimapForView(open);
           updateViewSwitcher();
           if (!options.skipUrlUpdate) updateBrowserURL();
           return;
@@ -909,6 +920,7 @@
         } else {
           document.body.dataset.view = view;
         }
+        updateMinimapForView(view);
         updateViewSwitcher();
         if (!options.skipUrlUpdate) updateBrowserURL();
         if (config.endpoint) {

@@ -1044,6 +1044,11 @@ tr.priority-7 {
   border-left: 1px solid var(--line);
   width: 34px;
 }
+/* Views without a minimap of their own (processes, compose) hide the
+   rail so stale ticks from the log stream don't linger there. */
+body.minimap-hidden #minimap {
+  display: none !important;
+}
 #minimap-top {
   width: 26px;
   height: 26px;
