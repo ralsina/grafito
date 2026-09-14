@@ -1955,8 +1955,11 @@ html[data-ui="mission"] #results table tbody tr:hover {
   white-space: nowrap;
 }
 .proc-table .proc-cmd {
-  white-space: normal;
-  word-break: break-all;
+  /* One line per process, like htop: the full command line lives in
+     the cell's title tooltip and in the detail panel. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   max-width: 34rem;
 }
 .proc-pid {
