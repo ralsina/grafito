@@ -864,15 +864,15 @@ body[data-view="dashboard"] #stats-strip {
 }
 #results svg .tl-err {
   fill: var(--err);
-  opacity: 0.9;
+  opacity: 1;
 }
 #results svg .tl-warn {
   fill: var(--warn);
-  opacity: 0.85;
+  opacity: 1;
 }
 #results svg .tl-info {
   fill: var(--info);
-  opacity: 0.45;
+  opacity: 0.8;
 }
 #results svg .tl-err:hover,
 #results svg .tl-warn:hover,
