@@ -136,6 +136,31 @@ small history chart of memory and disk usage.
 Set `GRAFITO_DASHBOARD=false` (or `--dashboard=false`) to disable the
 dashboard, its endpoints and the sampler completely.
 
+### Docker Compose View
+
+The third view, next to the log stream and the dashboard: click the
+**Compose** button in the top bar (or open `/compose`) to see your
+Docker Compose stacks, the services inside each one, and their health.
+
+* **Stacks and services**: each stack shows its status (from
+  `docker compose ls`) and a table of its containers with state,
+  healthcheck verdict, image and ports (from `docker ps` and the
+  compose labels, so stacks are found even without config files on
+  disk).
+* **Stack actions** (opt-in, auth required, same gate as unit
+  actions): up (`docker compose up -d`), stop, restart, and
+  **update** (pull images, then `up -d`). These run as background jobs
+  and their output streams into the view live, like Dockge.
+* **Service actions** (opt-in, auth required): start/stop/restart a
+  single service via `docker compose`.
+* **Service logs**: a pollable log tail per service, right in the
+  sidebar's Detail tab, via `docker compose logs`.
+* **compose.yaml view**: a read-only view of the stack's compose file.
+
+Set `GRAFITO_COMPOSE=false` (or `--compose=false`) to disable the
+compose view and its endpoints completely. Docker must be installed on
+the host running Grafito for anything to show up.
+
 ### Timezone Configuration
 
 Grafito displays timestamps in your local timezone by default, but you can configure it to use any timezone you prefer. This solves the issue of having to mentally convert UTC timestamps to your local time.

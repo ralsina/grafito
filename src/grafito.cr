@@ -15,6 +15,14 @@ require "./timeline"
 require "./system_status"
 require "./metrics_store"
 require "./dashboard"
+require "./compose_status"
+require "./compose_dashboard"
+require "./compose_jobs"
+
+{% if flag?(:fake_journal) %}
+  require "./fake_compose_data"
+{% end %}
+
 require "./gotify/config"
 require "./gotify/client"
 require "./gotify/rules"
@@ -65,6 +73,10 @@ module Grafito
   # Server dashboard - when enabled, /status, /status/history and
   # /dashboard are served and the metrics sampler runs.
   class_property? dashboard_enabled : Bool = true
+
+  # Compose view - when enabled, the /compose* routes are served and
+  # the Compose toggle appears in the frontend.
+  class_property? compose_enabled : Bool = true
 
   # Metrics sampler, nil when the dashboard is disabled (and in specs).
   class_property metrics_store : MetricsStore? = nil
@@ -857,7 +869,279 @@ module Grafito
       end
       render_dashboard_fragment
     end
+    # ## The compose view endpoints
+    #
+    # A third view, next to the log viewer and the dashboard: the
+    # Docker Compose stacks on this machine, their services, and
+    # (gated by --enable-actions like unit actions) lifecycle buttons.
+    # `GET /compose` returns the HTMX fragment the frontend polls;
+    # the other endpoints feed the sidebar Detail tab and the action
+    # buttons.
+    get route_path("compose") do |env|
+      unless Grafito.compose_enabled?
+        env.response.status_code = 404
+        next "Compose view is disabled."
+      end
+      env.response.content_type = "text/html"
+      ComposeDashboard.render_html(ComposeStatus.stacks, Grafito.enable_actions?)
+    end
+
+    # Sidebar Detail-tab fragment for one service of one stack.
+    get route_path("compose-details") do |env|
+      unless Grafito.compose_enabled?
+        env.response.status_code = 404
+        next "Compose view is disabled."
+      end
+      stack_name = optional_query_param(env, "stack")
+      service_name = optional_query_param(env, "service")
+      unless valid_compose_name?(stack_name) && valid_compose_name?(service_name)
+        halt env, status_code: 400, response: "Missing or invalid stack/service name."
+      end
+
+      compose_service = ComposeStatus.find_service(stack_name.to_s, service_name.to_s)
+      unless compose_service
+        env.response.status_code = 404
+        next "Service '#{HTML.escape(service_name.to_s)}' of stack '#{HTML.escape(stack_name.to_s)}' not found."
+      end
+      env.response.content_type = "text/html"
+      ComposeDashboard.service_details_fragment(compose_service, Grafito.enable_actions?)
+    end
+
+    # Read-only compose.yaml view for one stack, shown in the Detail
+    # tab. The path comes from the `docker compose ls` whitelist, so
+    # the endpoint can only read files docker itself reported.
+    get route_path("compose-yaml") do |env|
+      unless Grafito.compose_enabled?
+        env.response.status_code = 404
+        next "Compose view is disabled."
+      end
+      stack_name = optional_query_param(env, "stack")
+      unless valid_compose_name?(stack_name)
+        halt env, status_code: 400, response: "Missing or invalid stack name."
+      end
+
+      compose_stack = ComposeStatus.find_stack(stack_name.to_s)
+      unless compose_stack
+        env.response.status_code = 404
+        next "Stack '#{HTML.escape(stack_name.to_s)}' not found."
+      end
+      unless compose_stack.actionable?
+        env.response.content_type = "text/html"
+        next ComposeDashboard.action_error_fragment("View", compose_stack.name, "The compose file for this stack is not known (config files missing).")
+      end
+
+      content = compose_yaml_content(compose_stack)
+      env.response.content_type = "text/html"
+      ComposeDashboard.yaml_fragment(compose_stack.name, content)
+    end
+
+    # Recent log tail for one service, via `docker compose logs`.
+    # Pollable: the fragment re-requests itself every few seconds
+    # while the panel is open.
+    get route_path("compose-logs") do |env|
+      unless Grafito.compose_enabled?
+        env.response.status_code = 404
+        next "Compose view is disabled."
+      end
+      stack_name = optional_query_param(env, "stack")
+      service_name = optional_query_param(env, "service")
+      tail = optional_query_param(env, "tail").try(&.to_i?) || 200
+      tail = tail.clamp(1, 5000)
+      unless valid_compose_name?(stack_name) && valid_compose_name?(service_name)
+        halt env, status_code: 400, response: "Missing or invalid stack/service name."
+      end
+
+      compose_stack = ComposeStatus.find_stack(stack_name.to_s)
+      unless compose_stack
+        env.response.status_code = 404
+        next "Stack '#{HTML.escape(stack_name.to_s)}' not found."
+      end
+      compose_service = compose_stack.services.find(&.service.==(service_name))
+      unless compose_service
+        env.response.status_code = 404
+        next "Service '#{HTML.escape(service_name.to_s)}' of stack '#{HTML.escape(stack_name.to_s)}' not found."
+      end
+
+      args = compose_command_prefix(compose_stack) + ["logs", "--no-color", "--tail", tail.to_s, compose_service.service]
+      content = ComposeStatus.run_docker(args)
+      env.response.content_type = "text/html"
+      ComposeDashboard.logs_fragment(compose_service.stack, compose_service.service, content)
+    end
+
+    # Stack-level actions (up, stop, restart, image update). These run
+    # as background jobs so their output streams into the stack's
+    # output area; the POST answers with the job's polling fragment.
+    post route_path("compose-stack/:stack/:action") do |env|
+      unless compose_actions_allowed?
+        env.response.status_code = 403
+        next "Compose actions are disabled. Start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS) to allow them."
+      end
+
+      stack_name = env.params.url["stack"]
+      action = env.params.url["action"]
+      unless {"up", "stop", "restart", "update"}.includes?(action)
+        env.response.status_code = 400
+        next "Invalid action '#{HTML.escape(action)}'."
+      end
+      unless valid_compose_name?(stack_name)
+        env.response.status_code = 400
+        next "Invalid stack name."
+      end
+
+      compose_stack = ComposeStatus.find_stack(stack_name)
+      unless compose_stack
+        env.response.status_code = 404
+        next "Stack '#{HTML.escape(stack_name)}' not found."
+      end
+      unless compose_stack.actionable?
+        env.response.status_code = 409
+        next "The compose file for stack '#{HTML.escape(stack_name)}' is not known; cannot operate on it."
+      end
+
+      commands = case action
+                 when "up"
+                   [compose_command_prefix(compose_stack) + ["up", "-d"]]
+                 when "stop"
+                   [compose_command_prefix(compose_stack) + ["stop"]]
+                 when "restart"
+                   [compose_command_prefix(compose_stack) + ["restart"]]
+                 else # update: pull images, then bring the stack back up
+                   [
+                     compose_command_prefix(compose_stack) + ["pull"],
+                     compose_command_prefix(compose_stack) + ["up", "-d"],
+                   ]
+                 end
+      job_id = ComposeJobs.start("#{action} #{compose_stack.name}", commands)
+      env.response.content_type = "text/html"
+      job = ComposeJobs.find(job_id)
+      if job
+        ComposeDashboard.output_fragment(job, "compose-output-#{compose_stack.name}")
+      else
+        env.response.status_code = 500
+        "Failed to start compose job."
+      end
+    end
+
+    # Service-level actions (start, stop, restart), quick enough to run
+    # synchronously like the unit actions. Answers with the refreshed
+    # view, or the refreshed panel for from=panel requests.
+    post route_path("compose-service/:stack/:service/:action") do |env|
+      unless compose_actions_allowed?
+        env.response.status_code = 403
+        next "Compose actions are disabled. Start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS) to allow them."
+      end
+
+      stack_name = env.params.url["stack"]
+      service_name = env.params.url["service"]
+      action = env.params.url["action"]
+      unless {"start", "stop", "restart"}.includes?(action)
+        env.response.status_code = 400
+        next "Invalid action '#{HTML.escape(action)}'."
+      end
+      unless valid_compose_name?(stack_name) && valid_compose_name?(service_name)
+        env.response.status_code = 400
+        next "Invalid stack or service name."
+      end
+
+      compose_service = ComposeStatus.find_service(stack_name, service_name)
+      unless compose_service
+        env.response.status_code = 404
+        next "Service '#{HTML.escape(service_name)}' of stack '#{HTML.escape(stack_name)}' not found."
+      end
+      compose_stack = ComposeStatus.find_stack(stack_name)
+      unless compose_stack
+        env.response.status_code = 404
+        next "Stack '#{HTML.escape(stack_name)}' not found."
+      end
+      unless compose_stack.actionable?
+        env.response.status_code = 409
+        next "The compose file for stack '#{HTML.escape(stack_name)}' is not known; cannot operate on it."
+      end
+
+      args = compose_command_prefix(compose_stack) + [action, compose_service.service]
+      stdout = IO::Memory.new
+      stderr = IO::Memory.new
+      result = Process.run(args[0], args: args[1..], output: stdout, error: stderr)
+      unless result.normal_exit?
+        from_panel = optional_query_param(env, "from") == "panel"
+        message = stderr.to_s.strip
+        message = "docker compose #{action} #{compose_service.service} failed." if message.empty?
+        Log.error { "docker compose #{action} #{compose_service.service} failed: #{message[0..200]}" }
+        if from_panel
+          env.response.status_code = 200
+          env.response.content_type = "text/html"
+          next ComposeDashboard.action_error_fragment(action, "#{compose_service.stack}/#{compose_service.service}", message)
+        end
+        env.response.status_code = 500
+        next HTML.escape(message)
+      end
+
+      Log.info { "docker compose #{action} #{compose_service.service} (stack #{compose_service.stack}) succeeded" }
+      env.response.content_type = "text/html"
+      if optional_query_param(env, "from") == "panel"
+        refreshed = ComposeStatus.find_service(stack_name, service_name)
+        if refreshed
+          next ComposeDashboard.service_details_fragment(refreshed, Grafito.enable_actions?)
+        end
+      end
+      ComposeDashboard.render_html(ComposeStatus.stacks, Grafito.enable_actions?)
+    end
+
+    # Polling fragment for a compose job's output. The anchor id keeps
+    # the output area's DOM id stable across polls so htmx keeps
+    # replacing the same node until the job finishes.
+    get route_path("compose-output/:job") do |env|
+      unless Grafito.compose_enabled?
+        env.response.status_code = 404
+        next "Compose view is disabled."
+      end
+      job = ComposeJobs.find(env.params.url["job"])
+      unless job
+        env.response.status_code = 404
+        next "Unknown compose job."
+      end
+      anchor = optional_query_param(env, "anchor")
+      anchor = "compose-output" if anchor.nil? || anchor.empty? || !anchor.matches?(/^[\w-]+$/)
+      env.response.content_type = "text/html"
+      ComposeDashboard.output_fragment(job, anchor)
+    end
   end # register_routes
+
+  # The compose.yaml text for one stack. Demo builds have no real files
+  # behind the fake stacks, so they serve generated content instead.
+  private def self.compose_yaml_content(compose_stack : ComposeStatus::Stack) : String
+    {% if flag?(:fake_journal) %}
+      FakeComposeData.compose_yaml(compose_stack.name)
+    {% else %}
+      begin
+        File.read(compose_stack.config_files.first)
+      rescue ex
+        Log.warn(exception: ex) { "Failed to read #{compose_stack.config_files.first}" }
+        ""
+      end
+    {% end %}
+  end
+
+  # True when compose action endpoints may touch docker: the compose
+  # view enabled, actions explicitly enabled, and authentication
+  # configured (the same gate as the unit action endpoint).
+  private def self.compose_actions_allowed? : Bool
+    Grafito.compose_enabled? && Grafito.enable_actions? && Grafito.auth_configured?
+  end
+
+  # Whitelist for stack and service names coming from URLs: docker
+  # compose names are alphanumeric with dashes, underscores and dots.
+  private def self.valid_compose_name?(name : String?) : Bool
+    return false unless name
+    !name.empty? && !name.starts_with?('.') && name.matches?(/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/)
+  end
+
+  # The `docker compose -f <files>` prefix shared by every compose
+  # command. Config files come from the `docker compose ls` snapshot,
+  # never from user input.
+  private def self.compose_command_prefix(compose_stack : ComposeStatus::Stack) : Array(String)
+    ["docker", "compose"] + compose_stack.config_files.flat_map { |config_file| ["-f", config_file] }
+  end
 
   # Counts journal entries at priority <= 3 (error or worse) for one
   # unit since the given relative time. Bounded like the dashboard's

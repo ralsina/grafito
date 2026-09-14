@@ -112,6 +112,21 @@
           <span class="topbar-tool-label" id="dashboard-toggle-label">Dashboard</span>
         </button>
 
+        <!-- Compose view toggle: switches to the Docker Compose stacks
+             view, the third view next to the log stream and the
+             dashboard. -->
+        <button
+          id="compose-toggle"
+          class="topbar-tool"
+          aria-pressed="false"
+          aria-label="Toggle Docker Compose view"
+          title="Toggle the Docker Compose view (stacks, services, actions)"
+          onclick="toggleCompose()"
+        >
+          <span class="material-icons" id="compose-toggle-icon" aria-hidden="true">layers</span>
+          <span class="topbar-tool-label" id="compose-toggle-label">Compose</span>
+        </button>
+
         <!-- Service filter for the dashboard view, styled like the log
              omnibox. Lives outside the swapped fragment so its value
              survives auto-refreshes; requests include the dashboard
@@ -501,6 +516,19 @@
           hidden
           hx-get="dashboard"
           hx-trigger="every 30s[!document.getElementById('dashboard-view').hidden]"
+          hx-target="this"
+          hx-swap="innerHTML"
+        ></div>
+
+        <!-- Docker Compose view (toggled by the Compose button). Same
+             polling pattern as the dashboard, except a running compose
+             job pauses the poll so it doesn't wipe the job output
+             being streamed into the view. -->
+        <div
+          id="compose-view"
+          hidden
+          hx-get="compose"
+          hx-trigger="every 30s[!document.getElementById('compose-view').hidden && !document.querySelector('#compose-view .compose-output[data-job-running=true]')]"
           hx-target="this"
           hx-swap="innerHTML"
         ></div>
@@ -1090,10 +1118,13 @@
           }
         });
 
-        // --- Restore Dashboard View from URL Parameters ---
+        // --- Restore Dashboard / Compose View from URL Parameters ---
         // A reload (or shared link) with view=dashboard reopens the
-        // dashboard with its filter, time window and sort.
-        if (params.get("view") === "dashboard") {
+        // dashboard with its filter, time window and sort; view=compose
+        // reopens the compose view.
+        if (params.get("view") === "compose") {
+          setComposeVisible(true);
+        } else if (params.get("view") === "dashboard") {
           const dashboardView = document.getElementById("dashboard-view");
           const dashboardFilter = document.getElementById(
             "dashboard-unit-filter"
@@ -1460,8 +1491,12 @@
 
       function updateBrowserURL() {
         const params = buildFilterURLSearchParams();
-        // Persist the dashboard view and its state so reloads and
-        // shared links land back on the dashboard as it was.
+        // Persist the active view and its state so reloads and
+        // shared links land back where the user was.
+        const composeView = document.getElementById("compose-view");
+        if (composeView && !composeView.hidden) {
+          params.set("view", "compose");
+        }
         const dashboardView = document.getElementById("dashboard-view");
         if (dashboardView && !dashboardView.hidden) {
           params.set("view", "dashboard");
@@ -1547,9 +1582,13 @@
       }
 
       function setUnitFilterAndTrigger(unitName) {
-        // Coming from the dashboard (unit table link or the sidebar's
-        // "view logs" call): switch back to the log stream and close
-        // the sidebar, which has served its purpose.
+        // Coming from the dashboard or the compose view (a table link or
+        // the sidebar's "view logs" call): switch back to the log stream
+        // and close the sidebar, which has served its purpose.
+        const composeView = document.getElementById("compose-view");
+        if (composeView && !composeView.hidden) {
+          setComposeVisible(false);
+        }
         if (document.getElementById("dashboard-view") &&
             !document.getElementById("dashboard-view").hidden) {
           setDashboardVisible(false);
@@ -1577,6 +1616,10 @@
         if (!dashboardView || !results || !toggleButton) return;
         dashboardView.hidden = !visible;
         results.hidden = visible;
+        // The views are mutually exclusive: showing one hides the
+        // other(s).
+        const composeView = document.getElementById("compose-view");
+        if (composeView && visible) setComposeVisible(false, {skipUrlUpdate: true});
         toggleButton.setAttribute("aria-pressed", visible ? "true" : "false");
         // The button shows the view it switches TO, not the current one.
         const icon = document.getElementById("dashboard-toggle-icon");
@@ -1590,7 +1633,7 @@
         // stats strip and the minimap only make sense in log view.
         if (visible) {
           document.body.dataset.view = "dashboard";
-        } else {
+        } else if (!composeView || composeView.hidden) {
           delete document.body.dataset.view;
           restoreLogsMinimap();
         }
@@ -1610,6 +1653,59 @@
         const dashboardView = document.getElementById("dashboard-view");
         if (dashboardView) {
           setDashboardVisible(dashboardView.hidden);
+        }
+      }
+
+      // --- COMPOSE TOGGLE ---
+      // Shows the Docker Compose view instead of the log stream (or the
+      // dashboard). Same pattern as the dashboard: the view polls
+      // /compose every 30s only while visible; the initial content is
+      // fetched on demand when it is opened. `options.skipUrlUpdate`
+      // lets the dashboard toggle call this without clobbering the URL
+      // state it is about to write itself.
+      function setComposeVisible(visible, options) {
+        const composeView = document.getElementById("compose-view");
+        const results = document.getElementById("results");
+        const toggleButton = document.getElementById("compose-toggle");
+        if (!composeView || !results || !toggleButton) return;
+        // Close the dashboard FIRST: it also manages #results' hidden
+        // state, so doing it after would un-hide the log stream over
+        // the compose view.
+        const dashboardView = document.getElementById("dashboard-view");
+        if (dashboardView && visible) {
+          setDashboardVisible(false);
+        }
+        composeView.hidden = !visible;
+        results.hidden = visible;
+        toggleButton.setAttribute("aria-pressed", visible ? "true" : "false");
+        const icon = document.getElementById("compose-toggle-icon");
+        const label = document.getElementById("compose-toggle-label");
+        if (icon) icon.textContent = visible ? "receipt_long" : "layers";
+        if (label) label.textContent = visible ? "Logs" : "Compose";
+        toggleButton.title = visible
+          ? "Back to the log stream"
+          : "Toggle the Docker Compose view (stacks, services, actions)";
+        if (visible) {
+          document.body.dataset.view = "compose";
+        } else if (!dashboardView || dashboardView.hidden) {
+          delete document.body.dataset.view;
+          restoreLogsMinimap();
+        }
+        if (!(options && options.skipUrlUpdate)) {
+          updateBrowserURL();
+        }
+        if (visible) {
+          htmx.ajax("GET", buildUrl("compose"), {
+            target: "#compose-view",
+            swap: "innerHTML",
+          });
+        }
+      }
+
+      function toggleCompose() {
+        const composeView = document.getElementById("compose-view");
+        if (composeView) {
+          setComposeVisible(composeView.hidden);
         }
       }
 

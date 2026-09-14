@@ -610,7 +610,20 @@ body[data-view="dashboard"] #clear-filters-btn,
 body[data-view="dashboard"] #copy-link-button,
 body[data-view="dashboard"] #export-logs-button,
 body[data-view="dashboard"] .live-toggle,
-body[data-view="dashboard"] #stats-strip {
+body[data-view="dashboard"] #stats-strip,
+/* The compose view is as log-agnostic as the dashboard, and the
+   dashboard's service filter is meaningless here too. */
+body[data-view="compose"] #search-omnibox,
+body[data-view="compose"] #time-range-filter,
+body[data-view="compose"] #priority-filter,
+body[data-view="compose"] #filter-panel,
+body[data-view="compose"] #show-command-button,
+body[data-view="compose"] #clear-filters-btn,
+body[data-view="compose"] #copy-link-button,
+body[data-view="compose"] #export-logs-button,
+body[data-view="compose"] .live-toggle,
+body[data-view="compose"] #stats-strip,
+body[data-view="compose"] #dashboard-filter-box {
   display: none !important;
 }
 /* In dashboard view the minimap rail stays: it shows the services
@@ -1061,7 +1074,8 @@ tr.priority-7 {
 }
 .hover-action-cell .round-button,
 .dashboard-action-cell .round-button,
-.service-panel-actions .round-button {
+.service-panel-actions .round-button,
+.compose-stack-actions .round-button {
   width: 1.7rem;
   height: 1.7rem;
   border-radius: 6px;
@@ -1077,18 +1091,21 @@ tr.priority-7 {
 }
 html[data-ui="fieldnotes"] .hover-action-cell .round-button,
 html[data-ui="fieldnotes"] .dashboard-action-cell .round-button,
-html[data-ui="fieldnotes"] .service-panel-actions .round-button {
+html[data-ui="fieldnotes"] .service-panel-actions .round-button,
+html[data-ui="fieldnotes"] .compose-stack-actions .round-button {
   border-radius: 999px;
 }
 .hover-action-cell .round-button:hover,
 .dashboard-action-cell .round-button:hover,
-.service-panel-actions .round-button:hover {
+.service-panel-actions .round-button:hover,
+.compose-stack-actions .round-button:hover {
   color: var(--accent);
   border-color: var(--accent);
 }
 .hover-action-cell .material-icons,
 .dashboard-action-cell .material-icons,
-.service-panel-actions .material-icons {
+.service-panel-actions .material-icons,
+.compose-stack-actions .material-icons {
   font-size: 0.9rem;
 }
 
@@ -1863,4 +1880,68 @@ html[data-ui="mission"] #results table tbody tr:hover {
 }
 #search-omnibox .af-chip-x:hover {
   color: var(--err);
+}
+
+/* --- Compose view --- */
+#compose-view {
+  padding: 0.5rem 1.25rem 1rem;
+}
+.compose-empty {
+  text-align: center;
+  padding: 2em;
+  color: var(--muted);
+}
+.compose-stack {
+  margin-bottom: 1.25em;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.4rem 1rem 0.8rem;
+}
+/* The tables run edge-to-edge inside the card; give their rows the
+   card's own background so stripes don't fight the card surface. */
+.compose-stack .dashboard-units {
+  background: transparent;
+}
+.compose-stack .dashboard-units th {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.compose-stack-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.compose-stack-header h3 {
+  margin: 0.4em 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.compose-stack-actions {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+/* Live output of a stack-level compose job (up, stop, update...). */
+.compose-output {
+  margin: 0.4em 0 0.8em;
+}
+.compose-output-lines,
+.compose-yaml,
+.compose-logs pre {
+  max-height: 18rem;
+  overflow: auto;
+  font-size: 0.72rem;
+  margin: 0.3em 0;
+  padding: 0.6em;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
+  white-space: pre;
+}
+.compose-yaml {
+  max-height: 32rem;
 }
