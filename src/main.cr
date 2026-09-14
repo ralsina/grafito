@@ -75,6 +75,7 @@ DOC = <<-DOCOPT
     --user                       Enable user systemd mode (use journalctl --user and systemctl --user) [default: false].
     --dashboard=BOOL             Enable the server dashboard and metrics sampler (true/false) [default: true].
     --compose=BOOL               Enable the Docker Compose view (true/false) [default: true].
+    --processes=BOOL             Enable the process monitor view (true/false) [default: true].
     --data-dir=PATH              Directory for dashboard metrics history [default: /var/lib/grafito].
     --sample-interval-sec=N      Dashboard metrics sampling interval in seconds [default: 30].
     --retention-days=N           Days of dashboard metrics history to keep [default: 7].
@@ -92,6 +93,7 @@ DOC = <<-DOCOPT
     GRAFITO_USER_MODE            Enable user systemd mode (true/false) [default: false].
     GRAFITO_DASHBOARD            Enable the server dashboard (true/false) [default: true].
     GRAFITO_COMPOSE              Enable the Docker Compose view (true/false) [default: true].
+    GRAFITO_PROCESSES            Enable the process monitor view (true/false) [default: true].
     GRAFITO_DATA_DIR             Directory for dashboard metrics history [default: /var/lib/grafito].
     GRAFITO_SAMPLE_INTERVAL_SEC  Dashboard metrics sampling interval in seconds [default: 30].
     GRAFITO_RETENTION_DAYS       Days of dashboard metrics history to keep [default: 7].
@@ -190,6 +192,11 @@ def main
   # --enable-actions + authentication gate as the dashboard's.
   Grafito.compose_enabled = args["--compose"].to_s != "false"
   Grafito::Log.info { "Compose view: #{Grafito.compose_enabled? ? "enabled" : "disabled"}" }
+
+  # Parse process view configuration. Its kill actions go through the
+  # same --enable-actions + authentication gate as the dashboard's.
+  Grafito.processes_enabled = args["--processes"].to_s != "false"
+  Grafito::Log.info { "Process view: #{Grafito.processes_enabled? ? "enabled" : "disabled"}" }
 
   # Register all Kemal routes (must be done after base_path is set)
   Grafito.register_routes

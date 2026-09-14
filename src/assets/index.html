@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="style.min.css" />
     <title>Grafito Log Viewer</title>
     <script src="htmx.org@1.9.10.js" defer></script>
+    <script src="idiomorph-ext.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
   </head>
   <body
@@ -127,6 +128,18 @@
           <span class="topbar-tool-label" id="compose-toggle-label">Compose</span>
         </button>
 
+        <button
+          id="processes-toggle"
+          class="topbar-tool"
+          aria-pressed="false"
+          aria-label="Toggle process monitor"
+          title="Toggle the process monitor (htop on a page)"
+          onclick="toggleProcesses()"
+        >
+          <span class="material-icons" id="processes-toggle-icon" aria-hidden="true">memory</span>
+          <span class="topbar-tool-label" id="processes-toggle-label">Processes</span>
+        </button>
+
         <!-- Service filter for the dashboard view, styled like the log
              omnibox. Lives outside the swapped fragment so its value
              survives auto-refreshes; requests include the dashboard
@@ -148,6 +161,27 @@
             hx-swap="innerHTML"
           />
           <kbd>units</kbd>
+        </div>
+
+        <!-- Process filter, same survival strategy as the service
+             filter: lives in the topbar, feeds the fragment. -->
+        <div class="omnibox" id="processes-filter-box">
+          <span class="omnibox-glyph" aria-hidden="true">⌕</span>
+          <input
+            type="search"
+            id="process-filter"
+            name="filter"
+            placeholder="Filter processes…"
+            title="Filter processes by user, pid or command"
+            aria-label="Filter processes"
+            autocomplete="off"
+            hx-get="processes"
+            hx-trigger="input changed delay:400ms"
+            hx-target="#processes-view"
+            hx-include="#processes-view form"
+            hx-swap="innerHTML"
+          />
+          <kbd>proc</kbd>
         </div>
 
         <div class="omnibox" id="search-omnibox">
@@ -531,6 +565,18 @@
           hx-trigger="every 30s[!document.getElementById('compose-view').hidden && !document.querySelector('#compose-view .compose-output[data-job-running=true]')]"
           hx-target="this"
           hx-swap="innerHTML"
+        ></div>
+
+        <!-- Process monitor (toggled by the Processes button). htop on
+             a page: polled every 3 seconds while visible. -->
+        <div
+          id="processes-view"
+          hidden
+          hx-get="processes"
+          hx-trigger="every 5s[!document.getElementById('processes-view').hidden]"
+          hx-include="#processes-view form"
+          hx-target="this"
+          hx-swap="morph:innerHTML"
         ></div>
       </main>
 
@@ -1147,6 +1193,28 @@
           }
         }
 
+        // A reload (or shared link) with view=processes reopens the
+        // process monitor with its sort and filter.
+        if (params.get("view") === "processes") {
+          const processesView = document.getElementById("processes-view");
+          const processFilter = document.getElementById("process-filter");
+          if (processesView) {
+            const procSortBy = params.get("proc_sort_by");
+            if (procSortBy) {
+              processesView.dataset.sortBy = procSortBy;
+              processesView.dataset.sortOrder =
+                params.get("proc_sort_order") || "desc";
+            }
+            if (processFilter && params.get("proc_filter")) {
+              processFilter.value = params.get("proc_filter");
+            }
+            if (params.get("proc_limit") === "all") {
+              processesView.dataset.showAll = "1";
+            }
+            setProcessesVisible(true);
+          }
+        }
+
         // Clear All Filters Button Functionality
         const clearFiltersButton =
           document.getElementById("clear-filters-btn");
@@ -1514,6 +1582,25 @@
             );
           }
         }
+        // Same persistence for the process monitor.
+        const processesView = document.getElementById("processes-view");
+        if (processesView && !processesView.hidden) {
+          params.set("view", "processes");
+          if (processesView.dataset.sortBy) {
+            params.set("proc_sort_by", processesView.dataset.sortBy);
+            params.set(
+              "proc_sort_order",
+              processesView.dataset.sortOrder || "desc"
+            );
+          }
+          if (processesView.dataset.showAll) {
+            params.set("proc_limit", "all");
+          }
+          const processFilter = document.getElementById("process-filter");
+          if (processFilter && processFilter.value.trim()) {
+            params.set("proc_filter", processFilter.value.trim());
+          }
+        }
         renderActiveFilterChips();
 
         let queryString = params.toString();
@@ -1593,6 +1680,10 @@
             !document.getElementById("dashboard-view").hidden) {
           setDashboardVisible(false);
         }
+        if (document.getElementById("processes-view") &&
+            !document.getElementById("processes-view").hidden) {
+          setProcessesVisible(false);
+        }
         if (window.closeLogPanel) {
           closeLogPanel();
         }
@@ -1614,6 +1705,9 @@
         const results = document.getElementById("results");
         const toggleButton = document.getElementById("dashboard-toggle");
         if (!dashboardView || !results || !toggleButton) return;
+        // The views are mutually exclusive: opening the dashboard
+        // closes the process monitor, and vice versa.
+        if (visible) setProcessesVisible(false);
         dashboardView.hidden = !visible;
         results.hidden = visible;
         // The views are mutually exclusive: showing one hides the
@@ -1670,10 +1764,15 @@
         if (!composeView || !results || !toggleButton) return;
         // Close the dashboard FIRST: it also manages #results' hidden
         // state, so doing it after would un-hide the log stream over
-        // the compose view.
+        // the compose view. The process monitor gets the same
+        // treatment: only one main view is open at a time.
         const dashboardView = document.getElementById("dashboard-view");
         if (dashboardView && visible) {
           setDashboardVisible(false);
+        }
+        const processesView = document.getElementById("processes-view");
+        if (processesView && visible && !processesView.hidden) {
+          setProcessesVisible(false);
         }
         composeView.hidden = !visible;
         results.hidden = visible;
@@ -1707,6 +1806,157 @@
         if (composeView) {
           setComposeVisible(composeView.hidden);
         }
+      }
+
+      // --- PROCESS MONITOR TOGGLE ---
+      // htop on a page: shows the process table instead of the log
+      // stream. Polls /processes every 3s only while visible; the
+      // initial content is fetched on demand when it is opened.
+      function setProcessesVisible(visible) {
+        const processesView = document.getElementById("processes-view");
+        const results = document.getElementById("results");
+        const toggleButton = document.getElementById("processes-toggle");
+        if (!processesView || !results || !toggleButton) return;
+        // Mutual exclusion: opening the process monitor closes the
+        // dashboard and the compose view.
+        if (visible) setDashboardVisible(false);
+        const composeView = document.getElementById("compose-view");
+        if (visible && composeView && !composeView.hidden) {
+          setComposeVisible(false);
+        }
+        processesView.hidden = !visible;
+        results.hidden = visible;
+        toggleButton.setAttribute("aria-pressed", visible ? "true" : "false");
+        const icon = document.getElementById("processes-toggle-icon");
+        const label = document.getElementById("processes-toggle-label");
+        if (icon) icon.textContent = visible ? "receipt_long" : "memory";
+        if (label) label.textContent = visible ? "Logs" : "Processes";
+        toggleButton.title = visible
+          ? "Back to the log stream"
+          : "Toggle the process monitor (htop on a page)";
+        if (visible) {
+          document.body.dataset.view = "processes";
+        } else {
+          delete document.body.dataset.view;
+          restoreLogsMinimap();
+        }
+        updateBrowserURL();
+        if (visible) {
+          htmx.ajax("GET", buildUrl("processes") + processesQueryParams(), {
+            target: "#processes-view",
+            swap: "innerHTML",
+          });
+        }
+      }
+
+      function toggleProcesses() {
+        const processesView = document.getElementById("processes-view");
+        if (processesView) {
+          setProcessesVisible(processesView.hidden);
+        }
+      }
+
+      // --- PROCESS TABLE SORTING + FILTER ---
+      // Like the dashboard, the current sort lives in #processes-view's
+      // dataset so the 3s polls and reopening preserve it; the filter
+      // text lives in the topbar input.
+      function processesQueryParams() {
+        const view = document.getElementById("processes-view");
+        if (!view) return "";
+        const params = new URLSearchParams();
+        if (view.dataset.sortBy) params.set("sort_by", view.dataset.sortBy);
+        if (view.dataset.sortOrder)
+          params.set("sort_order", view.dataset.sortOrder);
+        if (view.dataset.showAll) params.set("limit", "all");
+        const filterInput = document.getElementById("process-filter");
+        if (filterInput && filterInput.value.trim()) {
+          params.set("filter", filterInput.value.trim());
+        }
+        const qs = params.toString();
+        return qs ? "?" + qs : "";
+      }
+
+      // Toggle between the capped table (top 100 rows, cheap to poll)
+      // and the full list; the choice rides the URL like the rest of
+      // the process view state.
+      function setProcessLimit(showAll) {
+        const view = document.getElementById("processes-view");
+        if (!view) return false;
+        if (showAll) {
+          view.dataset.showAll = "1";
+        } else {
+          delete view.dataset.showAll;
+        }
+        updateProcessesPollUrl();
+        updateBrowserURL();
+        htmx.ajax(
+          "GET",
+          buildUrl("processes") + processesQueryParams(),
+          { target: "#processes-view", swap: "morph:innerHTML" }
+        );
+        return false;
+      }
+
+      function updateProcessesPollUrl() {
+        const view = document.getElementById("processes-view");
+        if (view) {
+          view.setAttribute(
+            "hx-get",
+            "processes" + processesQueryParams()
+          );
+        }
+      }
+
+      function sortProcesses(sortBy) {
+        const view = document.getElementById("processes-view");
+        if (!view) return;
+        // Flip direction when re-clicking the active column; numeric
+        // columns start descending (biggest first), text columns asc.
+        const textColumns = ["pid", "user", "state", "cmd"];
+        if (view.dataset.sortBy === sortBy) {
+          view.dataset.sortOrder =
+            view.dataset.sortOrder === "asc" ? "desc" : "asc";
+        } else {
+          view.dataset.sortBy = sortBy;
+          view.dataset.sortOrder = textColumns.includes(sortBy)
+            ? "asc"
+            : "desc";
+        }
+        updateProcessesPollUrl();
+        updateBrowserURL();
+        htmx.ajax(
+          "GET",
+          buildUrl("processes") + processesQueryParams(),
+          { target: "#processes-view", swap: "innerHTML" }
+        );
+      }
+
+      // --- PROCESS PANEL: VIEW LOGS ---
+      // From the process detail panel: jump into the journal. A
+      // systemd-managed process filters by its unit; anything else
+      // falls back to a text search for the command name.
+      function setProcessLogsFilter(unitName, commandName) {
+        if (unitName) {
+          return setUnitFilterAndTrigger(unitName);
+        }
+        if (window.closeLogPanel) {
+          closeLogPanel();
+        }
+        if (
+          document.getElementById("processes-view") &&
+          !document.getElementById("processes-view").hidden
+        ) {
+          setProcessesVisible(false);
+        }
+        const searchBox = document.getElementById("search-box");
+        if (searchBox) {
+          searchBox.value = commandName;
+          // initial-load-event refetches the logs with every
+          // .log-filter, including the search box (q=).
+          htmx.trigger(document.body, "initial-load-event", {});
+          updateBrowserURL();
+        }
+        return false;
       }
 
       // --- DASHBOARD SORTING + FILTERS ---

@@ -289,7 +289,8 @@ html[data-ui="fieldnotes"] .grafito-title-link {
 
 /* Omnibox / search (log omnibox + dashboard service filter) */
 #search-omnibox,
-#dashboard-filter-box {
+#dashboard-filter-box,
+#processes-filter-box {
   flex: 1;
   min-width: 220px;
   max-width: 560px;
@@ -304,11 +305,13 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   cursor: text;
 }
 #search-omnibox:not(:focus-within) input,
-#dashboard-filter-box:not(:focus-within) input {
+#dashboard-filter-box:not(:focus-within) input,
+#processes-filter-box:not(:focus-within) input {
   min-width: 12ch;
 }
 #search-omnibox:focus-within,
-#dashboard-filter-box:focus-within {
+#dashboard-filter-box:focus-within,
+#processes-filter-box:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
 }
@@ -317,7 +320,8 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   font-weight: 600;
 }
 #search-omnibox input,
-#dashboard-filter-box input {
+#dashboard-filter-box input,
+#processes-filter-box input {
   flex: 1;
   background: none;
   border: none;
@@ -331,12 +335,14 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   font-size: 0.85rem;
 }
 #search-omnibox input:focus,
-#dashboard-filter-box input:focus {
+#dashboard-filter-box input:focus,
+#processes-filter-box input:focus {
   box-shadow: none;
   border: none;
 }
 #search-omnibox kbd,
-#dashboard-filter-box kbd {
+#dashboard-filter-box kbd,
+#processes-filter-box kbd {
   font-family: var(--font-mono);
   font-size: 0.62rem;
   text-transform: uppercase;
@@ -356,6 +362,19 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   max-width: none;
 }
 body[data-view="dashboard"] #dashboard-filter-box {
+  display: flex;
+}
+
+/* Process filter box: same hide-by-default strategy as the service
+   filter, shown only while the process view is active. */
+#processes-filter-box {
+  display: none;
+  flex: none;
+  width: 260px;
+  min-width: 0;
+  max-width: none;
+}
+body[data-view="processes"] #processes-filter-box {
   display: flex;
 }
 
@@ -623,7 +642,21 @@ body[data-view="compose"] #copy-link-button,
 body[data-view="compose"] #export-logs-button,
 body[data-view="compose"] .live-toggle,
 body[data-view="compose"] #stats-strip,
-body[data-view="compose"] #dashboard-filter-box {
+body[data-view="compose"] #dashboard-filter-box,
+body[data-view="compose"] #processes-filter-box,
+/* Same for the process monitor; its own filter box replaces the
+   service one. */
+body[data-view="processes"] #search-omnibox,
+body[data-view="processes"] #time-range-filter,
+body[data-view="processes"] #priority-filter,
+body[data-view="processes"] #filter-panel,
+body[data-view="processes"] #show-command-button,
+body[data-view="processes"] #clear-filters-btn,
+body[data-view="processes"] #copy-link-button,
+body[data-view="processes"] #export-logs-button,
+body[data-view="processes"] .live-toggle,
+body[data-view="processes"] #stats-strip,
+body[data-view="processes"] #dashboard-filter-box {
   display: none !important;
 }
 /* In dashboard view the minimap rail stays: it shows the services
@@ -1944,4 +1977,171 @@ html[data-ui="mission"] #results table tbody tr:hover {
 }
 .compose-yaml {
   max-height: 32rem;
+}
+
+/* =====================================================================
+   Process monitor (htop on a page)
+   ===================================================================== */
+#processes-view {
+  padding: 0.5rem 0 1rem;
+}
+.proc-meters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.8rem 0 0.4rem;
+}
+.proc-meters-hint {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.proc-meter {
+  display: flex;
+  align-items: stretch;
+  gap: 0.15rem;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--muted);
+}
+.proc-meter-label {
+  align-self: center;
+  min-width: 0.9rem;
+  text-align: right;
+}
+.proc-meter-track {
+  position: relative;
+  width: 0.55rem;
+  height: 1.9rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.proc-meter-track .proc-bar-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+.proc-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.4rem 0;
+}
+.proc-count {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.proc-state-form {
+  display: none;
+}
+/* CPU% cell: a htop-style bar with the number overlaid */
+.proc-table td,
+.proc-table th {
+  white-space: nowrap;
+}
+.proc-table .proc-cmd {
+  /* One line per process, like htop: the full command line lives in
+     the cell's title tooltip and in the detail panel. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 34rem;
+}
+.proc-pid {
+  font-family: var(--font-mono);
+}
+.proc-num,
+.proc-mem {
+  font-family: var(--font-mono);
+  text-align: right;
+}
+.proc-bar {
+  position: relative;
+  min-width: 5.5rem;
+  height: 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+}
+.proc-bar-fill {
+  height: 100%;
+}
+.proc-bar-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--txt);
+}
+.proc-bar-low {
+  background: var(--ok, #4c9f70);
+  opacity: 0.75;
+}
+.proc-bar-mid {
+  background: #d9a13c;
+}
+.proc-bar-high {
+  background: var(--err, #d9534f);
+}
+.proc-state {
+  display: inline-block;
+  min-width: 1.1rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0 0.3rem;
+  color: var(--muted);
+}
+.proc-state-R {
+  color: #4c9f70;
+  border-color: #4c9f70;
+}
+.proc-state-D {
+  color: #d9a13c;
+  border-color: #d9a13c;
+}
+.proc-state-Z,
+.proc-state-T {
+  color: var(--err, #d9534f);
+  border-color: var(--err, #d9534f);
+}
+.proc-zombie td {
+  opacity: 0.55;
+}
+.proc-actions {
+  text-align: right;
+}
+.proc-detail-command {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 8rem;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+}
+/* The process panel has eight info fields (twice the unit panel's),
+   so it wraps into a two-column grid instead of one flex row. */
+.proc-detail-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+}
+.proc-detail-info > div {
+  min-width: 0;
+}
+.proc-detail-info span:last-child {
+  overflow-wrap: break-word;
 }

@@ -18,6 +18,8 @@ require "./dashboard"
 require "./compose_status"
 require "./compose_dashboard"
 require "./compose_jobs"
+require "./process_status"
+require "./process_dashboard"
 
 {% if flag?(:fake_journal) %}
   require "./fake_compose_data"
@@ -77,6 +79,10 @@ module Grafito
   # Compose view - when enabled, the /compose* routes are served and
   # the Compose toggle appears in the frontend.
   class_property? compose_enabled : Bool = true
+
+  # Process view - when enabled, the /processes routes are served and
+  # the Processes toggle appears in the frontend.
+  class_property? processes_enabled : Bool = true
 
   # Metrics sampler, nil when the dashboard is disabled (and in specs).
   class_property metrics_store : MetricsStore? = nil
@@ -1105,6 +1111,190 @@ module Grafito
       env.response.content_type = "text/html"
       ComposeDashboard.output_fragment(job, anchor)
     end
+
+    # ## The `/processes` endpoint
+    #
+    # Returns the process view HTML fragment for HTMX: CPU meters,
+    # summary cards and the process table. The frontend polls it every
+    # 3 seconds. Parameters:
+    # * `sort_by` (pid, user, state, cpu, mem, virt, res, time, cmd) and
+    #   `sort_order` (asc/desc) control the table ordering.
+    # * `filter` matches user, pid or command substring.
+    get route_path("processes") do |env|
+      unless Grafito.processes_enabled?
+        env.response.status_code = 404
+        next "Process view is disabled."
+      end
+      env.response.content_type = "text/html"
+      ProcessDashboard.render_html(
+        ProcessStatus.snapshot,
+        Grafito.enable_actions?,
+        optional_query_param(env, "sort_by"),
+        optional_query_param(env, "sort_order"),
+        optional_query_param(env, "filter"),
+        optional_query_param(env, "limit"),
+      )
+    end
+
+    # ## The `/process-details` endpoint
+    #
+    # Returns the process detail fragment for the right sidebar's Detail
+    # tab: identity, resource usage, full command line, signal actions
+    # (when enabled), an AI explanation button (when a provider is
+    # configured) and a jump into the process's logs.
+    #
+    # Example usage:
+    # ```text
+    # GET /process-details?pid=1234
+    # ```
+    get route_path("process-details") do |env|
+      unless Grafito.processes_enabled?
+        env.response.status_code = 404
+        next "Process view is disabled."
+      end
+
+      pid = optional_query_param(env, "pid").try(&.to_i32?)
+      if pid.nil? || pid <= 0
+        halt env, status_code: 400, response: "Missing or invalid pid."
+      end
+
+      detail = ProcessStatus.detail(pid)
+      unless detail
+        env.response.status_code = 404
+        next "Process #{pid} not found (it may have exited)."
+      end
+
+      env.response.content_type = "text/html"
+      ProcessDashboard.process_details_fragment(detail, Grafito.enable_actions?, !!Grafito.ai_provider)
+    end
+
+    # ## The process action endpoint
+    #
+    # `POST /process/<pid>/<term|kill|stop|cont>` sends a signal to the
+    # named process. Gated exactly like the unit actions:
+    # --enable-actions plus authentication, because killing processes is
+    # the least read-only thing grafito can do. Requests with from=panel
+    # (the sidebar buttons) get the refreshed detail fragment back, or
+    # an error fragment on failure, so the panel always shows the
+    # process's current state.
+    post route_path("process/:pid/:action") do |env|
+      unless Grafito.processes_enabled? && Grafito.enable_actions? && Grafito.auth_configured?
+        env.response.status_code = 403
+        next "Process actions are disabled. Start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS) to allow them."
+      end
+
+      action = env.params.url["action"]
+      signal = case action
+               when "term" then Signal::TERM
+               when "kill" then Signal::KILL
+               when "stop" then Signal::STOP
+               when "cont" then Signal::CONT
+               else
+                 env.response.status_code = 400
+                 next "Invalid action '#{HTML.escape(action)}'."
+               end
+
+      pid = env.params.url["pid"].to_i32?
+      if pid.nil? || pid <= 1 || !File.exists?("/proc/#{pid}")
+        env.response.status_code = 404
+        next "Process '#{HTML.escape(env.params.url["pid"])}' not found."
+      end
+
+      from_panel = optional_query_param(env, "from") == "panel"
+      if ProcessStatus.signal(pid, signal)
+        Log.info { "sent SIG#{action.upcase} to pid #{pid}" }
+        env.response.content_type = "text/html"
+        # Panel requests re-render the panel so it shows the state
+        # after the signal (e.g. T after SIGSTOP); the table catches
+        # up on its next 3s poll.
+        if from_panel && (detail = ProcessStatus.detail(pid))
+          next ProcessDashboard.process_details_fragment(detail, Grafito.enable_actions?, !!Grafito.ai_provider)
+        end
+        render_process_fragment(env)
+      else
+        message = "the kernel refused the signal (permissions, or the process just exited)"
+        Log.error { "signal #{action} to pid #{pid} failed" }
+        if from_panel
+          env.response.status_code = 200
+          env.response.content_type = "text/html"
+          # htmx ignores error statuses, so a success status is needed
+          # to show the failure inside the panel.
+          next ProcessDashboard.process_action_error_fragment(action, pid, message)
+        end
+        env.response.status_code = 500
+        "Failed to signal process #{pid}."
+      end
+    end
+
+    # ## The `/process-explain` endpoint
+    #
+    # `POST /process-explain?pid=<pid>` asks the configured AI provider
+    # to explain what a process is doing, using its /proc details and
+    # recent journal lines mentioning it. Returns an HTML fragment for
+    # the sidebar. 503 when no AI provider is configured, 404 for
+    # unknown processes.
+    post route_path("process-explain") do |env|
+      unless Grafito.processes_enabled?
+        env.response.status_code = 404
+        next "Process view is disabled."
+      end
+
+      provider = Grafito.ai_provider
+      unless provider
+        env.response.content_type = "application/json"
+        env.response.status_code = 503
+        next {error: "AI features are disabled. Configure a provider key to enable explanations."}.to_json
+      end
+
+      pid = optional_query_param(env, "pid").try(&.to_i32?)
+      if pid.nil? || pid <= 0
+        env.response.content_type = "text/html"
+        env.response.status_code = 400
+        next "Missing or invalid pid."
+      end
+
+      detail = ProcessStatus.detail(pid)
+      unless detail
+        env.response.content_type = "text/html"
+        env.response.status_code = 404
+        next "Process #{pid} not found."
+      end
+
+      # Journal lines mentioning the process: its unit when it is
+      # systemd-managed, otherwise a grep for its command name.
+      recent = if detail.systemd_unit?
+                 Journalctl.query(since: "-6h", unit: detail.unit, lines: 100) || [] of Journalctl::LogEntry
+               else
+                 Journalctl.query(since: "-6h", query: detail.comm, lines: 100) || [] of Journalctl::LogEntry
+               end
+
+      report = String.build do |str|
+        str << "Process: #{detail.command} (pid #{detail.pid})\n"
+        str << "User: #{detail.user} (uid #{detail.uid})\n"
+        str << "State: #{detail.state}, threads: #{detail.threads}, parent pid: #{detail.ppid}\n"
+        str << "Started: #{detail.started}\n"
+        str << "CPU (lifetime average): #{detail.cpu_pct.round(1)}%, CPU time: #{detail.cpu_time_sec.round(1)}s\n"
+        str << "Memory: #{detail.mem_pct.round(1)}% (#{detail.res_kb} KB resident, #{detail.virt_kb} KB virtual)\n"
+        str << "Systemd unit: #{detail.systemd_unit? ? detail.unit : "none (not systemd-managed)"}\n"
+        str << "\nRecent journal entries mentioning this process (last 6h, up to #{recent.size} lines):\n"
+        recent.each do |entry|
+          str << "[#{entry.formatted_timestamp_with_timezone}] [#{entry.formatted_priority}] #{entry.message}\n"
+        end
+      end
+
+      begin
+        request = AI::Request.for_unit_diagnosis(report)
+        response = provider.complete(request)
+        Log.info { "AI process explanation generated for pid #{pid} (#{response.content.size} chars)" }
+        env.response.content_type = "text/html"
+        Dashboard.unit_ai_fragment(response.content)
+      rescue ex : Exception
+        Log.error(exception: ex) { "AI process explanation failed for pid #{pid}" }
+        env.response.content_type = "text/html"
+        # A 200 keeps htmx swapping so the user sees the failure inline.
+        Dashboard.unit_ai_fragment("AI request failed: #{ex.message}")
+      end
+    end
   end # register_routes
 
   # The compose.yaml text for one stack. Demo builds have no real files
@@ -1141,6 +1331,20 @@ module Grafito
   # never from user input.
   private def self.compose_command_prefix(compose_stack : ComposeStatus::Stack) : Array(String)
     ["docker", "compose"] + compose_stack.config_files.flat_map { |config_file| ["-f", config_file] }
+  end
+
+  # Returns the process view fragment preserving the request's sort and
+  # filter parameters, used by the kill endpoints so the table does not
+  # jump back to the default ordering.
+  private def self.render_process_fragment(env : HTTP::Server::Context) : String
+    ProcessDashboard.render_html(
+      ProcessStatus.snapshot,
+      Grafito.enable_actions?,
+      optional_query_param(env, "sort_by"),
+      optional_query_param(env, "sort_order"),
+      optional_query_param(env, "filter"),
+      optional_query_param(env, "limit"),
+    )
   end
 
   # Counts journal entries at priority <= 3 (error or worse) for one

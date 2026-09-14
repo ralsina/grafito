@@ -161,6 +161,33 @@ Set `GRAFITO_COMPOSE=false` (or `--compose=false`) to disable the
 compose view and its endpoints completely. Docker must be installed on
 the host running Grafito for anything to show up.
 
+### Process Monitor
+
+Click the **Processes** button in the top bar (or share a link with
+`view=processes`) for "htop on a page": per-core CPU meters, summary
+cards and a live process table (pid, user, state, CPU%, MEM%, VIRT,
+RES, TIME+ and command) refreshed every 3 seconds. The table sorts by
+any column (click the headers) and filters by user, pid or command.
+
+* **Sorting and filtering**: every column sorts (click the headers)
+  and the table filters by user, pid or command; both are applied
+  server-side and persisted in the URL, so shared links reopen the view
+  exactly as it was.
+* **Detail panel**: clicking a row opens the sidebar's Detail tab with
+  the process's user, parent, threads, start time, resource usage and
+  full command line, plus a jump into its logs (the owning systemd
+  unit's journal when there is one, a text search otherwise).
+* **Signal actions** (opt-in, auth required): with `--enable-actions`
+  and credentials configured, the table and the detail panel offer
+  SIGTERM, SIGKILL, SIGSTOP and SIGCONT buttons; each asks for
+  confirmation and is logged.
+* **AI explanations** (opt-in): with an AI provider configured, the
+  detail panel can explain what a process is doing using its /proc
+  details and recent journal lines mentioning it.
+
+Set `GRAFITO_PROCESSES=false` (or `--processes=false`) to disable the
+process view and its endpoints completely.
+
 ### Timezone Configuration
 
 Grafito displays timestamps in your local timezone by default, but you can configure it to use any timezone you prefer. This solves the issue of having to mentally convert UTC timestamps to your local time.
