@@ -431,3 +431,15 @@ private def point_at(seconds_ago : Int32, mem : Float64, disk : Float64) : Grafi
     units_failed: 0,
   )
 end
+
+{% if flag?(:fake_journal) %}
+  it "generates clamped, varying fake metrics" do
+    a = SystemStatus.fake_metrics_at(Time.utc)
+    b = SystemStatus.fake_metrics_at(Time.utc + 7.minutes)
+    a[:load1].should be >= 0.05
+    a[:mem_used_pct].should be >= 5.0
+    a[:mem_used_pct].should be <= 95.0
+    a[:disk_used_pct].should be <= 100.0
+    b[:mem_used_pct].should_not eq(a[:mem_used_pct])
+  end
+{% end %}

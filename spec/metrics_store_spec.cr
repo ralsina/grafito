@@ -99,3 +99,39 @@ describe Grafito::MetricsStore do
     FileUtils.rm_rf(File.join(Dir.current, "grafito-data"))
   end
 end
+
+{% if flag?(:fake_journal) %}
+  it "pre-seeds a day of plausible fake history for the demo" do
+    data_dir = File.join(Dir.tempdir, "grafito-seed-spec-#{Random::Secure.hex(4)}")
+    Dir.mkdir_p(data_dir)
+    store = Grafito::MetricsStore.new(data_dir)
+    Grafito::MetricsStore.seed_fake_history(store, 24.hours, 5.minutes)
+
+    points = store.history(Time.utc - 25.hours)
+    points.size.should eq(289) # 24h at 5-minute steps, inclusive
+
+    # Values follow the fake wave: clamped, and not a dead-flat line.
+    points.each do |point|
+      point.mem_used_pct.should be >= 5.0
+      point.mem_used_pct.should be <= 95.0
+      point.load1.should be >= 0.05
+    end
+    unique_mem = points.map(&.mem_used_pct).uniq
+    unique_mem.size.should be > 10
+  ensure
+    FileUtils.rm_rf(data_dir) if data_dir
+  end
+
+  it "does not re-seed when history already exists" do
+    data_dir = File.join(Dir.tempdir, "grafito-seed-spec-#{Random::Secure.hex(4)}")
+    Dir.mkdir_p(data_dir)
+    store = Grafito::MetricsStore.new(data_dir)
+    Grafito::MetricsStore.seed_fake_history(store, 24.hours, 5.minutes)
+    count_after_first = store.history(Time.utc - 25.hours).size
+
+    Grafito::MetricsStore.seed_fake_history(store, 24.hours, 5.minutes)
+    store.history(Time.utc - 25.hours).size.should eq(count_after_first)
+  ensure
+    FileUtils.rm_rf(data_dir) if data_dir
+  end
+{% end %}

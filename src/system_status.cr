@@ -179,7 +179,25 @@ module SystemStatus
     end
   end
 
-  # A small, deterministic snapshot for demo builds and fake-mode specs.
+  # Point in the past the fake demo "booted" from; the fake uptime is
+  # derived from it so it grows plausibly across restarts.
+  FAKE_BOOT = Time.local - 30.days
+
+  # Plausible, time-varying fake metrics: a slow memory wave, a load
+  # average that bounces around, and a nearly-stable disk. Used by both
+  # the live fake snapshot and the demo history pre-seeding, so the
+  # chart has no visible seam between seeded and live samples.
+  def self.fake_metrics_at(ts : Time) : NamedTuple(load1: Float64, mem_used_pct: Float64, disk_used_pct: Float64)
+    angle = (ts - Time.local.at_beginning_of_day).total_minutes / 45.0
+    {
+      load1:         (1.1 + 0.6 * Math.sin(angle / 2.5 + 1.0) + rand(-0.3..0.6)).clamp(0.05, 9.0),
+      mem_used_pct:  (55.0 + 9.0 * Math.sin(angle) + rand(-1.5..1.5)).clamp(5.0, 95.0),
+      disk_used_pct: (47.5 + 0.4 * Math.sin(angle / 8.0) + rand(0.0..0.15)).clamp(0.0, 100.0),
+    }
+  end
+
+  # A small snapshot for demo builds and fake-mode specs, with metrics
+  # that drift over time so charts look alive.
   private def self.fake_snapshot : Snapshot
     units = [
       UnitState.new("cron.service", "loaded", "active", "exited", "Regular background program processing"),
@@ -188,12 +206,13 @@ module SystemStatus
       UnitState.new("nginx.service", "loaded", "active", "running", "A high performance web server"),
       UnitState.new("sshd.service", "loaded", "active", "running", "OpenBSD Secure Shell server"),
     ]
+    metrics = fake_metrics_at(Time.local)
     Snapshot.new(
       timestamp: Time.local,
-      load1: 0.42,
-      mem_used_pct: 61.5,
-      disk_used_pct: 47.8,
-      uptime_sec: 123456,
+      load1: metrics[:load1],
+      mem_used_pct: metrics[:mem_used_pct],
+      disk_used_pct: metrics[:disk_used_pct],
+      uptime_sec: (Time.local - FAKE_BOOT).total_seconds.to_i64,
       units_total: units.size,
       units_failed: units.count(&.failed?),
       units: units,

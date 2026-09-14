@@ -111,6 +111,11 @@ module Grafito
     ) : MetricsStore
       store = new(data_dir)
       store.prune(retention_days)
+      {% if flag?(:fake_journal) %}
+        # Demo builds pre-seed a day of plausible history so the chart
+        # is full from the first page load instead of growing a stub.
+        seed_fake_history(store, 24.hours, 5.minutes)
+      {% end %}
       spawn(name: "metrics-sampler(#{interval_sec}s)") do
         loop do
           begin
@@ -124,6 +129,29 @@ module Grafito
         end
       end
       store
+    end
+
+    # Demo only: fills the store with a `window`-long history of
+    # plausible samples at `step` intervals, matching the live fake
+    # snapshot's wave so there is no seam between seeded and live
+    # points. No-op when history already exists.
+    def self.seed_fake_history(store : MetricsStore, window : Time::Span, step : Time::Span) : Nil
+      return unless store.history(Time.utc - window).empty?
+
+      now = Time.utc
+      steps = (window.total_seconds / step.total_seconds).to_i
+      steps.downto(0) do |back|
+        ts = now - (back * step.total_seconds).seconds
+        metrics = SystemStatus.fake_metrics_at(ts)
+        store.record(MetricPoint.new(
+          ts: ts,
+          load1: metrics[:load1],
+          mem_used_pct: metrics[:mem_used_pct],
+          disk_used_pct: metrics[:disk_used_pct],
+          units_total: 5,
+          units_failed: 1,
+        ))
+      end
     end
 
     # Ensures the requested data directory is usable, falling back to a
