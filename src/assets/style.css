@@ -462,6 +462,51 @@ html[data-ui="fieldnotes"] #mode-switcher button {
   }
 }
 
+/* View switcher: compact segmented 4-way control (logs, dashboard,
+   compose, processes) in the topbar, styled like the statusbar's mode
+   switcher. */
+#view-switcher {
+  display: inline-flex;
+  flex: none;
+  height: 2.1rem;
+  align-self: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+#view-switcher button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: auto;
+  flex: none;
+  height: 100%;
+  padding: 0 0.65rem;
+  background: none;
+  border: none;
+  border-radius: 0;
+  border-left: 1px solid var(--line);
+  box-shadow: none;
+  margin-bottom: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+#view-switcher button:first-child {
+  border-left: none;
+}
+#view-switcher button:hover {
+  color: var(--txt);
+}
+#view-switcher button.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+#view-switcher .material-icons {
+  font-size: 1rem;
+}
+
 /* Mode switcher (segmented control, lives in the statusbar) */
 #mode-switcher {
   display: inline-flex;

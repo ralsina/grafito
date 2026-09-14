@@ -101,44 +101,45 @@
           <span class="brand-sub" id="brand-sub">log viewer</span>
         </div>
 
-        <button
-          id="dashboard-toggle"
-          class="topbar-tool"
-          aria-pressed="false"
-          aria-label="Toggle server dashboard"
-          title="Toggle the server dashboard (status, services, history)"
-          onclick="toggleDashboard()"
-        >
-          <span class="material-icons" id="dashboard-toggle-icon" aria-hidden="true">dashboard</span>
-          <span class="topbar-tool-label" id="dashboard-toggle-label">Dashboard</span>
-        </button>
-
-        <!-- Compose view toggle: switches to the Docker Compose stacks
-             view, the third view next to the log stream and the
-             dashboard. -->
-        <button
-          id="compose-toggle"
-          class="topbar-tool"
-          aria-pressed="false"
-          aria-label="Toggle Docker Compose view"
-          title="Toggle the Docker Compose view (stacks, services, actions)"
-          onclick="toggleCompose()"
-        >
-          <span class="material-icons" id="compose-toggle-icon" aria-hidden="true">layers</span>
-          <span class="topbar-tool-label" id="compose-toggle-label">Compose</span>
-        </button>
-
-        <button
-          id="processes-toggle"
-          class="topbar-tool"
-          aria-pressed="false"
-          aria-label="Toggle process monitor"
-          title="Toggle the process monitor (htop on a page)"
-          onclick="toggleProcesses()"
-        >
-          <span class="material-icons" id="processes-toggle-icon" aria-hidden="true">memory</span>
-          <span class="topbar-tool-label" id="processes-toggle-label">Processes</span>
-        </button>
+        <!-- Compact 4-way switch for the main views: logs, server
+             dashboard, Docker Compose stacks and the process monitor.
+             Exactly one is active; the active one shows the view you
+             are looking at. -->
+        <div id="view-switcher" role="group" aria-label="View">
+          <button
+            data-view-mode="logs"
+            class="active"
+            aria-pressed="true"
+            title="Log stream"
+          >
+            <span class="material-icons" aria-hidden="true">receipt_long</span>
+            <span>Logs</span>
+          </button>
+          <button
+            data-view-mode="dashboard"
+            aria-pressed="false"
+            title="Server dashboard (status, services, history)"
+          >
+            <span class="material-icons" aria-hidden="true">dashboard</span>
+            <span>Dashboard</span>
+          </button>
+          <button
+            data-view-mode="compose"
+            aria-pressed="false"
+            title="Docker Compose (stacks, services, actions)"
+          >
+            <span class="material-icons" aria-hidden="true">layers</span>
+            <span>Compose</span>
+          </button>
+          <button
+            data-view-mode="processes"
+            aria-pressed="false"
+            title="Process monitor (htop on a page)"
+          >
+            <span class="material-icons" aria-hidden="true">memory</span>
+            <span>Proc</span>
+          </button>
+        </div>
 
         <!-- Service filter for the dashboard view, styled like the log
              omnibox. Lives outside the swapped fragment so its value
@@ -1215,6 +1216,8 @@
           }
         }
 
+        updateViewSwitcher();
+
         // Clear All Filters Button Functionality
         const clearFiltersButton =
           document.getElementById("clear-filters-btn");
@@ -1703,8 +1706,7 @@
       function setDashboardVisible(visible) {
         const dashboardView = document.getElementById("dashboard-view");
         const results = document.getElementById("results");
-        const toggleButton = document.getElementById("dashboard-toggle");
-        if (!dashboardView || !results || !toggleButton) return;
+        if (!dashboardView || !results) return;
         // The views are mutually exclusive: opening the dashboard
         // closes the process monitor, and vice versa.
         if (visible) setProcessesVisible(false);
@@ -1714,15 +1716,6 @@
         // other(s).
         const composeView = document.getElementById("compose-view");
         if (composeView && visible) setComposeVisible(false, {skipUrlUpdate: true});
-        toggleButton.setAttribute("aria-pressed", visible ? "true" : "false");
-        // The button shows the view it switches TO, not the current one.
-        const icon = document.getElementById("dashboard-toggle-icon");
-        const label = document.getElementById("dashboard-toggle-label");
-        if (icon) icon.textContent = visible ? "receipt_long" : "dashboard";
-        if (label) label.textContent = visible ? "Logs" : "Dashboard";
-        toggleButton.title = visible
-          ? "Back to the log stream"
-          : "Toggle the server dashboard (status, services, history)";
         // Switch the page chrome: log filters, export tools, the log
         // stats strip and the minimap only make sense in log view.
         if (visible) {
@@ -1731,6 +1724,7 @@
           delete document.body.dataset.view;
           restoreLogsMinimap();
         }
+        updateViewSwitcher();
         // Keep the URL in sync with the active view, so a reload (or
         // any htmx request) neither resurrects a closed dashboard nor
         // drops an open one.
@@ -1743,11 +1737,48 @@
         }
       }
 
-      function toggleDashboard() {
+      // --- VIEW SWITCHER ---
+      // One compact 4-way switch for the main views (logs, dashboard,
+      // compose, processes). The per-view set*Visible functions keep
+      // owning their own state; the switcher just routes and reflects.
+      function currentViewMode() {
         const dashboardView = document.getElementById("dashboard-view");
-        if (dashboardView) {
-          setDashboardVisible(dashboardView.hidden);
+        const composeView = document.getElementById("compose-view");
+        const processesView = document.getElementById("processes-view");
+        if (dashboardView && !dashboardView.hidden) return "dashboard";
+        if (composeView && !composeView.hidden) return "compose";
+        if (processesView && !processesView.hidden) return "processes";
+        return "logs";
+      }
+
+      function updateViewSwitcher() {
+        const mode = currentViewMode();
+        document
+          .querySelectorAll("#view-switcher button")
+          .forEach(function (button) {
+            const active = button.dataset.viewMode === mode;
+            button.classList.toggle("active", active);
+            button.setAttribute("aria-pressed", active ? "true" : "false");
+          });
+      }
+
+      function setViewMode(mode) {
+        if (mode === "dashboard") setDashboardVisible(true);
+        else if (mode === "compose") setComposeVisible(true);
+        else if (mode === "processes") setProcessesVisible(true);
+        else {
+          setDashboardVisible(false);
+          setComposeVisible(false);
+          setProcessesVisible(false);
         }
+      }
+
+      const viewSwitcher = document.getElementById("view-switcher");
+      if (viewSwitcher) {
+        viewSwitcher.addEventListener("click", function (event) {
+          const button = event.target.closest("button[data-view-mode]");
+          if (button) setViewMode(button.dataset.viewMode);
+        });
       }
 
       // --- COMPOSE TOGGLE ---
@@ -1760,8 +1791,7 @@
       function setComposeVisible(visible, options) {
         const composeView = document.getElementById("compose-view");
         const results = document.getElementById("results");
-        const toggleButton = document.getElementById("compose-toggle");
-        if (!composeView || !results || !toggleButton) return;
+        if (!composeView || !results) return;
         // Close the dashboard FIRST: it also manages #results' hidden
         // state, so doing it after would un-hide the log stream over
         // the compose view. The process monitor gets the same
@@ -1776,14 +1806,7 @@
         }
         composeView.hidden = !visible;
         results.hidden = visible;
-        toggleButton.setAttribute("aria-pressed", visible ? "true" : "false");
-        const icon = document.getElementById("compose-toggle-icon");
-        const label = document.getElementById("compose-toggle-label");
-        if (icon) icon.textContent = visible ? "receipt_long" : "layers";
-        if (label) label.textContent = visible ? "Logs" : "Compose";
-        toggleButton.title = visible
-          ? "Back to the log stream"
-          : "Toggle the Docker Compose view (stacks, services, actions)";
+        updateViewSwitcher();
         if (visible) {
           document.body.dataset.view = "compose";
         } else if (!dashboardView || dashboardView.hidden) {
@@ -1815,8 +1838,7 @@
       function setProcessesVisible(visible) {
         const processesView = document.getElementById("processes-view");
         const results = document.getElementById("results");
-        const toggleButton = document.getElementById("processes-toggle");
-        if (!processesView || !results || !toggleButton) return;
+        if (!processesView || !results) return;
         // Mutual exclusion: opening the process monitor closes the
         // dashboard and the compose view.
         if (visible) setDashboardVisible(false);
@@ -1826,20 +1848,13 @@
         }
         processesView.hidden = !visible;
         results.hidden = visible;
-        toggleButton.setAttribute("aria-pressed", visible ? "true" : "false");
-        const icon = document.getElementById("processes-toggle-icon");
-        const label = document.getElementById("processes-toggle-label");
-        if (icon) icon.textContent = visible ? "receipt_long" : "memory";
-        if (label) label.textContent = visible ? "Logs" : "Processes";
-        toggleButton.title = visible
-          ? "Back to the log stream"
-          : "Toggle the process monitor (htop on a page)";
         if (visible) {
           document.body.dataset.view = "processes";
         } else {
           delete document.body.dataset.view;
           restoreLogsMinimap();
         }
+        updateViewSwitcher();
         updateBrowserURL();
         if (visible) {
           htmx.ajax("GET", buildUrl("processes") + processesQueryParams(), {
@@ -1849,12 +1864,6 @@
         }
       }
 
-      function toggleProcesses() {
-        const processesView = document.getElementById("processes-view");
-        if (processesView) {
-          setProcessesVisible(processesView.hidden);
-        }
-      }
 
       // --- PROCESS TABLE SORTING + FILTER ---
       // Like the dashboard, the current sort lives in #processes-view's
