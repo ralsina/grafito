@@ -682,6 +682,16 @@ body[data-view="dashboard"] #stats-strip {
   background: var(--bg);
   display: block;
 }
+/* Time axis labels sit on top of the bars, so they need a readable
+   fill plus a background-colored outline to stand out from whatever
+   they overlap. */
+.dashboard-history-svg .tl-label {
+  fill: var(--muted);
+  stroke: var(--bg);
+  stroke-width: 3px;
+  paint-order: stroke;
+  font-size: 10px;
+}
 .dashboard-units td,
 .dashboard-units th {
   white-space: nowrap;
