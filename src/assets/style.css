@@ -467,6 +467,7 @@ html[data-ui="fieldnotes"] #mode-switcher button {
    switcher. */
 #view-switcher {
   display: inline-flex;
+  width: auto;
   flex: none;
   height: 2.1rem;
   align-self: center;
