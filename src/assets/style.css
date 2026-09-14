@@ -289,7 +289,8 @@ html[data-ui="fieldnotes"] .grafito-title-link {
 
 /* Omnibox / search (log omnibox + dashboard service filter) */
 #search-omnibox,
-#dashboard-filter-box {
+#dashboard-filter-box,
+#processes-filter-box {
   flex: 1;
   min-width: 220px;
   max-width: 560px;
@@ -304,11 +305,13 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   cursor: text;
 }
 #search-omnibox:not(:focus-within) input,
-#dashboard-filter-box:not(:focus-within) input {
+#dashboard-filter-box:not(:focus-within) input,
+#processes-filter-box:not(:focus-within) input {
   min-width: 12ch;
 }
 #search-omnibox:focus-within,
-#dashboard-filter-box:focus-within {
+#dashboard-filter-box:focus-within,
+#processes-filter-box:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
 }
@@ -317,7 +320,8 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   font-weight: 600;
 }
 #search-omnibox input,
-#dashboard-filter-box input {
+#dashboard-filter-box input,
+#processes-filter-box input {
   flex: 1;
   background: none;
   border: none;
@@ -331,12 +335,14 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   font-size: 0.85rem;
 }
 #search-omnibox input:focus,
-#dashboard-filter-box input:focus {
+#dashboard-filter-box input:focus,
+#processes-filter-box input:focus {
   box-shadow: none;
   border: none;
 }
 #search-omnibox kbd,
-#dashboard-filter-box kbd {
+#dashboard-filter-box kbd,
+#processes-filter-box kbd {
   font-family: var(--font-mono);
   font-size: 0.62rem;
   text-transform: uppercase;
