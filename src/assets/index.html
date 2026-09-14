@@ -1594,6 +1594,10 @@
           delete document.body.dataset.view;
           restoreLogsMinimap();
         }
+        // Keep the URL in sync with the active view, so a reload (or
+        // any htmx request) neither resurrects a closed dashboard nor
+        // drops an open one.
+        updateBrowserURL();
         if (visible) {
           htmx.ajax("GET", buildUrl("dashboard") + dashboardQueryParams(), {
             target: "#dashboard-view",
