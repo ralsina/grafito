@@ -937,11 +937,25 @@
         updateViewSwitcher();
         if (!options.skipUrlUpdate) updateBrowserURL();
         if (config.endpoint) {
+          // Some views take a while on open (compose shells out to
+          // docker), so the global loading overlay shows until the
+          // fragment arrives. Polls never trigger this.
+          const spinner = document.getElementById("loading-spinner");
+          if (spinner) spinner.classList.add("htmx-request");
           htmx.ajax(
             "GET",
             buildUrl(config.endpoint) + (config.query ? config.query() : ""),
             { target: "#" + config.element, swap: "innerHTML" }
-          );
+          )
+            .catch(function () {
+              if (element) {
+                element.innerHTML =
+                  '<p style="padding: 1em">Failed to load this view. Is the server still running?</p>';
+              }
+            })
+            .finally(function () {
+              if (spinner) spinner.classList.remove("htmx-request");
+            });
         }
       }
 
