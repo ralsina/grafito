@@ -230,11 +230,14 @@ module ProcessStatus
     uptime_sec : Float64,
   ) : Array(ProcessInfo)
     infos = [] of ProcessInfo
+    # Read once per snapshot, not once per process: this poll runs every
+    # few seconds and /etc/passwd does not change between pids.
+    users = user_names
 
     Dir.children("/proc").each do |entry|
       pid = entry.to_i32?
       next unless pid
-      info = process_info(pid, previous_procs, now_ms, mem_total_kb, uptime_sec)
+      info = process_info(pid, users, previous_procs, now_ms, mem_total_kb, uptime_sec)
       infos << info if info
     rescue File::NotFoundError | File::AccessDeniedError
       # The process vanished between listing and reading; skip it.
@@ -246,6 +249,7 @@ module ProcessStatus
   # entry is not a process directory with a well-formed stat file.
   private def self.process_info(
     pid : Int32,
+    users : Hash(String, String),
     previous_procs : Hash(Int32, ProcTicks),
     now_ms : Int64,
     mem_total_kb : Int64,
@@ -258,13 +262,14 @@ module ProcessStatus
     comm = raw[head_start + 1...tail_start]
     fields = raw[tail_start + 1..].split
     return unless fields.size >= 22
-    process_info_from_fields(pid, comm, fields, previous_procs, now_ms, mem_total_kb, uptime_sec)
+    process_info_from_fields(pid, comm, users, fields, previous_procs, now_ms, mem_total_kb, uptime_sec)
   end
 
   # Assembles the ProcessInfo from the fixed-field tail of a stat file.
   private def self.process_info_from_fields(
     pid : Int32,
     comm : String,
+    users : Hash(String, String),
     fields : Array(String),
     previous_procs : Hash(Int32, ProcTicks),
     now_ms : Int64,
@@ -285,7 +290,7 @@ module ProcessStatus
     mem_pct = mem_total_kb > 0 ? res_kb.to_f / mem_total_kb * 100 : 0.0
     ProcessInfo.new(
       pid: pid,
-      user: user_names[uid_of(pid)]? || "?",
+      user: users[uid_of(pid)]? || "?",
       cpu_pct: cpu_pct.clamp(0.0, 100.0 * cpu_count),
       mem_pct: mem_pct.clamp(0.0, 100.0),
       virt_kb: vsize // 1024,
