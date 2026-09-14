@@ -90,22 +90,19 @@
 
     <div id="app-shell">
       <header id="topbar">
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true"></span>
+        <!-- Brand cartouche: the grafito wordmark and the 4-way view
+             switch (logs, dashboard, compose, processes) live in one
+             bordered segment. Exactly one view is active; it shows
+             the view you are looking at. -->
+        <div id="brand-switcher">
           <a
             href="https://grafito.ralsina.me"
-            class="grafito-title-link"
+            class="brand-word"
             title="Grafito home"
-            >grafito</a
           >
-          <span class="brand-sub" id="brand-sub">log viewer</span>
-        </div>
-
-        <!-- Compact 4-way switch for the main views: logs, server
-             dashboard, Docker Compose stacks and the process monitor.
-             Exactly one is active; the active one shows the view you
-             are looking at. -->
-        <div id="view-switcher" role="group" aria-label="View">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span class="brand-word-text">grafito</span>
+          </a>
           <button
             data-view-mode="logs"
             class="active"
@@ -1754,7 +1751,7 @@
       function updateViewSwitcher() {
         const mode = currentViewMode();
         document
-          .querySelectorAll("#view-switcher button")
+          .querySelectorAll("#brand-switcher button[data-view-mode]")
           .forEach(function (button) {
             const active = button.dataset.viewMode === mode;
             button.classList.toggle("active", active);
@@ -1773,7 +1770,7 @@
         }
       }
 
-      const viewSwitcher = document.getElementById("view-switcher");
+      const viewSwitcher = document.getElementById("brand-switcher");
       if (viewSwitcher) {
         viewSwitcher.addEventListener("click", function (event) {
           const button = event.target.closest("button[data-view-mode]");

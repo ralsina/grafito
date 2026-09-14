@@ -462,27 +462,51 @@ html[data-ui="fieldnotes"] #mode-switcher button {
   }
 }
 
-/* View switcher: compact segmented 4-way control (logs, dashboard,
-   compose, processes) in the topbar, styled like the statusbar's mode
-   switcher. */
-#view-switcher {
+/* Brand cartouche: grafito wordmark + 4-way view switch (logs,
+   dashboard, compose, processes) in one bordered segment, styled like
+   the statusbar mode switcher. The explicit width:auto beats pico's
+   [role=group] width:100% stretching. */
+#brand-switcher {
   display: inline-flex;
+  align-items: stretch;
   width: auto;
   flex: none;
-  height: 2.1rem;
+  height: 2.4rem;
   align-self: center;
   border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
+  background: var(--panel);
 }
-#view-switcher button {
+.brand-word {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.8rem 0 0.7rem;
+  border-right: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-weight: var(--brand-weight);
+  font-size: 1.15rem;
+  color: var(--txt);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+html[data-ui="fieldnotes"] .brand-word {
+  font-style: italic;
+  font-size: 1.3rem;
+}
+.brand-word .brand-mark {
+  align-self: center;
+}
+#brand-switcher button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: auto;
   flex: none;
-  height: 100%;
-  padding: 0 0.55rem;
+  height: auto;
+  padding: 0 0.65rem;
   background: none;
   border: none;
   border-radius: 0;
@@ -494,18 +518,15 @@ html[data-ui="fieldnotes"] #mode-switcher button {
   color: var(--muted);
   cursor: pointer;
 }
-#view-switcher button:first-child {
-  border-left: none;
-}
-#view-switcher button:hover {
+#brand-switcher button:hover {
   color: var(--txt);
 }
-#view-switcher button.active {
+#brand-switcher button.active {
   background: var(--accent);
   color: var(--accent-ink);
 }
-#view-switcher .material-icons {
-  font-size: 1rem;
+#brand-switcher .material-icons {
+  font-size: 1.05rem;
 }
 
 /* Mode switcher (segmented control, lives in the statusbar) */
