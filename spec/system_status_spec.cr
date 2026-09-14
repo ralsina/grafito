@@ -61,7 +61,7 @@ describe Dashboard do
     svg.scan(/<polyline/).size.should eq(2)
   end
 
-  it "overlays the error frequency bars when buckets are given" do
+  it "draws stacked severity bars behind the metric lines" do
     points = [
       point_at(60, mem: 10.0, disk: 20.0),
       point_at(30, mem: 50.0, disk: 20.0),
@@ -69,16 +69,17 @@ describe Dashboard do
     ]
     base = Time.utc - 60.seconds
     buckets = [
-      {base, 0},
-      {base + 30.seconds, 5},
-      {base + 60.seconds, 2},
-    ] of Tuple(Time, Int32)
+      {time: base, err: 0, warn: 0, info: 0},
+      {time: base + 30.seconds, err: 2, warn: 1, info: 2},
+      {time: base + 60.seconds, err: 0, warn: 0, info: 1},
+    ] of NamedTuple(time: Time, err: Int32, warn: Int32, info: Int32)
     svg = Dashboard.generate_svg_history(points, buckets)
     svg.should contain("<rect")
-    svg.scan(/<rect/).size.should eq(2) # one bar per non-empty bucket
-    svg.should contain("error frequency (bars)")
+    # Busy bucket: info + warn + err segments; quiet bucket: info only.
+    svg.scan(/<rect/).size.should eq(4)
+    svg.should contain("<title>")
     # All-zero buckets render no bars at all.
-    zero_buckets = buckets.map { |bucket_time, _| {bucket_time, 0} }
+    zero_buckets = buckets.map { |bucket| {time: bucket[:time], err: 0, warn: 0, info: 0} }
     svg_zero = Dashboard.generate_svg_history(points, zero_buckets)
     svg_zero.should_not contain("<rect")
   end

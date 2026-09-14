@@ -627,6 +627,31 @@ body[data-view="dashboard"] #stats-strip {
   position: relative;
   margin: 1em 0;
 }
+.dashboard-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  align-items: center;
+  margin-bottom: 0.25rem;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.dashboard-legend .legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.dashboard-legend .legend-swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+  display: inline-block;
+}
+.dashboard-legend .legend-line {
+  width: 0.9rem;
+  border-top: 2px solid;
+  display: inline-block;
+}
 /* The time window selector lives on the timeline itself, overlaid on
    the chart's top-right corner. */
 .dashboard-window-select {

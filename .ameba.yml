@@ -20,5 +20,8 @@ Metrics/CyclomaticComplexity:
   Severity: Warning
 
 # This is a total hack that doesn't really need to work too well :-)
+# Also external libraries and tooling; never lint or autofix these.
 Excluded:
   - src/fake_journal_data.cr
+  - "lib/**/*"
+  - "aur-grafito/**/*"

@@ -40,7 +40,7 @@ module Dashboard
     unit_filter : String? = nil,
     since_text : String? = nil,
     unit_flags : Hash(String, SystemStatus::UnitFileFlags) = {} of String => SystemStatus::UnitFileFlags,
-    error_buckets : Array(Tuple(Time, Int32)) = [] of Tuple(Time, Int32),
+    severity_buckets : Array(NamedTuple(time: Time, err: Int32, warn: Int32, info: Int32)) = [] of NamedTuple(time: Time, err: Int32, warn: Int32, info: Int32),
   ) : String
     # Units arrive sorted by name from SystemStatus; apply the requested
     # column sort on top (defaulting to name, ascending).
@@ -65,7 +65,8 @@ module Dashboard
 
         div(class: "dashboard-history") do
           if history.size >= 2
-            html generate_svg_history(history, error_buckets)
+            html chart_legend
+            html generate_svg_history(history, severity_buckets)
           end
           html window_select(since_text)
         end
@@ -557,13 +558,44 @@ module Dashboard
     end
   end
 
-  # Renders memory and disk usage over time as a small SVG line chart,
-  # with the error frequency over the same time span overlaid as a
-  # translucent filled area behind the lines. Both percentage series
-  # share the same 0-100% scale; the error area scales to its own max.
+  # Legend for the combined chart: severity bars plus the two metric
+  # lines, colored exactly as they render in the SVG.
+  private def chart_legend : String
+    HTML.build do
+      div(class: "dashboard-legend") do
+        span(class: "legend-item") do
+          span(class: "legend-swatch", style: "background: var(--err)") { }
+          text "errors"
+        end
+        span(class: "legend-item") do
+          span(class: "legend-swatch", style: "background: var(--warn)") { }
+          text "warnings"
+        end
+        span(class: "legend-item") do
+          span(class: "legend-swatch", style: "background: var(--info)") { }
+          text "info"
+        end
+        span(class: "legend-item") do
+          span(class: "legend-line", style: "border-color: var(--info)") { }
+          text "memory"
+        end
+        span(class: "legend-item") do
+          span(class: "legend-line", style: "border-color: var(--err)") { }
+          text "disk"
+        end
+      end
+    end
+  end
+
+  # The combined dashboard chart: journal severity as stacked bars
+  # (errors red, warnings amber, info blue — the same encoding as the
+  # log view's timeline) with memory and disk usage as xy lines over
+  # the same time span, so events and resource usage can be correlated
+  # at a glance. Bars scale to their own maximum; both percentage
+  # series share the full 0-100% scale.
   def generate_svg_history(
     points : Array(Grafito::MetricsStore::MetricPoint),
-    error_buckets : Array(Tuple(Time, Int32)) = [] of Tuple(Time, Int32),
+    severity_buckets : Array(NamedTuple(time: Time, err: Int32, warn: Int32, info: Int32)) = [] of NamedTuple(time: Time, err: Int32, warn: Int32, info: Int32),
   ) : String
     svg = IO::Memory.new
     width = 800.0
@@ -573,20 +605,56 @@ module Dashboard
 
     svg << %(<svg width="100%" height="#{height.to_i}" viewBox="0 0 #{width.to_i} #{height.to_i}" )
     svg << %(preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" role="img" class="dashboard-history-svg" )
-    svg << %(aria-label="Memory, disk and error frequency over the selected time window">)
-    has_errors = !error_buckets.empty? && error_buckets.max_of(&.[1]) > 0
-    if has_errors
-      svg << error_bars(error_buckets, oldest, span_sec, width, height)
+    svg << %(aria-label="Journal severity and memory, disk usage over the selected time window">)
+    has_bars = severity_buckets.any? { |bucket| (bucket[:err] + bucket[:warn] + bucket[:info]) > 0 }
+    if has_bars
+      svg << severity_bars(severity_buckets, oldest, span_sec, width, height)
     end
     svg << %(  <polyline fill="none" stroke="var(--info, steelblue)" stroke-width="2" points="#{polyline_points(points, oldest, span_sec, width, height, &.mem_used_pct)}" />)
     svg << %(  <polyline fill="none" stroke="var(--err, darkorange)" stroke-width="2" points="#{polyline_points(points, oldest, span_sec, width, height, &.disk_used_pct)}" />)
     svg << %(  <text x="8" y="#{(height - 8).to_i}" class="tl-label">#{points.first.ts.to_s("%m-%d %H:%M")}</text>)
     svg << %(  <text x="#{(width - 8).to_i}" y="#{(height - 8).to_i}" text-anchor="end" class="tl-label">#{points.last.ts.to_s("%m-%d %H:%M")}</text>)
-    if has_errors
-      svg << %(  <text x="8" y="14" class="tl-label">error frequency (bars)</text>)
-    end
     svg << %(</svg>)
     svg.to_s
+  end
+
+  # Builds one stacked bar per severity bucket: info at the bottom,
+  # warnings in the middle, errors on top — the same encoding as the
+  # log view's timeline. Height scales so the busiest bucket reaches
+  # the top of the chart; each bar carries a tooltip with its counts.
+  private def severity_bars(
+    buckets : Array(NamedTuple(time: Time, err: Int32, warn: Int32, info: Int32)),
+    oldest : Time,
+    span_sec : Float64,
+    width : Float64,
+    height : Float64,
+  ) : String
+    padding = 8.0
+    usable = height - 2 * padding
+    # Scale against a reference of at least 10 entries per bucket so a
+    # sparse window doesn't render every bar at full height; busier
+    # windows scale to their own maximum.
+    reference = [buckets.max_of { |bucket| bucket[:err] + bucket[:warn] + bucket[:info] }.to_f, 10.0].max
+    slot = (width - 2 * padding) / buckets.size
+    bar_width = (slot * 0.7).round(2)
+    bars = IO::Memory.new
+    buckets.each do |bucket|
+      total = bucket[:err] + bucket[:warn] + bucket[:info]
+      next if total.zero?
+      x = padding + ((bucket[:time] - oldest).total_seconds / span_sec) * (width - 2 * padding)
+      total_h = (total.to_f / reference * usable).round(2)
+      err_h = (bucket[:err].to_f / total * total_h).round(2)
+      warn_h = (bucket[:warn].to_f / total * total_h).round(2)
+      info_h = (total_h - err_h - warn_h).round(2)
+      base = (height - padding).round(2)
+      title = HTML.escape("#{bucket[:time].to_s("%H:%M")} · #{bucket[:err]} errors, #{bucket[:warn]} warnings, #{bucket[:info]} info")
+      bars << %(  <g class="severity-bucket"><title>#{title}</title>)
+      bars << %(    <rect x="#{x.round(2)}" y="#{(base - info_h).round(2)}" width="#{bar_width}" height="#{info_h}" fill="var(--info)" fill-opacity="0.85" stroke="none" />)
+      bars << %(    <rect x="#{x.round(2)}" y="#{(base - info_h - warn_h).round(2)}" width="#{bar_width}" height="#{warn_h}" fill="var(--warn)" fill-opacity="0.9" stroke="none" />) if warn_h > 0
+      bars << %(    <rect x="#{x.round(2)}" y="#{(base - info_h - warn_h - err_h).round(2)}" width="#{bar_width}" height="#{err_h}" fill="var(--err)" fill-opacity="1" stroke="none" />) if err_h > 0
+      bars << %(  </g>)
+    end
+    bars.to_s
   end
 
   # Builds one translucent bar per error bucket: same x mapping and

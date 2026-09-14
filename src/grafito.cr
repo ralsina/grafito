@@ -881,49 +881,61 @@ module Grafito
     snapshot = SystemStatus.snapshot
     since_time = parse_since(since_text.to_s) || DEFAULT_DASHBOARD_SINCE
     history = Grafito.metrics_store.try(&.history(since_time)) || [] of MetricsStore::MetricPoint
-    error_logs = dashboard_error_logs(since_text.presence || "-6h")
+    entries = dashboard_journal_entries(since_text.presence || "-6h")
+    buckets = severity_buckets(entries, history)
+    errors = entries.count { |entry| (entry.priority.to_i? || 7) <= 3 }
     Dashboard.render_html(
       snapshot,
       history,
-      error_logs.size,
+      errors,
       Grafito.enable_actions?,
       sort_by,
       sort_order,
       unit_filter,
       since_text,
       unit_flags,
-      error_buckets(error_logs, history),
+      buckets,
     )
   end
 
-  # Journal entries at priority <= 3 (error or worse) since the given
-  # relative time. Bounded to 500 lines to keep dashboard refreshes
-  # cheap; the count is a signal, not an audit.
-  private def self.dashboard_error_logs(since : String) : Array(Journalctl::LogEntry)
+  # Journal entries over the given relative time for the dashboard
+  # chart: all severities, bounded to 5000 entries to keep refreshes
+  # cheap; the chart is a signal, not an audit.
+  private def self.dashboard_journal_entries(since : String) : Array(Journalctl::LogEntry)
     return [] of Journalctl::LogEntry unless Grafito.dashboard_enabled?
-    Journalctl.query(since: since, priority: "3", lines: 500) || [] of Journalctl::LogEntry
+    Journalctl.query(since: since, lines: 5000) || [] of Journalctl::LogEntry
   end
 
-  # Buckets error entries over the exact time span covered by the
-  # metrics history, so the error area lines up pixel-for-pixel with
-  # the load/memory lines in the overlay chart.
-  private def self.error_buckets(
+  # Buckets journal entries by severity over the exact time span
+  # covered by the metrics history, so the stacked severity bars line
+  # up pixel-for-pixel with the load/memory lines in the combined
+  # chart.
+  private def self.severity_buckets(
     logs : Array(Journalctl::LogEntry),
     history : Array(MetricsStore::MetricPoint),
-  ) : Array(Tuple(Time, Int32))
-    return [] of Tuple(Time, Int32) if history.size < 2
+  ) : Array(NamedTuple(time: Time, err: Int32, warn: Int32, info: Int32))
+    return [] of NamedTuple(time: Time, err: Int32, warn: Int32, info: Int32) if history.size < 2
     oldest = history.first.ts
     span_sec = [(history.last.ts - oldest).total_seconds, 1.0].max
     bucket_count = 60
     bucket_sec = span_sec / bucket_count
-    buckets = Array.new(bucket_count) { |index| {oldest + Time::Span.new(seconds: (index * bucket_sec).to_i), 0} }
+    buckets = Array.new(bucket_count) do |index|
+      {time: oldest + Time::Span.new(seconds: (index * bucket_sec).to_i), err: 0, warn: 0, info: 0}
+    end
     logs.each do |entry|
       offset = (entry.timestamp - oldest).total_seconds
       next if offset < 0
       index = (offset / bucket_sec).to_i
       next if index >= bucket_count
-      start_time, count = buckets[index]
-      buckets[index] = {start_time, count + 1}
+      bucket = buckets[index]
+      case entry.priority.to_i? || 7
+      when 0..3
+        buckets[index] = {time: bucket[:time], err: bucket[:err] + 1, warn: bucket[:warn], info: bucket[:info]}
+      when 4
+        buckets[index] = {time: bucket[:time], err: bucket[:err], warn: bucket[:warn] + 1, info: bucket[:info]}
+      else
+        buckets[index] = {time: bucket[:time], err: bucket[:err], warn: bucket[:warn], info: bucket[:info] + 1}
+      end
     end
     buckets
   end
