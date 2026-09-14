@@ -229,7 +229,9 @@ module ProcessDashboard
     end
   end
 
-  # One htop-style CPU meter: a vertical label, a bar, and the percent.
+  # One htop-style CPU meter: a vertical label and a bar. The exact
+  # percentage lives in the tooltip; the color banding (blue/amber/red)
+  # carries the coarse signal at a glance.
   private def core_meter(core_index : Int32, pct : Float64) : String
     fill_class = pct >= 80 ? "proc-bar-high" : (pct >= 30 ? "proc-bar-mid" : "proc-bar-low")
     HTML.build do
@@ -238,7 +240,6 @@ module ProcessDashboard
         div(class: "proc-meter-track") do
           div(class: "proc-bar-fill #{fill_class}", style: "height: #{pct.round(1)}%;") { }
         end
-        span(class: "proc-meter-pct") { text pct.round.to_i.to_s }
       end
     end
   end

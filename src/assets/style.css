@@ -1907,9 +1907,9 @@ html[data-ui="mission"] #results table tbody tr:hover {
 .proc-meter {
   display: flex;
   align-items: stretch;
-  gap: 0.25rem;
+  gap: 0.15rem;
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   color: var(--muted);
 }
 .proc-meter-label {
@@ -1919,8 +1919,8 @@ html[data-ui="mission"] #results table tbody tr:hover {
 }
 .proc-meter-track {
   position: relative;
-  width: 0.75rem;
-  height: 2.4rem;
+  width: 0.55rem;
+  height: 1.9rem;
   border: 1px solid var(--line);
   border-radius: 4px;
   background: var(--panel);
@@ -1931,10 +1931,6 @@ html[data-ui="mission"] #results table tbody tr:hover {
   left: 0;
   right: 0;
   bottom: 0;
-}
-.proc-meter-pct {
-  align-self: center;
-  min-width: 1.4rem;
 }
 .proc-toolbar {
   display: flex;
