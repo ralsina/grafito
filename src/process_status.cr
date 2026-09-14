@@ -302,8 +302,9 @@ module ProcessStatus
     users = Hash(String, String).new
     begin
       File.each_line("/etc/passwd") do |line|
+        # name:password:uid:gid:gecos:home:shell — key on the uid.
         fields = line.split(':')
-        users[fields[1]] = fields[0] if fields.size >= 3
+        users[fields[2]] = fields[0] if fields.size >= 3
       end
     rescue ex
       Log.warn(exception: ex) { "Failed to read /etc/passwd" }
