@@ -901,6 +901,15 @@ body[data-view="dashboard"] #stats-strip {
   margin-top: 0.75rem;
   display: block;
 }
+#results > div > svg.dashboard-history-svg {
+  height: 130px;
+}
+#results > div > svg.dashboard-history-svg .tl-label {
+  fill: var(--muted);
+  stroke: var(--bg);
+  stroke-width: 3px;
+  paint-order: stroke;
+}
 #results svg .tl-err {
   fill: var(--err);
   opacity: 1;
@@ -918,7 +927,7 @@ body[data-view="dashboard"] #stats-strip {
 #results svg .tl-info:hover {
   opacity: 1;
 }
-#results svg .tl-label {
+#results svg:not(.dashboard-history-svg) .tl-label {
   fill: var(--faint) !important;
 }
 #results svg .no-data-text {
