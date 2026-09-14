@@ -1,14 +1,11 @@
 /* =====================================================================
-   Grafito — three looks, one stylesheet.
-   Modes are selected with <html data-ui="graphite|fieldnotes|mission">
-   and the light/dark switch with <html data-theme="dark|light">.
-
-   Each (mode, theme) pair defines the same set of custom properties;
-   everything below "tokens" is mode-agnostic and only reads variables.
+   Grafito — one look (Mission Control), one stylesheet.
+   The light/dark switch works with <html data-theme="dark|light">;
+   Mission's custom properties live on :root and html[data-theme].
    ===================================================================== */
 
 /* ------------------------------------------------------------------
-   Tokens — Mission Control (dark by default)
+   Tokens — Mission Control
    ------------------------------------------------------------------ */
 :root {
   --font-body: "Chivo", sans-serif;
@@ -16,11 +13,11 @@
   --radius: 8px;
 }
 
-html[data-ui="mission"] {
+:root {
   --font-display: "Space Grotesk", var(--font-body);
   --brand-weight: 600;
 }
-html[data-ui="mission"][data-theme="dark"] {
+html[data-theme="dark"] {
   --bg: #101418;
   --panel: #161b22;
   --panel-2: #1c232c;
@@ -38,7 +35,7 @@ html[data-ui="mission"][data-theme="dark"] {
   --mark-bg: rgba(76, 194, 169, 0.25);
   --shadow: rgba(0, 0, 0, 0.45);
 }
-html[data-ui="mission"][data-theme="light"] {
+html[data-theme="light"] {
   --bg: #f2f5f4;
   --panel: #ffffff;
   --panel-2: #e9eeee;
@@ -55,94 +52,6 @@ html[data-ui="mission"][data-theme="light"] {
   --debug: #8a969c;
   --mark-bg: rgba(23, 143, 119, 0.22);
   --shadow: rgba(30, 40, 40, 0.2);
-}
-
-/* ------------------------------------------------------------------
-   Tokens — Graphite (dark by default)
-   ------------------------------------------------------------------ */
-html[data-ui="graphite"] {
-  --font-display: "Chivo", var(--font-body);
-  --brand-weight: 700;
-}
-html[data-ui="graphite"][data-theme="dark"] {
-  --bg: #12151a;
-  --panel: #191d24;
-  --panel-2: #22272f;
-  --line: #2a3038;
-  --txt: #e8ebef;
-  --muted: #8b93a1;
-  --faint: #5b6470;
-  --accent: #e8b84b;
-  --accent-ink: #191d24;
-  --err: #ff7a6e;
-  --warn: #ffc46b;
-  --ok: #7ec9a1;
-  --info: #6aa7d8;
-  --debug: #6b7480;
-  --mark-bg: rgba(232, 184, 75, 0.25);
-  --shadow: rgba(0, 0, 0, 0.5);
-}
-html[data-ui="graphite"][data-theme="light"] {
-  --bg: #f4f4f1;
-  --panel: #ffffff;
-  --panel-2: #eae9e4;
-  --line: #d6d4cc;
-  --txt: #26282c;
-  --muted: #6d7078;
-  --faint: #979aa1;
-  --accent: #a97a12;
-  --accent-ink: #ffffff;
-  --err: #c2463a;
-  --warn: #a8761b;
-  --ok: #3e7d5c;
-  --info: #3a6ea5;
-  --debug: #979aa1;
-  --mark-bg: rgba(169, 122, 18, 0.22);
-  --shadow: rgba(40, 40, 40, 0.18);
-}
-
-/* ------------------------------------------------------------------
-   Tokens — Field Notes (light by default)
-   ------------------------------------------------------------------ */
-html[data-ui="fieldnotes"] {
-  --font-display: "Fraunces", serif;
-  --brand-weight: 700;
-}
-html[data-ui="fieldnotes"][data-theme="light"] {
-  --bg: #faf8f4;
-  --panel: #ffffff;
-  --panel-2: #f1ede5;
-  --line: #d9d2c4;
-  --txt: #2b2a26;
-  --muted: #7a766c;
-  --faint: #a49e90;
-  --accent: #c2571f;
-  --accent-ink: #ffffff;
-  --err: #b3402e;
-  --warn: #a8761b;
-  --ok: #3e7d5c;
-  --info: #3a6ea5;
-  --debug: #a49e90;
-  --mark-bg: #f7e3b0;
-  --shadow: rgba(80, 70, 50, 0.15);
-}
-html[data-ui="fieldnotes"][data-theme="dark"] {
-  --bg: #23211d;
-  --panel: #2b2925;
-  --panel-2: #34312b;
-  --line: #45413a;
-  --txt: #e8e4da;
-  --muted: #a39d8f;
-  --faint: #6f6a5e;
-  --accent: #e08a4f;
-  --accent-ink: #23211d;
-  --err: #e2726a;
-  --warn: #d9a04e;
-  --ok: #7ec9a1;
-  --info: #6aa7d8;
-  --debug: #6f6a5e;
-  --mark-bg: rgba(224, 138, 79, 0.3);
-  --shadow: rgba(0, 0, 0, 0.4);
 }
 
 /* =====================================================================
@@ -257,19 +166,6 @@ select:focus {
   -webkit-mask: url("favicon.svg") center / contain no-repeat;
   mask: url("favicon.svg") center / contain no-repeat;
 }
-html[data-ui="graphite"] .brand-mark {
-  -webkit-mask: none;
-  mask: none;
-  border-radius: 50%;
-  box-shadow: 0 0 10px var(--accent);
-}
-html[data-ui="fieldnotes"] .brand-mark {
-  -webkit-mask: none;
-  mask: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
 .grafito-title-link {
   font-family: var(--font-display);
   font-weight: var(--brand-weight);
@@ -277,10 +173,6 @@ html[data-ui="fieldnotes"] .brand-mark {
   color: var(--txt);
   text-decoration: none;
   letter-spacing: 0.01em;
-}
-html[data-ui="fieldnotes"] .grafito-title-link {
-  font-size: 1.6rem;
-  font-style: italic;
 }
 .brand-sub {
   color: var(--faint);
@@ -387,8 +279,7 @@ body[data-view="processes"] #processes-filter-box {
 }
 
 /* Topbar tool buttons */
-.topbar-tool,
-#mode-switcher button {
+.topbar-tool {
   width: auto;
   display: inline-flex;
   align-items: center;
@@ -405,8 +296,7 @@ body[data-view="processes"] #processes-filter-box {
   box-shadow: none;
   margin-bottom: 0;
 }
-.topbar-tool:hover,
-#mode-switcher button:hover {
+.topbar-tool:hover {
   color: var(--txt);
   border-color: var(--faint);
 }
@@ -415,10 +305,6 @@ body[data-view="processes"] #processes-filter-box {
 }
 .topbar-tool.icon-only {
   padding: 0.35rem 0.45rem;
-}
-html[data-ui="fieldnotes"] .topbar-tool,
-html[data-ui="fieldnotes"] #mode-switcher button {
-  border-radius: 999px;
 }
 
 /* Live toggle */
@@ -492,10 +378,6 @@ html[data-ui="fieldnotes"] #mode-switcher button {
   letter-spacing: 0.01em;
   white-space: nowrap;
 }
-html[data-ui="fieldnotes"] .brand-word {
-  font-style: italic;
-  font-size: 1.3rem;
-}
 .brand-word .brand-mark {
   align-self: center;
 }
@@ -527,45 +409,6 @@ html[data-ui="fieldnotes"] .brand-word {
 }
 #brand-switcher .material-icons {
   font-size: 1.05rem;
-}
-
-/* Mode switcher (segmented control, lives in the statusbar) */
-#mode-switcher {
-  display: inline-flex;
-  width: auto;
-  flex: none;
-  align-self: center;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  overflow: hidden;
-}
-#mode-switcher button {
-  width: auto;
-  flex: none;
-  border: none;
-  border-radius: 0;
-  border-left: 1px solid var(--line);
-}
-#mode-switcher button:first-child {
-  border-left: none;
-}
-#mode-switcher button.active {
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-html[data-ui="fieldnotes"] #mode-switcher {
-  border-radius: 999px;
-}
-#statusbar #mode-switcher,
-#statusbar #mode-switcher button {
-  margin-bottom: 0;
-  box-shadow: none;
-}
-#statusbar #mode-switcher button {
-  height: 1.7rem;
-  padding: 0 0.6rem;
-  font-size: 0.68rem;
-  line-height: 1;
 }
 
 /* Filter panel (dropdown popover) */
@@ -1164,12 +1007,6 @@ tr.priority-7 {
   box-shadow: none;
   margin-bottom: 0;
 }
-html[data-ui="fieldnotes"] .hover-action-cell .round-button,
-html[data-ui="fieldnotes"] .dashboard-action-cell .round-button,
-html[data-ui="fieldnotes"] .service-panel-actions .round-button,
-html[data-ui="fieldnotes"] .compose-stack-actions .round-button {
-  border-radius: 999px;
-}
 .hover-action-cell .round-button:hover,
 .dashboard-action-cell .round-button:hover,
 .service-panel-actions .round-button:hover,
@@ -1344,17 +1181,6 @@ html[data-ui="fieldnotes"] .compose-stack-actions .round-button {
 }
 .statusbar-spacer {
   flex: 1;
-}
-#statusbar #mode-switcher,
-#statusbar #mode-switcher button {
-  margin-bottom: 0;
-  box-shadow: none;
-}
-#statusbar #mode-switcher button {
-  height: 1.7rem;
-  padding: 0 0.6rem;
-  font-size: 0.68rem;
-  line-height: 1;
 }
 .theme-switch-wrapper {
   display: inline-flex;
@@ -1714,94 +1540,19 @@ dialog article dd {
 }
 
 /* =====================================================================
-   Field Notes layout flourishes
-   ===================================================================== */
-html[data-ui="fieldnotes"] #topbar {
-  background: var(--bg);
-  border-bottom: 2px solid var(--txt);
-  padding: 0.9rem 1.6rem 0.7rem;
-  gap: 1rem;
-}
-html[data-ui="fieldnotes"] .brand {
-  border-right: none;
-  padding-right: 0;
-}
-html[data-ui="fieldnotes"] .brand-sub {
-  font-style: italic;
-}
-html[data-ui="fieldnotes"] #stats-strip {
-  background: transparent;
-  border-bottom: 1px dashed var(--line);
-}
-html[data-ui="fieldnotes"] .stat {
-  background: transparent;
-}
-html[data-ui="fieldnotes"] .stat-label {
-  font-family: var(--font-display);
-  font-style: italic;
-  text-transform: none;
-  letter-spacing: 0;
-  font-size: 0.75rem;
-}
-html[data-ui="fieldnotes"] #stream {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0.5rem 2rem 2rem;
-}
-html[data-ui="fieldnotes"] #results table thead th {
-  background: var(--bg);
-  border-bottom: 1px dashed var(--line);
-}
-html[data-ui="fieldnotes"] #results table tbody tr:hover {
-  background: var(--panel-2);
-}
-html[data-ui="fieldnotes"] #results td.log-timestamp-cell {
-  font-family: var(--font-mono);
-}
-html[data-ui="fieldnotes"] #minimap {
-  background: var(--bg);
-}
-html[data-ui="fieldnotes"] #statusbar {
-  background: var(--bg);
-  border-top: 1px dashed var(--line);
-}
-html[data-ui="fieldnotes"] dialog article {
-  border-radius: 4px;
-}
-
-/* =====================================================================
-   Graphite layout flourishes
-   ===================================================================== */
-html[data-ui="graphite"] #topbar {
-  padding: 0.7rem 1.1rem;
-}
-html[data-ui="graphite"] #stream {
-  padding: 0 1.1rem 0;
-}
-html[data-ui="graphite"] #results > div > svg {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
-  padding: 4px;
-}
-html[data-ui="graphite"] .stat-value {
-  font-size: 0.95rem;
-}
-
-/* =====================================================================
    Mission layout flourishes
    ===================================================================== */
-html[data-ui="mission"] .brand {
+.brand {
   height: 2.1rem;
   align-items: center;
 }
-html[data-ui="mission"] #stream {
+#stream {
   padding: 0;
 }
-html[data-ui="mission"] #results table thead th {
+#results table thead th {
   background: var(--panel);
 }
-html[data-ui="mission"] #results table tbody tr:hover {
+#results table tbody tr:hover {
   background: color-mix(in srgb, var(--panel-2) 70%, transparent);
 }
 

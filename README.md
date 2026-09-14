@@ -9,9 +9,7 @@ Grafito is a simple, self-contained web-based log viewer for `journalctl`.
 It provides an intuitive interface to browse and filter system logs
 directly from your web browser.
 
-| Mission Control (dark) | Field Notes (light) |
-| --------------------- | ------------------- |
-| ![Mission Control mode](screenshots/mission.png) | ![Field Notes mode](screenshots/fieldnotes.png) |
+![Mission Control](screenshots/mission.png)
 
 <p align="center">
   <img src="screenshots/ai-panel.png" width="49%" alt="AI explanation panel" />
@@ -23,9 +21,8 @@ There is a live demo with fake logs (and AI enabled) at
 
 Key features include:
 
-* **Three switchable UIs** - Mission Control (dark ops dashboard), Field
-  Notes (light editorial) and Graphite (amber terminal look), plus a
-  light/dark toggle inside each of them.
+* **Mission Control UI** - a dense, dark ops-dashboard look with a
+  light/dark toggle.
 * **Inspector side panel** - clicking any log entry opens a Detail tab;
   Context shows the surrounding entries with the inspected one
   highlighted, and the AI tab holds the explanation.

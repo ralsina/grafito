@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ui="mission" data-theme="dark">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -597,31 +597,6 @@
         <span class="statusbar-sep">·</span>
         <a href="https://github.com/ralsina/grafito">code</a>
         <span class="statusbar-spacer"></span>
-        <div
-          id="mode-switcher"
-          role="group"
-          aria-label="Interface mode"
-          title="Interface mode"
-        >
-          <button
-            data-ui-mode="graphite"
-            title="Graphite: dark, dense, terminal-style"
-          >
-            Graphite
-          </button>
-          <button
-            data-ui-mode="fieldnotes"
-            title="Field Notes: light, editorial, paper-style"
-          >
-            Notes
-          </button>
-          <button
-            data-ui-mode="mission"
-            title="Mission Control: stats, inspector and minimap"
-          >
-            Mission
-          </button>
-        </div>
         <label class="theme-switch-wrapper" for="theme-switch">
           <span class="material-icons" aria-hidden="true">light_mode</span>
           <input
@@ -1095,68 +1070,6 @@
         }
         // --- END GLOBAL HTMX ERROR HANDLER ---
 
-        // --- INTERFACE MODE SWITCHER ---
-        // Three looks, one document: 'graphite', 'fieldnotes' and 'mission'.
-        // The mode sets the palette and layout via data-ui on <html>; the
-        // light/dark switch still works within every mode.
-        const UI_MODES = ["graphite", "fieldnotes", "mission"];
-        const DEFAULT_MODE_THEME = {
-          graphite: "dark",
-          fieldnotes: "light",
-          mission: "dark",
-        };
-
-        function applyUiMode(mode) {
-          if (!UI_MODES.includes(mode)) {
-            mode = "mission";
-          }
-          document.documentElement.setAttribute("data-ui", mode);
-          localStorage.setItem("grafito-ui-mode", mode);
-          document.querySelectorAll("#mode-switcher button").forEach(
-            (button) => {
-              button.classList.toggle(
-                "active",
-                button.dataset.uiMode === mode
-              );
-            }
-          );
-          applyTheme(DEFAULT_MODE_THEME[mode]);
-          updateStatsAndMinimap();
-        }
-
-        const modeSwitcher = document.getElementById("mode-switcher");
-        if (modeSwitcher) {
-          modeSwitcher.addEventListener("click", function (event) {
-            const button = event.target.closest("button[data-ui-mode]");
-            if (button) {
-              applyUiMode(button.dataset.uiMode);
-            }
-          });
-          const savedMode = localStorage.getItem("grafito-ui-mode");
-          // A ?ui= URL parameter wins over the saved mode, so a mode can be
-          // shared or forced via link.
-          const urlMode = new URLSearchParams(window.location.search).get(
-            "ui"
-          );
-          const initialMode =
-            urlMode && UI_MODES.includes(urlMode)
-              ? urlMode
-              : savedMode && UI_MODES.includes(savedMode)
-                ? savedMode
-                : "mission";
-          document.documentElement.setAttribute("data-ui", initialMode);
-          localStorage.setItem("grafito-ui-mode", initialMode);
-          document
-            .querySelectorAll("#mode-switcher button")
-            .forEach((button) => {
-              button.classList.toggle(
-                "active",
-                button.dataset.uiMode === initialMode
-              );
-            });
-        }
-        // --- END INTERFACE MODE SWITCHER ---
-
         // --- THEME SWITCHER LOGIC ---
         const themeSwitch = document.getElementById("theme-switch");
         const htmlElement = document.documentElement;
@@ -1172,15 +1085,14 @@
           localStorage.setItem("theme", theme);
         }
 
-        // Apply initial theme: 1. saved choice, 2. current mode's default.
-        // (An explicit user choice beats the mode default; the OS preference
-        // is only honored through the mode defaults.)
+        // Apply initial theme: 1. saved choice, 2. Mission's default.
+        // (An explicit user choice beats the default; the OS preference
+        // is only honored through that default.)
         const savedTheme = localStorage.getItem("theme");
         if (savedTheme) {
           applyTheme(savedTheme);
         } else {
-          const initialUiMode = htmlElement.getAttribute("data-ui");
-          applyTheme(DEFAULT_MODE_THEME[initialUiMode] || "dark");
+          applyTheme("dark");
         }
 
         if (themeSwitch) {
