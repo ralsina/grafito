@@ -1510,6 +1510,60 @@
             }, 1300);
           });
         }
+        // --- MINIMAP VIEWPORT WINDOW ---
+        // A scrollbar-thumb style window over the ticks showing which
+        // slice of the rows is currently on screen. The tick builders
+        // rebuild the track's children, so a mutation observer keeps
+        // the window element alive in there.
+        function ensureMinimapWindow() {
+          if (!minimapTrack) return null;
+          let win = document.getElementById("minimap-window");
+          if (!win || win.parentElement !== minimapTrack) {
+            win = document.createElement("div");
+            win.id = "minimap-window";
+            win.hidden = true;
+            minimapTrack.appendChild(win);
+          }
+          return win;
+        }
+
+        const streamEl = document.getElementById("stream");
+
+        function updateMinimapWindow() {
+          const win = ensureMinimapWindow();
+          if (!win) return;
+          if (!streamEl || document.body.classList.contains("minimap-hidden")) {
+            win.hidden = true;
+            return;
+          }
+          const scrollable = streamEl.scrollHeight - streamEl.clientHeight;
+          if (scrollable <= 1) {
+            win.hidden = true;
+            return;
+          }
+          const top = streamEl.scrollTop / streamEl.scrollHeight;
+          const visible = streamEl.clientHeight / streamEl.scrollHeight;
+          win.hidden = false;
+          win.style.top = (top * 100).toFixed(3) + "%";
+          win.style.height = Math.max(visible * 100, 2).toFixed(3) + "%";
+        }
+
+        if (streamEl) {
+          streamEl.addEventListener("scroll", updateMinimapWindow, {
+            passive: true,
+          });
+          if (window.ResizeObserver) {
+            new ResizeObserver(updateMinimapWindow).observe(streamEl);
+          }
+        }
+        window.addEventListener("resize", updateMinimapWindow);
+        if (minimapTrack) {
+          new MutationObserver(updateMinimapWindow).observe(minimapTrack, {
+            childList: true,
+          });
+          updateMinimapWindow();
+        }
+        // --- END MINIMAP VIEWPORT WINDOW ---
         // --- END MINIMAP INTERACTION ---
         // --- END STATS STRIP + MINIMAP ---
       });
