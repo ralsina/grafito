@@ -98,6 +98,12 @@ module SystemStatus
       Log.warn { "systemctl status #{unit_name} produced no output: #{stderr.to_s[0..200]}" }
       nil
     {% end %}
+  rescue File::NotFoundError
+    # Environments without systemd (CI containers): no status to show.
+    nil
+  rescue ex
+    Log.warn(exception: ex) { "systemctl status #{unit_name} failed" }
+    nil
   end
 
   # Per-unit file/systemd flags gathered in one batched call. Used to

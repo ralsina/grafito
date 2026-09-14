@@ -91,7 +91,7 @@ describe Dashboard do
   end
 
   it "renders action buttons when actions are enabled" do
-    snapshot = SystemStatus.snapshot
+    snapshot = filter_spec_snapshot
     html = Dashboard.render_html(snapshot, [] of Grafito::MetricsStore::MetricPoint, 0, enable_actions: true)
     html.should contain("hx-post")
     html.should contain("hx-confirm")
@@ -126,7 +126,7 @@ describe Dashboard do
   end
 
   it "sorts units by the requested column and direction" do
-    snapshot = SystemStatus.snapshot
+    snapshot = filter_spec_snapshot
     html = Dashboard.render_html(
       snapshot,
       [] of Grafito::MetricsStore::MetricPoint,
@@ -143,7 +143,7 @@ describe Dashboard do
   end
 
   it "sorts units by state when requested" do
-    snapshot = SystemStatus.snapshot
+    snapshot = filter_spec_snapshot
     html = Dashboard.render_html(
       snapshot,
       [] of Grafito::MetricsStore::MetricPoint,
@@ -157,7 +157,7 @@ describe Dashboard do
   end
 
   it "renders state and sub-state pills with state stripes" do
-    snapshot = SystemStatus.snapshot
+    snapshot = filter_spec_snapshot
     html = Dashboard.render_html(snapshot, [] of Grafito::MetricsStore::MetricPoint, 0)
     # Both State and Sub render as pills with semantic color classes...
     html.should contain("dashboard-state-cell")
