@@ -2083,6 +2083,8 @@ html[data-ui="mission"] #results table tbody tr:hover {
   align-items: center;
   justify-content: space-between;
   margin: 0.4rem 0;
+  /* Left padding aligns the count with the table's first column. */
+  padding: 0 0.5rem 0 1rem;
 }
 .proc-count {
   color: var(--muted);
