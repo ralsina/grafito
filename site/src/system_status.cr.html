@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>system_status.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;font-weight: 600;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;font-style: italic;}.nc {color: #7cafc2;}.no {color: #dc9656;}.nd {color: #dc9656;font-style: italic;}.nf {color: #7cafc2;}.nn {color: #ba8baf;font-style: italic;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.m {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.s {color: #a1b56c;}.lsi {color: #a16946;}.sr {color: #86c1b9;}.ss {color: #dc9656;}.p {color: #d8d8d8;}.tw {color: #d8d8d8;}.cm {color: #585858;font-style: italic;}.s1 {color: #a1b56c;}.lso {color: #a1b56c;}.sc {color: #a1b56c;}.sb {color: #a1b56c;}.sa {color: #dc9656;}.sd {color: #7cafc2;font-style: italic;}.se {color: #a16946;}.lnf {color: #dc9656;}.lnh {color: #dc9656;}.lni {color: #dc9656;}.lno {color: #dc9656;}.lnb {color: #dc9656;}.kr {color: #ba8baf;font-weight: 600;}.kd {color: #ba8baf;font-style: italic;}.kn {color: #ba8baf;}.kp {color: #ba8baf;font-style: italic;}.kc {color: #ab4642;}.cs {color: #a16946;font-weight: 600;}.ch {color: #585858;font-weight: 600;}.gh {color: #7cafc2;font-weight: 600;}.gu {color: #7cafc2;font-weight: 600;font-style: italic;}.gs {color: #ab4642;font-weight: 600;}.ge {color: #dc9656;font-style: italic;}.gd {color: #ab4642;}.gi {color: #a1b56c;}.gp {color: #7cafc2;}.go {color: #d8d8d8;}.gt {color: #ab4642;}.gr {color: #ab4642;}.gl {color: #d8d8d8;text-decoration: underline;}.x {color: #d8d8d8;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Apathy */
+/* Author: Jannik Siebert (https://github.com/janniks) */
+
+:root {
+    --pico-background-color: #031a16; /* Default backround */
+    --pico-color: #81b5ac; /* Default foreground */
+    --pico-text-selection-color: #184e45; /* Selection background */
+    --pico-primary: #96883e; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #184e45;
+    --pico-primary-hover: #3e7996; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-weight: 300;
+        overflow: visible;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 2.5%, #0b342d 2.5%);
+        background-size: 2000% 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #5f9c92;
+        background-color: #031a16;
+        margin-top: auto;
+    }
+    code, div.code>pre>code {
+        font-family: 'Chivo Mono', monospace !important;
+        padding: .15rem;
+        background-color: #0b342d !important;
+    }
+
+    code>span {
+        font-family: 'Chivo Mono', monospace !important;
+    }
+
+    div.doc>pre>code {
+        overflow-x: auto !important;
+    }
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/metrics_store.cr.html"><span>src/metrics_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/system_status.cr</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="system-status" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#system-status" class="anchor">↦</a>
+        </span>
+        <h1>System status</h1>
+<p>The dashboard needs a snapshot of the machine's health: load, memory,
+disk usage, uptime and the state of systemd units. This module gathers
+that without adding dependencies: it reads a few files from <code>/proc</code> and
+shells out to <code>systemctl</code> and <code>df</code>, the same way <a href="journalctl.cr.html">journalctl.cr</a>
+shells out to <code>journalctl</code>.</p>
+<p>When compiled with <code>-Dfake_journal</code> (the demo build) it returns a small
+deterministic snapshot instead, so the dashboard works without systemd.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-12"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">json</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-13"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-14"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">time</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-15"></span><span class="t"></span>
+<span id="line-16"></span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-17"></span><span class="t">  </span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./fake_journal_data</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-18"></span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-19"></span><span class="t"></span>
+<span id="line-20"></span><span class="nk">module</span><span class="t"> </span><span class="no">SystemStatus</span><span class="t"></span>
+<span id="line-21"></span><span class="t">  </span><span class="no">Log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="nk">for</span><span class="t">(</span><span class="nk">self</span><span class="t">)</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+        <p>The state of a single systemd unit as reported by
+<code>systemctl list-units</code>.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-25"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">record</span><span class="t"> </span><span class="no">UnitState</span><span class="t">,</span><span class="t"></span>
+<span id="line-26"></span><span class="t">    </span><span class="t">unit</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-27"></span><span class="t">    </span><span class="t">load_state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-28"></span><span class="t">    </span><span class="t">active_state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-29"></span><span class="t">    </span><span class="t">sub_state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-30"></span><span class="t">    </span><span class="t">description</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-31"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-32"></span><span class="t"></span>
+<span id="line-33"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">failed?</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-34"></span><span class="t">      </span><span class="t">active_state</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">failed</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-35"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-36"></span><span class="t"></span>
+<span id="line-37"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">running?</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-38"></span><span class="t">      </span><span class="t">active_state</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">active</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-39"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-40"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>A point-in-time view of the whole machine. This is what the dashboard
+cards display and what the metrics sampler records over time.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-44"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">record</span><span class="t"> </span><span class="no">Snapshot</span><span class="t">,</span><span class="t"></span>
+<span id="line-45"></span><span class="t">    </span><span class="t">timestamp</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">,</span><span class="t"></span>
+<span id="line-46"></span><span class="t">    </span><span class="t">load1</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-47"></span><span class="t">    </span><span class="t">mem_used_pct</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-48"></span><span class="t">    </span><span class="t">disk_used_pct</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-49"></span><span class="t">    </span><span class="t">uptime_sec</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-50"></span><span class="t">    </span><span class="t">units_total</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-51"></span><span class="t">    </span><span class="t">units_failed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-52"></span><span class="t">    </span><span class="t">units</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">UnitState</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-53"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-54"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>Returns the current system snapshot. On the demo build this is fake
+data; otherwise it reads /proc and queries systemctl.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-58"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Snapshot</span><span class="t"></span>
+<span id="line-59"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-60"></span><span class="t">      </span><span class="t">fake_snapshot</span><span class="t"></span>
+<span id="line-61"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">else</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-62"></span><span class="t">      </span><span class="t">real_snapshot</span><span class="t"></span>
+<span id="line-63"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-64"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>Returns just the unit states (used by the unit-action endpoint to
+verify a unit exists before touching it).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-68"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">unit_states</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">UnitState</span><span class="t">)</span><span class="t"></span>
+<span id="line-69"></span><span class="t">    </span><span class="t">snapshot</span><span class="t">.</span><span class="t">units</span><span class="t"></span>
+<span id="line-70"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>Raw <code>systemctl status</code> output for one unit, for the AI explanation
+endpoint. Read-only, so it needs neither --enable-actions nor root.
+Journal excerpts are stripped (-n 0) because the AI report already
+carries a longer journal tail; colors and paging are disabled and
+lines kept untruncated so the model sees clean, complete output.
+Returns nil when systemctl fails (unit vanished, no systemd session).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-78"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">unit_status_output</span><span class="t">(</span><span class="t">unit_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t"></span>
+<span id="line-79"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-80"></span><span class="t">      </span><span class="t">fake_unit_status_output</span><span class="t">(</span><span class="t">unit_name</span><span class="t">)</span><span class="t"></span>
+<span id="line-81"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">else</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-82"></span><span class="t">      </span><span class="t">command</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">systemctl</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="no">Journalctl</span><span class="t">.</span><span class="t">user_flags</span><span class="t"> </span><span class="o">+</span><span class="t"></span>
+<span id="line-83"></span><span class="t">                </span><span class="t">[</span><span class="s">&quot;</span><span class="s">status</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">unit_name</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">--no-pager</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">-l</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">--full</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">-n</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">0</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"></span>
+<span id="line-84"></span><span class="t">      </span><span class="t">stdout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">IO</span><span class="no">::</span><span class="no">Memory</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-85"></span><span class="t">      </span><span class="t">stderr</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">IO</span><span class="no">::</span><span class="no">Memory</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-86"></span><span class="t">      </span><span class="t">process</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Process</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t"></span>
+<span id="line-87"></span><span class="t">        </span><span class="t">command</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-88"></span><span class="t">        </span><span class="t">args</span><span class="t">:</span><span class="t"> </span><span class="t">command</span><span class="t">[</span><span class="m">1</span><span class="t">..</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-89"></span><span class="t">        </span><span class="t">output</span><span class="t">:</span><span class="t"> </span><span class="t">stdout</span><span class="t">,</span><span class="t"></span>
+<span id="line-90"></span><span class="t">        </span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="t">stderr</span><span class="t">,</span><span class="t"></span>
+<span id="line-91"></span><span class="t">        </span><span class="t">env</span><span class="t">:</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">SYSTEMD_COLORS</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">0</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">LANG</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">C</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-92"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-93"></span><span class="t">      </span><span class="t">output</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-94"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">output</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">process</span><span class="t">.</span><span class="t">success?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">output</span><span class="t">.</span><span class="t">empty?</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>systemctl exits non-zero for inactive/failed units while still
+printing the full status block, which is exactly what we want.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-97"><pre class="b" ><code class="b"><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">output</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">output</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-98"></span><span class="t">      </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">systemctl status </span><span class="lsi">#{</span><span class="t">unit_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> produced no output: </span><span class="lsi">#{</span><span class="t">stderr</span><span class="t">.</span><span class="t">to_s</span><span class="t">[</span><span class="m">0</span><span class="t">..</span><span class="m">200</span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-99"></span><span class="t">      </span><span class="l">nil</span><span class="t"></span>
+<span id="line-100"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-101"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>Per-unit file/systemd flags gathered in one batched call. Used to
+decide which action buttons make sense for a unit.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-105"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">record</span><span class="t"> </span><span class="no">UnitFileFlags</span><span class="t">,</span><span class="t"></span>
+<span id="line-106"></span><span class="t">    </span><span class="t">file_state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-107"></span><span class="t">    </span><span class="t">can_start</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>Returns the enablement and startability for every unit in one
+batched <code>systemctl show</code> call: {unit name =&gt; UnitFileFlags}.
+Units with no unit file state (e.g. generated ones) are omitted,
+and the dashboard hides enable/disable for them.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-113"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">unit_flags_map</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">UnitFileFlags</span><span class="t">)</span><span class="t"></span>
+<span id="line-114"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-115"></span><span class="t">      </span><span class="t">fake_unit_flags_map</span><span class="t"></span>
+<span id="line-116"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">else</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-117"></span><span class="t">      </span><span class="t">unit_names</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">units</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">unit</span><span class="t">)</span><span class="t"></span>
+<span id="line-118"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">{</span><span class="t">}</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="no">UnitFileFlags</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">unit_names</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-119"></span><span class="t"></span>
+<span id="line-120"></span><span class="t">      </span><span class="t">command</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">systemctl</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="no">Journalctl</span><span class="t">.</span><span class="t">user_flags</span><span class="t"> </span><span class="o">+</span><span class="t"></span>
+<span id="line-121"></span><span class="t">                </span><span class="t">[</span><span class="s">&quot;</span><span class="s">show</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">-p</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Id</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">-p</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">UnitFileState</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">-p</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">CanStart</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">unit_names</span><span class="t"></span>
+<span id="line-122"></span><span class="t">      </span><span class="t">stdout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">IO</span><span class="no">::</span><span class="no">Memory</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-123"></span><span class="t">      </span><span class="no">Process</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">command</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">,</span><span class="t"> </span><span class="t">args</span><span class="t">:</span><span class="t"> </span><span class="t">command</span><span class="t">[</span><span class="m">1</span><span class="t">..</span><span class="t">]</span><span class="t">,</span><span class="t"> </span><span class="t">output</span><span class="t">:</span><span class="t"> </span><span class="t">stdout</span><span class="t">)</span><span class="t"></span>
+<span id="line-124"></span><span class="t"></span>
+<span id="line-125"></span><span class="t">      </span><span class="t">states</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">UnitFileFlags</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-126"></span><span class="t">      </span><span class="t">current_id</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-127"></span><span class="t">      </span><span class="t">current_file_state</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-128"></span><span class="t">      </span><span class="t">current_can_start</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t"></span>
+<span id="line-129"></span><span class="t">      </span><span class="t">flush</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">-&gt;</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-130"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">current_id</span><span class="t"></span>
+<span id="line-131"></span><span class="t">          </span><span class="t">states</span><span class="t">[</span><span class="t">current_id</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">UnitFileFlags</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">current_file_state</span><span class="t">,</span><span class="t"> </span><span class="t">current_can_start</span><span class="t">)</span><span class="t"></span>
+<span id="line-132"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-133"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-134"></span><span class="t">      </span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">each_line</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
+<span id="line-135"></span><span class="t">        </span><span class="nk">case</span><span class="t"></span>
+<span id="line-136"></span><span class="t">        </span><span class="nk">when</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">starts_with?</span><span class="t">(</span><span class="s">&quot;</span><span class="s">Id=</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-137"></span><span class="t">          </span><span class="t">flush</span><span class="t">.</span><span class="t">call</span><span class="t"></span>
+<span id="line-138"></span><span class="t">          </span><span class="t">current_id</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">line</span><span class="t">[</span><span class="m">3</span><span class="t">..</span><span class="t">]</span><span class="t"></span>
+<span id="line-139"></span><span class="t">          </span><span class="t">current_file_state</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-140"></span><span class="t">          </span><span class="t">current_can_start</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t"></span>
+<span id="line-141"></span><span class="t">        </span><span class="nk">when</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">starts_with?</span><span class="t">(</span><span class="s">&quot;</span><span class="s">UnitFileState=</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-142"></span><span class="t">          </span><span class="t">current_file_state</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">line</span><span class="t">[</span><span class="s">&quot;</span><span class="s">UnitFileState=</span><span class="s">&quot;</span><span class="s"></span><span class="t">.</span><span class="t">size</span><span class="t">..</span><span class="t">]</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">downcase</span><span class="t"></span>
+<span id="line-143"></span><span class="t">        </span><span class="nk">when</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">starts_with?</span><span class="t">(</span><span class="s">&quot;</span><span class="s">CanStart=</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-144"></span><span class="t">          </span><span class="t">current_can_start</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">line</span><span class="t">[</span><span class="s">&quot;</span><span class="s">CanStart=</span><span class="s">&quot;</span><span class="s"></span><span class="t">.</span><span class="t">size</span><span class="t">..</span><span class="t">]</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">downcase</span><span class="t"> </span><span class="o">!=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">no</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-145"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-146"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-147"></span><span class="t">      </span><span class="t">flush</span><span class="t">.</span><span class="t">call</span><span class="t"></span>
+<span id="line-148"></span><span class="t">      </span><span class="t">states</span><span class="t"></span>
+<span id="line-149"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-150"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-151"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to read batched unit flags</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-152"></span><span class="t">    </span><span class="t">{</span><span class="t">}</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="no">UnitFileFlags</span><span class="t"></span>
+<span id="line-153"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>Deterministic unit flags for the demo build.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-156"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fake_unit_flags_map</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">UnitFileFlags</span><span class="t">)</span><span class="t"></span>
+<span id="line-157"></span><span class="t">    </span><span class="t">{</span><span class="t"></span>
+<span id="line-158"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">cron.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">        </span><span class="o">=&gt;</span><span class="t"> </span><span class="no">UnitFileFlags</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="s">&quot;</span><span class="s">static</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="l">true</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-159"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">fake-broken.service</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="no">UnitFileFlags</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="s">&quot;</span><span class="s">disabled</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="l">true</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-160"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">docker.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">      </span><span class="o">=&gt;</span><span class="t"> </span><span class="no">UnitFileFlags</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="s">&quot;</span><span class="s">enabled</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="l">true</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-161"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">nginx.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">       </span><span class="o">=&gt;</span><span class="t"> </span><span class="no">UnitFileFlags</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="s">&quot;</span><span class="s">enabled</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="l">true</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-162"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">sshd.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">        </span><span class="o">=&gt;</span><span class="t"> </span><span class="no">UnitFileFlags</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="s">&quot;</span><span class="s">enabled</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="l">true</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-163"></span><span class="t">    </span><span class="t">}</span><span class="t"></span>
+<span id="line-164"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
+        <p>Deterministic <code>systemctl status</code> stand-in for demo builds: a real
+looking block for the broken unit, a minimal one for the rest.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-168"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fake_unit_status_output</span><span class="t">(</span><span class="t">unit_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t"></span>
+<span id="line-169"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">unit_name</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">fake-broken.service</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-170"></span><span class="t">      </span><span class="s">&lt;&lt;-STATUS</span><span class="t"></span>
+<span id="line-171"></span><span class="s">        ● fake-broken.service - Fake failing service</span><span class="s"></span>
+<span id="line-172">             Loaded: loaded (/etc/systemd/system/fake-broken.service; enabled; preset: enabled)</span><span class="s"></span>
+<span id="line-173">             Active: failed (Result: exit-code) since Mon 2026-09-13 09:00:01 UTC; 4min 2s ago</span><span class="s"></span>
+<span id="line-174">            Process: 998 ExecStart=/usr/bin/fake-broken --run (code=exited, status=1/FAILURE)</span><span class="s"></span>
+<span id="line-175">              Main PID: 998 (code=exited, status=1/FAILURE)</span><span class="s"></span>
+<span id="line-176">        STATUS</span><span class="s"></span><span class="t"></span>
+<span id="line-177"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-178"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">● </span><span class="lsi">#{</span><span class="t">unit_name</span><span class="t"></span><span class="lsi">}</span><span class="s">\n</span><span class="s">     Loaded: loaded</span><span class="s">\n</span><span class="s">     Active: active (running)</span><span class="s">\n</span><span class="s">   Main PID: 1234</span><span class="s">\n</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-179"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-180"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-11" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-11" class="anchor">↦</a>
+        </span>
+        <p>Point in the past the fake demo &quot;booted&quot; from; the fake uptime is
+derived from it so it grows plausibly across restarts.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-184"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">FAKE_BOOT</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="m">30</span><span class="t">.</span><span class="t">days</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-12" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-12" class="anchor">↦</a>
+        </span>
+        <p>Plausible, time-varying fake metrics: a slow memory wave, a load
+average that bounces around, and a nearly-stable disk. Used by both
+the live fake snapshot and the demo history pre-seeding, so the
+chart has no visible seam between seeded and live samples.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-190"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fake_metrics_at</span><span class="t">(</span><span class="t">ts</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">NamedTuple</span><span class="t">(</span><span class="t">load1</span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"> </span><span class="t">mem_used_pct</span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"> </span><span class="t">disk_used_pct</span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">)</span><span class="t"></span>
+<span id="line-191"></span><span class="t">    </span><span class="t">angle</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">ts</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t">.</span><span class="t">at_beginning_of_day</span><span class="t">)</span><span class="t">.</span><span class="t">total_minutes</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">45.0</span><span class="t"></span>
+<span id="line-192"></span><span class="t">    </span><span class="t">{</span><span class="t"></span>
+<span id="line-193"></span><span class="t">      </span><span class="t">load1</span><span class="t">:</span><span class="t">         </span><span class="t">(</span><span class="m">1.1</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">0.6</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="no">Math</span><span class="t">.</span><span class="t">sin</span><span class="t">(</span><span class="t">angle</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">2.5</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">1.0</span><span class="t">)</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="m">-0.3</span><span class="t">..</span><span class="m">0.6</span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">0.05</span><span class="t">,</span><span class="t"> </span><span class="m">9.0</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-194"></span><span class="t">      </span><span class="t">mem_used_pct</span><span class="t">:</span><span class="t">  </span><span class="t">(</span><span class="m">55.0</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">9.0</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="no">Math</span><span class="t">.</span><span class="t">sin</span><span class="t">(</span><span class="t">angle</span><span class="t">)</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="m">-1.5</span><span class="t">..</span><span class="m">1.5</span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">5.0</span><span class="t">,</span><span class="t"> </span><span class="m">95.0</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-195"></span><span class="t">      </span><span class="t">disk_used_pct</span><span class="t">:</span><span class="t"> </span><span class="t">(</span><span class="m">47.5</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">0.4</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="no">Math</span><span class="t">.</span><span class="t">sin</span><span class="t">(</span><span class="t">angle</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">8.0</span><span class="t">)</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="m">0.0</span><span class="t">..</span><span class="m">0.15</span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">0.0</span><span class="t">,</span><span class="t"> </span><span class="m">100.0</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-196"></span><span class="t">    </span><span class="t">}</span><span class="t"></span>
+<span id="line-197"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-13" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-13" class="anchor">↦</a>
+        </span>
+        <p>A small snapshot for demo builds and fake-mode specs, with metrics
+that drift over time so charts look alive.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-201"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fake_snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Snapshot</span><span class="t"></span>
+<span id="line-202"></span><span class="t">    </span><span class="t">units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
+<span id="line-203"></span><span class="t">      </span><span class="no">UnitState</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="s">&quot;</span><span class="s">cron.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">loaded</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">active</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">exited</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Regular background program processing</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-204"></span><span class="t">      </span><span class="no">UnitState</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="s">&quot;</span><span class="s">docker.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">loaded</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">active</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Docker Application Container Engine</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-205"></span><span class="t">      </span><span class="no">UnitState</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="s">&quot;</span><span class="s">fake-broken.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">loaded</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">failed</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">failed</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Fake failing service</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-206"></span><span class="t">      </span><span class="no">UnitState</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="s">&quot;</span><span class="s">nginx.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">loaded</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">active</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">A high performance web server</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-207"></span><span class="t">      </span><span class="no">UnitState</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="s">&quot;</span><span class="s">sshd.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">loaded</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">active</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">OpenBSD Secure Shell server</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-208"></span><span class="t">    </span><span class="t">]</span><span class="t"></span>
+<span id="line-209"></span><span class="t">    </span><span class="t">metrics</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fake_metrics_at</span><span class="t">(</span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t">)</span><span class="t"></span>
+<span id="line-210"></span><span class="t">    </span><span class="no">Snapshot</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-211"></span><span class="t">      </span><span class="t">timestamp</span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t">,</span><span class="t"></span>
+<span id="line-212"></span><span class="t">      </span><span class="t">load1</span><span class="t">:</span><span class="t"> </span><span class="t">metrics</span><span class="t">[</span><span class="ss">:load1</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-213"></span><span class="t">      </span><span class="t">mem_used_pct</span><span class="t">:</span><span class="t"> </span><span class="t">metrics</span><span class="t">[</span><span class="ss">:mem_used_pct</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-214"></span><span class="t">      </span><span class="t">disk_used_pct</span><span class="t">:</span><span class="t"> </span><span class="t">metrics</span><span class="t">[</span><span class="ss">:disk_used_pct</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-215"></span><span class="t">      </span><span class="t">uptime_sec</span><span class="t">:</span><span class="t"> </span><span class="t">(</span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="no">FAKE_BOOT</span><span class="t">)</span><span class="t">.</span><span class="t">total_seconds</span><span class="t">.</span><span class="t">to_i64</span><span class="t">,</span><span class="t"></span>
+<span id="line-216"></span><span class="t">      </span><span class="t">units_total</span><span class="t">:</span><span class="t"> </span><span class="t">units</span><span class="t">.</span><span class="t">size</span><span class="t">,</span><span class="t"></span>
+<span id="line-217"></span><span class="t">      </span><span class="t">units_failed</span><span class="t">:</span><span class="t"> </span><span class="t">units</span><span class="t">.</span><span class="t">count</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">failed?</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-218"></span><span class="t">      </span><span class="t">units</span><span class="t">:</span><span class="t"> </span><span class="t">units</span><span class="t">,</span><span class="t"></span>
+<span id="line-219"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-220"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-221"></span><span class="t"></span>
+<span id="line-222"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">real_snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Snapshot</span><span class="t"></span>
+<span id="line-223"></span><span class="t">    </span><span class="t">units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">query_unit_states</span><span class="t"></span>
+<span id="line-224"></span><span class="t">    </span><span class="no">Snapshot</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-225"></span><span class="t">      </span><span class="t">timestamp</span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t">,</span><span class="t"></span>
+<span id="line-226"></span><span class="t">      </span><span class="t">load1</span><span class="t">:</span><span class="t"> </span><span class="t">read_load1</span><span class="t">,</span><span class="t"></span>
+<span id="line-227"></span><span class="t">      </span><span class="t">mem_used_pct</span><span class="t">:</span><span class="t"> </span><span class="t">read_mem_used_pct</span><span class="t">,</span><span class="t"></span>
+<span id="line-228"></span><span class="t">      </span><span class="t">disk_used_pct</span><span class="t">:</span><span class="t"> </span><span class="t">read_disk_used_pct</span><span class="t">,</span><span class="t"></span>
+<span id="line-229"></span><span class="t">      </span><span class="t">uptime_sec</span><span class="t">:</span><span class="t"> </span><span class="t">read_uptime_sec</span><span class="t">,</span><span class="t"></span>
+<span id="line-230"></span><span class="t">      </span><span class="t">units_total</span><span class="t">:</span><span class="t"> </span><span class="t">units</span><span class="t">.</span><span class="t">size</span><span class="t">,</span><span class="t"></span>
+<span id="line-231"></span><span class="t">      </span><span class="t">units_failed</span><span class="t">:</span><span class="t"> </span><span class="t">units</span><span class="t">.</span><span class="t">count</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">failed?</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-232"></span><span class="t">      </span><span class="t">units</span><span class="t">:</span><span class="t"> </span><span class="t">units</span><span class="t">,</span><span class="t"></span>
+<span id="line-233"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-234"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-14" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-14" class="anchor">↦</a>
+        </span>
+        <p>Reads the one-minute load average from /proc/loadavg.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-237"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">read_load1</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-238"></span><span class="t">    </span><span class="t">first_field</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc/loadavg</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">to_f?</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-239"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-240"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to read load average</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-241"></span><span class="t">    </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-242"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-15" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-15" class="anchor">↦</a>
+        </span>
+        <p>Reads uptime seconds from /proc/uptime.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-245"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">read_uptime_sec</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t"></span>
+<span id="line-246"></span><span class="t">    </span><span class="t">seconds</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">first_field</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc/uptime</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">to_f?</span><span class="t">)</span><span class="t"></span>
+<span id="line-247"></span><span class="t">    </span><span class="t">seconds</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">seconds</span><span class="t">.</span><span class="t">to_i64</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="m">0i64</span><span class="t"></span>
+<span id="line-248"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-249"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to read uptime</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-250"></span><span class="t">    </span><span class="m">0i64</span><span class="t"></span>
+<span id="line-251"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-16" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-16" class="anchor">↦</a>
+        </span>
+        <p>Computes memory usage percentage from /proc/meminfo, using
+MemAvailable (which accounts for caches) rather than MemFree.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-255"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">read_mem_used_pct</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-256"></span><span class="t">    </span><span class="t">values</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">Int64</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-257"></span><span class="t">    </span><span class="no">File</span><span class="t">.</span><span class="t">each_line</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc/meminfo</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
+<span id="line-258"></span><span class="t">      </span><span class="t">parts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">split</span><span class="t"></span>
+<span id="line-259"></span><span class="t">      </span><span class="t">key</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parts</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">chomp</span><span class="t">(</span><span class="s">&quot;</span><span class="s">:</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-260"></span><span class="t">      </span><span class="t">value</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parts</span><span class="t">[</span><span class="m">1</span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">to_i64?</span><span class="t">)</span><span class="t"></span>
+<span id="line-261"></span><span class="t">      </span><span class="t">values</span><span class="t">[</span><span class="t">key</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">value</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">key</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">value</span><span class="t"></span>
+<span id="line-262"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-263"></span><span class="t">    </span><span class="t">total</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">values</span><span class="t">[</span><span class="s">&quot;</span><span class="s">MemTotal</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-264"></span><span class="t">    </span><span class="t">available</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">values</span><span class="t">[</span><span class="s">&quot;</span><span class="s">MemAvailable</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-265"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">total</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">total</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">available</span><span class="t"></span>
+<span id="line-266"></span><span class="t">      </span><span class="t">(</span><span class="t">(</span><span class="t">total</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">available</span><span class="t">)</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">total</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="m">100</span><span class="t">)</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">0.0</span><span class="t">,</span><span class="t"> </span><span class="m">100.0</span><span class="t">)</span><span class="t"></span>
+<span id="line-267"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-268"></span><span class="t">      </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-269"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-270"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-271"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to read memory info</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-272"></span><span class="t">    </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-273"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-17" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-17" class="anchor">↦</a>
+        </span>
+        <p>Computes root filesystem usage via <code>df -k -P /</code>. POSIX output makes
+the column layout stable: field 5 is the capacity percentage.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-277"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">read_disk_used_pct</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-278"></span><span class="t">    </span><span class="t">stdout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">IO</span><span class="no">::</span><span class="no">Memory</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-279"></span><span class="t">    </span><span class="t">result</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Process</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="s">&quot;</span><span class="s">df</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">args</span><span class="t">:</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">-k</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">-P</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">/</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">,</span><span class="t"> </span><span class="t">output</span><span class="t">:</span><span class="t"> </span><span class="t">stdout</span><span class="t">)</span><span class="t"></span>
+<span id="line-280"></span><span class="t">    </span><span class="nk">unless</span><span class="t"> </span><span class="t">result</span><span class="t">.</span><span class="t">normal_exit?</span><span class="t"></span>
+<span id="line-281"></span><span class="t">      </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">df command failed with exit code </span><span class="lsi">#{</span><span class="t">result</span><span class="t">.</span><span class="t">system_exit_status</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-282"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-283"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-284"></span><span class="t">    </span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">each_line</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
+<span id="line-285"></span><span class="t">      </span><span class="t">fields</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">split</span><span class="t"></span>
+<span id="line-286"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">fields</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="m">5</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">5</span><span class="t">]</span><span class="t">?</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">/</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-287"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">4</span><span class="t">]</span><span class="t">.</span><span class="t">rchop</span><span class="t">(</span><span class="s">&quot;</span><span class="s">%</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">.</span><span class="t">to_f?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">0.0</span><span class="t">,</span><span class="t"> </span><span class="m">100.0</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-288"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-289"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">df output did not contain a &#39;/&#39; mount point</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-290"></span><span class="t">    </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-291"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-292"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to read disk usage</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-293"></span><span class="t">    </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-294"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-18" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-18" class="anchor">↦</a>
+        </span>
+        <p>Queries <code>systemctl list-units</code> and parses the plain output.
+Each line is: UNIT LOAD ACTIVE SUB DESCRIPTION.</p>
+<p>Note: the --units whitelist does NOT apply here. It gates what may
+be controlled (unit actions) and which logs are visible, but the
+dashboard shows the state of every unit on the machine.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-302"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">query_unit_states</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">UnitState</span><span class="t">)</span><span class="t"></span>
+<span id="line-303"></span><span class="t">    </span><span class="t">command</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">systemctl</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="no">Journalctl</span><span class="t">.</span><span class="t">user_flags</span><span class="t"> </span><span class="o">+</span><span class="t"></span>
+<span id="line-304"></span><span class="t">              </span><span class="t">[</span><span class="s">&quot;</span><span class="s">list-units</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">--type=service</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">--all</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">--no-legend</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">--plain</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"></span>
+<span id="line-305"></span><span class="t">    </span><span class="t">stdout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">IO</span><span class="no">::</span><span class="no">Memory</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-306"></span><span class="t">    </span><span class="t">result</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Process</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">command</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">,</span><span class="t"> </span><span class="t">args</span><span class="t">:</span><span class="t"> </span><span class="t">command</span><span class="t">[</span><span class="m">1</span><span class="t">..</span><span class="t">]</span><span class="t">,</span><span class="t"> </span><span class="t">output</span><span class="t">:</span><span class="t"> </span><span class="t">stdout</span><span class="t">)</span><span class="t"></span>
+<span id="line-307"></span><span class="t">    </span><span class="nk">unless</span><span class="t"> </span><span class="t">result</span><span class="t">.</span><span class="t">normal_exit?</span><span class="t"></span>
+<span id="line-308"></span><span class="t">      </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">systemctl list-units failed with exit code </span><span class="lsi">#{</span><span class="t">result</span><span class="t">.</span><span class="t">system_exit_status</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-309"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">UnitState</span><span class="t"></span>
+<span id="line-310"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-311"></span><span class="t"></span>
+<span id="line-312"></span><span class="t">    </span><span class="t">units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">UnitState</span><span class="t"></span>
+<span id="line-313"></span><span class="t">    </span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">each_line</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
+<span id="line-314"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-19" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-19" class="anchor">↦</a>
+        </span>
+        <p>systemctl --plain pads columns with spaces; split on whitespace
+and rejoin the description, which may itself contain spaces.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-317"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">fields</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">split</span><span class="t"></span>
+<span id="line-318"></span><span class="t">      </span><span class="t">unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-319"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">unit_name</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">fields</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="m">4</span><span class="t"></span>
+<span id="line-320"></span><span class="t">      </span><span class="t">units</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="no">UnitState</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-321"></span><span class="t">        </span><span class="t">unit</span><span class="t">:</span><span class="t"> </span><span class="t">unit_name</span><span class="t">,</span><span class="t"></span>
+<span id="line-322"></span><span class="t">        </span><span class="t">load_state</span><span class="t">:</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">1</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-323"></span><span class="t">        </span><span class="t">active_state</span><span class="t">:</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">2</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-324"></span><span class="t">        </span><span class="t">sub_state</span><span class="t">:</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">3</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-325"></span><span class="t">        </span><span class="t">description</span><span class="t">:</span><span class="t"> </span><span class="t">fields</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="m">5</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">4</span><span class="t">..</span><span class="t">]</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-326"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-327"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-328"></span><span class="t">    </span><span class="t">units</span><span class="t">.</span><span class="t">sort_by!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">unit</span><span class="t">)</span><span class="t"></span>
+<span id="line-329"></span><span class="t">    </span><span class="t">units</span><span class="t"></span>
+<span id="line-330"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-331"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to query systemd units</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-332"></span><span class="t">    </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">UnitState</span><span class="t"></span>
+<span id="line-333"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-20" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-20" class="anchor">↦</a>
+        </span>
+        <p>Returns the first whitespace-separated field of a file, or nil.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-336"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">first_field</span><span class="t">(</span><span class="t">path</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t"></span>
+<span id="line-337"></span><span class="t">    </span><span class="no">File</span><span class="t">.</span><span class="t">read</span><span class="t">(</span><span class="t">path</span><span class="t">)</span><span class="t">.</span><span class="t">split</span><span class="t">.</span><span class="t">first?</span><span class="t"></span>
+<span id="line-338"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-339"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Apathy
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

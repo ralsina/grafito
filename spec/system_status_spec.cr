@@ -49,39 +49,36 @@ describe Dashboard do
     Dashboard.format_uptime((3 * 86400 + 4 * 3600).to_i64).should eq("3d 4h")
   end
 
-  it "builds a history SVG with one polyline per series" do
+  it "builds a combined chart with severity bars and metric lines" do
     points = [
       point_at(0, mem: 10.0, disk: 20.0),
       point_at(30, mem: 50.0, disk: 20.0),
       point_at(60, mem: 90.0, disk: 20.0),
     ]
-    svg = Dashboard.generate_svg_history(points)
-    svg.should contain("<svg")
-    svg.should contain("polyline")
-    svg.scan(/<polyline/).size.should eq(2)
-  end
-
-  it "draws stacked severity bars behind the metric lines" do
-    points = [
-      point_at(60, mem: 10.0, disk: 20.0),
-      point_at(30, mem: 50.0, disk: 20.0),
-      point_at(0, mem: 90.0, disk: 20.0),
-    ]
     base = Time.utc - 60.seconds
     buckets = [
-      {time: base, err: 0, warn: 0, info: 0},
-      {time: base + 30.seconds, err: 2, warn: 1, info: 2},
-      {time: base + 60.seconds, err: 0, warn: 0, info: 1},
-    ] of NamedTuple(time: Time, err: Int32, warn: Int32, info: Int32)
-    svg = Dashboard.generate_svg_history(points, buckets)
-    svg.should contain("<rect")
+      {start_time: base, count: 0, err: 0, warn: 0, info: 0},
+      {start_time: base + 30.seconds, count: 5, err: 2, warn: 1, info: 2},
+      {start_time: base + 60.seconds, count: 1, err: 0, warn: 0, info: 1},
+    ] of Timeline::TimelinePoint
+    svg = Timeline.generate_combined_svg(points, buckets)
+    svg.should contain("<svg")
     # Busy bucket: info + warn + err segments; quiet bucket: info only.
     svg.scan(/<rect/).size.should eq(4)
+    svg.should contain("<polyline")
+    svg.scan(/<polyline/).size.should eq(2)
     svg.should contain("<title>")
     # All-zero buckets render no bars at all.
-    zero_buckets = buckets.map { |bucket| {time: bucket[:time], err: 0, warn: 0, info: 0} }
-    svg_zero = Dashboard.generate_svg_history(points, zero_buckets)
+    zero_buckets = buckets.map { |bucket| {start_time: bucket[:start_time], count: 0, err: 0, warn: 0, info: 0} }
+    svg_zero = Timeline.generate_combined_svg(points, zero_buckets)
     svg_zero.should_not contain("<rect")
+  end
+
+  it "provides a legend for the combined chart" do
+    legend = Timeline.combined_legend
+    legend.should contain("errors")
+    legend.should contain("memory")
+    legend.should contain("disk")
   end
 
   it "renders the dashboard fragment with cards and services" do

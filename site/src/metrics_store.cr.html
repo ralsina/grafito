@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>metrics_store.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;font-weight: 600;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;font-style: italic;}.nc {color: #7cafc2;}.no {color: #dc9656;}.nd {color: #dc9656;font-style: italic;}.nf {color: #7cafc2;}.nn {color: #ba8baf;font-style: italic;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.m {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.s {color: #a1b56c;}.lsi {color: #a16946;}.sr {color: #86c1b9;}.ss {color: #dc9656;}.p {color: #d8d8d8;}.tw {color: #d8d8d8;}.cm {color: #585858;font-style: italic;}.s1 {color: #a1b56c;}.lso {color: #a1b56c;}.sc {color: #a1b56c;}.sb {color: #a1b56c;}.sa {color: #dc9656;}.sd {color: #7cafc2;font-style: italic;}.se {color: #a16946;}.lnf {color: #dc9656;}.lnh {color: #dc9656;}.lni {color: #dc9656;}.lno {color: #dc9656;}.lnb {color: #dc9656;}.kr {color: #ba8baf;font-weight: 600;}.kd {color: #ba8baf;font-style: italic;}.kn {color: #ba8baf;}.kp {color: #ba8baf;font-style: italic;}.kc {color: #ab4642;}.cs {color: #a16946;font-weight: 600;}.ch {color: #585858;font-weight: 600;}.gh {color: #7cafc2;font-weight: 600;}.gu {color: #7cafc2;font-weight: 600;font-style: italic;}.gs {color: #ab4642;font-weight: 600;}.ge {color: #dc9656;font-style: italic;}.gd {color: #ab4642;}.gi {color: #a1b56c;}.gp {color: #7cafc2;}.go {color: #d8d8d8;}.gt {color: #ab4642;}.gr {color: #ab4642;}.gl {color: #d8d8d8;text-decoration: underline;}.x {color: #d8d8d8;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Apathy */
+/* Author: Jannik Siebert (https://github.com/janniks) */
+
+:root {
+    --pico-background-color: #031a16; /* Default backround */
+    --pico-color: #81b5ac; /* Default foreground */
+    --pico-text-selection-color: #184e45; /* Selection background */
+    --pico-primary: #96883e; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #184e45;
+    --pico-primary-hover: #3e7996; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-weight: 300;
+        overflow: visible;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 2.5%, #0b342d 2.5%);
+        background-size: 2000% 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #5f9c92;
+        background-color: #031a16;
+        margin-top: auto;
+    }
+    code, div.code>pre>code {
+        font-family: 'Chivo Mono', monospace !important;
+        padding: .15rem;
+        background-color: #0b342d !important;
+    }
+
+    code>span {
+        font-family: 'Chivo Mono', monospace !important;
+    }
+
+    div.doc>pre>code {
+        overflow-x: auto !important;
+    }
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/metrics_store.cr</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/system_status.cr.html"><span>src/system_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="metrics-store" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#metrics-store" class="anchor">↦</a>
+        </span>
+        <h1>Metrics store</h1>
+<p>The dashboard shows history, and journald only has <em>log</em> history, so
+Grafito gathers its own: a background fiber takes a
+<a href="system_status.cr.html">SystemStatus</a> snapshot every few seconds and
+appends it to a small JSONL file, one per day.</p>
+<p>The format is deliberately boring: one JSON object per line, one file
+per UTC day (<code>metrics-YYYY-MM-DD.jsonl</code>). It is trivially inspectable
+with standard tools, needs no database dependency, and a full week of
+30-second samples is a few megabytes. Old files are pruned at startup
+according to the retention setting.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-14"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">json</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-15"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-16"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">mutex</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-17"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">time</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-18"></span><span class="t"></span>
+<span id="line-19"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./system_status</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-20"></span><span class="t"></span>
+<span id="line-21"></span><span class="nk">module</span><span class="t"> </span><span class="no">Grafito</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+        <p>Stores metric points in memory (for quick &quot;current&quot; access) and in
+daily JSONL files (for history). All public methods are safe to call
+from both the sampler fiber and HTTP request fibers.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-25"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="no">MetricsStore</span><span class="t"></span>
+<span id="line-26"></span><span class="t">    </span><span class="no">Log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="nk">for</span><span class="t">(</span><span class="nk">self</span><span class="t">)</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>One sampled point in time. Kept as a small flat record so it maps
+1:1 to a JSONL line.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-30"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">record</span><span class="t"> </span><span class="no">MetricPoint</span><span class="t">,</span><span class="t"></span>
+<span id="line-31"></span><span class="t">      </span><span class="t">ts</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">,</span><span class="t"></span>
+<span id="line-32"></span><span class="t">      </span><span class="t">load1</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-33"></span><span class="t">      </span><span class="t">mem_used_pct</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-34"></span><span class="t">      </span><span class="t">disk_used_pct</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-35"></span><span class="t">      </span><span class="t">units_total</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-36"></span><span class="t">      </span><span class="t">units_failed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-37"></span><span class="t">      </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-38"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>In-memory cap: 24h of samples at a 30s interval.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-41"><pre class="b" ><code class="b"><span class="t">    </span><span class="no">MAX_RECENT</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">2880</span><span class="t"></span>
+<span id="line-42"></span><span class="t"></span>
+<span id="line-43"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">data_dir</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-44"></span><span class="t"></span>
+<span id="line-45"></span><span class="t">    </span><span class="t">@mutex</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Mutex</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-46"></span><span class="t">    </span><span class="t">@recent</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">MetricPoint</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-47"></span><span class="t">    </span><span class="t">@write_failure_logged</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">false</span><span class="t"></span>
+<span id="line-48"></span><span class="t"></span>
+<span id="line-49"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">initialize</span><span class="t">(</span><span class="t">@data_dir</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"></span>
+<span id="line-50"></span><span class="t">      </span><span class="no">Dir</span><span class="t">.</span><span class="t">mkdir_p</span><span class="t">(</span><span class="t">@data_dir</span><span class="t">)</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="no">Dir</span><span class="t">.</span><span class="t">exists?</span><span class="t">(</span><span class="t">@data_dir</span><span class="t">)</span><span class="t"></span>
+<span id="line-51"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>Converts a system snapshot into the flat point we persist.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-54"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">point_from_snapshot</span><span class="t">(</span><span class="t">snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">SystemStatus</span><span class="no">::</span><span class="no">Snapshot</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">MetricPoint</span><span class="t"></span>
+<span id="line-55"></span><span class="t">      </span><span class="no">MetricPoint</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-56"></span><span class="t">        </span><span class="t">ts</span><span class="t">:</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">timestamp</span><span class="t">,</span><span class="t"></span>
+<span id="line-57"></span><span class="t">        </span><span class="t">load1</span><span class="t">:</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">load1</span><span class="t">,</span><span class="t"></span>
+<span id="line-58"></span><span class="t">        </span><span class="t">mem_used_pct</span><span class="t">:</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">mem_used_pct</span><span class="t">,</span><span class="t"></span>
+<span id="line-59"></span><span class="t">        </span><span class="t">disk_used_pct</span><span class="t">:</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">disk_used_pct</span><span class="t">,</span><span class="t"></span>
+<span id="line-60"></span><span class="t">        </span><span class="t">units_total</span><span class="t">:</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">units_total</span><span class="t">,</span><span class="t"></span>
+<span id="line-61"></span><span class="t">        </span><span class="t">units_failed</span><span class="t">:</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">units_failed</span><span class="t">,</span><span class="t"></span>
+<span id="line-62"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-63"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>Records a point: appended to the in-memory tail and to the current
+day's file. File write failures are logged once (the store keeps
+working from memory).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-68"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">record</span><span class="t">(</span><span class="t">point</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">MetricPoint</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-69"></span><span class="t">      </span><span class="t">@mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-70"></span><span class="t">        </span><span class="t">@recent</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">point</span><span class="t"></span>
+<span id="line-71"></span><span class="t">        </span><span class="t">@recent</span><span class="t">.</span><span class="t">shift</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">@recent</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="no">MAX_RECENT</span><span class="t"></span>
+<span id="line-72"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-73"></span><span class="t">      </span><span class="t">append_to_file</span><span class="t">(</span><span class="t">point</span><span class="t">)</span><span class="t"></span>
+<span id="line-74"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>Returns the points recorded since the given time, newest last.
+Day files are the source of truth; the in-memory tail is the
+fallback for when file writes fail.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-79"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">history</span><span class="t">(</span><span class="t">since</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">MetricPoint</span><span class="t">)</span><span class="t"></span>
+<span id="line-80"></span><span class="t">      </span><span class="t">points</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">history_from_files</span><span class="t">(</span><span class="t">since</span><span class="t">)</span><span class="t"></span>
+<span id="line-81"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">points</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">points</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-82"></span><span class="t">      </span><span class="t">history_from_memory</span><span class="t">(</span><span class="t">since</span><span class="t">)</span><span class="t"></span>
+<span id="line-83"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>The most recent point, or nil when nothing has been sampled yet.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-86"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">latest</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">MetricPoint</span><span class="t">?</span><span class="t"></span>
+<span id="line-87"></span><span class="t">      </span><span class="t">@mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="t">@recent</span><span class="t">.</span><span class="t">last?</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-88"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>Deletes day files older than the retention window. Called at
+startup; also handy to call manually from specs.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-92"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">prune</span><span class="t">(</span><span class="t">retention_days</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-93"></span><span class="t">      </span><span class="t">cutoff_date</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">retention_days</span><span class="t">.</span><span class="t">days</span><span class="t">)</span><span class="t">.</span><span class="t">date</span><span class="t"></span>
+<span id="line-94"></span><span class="t">      </span><span class="no">Dir</span><span class="t">.</span><span class="t">glob</span><span class="t">(</span><span class="no">File</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="t">@data_dir</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">metrics-*.jsonl</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">path</span><span class="o">|</span><span class="t"></span>
+<span id="line-95"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">file_date</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">date_from_filename</span><span class="t">(</span><span class="t">path</span><span class="t">)</span><span class="t"></span>
+<span id="line-96"></span><span class="t">          </span><span class="no">File</span><span class="t">.</span><span class="t">delete</span><span class="t">(</span><span class="t">path</span><span class="t">)</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">file_date</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="t">cutoff_date</span><span class="t"></span>
+<span id="line-97"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-98"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-99"></span><span class="t">    </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-100"></span><span class="t">      </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to prune metrics files in </span><span class="lsi">#{</span><span class="t">@data_dir</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-101"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>Starts the background sampler fiber: snapshots the system every
+<code>interval_sec</code> seconds, records the point, and invokes the
+optional callback (used for Gotify alert rules).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-106"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">start</span><span class="t">(</span><span class="t"></span>
+<span id="line-107"></span><span class="t">      </span><span class="t">data_dir</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-108"></span><span class="t">      </span><span class="t">interval_sec</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-109"></span><span class="t">      </span><span class="t">retention_days</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-110"></span><span class="t">      </span><span class="o">&amp;</span><span class="t">on_sample</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">SystemStatus</span><span class="no">::</span><span class="no">Snapshot</span><span class="t"> </span><span class="o">-&gt;</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-111"></span><span class="t">    </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">MetricsStore</span><span class="t"></span>
+<span id="line-112"></span><span class="t">      </span><span class="t">store</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">new</span><span class="t">(</span><span class="t">data_dir</span><span class="t">)</span><span class="t"></span>
+<span id="line-113"></span><span class="t">      </span><span class="t">store</span><span class="t">.</span><span class="t">prune</span><span class="t">(</span><span class="t">retention_days</span><span class="t">)</span><span class="t"></span>
+<span id="line-114"></span><span class="t">      </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
+        <p>Demo builds pre-seed a day of plausible history so the chart
+is full from the first page load instead of growing a stub.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-117"><pre class="b" ><code class="b"><span class="t">        </span><span class="t">seed_fake_history</span><span class="t">(</span><span class="t">store</span><span class="t">,</span><span class="t"> </span><span class="m">24</span><span class="t">.</span><span class="t">hours</span><span class="t">,</span><span class="t"> </span><span class="m">5</span><span class="t">.</span><span class="t">minutes</span><span class="t">)</span><span class="t"></span>
+<span id="line-118"></span><span class="t">      </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-119"></span><span class="t">      </span><span class="t">spawn</span><span class="t">(</span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">metrics-sampler(</span><span class="lsi">#{</span><span class="t">interval_sec</span><span class="t"></span><span class="lsi">}</span><span class="s">s)</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-120"></span><span class="t">        </span><span class="t">loop</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-121"></span><span class="t">          </span><span class="nk">begin</span><span class="t"></span>
+<span id="line-122"></span><span class="t">            </span><span class="t">snapshot</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">SystemStatus</span><span class="t">.</span><span class="t">snapshot</span><span class="t"></span>
+<span id="line-123"></span><span class="t">            </span><span class="t">store</span><span class="t">.</span><span class="t">record</span><span class="t">(</span><span class="t">point_from_snapshot</span><span class="t">(</span><span class="t">snapshot</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-124"></span><span class="t">            </span><span class="t">on_sample</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">call</span><span class="t">(</span><span class="t">snapshot</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-125"></span><span class="t">          </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-126"></span><span class="t">            </span><span class="no">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Metrics sampling iteration failed</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-127"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-128"></span><span class="t">          </span><span class="t">sleep</span><span class="t"> </span><span class="t">interval_sec</span><span class="t">.</span><span class="t">seconds</span><span class="t"></span>
+<span id="line-129"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-130"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-131"></span><span class="t">      </span><span class="t">store</span><span class="t"></span>
+<span id="line-132"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-11" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-11" class="anchor">↦</a>
+        </span>
+        <p>Demo only: fills the store with a <code>window</code>-long history of
+plausible samples at <code>step</code> intervals, matching the live fake
+snapshot's wave so there is no seam between seeded and live
+points. No-op when history already exists.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-138"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">seed_fake_history</span><span class="t">(</span><span class="t">store</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">MetricsStore</span><span class="t">,</span><span class="t"> </span><span class="t">window</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="no">::</span><span class="no">Span</span><span class="t">,</span><span class="t"> </span><span class="t">step</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="no">::</span><span class="no">Span</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-139"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">store</span><span class="t">.</span><span class="t">history</span><span class="t">(</span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">window</span><span class="t">)</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-140"></span><span class="t"></span>
+<span id="line-141"></span><span class="t">      </span><span class="t">now</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t"></span>
+<span id="line-142"></span><span class="t">      </span><span class="t">steps</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">window</span><span class="t">.</span><span class="t">total_seconds</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">step</span><span class="t">.</span><span class="t">total_seconds</span><span class="t">)</span><span class="t">.</span><span class="t">to_i</span><span class="t"></span>
+<span id="line-143"></span><span class="t">      </span><span class="t">steps</span><span class="t">.</span><span class="t">downto</span><span class="t">(</span><span class="m">0</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">back</span><span class="o">|</span><span class="t"></span>
+<span id="line-144"></span><span class="t">        </span><span class="t">ts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">now</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">(</span><span class="t">back</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">step</span><span class="t">.</span><span class="t">total_seconds</span><span class="t">)</span><span class="t">.</span><span class="t">seconds</span><span class="t"></span>
+<span id="line-145"></span><span class="t">        </span><span class="t">metrics</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">SystemStatus</span><span class="t">.</span><span class="t">fake_metrics_at</span><span class="t">(</span><span class="t">ts</span><span class="t">)</span><span class="t"></span>
+<span id="line-146"></span><span class="t">        </span><span class="t">store</span><span class="t">.</span><span class="t">record</span><span class="t">(</span><span class="no">MetricPoint</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-147"></span><span class="t">          </span><span class="t">ts</span><span class="t">:</span><span class="t"> </span><span class="t">ts</span><span class="t">,</span><span class="t"></span>
+<span id="line-148"></span><span class="t">          </span><span class="t">load1</span><span class="t">:</span><span class="t"> </span><span class="t">metrics</span><span class="t">[</span><span class="ss">:load1</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-149"></span><span class="t">          </span><span class="t">mem_used_pct</span><span class="t">:</span><span class="t"> </span><span class="t">metrics</span><span class="t">[</span><span class="ss">:mem_used_pct</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-150"></span><span class="t">          </span><span class="t">disk_used_pct</span><span class="t">:</span><span class="t"> </span><span class="t">metrics</span><span class="t">[</span><span class="ss">:disk_used_pct</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-151"></span><span class="t">          </span><span class="t">units_total</span><span class="t">:</span><span class="t"> </span><span class="m">5</span><span class="t">,</span><span class="t"></span>
+<span id="line-152"></span><span class="t">          </span><span class="t">units_failed</span><span class="t">:</span><span class="t"> </span><span class="m">1</span><span class="t">,</span><span class="t"></span>
+<span id="line-153"></span><span class="t">        </span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-154"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-155"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-12" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-12" class="anchor">↦</a>
+        </span>
+        <p>Ensures the requested data directory is usable, falling back to a
+local directory when it cannot be created or written (e.g. the
+packaged DynamicUser service has no home and /var/lib/grafito may
+not be writable).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-161"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">resolve_data_dir</span><span class="t">(</span><span class="t">requested</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-162"></span><span class="t">      </span><span class="nk">begin</span><span class="t"></span>
+<span id="line-163"></span><span class="t">        </span><span class="no">Dir</span><span class="t">.</span><span class="t">mkdir_p</span><span class="t">(</span><span class="t">requested</span><span class="t">)</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="no">Dir</span><span class="t">.</span><span class="t">exists?</span><span class="t">(</span><span class="t">requested</span><span class="t">)</span><span class="t"></span>
+<span id="line-164"></span><span class="t">        </span><span class="t">probe</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">File</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="t">requested</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">.grafito-write-test</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-165"></span><span class="t">        </span><span class="no">File</span><span class="t">.</span><span class="t">write</span><span class="t">(</span><span class="t">probe</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">ok</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-166"></span><span class="t">        </span><span class="no">File</span><span class="t">.</span><span class="t">delete</span><span class="t">(</span><span class="t">probe</span><span class="t">)</span><span class="t"></span>
+<span id="line-167"></span><span class="t">        </span><span class="nk">return</span><span class="t"> </span><span class="t">requested</span><span class="t"></span>
+<span id="line-168"></span><span class="t">      </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-169"></span><span class="t">        </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Data dir &#39;</span><span class="lsi">#{</span><span class="t">requested</span><span class="t"></span><span class="lsi">}</span><span class="s">&#39; is not writable, falling back to ./grafito-data</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-170"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-171"></span><span class="t"></span>
+<span id="line-172"></span><span class="t">      </span><span class="t">fallback</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">File</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="no">Dir</span><span class="t">.</span><span class="t">current</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">grafito-data</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-173"></span><span class="t">      </span><span class="nk">begin</span><span class="t"></span>
+<span id="line-174"></span><span class="t">        </span><span class="no">Dir</span><span class="t">.</span><span class="t">mkdir_p</span><span class="t">(</span><span class="t">fallback</span><span class="t">)</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="no">Dir</span><span class="t">.</span><span class="t">exists?</span><span class="t">(</span><span class="t">fallback</span><span class="t">)</span><span class="t"></span>
+<span id="line-175"></span><span class="t">      </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-176"></span><span class="t">        </span><span class="no">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Fallback data dir &#39;</span><span class="lsi">#{</span><span class="t">fallback</span><span class="t"></span><span class="lsi">}</span><span class="s">&#39; is also unusable; metrics history will not persist</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-177"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-178"></span><span class="t">      </span><span class="t">fallback</span><span class="t"></span>
+<span id="line-179"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-13" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-13" class="anchor">↦</a>
+        </span>
+        <p>Parses the UTC date out of a metrics file name, if well-formed.
+<code>Time#date</code> returns a (year, month, day) tuple in current Crystal,
+which compares correctly as a date.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-184"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">date_from_filename</span><span class="t">(</span><span class="t">path</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Tuple</span><span class="t">(</span><span class="no">Int32</span><span class="t">,</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"> </span><span class="no">Int32</span><span class="t">)</span><span class="t">?</span><span class="t"></span>
+<span id="line-185"></span><span class="t">      </span><span class="t">filename</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">File</span><span class="t">.</span><span class="t">basename</span><span class="t">(</span><span class="t">path</span><span class="t">)</span><span class="t"></span>
+<span id="line-186"></span><span class="t">      </span><span class="t">match</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">filename</span><span class="t">.</span><span class="t">match</span><span class="t">(</span><span class="s">/</span><span class="s">^metrics-(</span><span class="s">\d</span><span class="s">{4})-(</span><span class="s">\d</span><span class="s">{2})-(</span><span class="s">\d</span><span class="s">{2})</span><span class="s">\.</span><span class="s">jsonl$</span><span class="s">/</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-187"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">match</span><span class="t"></span>
+<span id="line-188"></span><span class="t"></span>
+<span id="line-189"></span><span class="t">      </span><span class="t">{</span><span class="t">match</span><span class="t">[</span><span class="m">1</span><span class="t">]</span><span class="t">.</span><span class="t">to_i</span><span class="t">,</span><span class="t"> </span><span class="t">match</span><span class="t">[</span><span class="m">2</span><span class="t">]</span><span class="t">.</span><span class="t">to_i</span><span class="t">,</span><span class="t"> </span><span class="t">match</span><span class="t">[</span><span class="m">3</span><span class="t">]</span><span class="t">.</span><span class="t">to_i</span><span class="t">}</span><span class="t"></span>
+<span id="line-190"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-191"></span><span class="t"></span>
+<span id="line-192"></span><span class="t">    </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">append_to_file</span><span class="t">(</span><span class="t">point</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">MetricPoint</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-193"></span><span class="t">      </span><span class="t">path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">File</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="t">@data_dir</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">metrics-</span><span class="lsi">#{</span><span class="t">point</span><span class="t">.</span><span class="t">ts</span><span class="t">.</span><span class="t">to_utc</span><span class="t">.</span><span class="t">to_s</span><span class="t">(</span><span class="s">&quot;</span><span class="s">%F</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">.jsonl</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-194"></span><span class="t">      </span><span class="no">File</span><span class="t">.</span><span class="t">open</span><span class="t">(</span><span class="t">path</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">a</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="o">&amp;</span><span class="t">.</span><span class="t">puts</span><span class="t">(</span><span class="t">point</span><span class="t">.</span><span class="t">to_json</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-195"></span><span class="t">      </span><span class="t">@write_failure_logged</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">false</span><span class="t"></span>
+<span id="line-196"></span><span class="t">    </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-197"></span><span class="t">      </span><span class="nk">unless</span><span class="t"> </span><span class="t">@write_failure_logged</span><span class="t"></span>
+<span id="line-198"></span><span class="t">        </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to write metrics to </span><span class="lsi">#{</span><span class="t">@data_dir</span><span class="t"></span><span class="lsi">}</span><span class="s">; will keep sampling in memory</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-199"></span><span class="t">        </span><span class="t">@write_failure_logged</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t"></span>
+<span id="line-200"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-201"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-202"></span><span class="t"></span>
+<span id="line-203"></span><span class="t">    </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">history_from_memory</span><span class="t">(</span><span class="t">since</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">MetricPoint</span><span class="t">)</span><span class="t"></span>
+<span id="line-204"></span><span class="t">      </span><span class="t">@mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-205"></span><span class="t">        </span><span class="t">@recent</span><span class="t">.</span><span class="nk">select</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">point</span><span class="o">|</span><span class="t"> </span><span class="t">point</span><span class="t">.</span><span class="t">ts</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="t">since</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-206"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-207"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-208"></span><span class="t"></span>
+<span id="line-209"></span><span class="t">    </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">history_from_files</span><span class="t">(</span><span class="t">since</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">MetricPoint</span><span class="t">)</span><span class="t"></span>
+<span id="line-210"></span><span class="t">      </span><span class="t">points</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">MetricPoint</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-211"></span><span class="t"></span>
+<span id="line-212"></span><span class="t">      </span><span class="t">day</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">since</span><span class="t">.</span><span class="t">to_utc</span><span class="t">.</span><span class="t">at_beginning_of_day</span><span class="t"></span>
+<span id="line-213"></span><span class="t">      </span><span class="t">now</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t"></span>
+<span id="line-214"></span><span class="t">      </span><span class="nk">while</span><span class="t"> </span><span class="t">day</span><span class="t"> </span><span class="o">&lt;=</span><span class="t"> </span><span class="t">now</span><span class="t"></span>
+<span id="line-215"></span><span class="t">        </span><span class="t">path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">File</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="t">@data_dir</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">metrics-</span><span class="lsi">#{</span><span class="t">day</span><span class="t">.</span><span class="t">to_s</span><span class="t">(</span><span class="s">&quot;</span><span class="s">%F</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">.jsonl</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-216"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="no">File</span><span class="t">.</span><span class="t">exists?</span><span class="t">(</span><span class="t">path</span><span class="t">)</span><span class="t"></span>
+<span id="line-217"></span><span class="t">          </span><span class="no">File</span><span class="t">.</span><span class="t">each_line</span><span class="t">(</span><span class="t">path</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
+<span id="line-218"></span><span class="t">            </span><span class="nk">next</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-219"></span><span class="t">            </span><span class="t">point</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">MetricPoint</span><span class="t">.</span><span class="t">from_json</span><span class="t">(</span><span class="t">line</span><span class="t">)</span><span class="t"></span>
+<span id="line-220"></span><span class="t">            </span><span class="t">points</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">point</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">point</span><span class="t">.</span><span class="t">ts</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="t">since</span><span class="t"></span>
+<span id="line-221"></span><span class="t">          </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-222"></span><span class="t">            </span><span class="no">Log</span><span class="t">.</span><span class="t">debug</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Skipping malformed metrics line</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-223"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-224"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-225"></span><span class="t">        </span><span class="t">day</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">day</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">1</span><span class="t">.</span><span class="t">days</span><span class="t"></span>
+<span id="line-226"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-227"></span><span class="t">      </span><span class="t">points</span><span class="t">.</span><span class="t">sort_by!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">ts</span><span class="t">)</span><span class="t"></span>
+<span id="line-228"></span><span class="t">      </span><span class="t">points</span><span class="t"></span>
+<span id="line-229"></span><span class="t">    </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-230"></span><span class="t">      </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to read metrics history from </span><span class="lsi">#{</span><span class="t">@data_dir</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-231"></span><span class="t">      </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">MetricPoint</span><span class="t"></span>
+<span id="line-232"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-233"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-234"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Apathy
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

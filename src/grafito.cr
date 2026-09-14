@@ -913,14 +913,15 @@ module Grafito
   private def self.severity_buckets(
     logs : Array(Journalctl::LogEntry),
     history : Array(MetricsStore::MetricPoint),
-  ) : Array(NamedTuple(time: Time, err: Int32, warn: Int32, info: Int32))
-    return [] of NamedTuple(time: Time, err: Int32, warn: Int32, info: Int32) if history.size < 2
+  ) : Array(Timeline::TimelinePoint)
+    return [] of Timeline::TimelinePoint if history.size < 2
     oldest = history.first.ts
     span_sec = [(history.last.ts - oldest).total_seconds, 1.0].max
     bucket_count = 60
     bucket_sec = span_sec / bucket_count
     buckets = Array.new(bucket_count) do |index|
-      {time: oldest + Time::Span.new(seconds: (index * bucket_sec).to_i), err: 0, warn: 0, info: 0}
+      start_time = oldest + Time::Span.new(seconds: (index * bucket_sec).to_i)
+      {start_time: start_time, count: 0, err: 0, warn: 0, info: 0}
     end
     logs.each do |entry|
       offset = (entry.timestamp - oldest).total_seconds
@@ -928,13 +929,14 @@ module Grafito
       index = (offset / bucket_sec).to_i
       next if index >= bucket_count
       bucket = buckets[index]
+      count = bucket[:count] + 1
       case entry.priority.to_i? || 7
       when 0..3
-        buckets[index] = {time: bucket[:time], err: bucket[:err] + 1, warn: bucket[:warn], info: bucket[:info]}
+        buckets[index] = {start_time: bucket[:start_time], count: count, err: bucket[:err] + 1, warn: bucket[:warn], info: bucket[:info]}
       when 4
-        buckets[index] = {time: bucket[:time], err: bucket[:err], warn: bucket[:warn] + 1, info: bucket[:info]}
+        buckets[index] = {start_time: bucket[:start_time], count: count, err: bucket[:err], warn: bucket[:warn] + 1, info: bucket[:info]}
       else
-        buckets[index] = {time: bucket[:time], err: bucket[:err], warn: bucket[:warn], info: bucket[:info] + 1}
+        buckets[index] = {start_time: bucket[:start_time], count: count, err: bucket[:err], warn: bucket[:warn], info: bucket[:info] + 1}
       end
     end
     buckets
