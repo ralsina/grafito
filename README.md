@@ -136,6 +136,23 @@ small history chart of memory and disk usage.
 Set `GRAFITO_DASHBOARD=false` (or `--dashboard=false`) to disable the
 dashboard, its endpoints and the sampler completely.
 
+### Process Monitor
+
+Click the **Processes** button in the top bar (or share a link with
+`view=processes`) for "htop on a page": per-core CPU meters, summary
+cards and a live process table (pid, user, state, CPU%, MEM%, VIRT,
+RES, TIME+ and command) refreshed every 3 seconds. The table sorts by
+any column (click the headers) and filters by user, pid or command.
+
+* **Sorting and filtering**: applied server-side and persisted in the
+  URL, so shared links reopen the view exactly as it was.
+* **Kill actions** (opt-in, auth required): with `--enable-actions` and
+  credentials configured, the table offers SIGTERM and SIGKILL buttons;
+  each asks for confirmation and is logged.
+
+Set `GRAFITO_PROCESSES=false` (or `--processes=false`) to disable the
+process view and its endpoints completely.
+
 ### Timezone Configuration
 
 Grafito displays timestamps in your local timezone by default, but you can configure it to use any timezone you prefer. This solves the issue of having to mentally convert UTC timestamps to your local time.

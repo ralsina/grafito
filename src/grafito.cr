@@ -15,6 +15,8 @@ require "./timeline"
 require "./system_status"
 require "./metrics_store"
 require "./dashboard"
+require "./process_status"
+require "./process_dashboard"
 require "./gotify/config"
 require "./gotify/client"
 require "./gotify/rules"
@@ -65,6 +67,10 @@ module Grafito
   # Server dashboard - when enabled, /status, /status/history and
   # /dashboard are served and the metrics sampler runs.
   class_property? dashboard_enabled : Bool = true
+
+  # Process view - when enabled, the /processes routes are served and
+  # the Processes toggle appears in the frontend.
+  class_property? processes_enabled : Bool = true
 
   # Metrics sampler, nil when the dashboard is disabled (and in specs).
   class_property metrics_store : MetricsStore? = nil
@@ -857,7 +863,80 @@ module Grafito
       end
       render_dashboard_fragment
     end
+
+    # ## The `/processes` endpoint
+    #
+    # Returns the process view HTML fragment for HTMX: CPU meters,
+    # summary cards and the process table. The frontend polls it every
+    # 3 seconds. Parameters:
+    # * `sort_by` (pid, user, state, cpu, mem, virt, res, time, cmd) and
+    #   `sort_order` (asc/desc) control the table ordering.
+    # * `filter` matches user, pid or command substring.
+    get route_path("processes") do |env|
+      unless Grafito.processes_enabled?
+        env.response.status_code = 404
+        next "Process view is disabled."
+      end
+      env.response.content_type = "text/html"
+      ProcessDashboard.render_html(
+        ProcessStatus.snapshot,
+        Grafito.enable_actions?,
+        optional_query_param(env, "sort_by"),
+        optional_query_param(env, "sort_order"),
+        optional_query_param(env, "filter"),
+      )
+    end
+
+    # ## The process action endpoint
+    #
+    # `POST /process/<pid>/<term|kill>` sends a signal to the named
+    # process. Gated exactly like the unit actions: --enable-actions
+    # plus authentication, because killing processes is the least
+    # read-only thing grafito can do.
+    post route_path("process/:pid/:action") do |env|
+      unless Grafito.processes_enabled? && Grafito.enable_actions? && Grafito.auth_configured?
+        env.response.status_code = 403
+        next "Process actions are disabled. Start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS) to allow them."
+      end
+
+      action = env.params.url["action"]
+      signal = case action
+               when "term" then Signal::TERM
+               when "kill" then Signal::KILL
+               else
+                 env.response.status_code = 400
+                 next "Invalid action '#{HTML.escape(action)}'."
+               end
+
+      pid = env.params.url["pid"].to_i32?
+      if pid.nil? || pid <= 1 || !File.exists?("/proc/#{pid}")
+        env.response.status_code = 404
+        next "Process '#{HTML.escape(env.params.url["pid"])}' not found."
+      end
+
+      if ProcessStatus.signal(pid, signal)
+        Log.info { "sent SIG#{action.upcase} to pid #{pid}" }
+        env.response.content_type = "text/html"
+        render_process_fragment(env)
+      else
+        env.response.status_code = 500
+        "Failed to signal process #{pid}."
+      end
+    end
   end # register_routes
+
+  # Returns the process view fragment preserving the request's sort and
+  # filter parameters, used by the kill endpoints so the table does not
+  # jump back to the default ordering.
+  private def self.render_process_fragment(env : HTTP::Server::Context) : String
+    ProcessDashboard.render_html(
+      ProcessStatus.snapshot,
+      Grafito.enable_actions?,
+      optional_query_param(env, "sort_by"),
+      optional_query_param(env, "sort_order"),
+      optional_query_param(env, "filter"),
+    )
+  end
 
   # Counts journal entries at priority <= 3 (error or worse) for one
   # unit since the given relative time. Bounded like the dashboard's

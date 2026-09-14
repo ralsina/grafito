@@ -359,6 +359,19 @@ body[data-view="dashboard"] #dashboard-filter-box {
   display: flex;
 }
 
+/* Process filter box: same hide-by-default strategy as the service
+   filter, shown only while the process view is active. */
+#processes-filter-box {
+  display: none;
+  flex: none;
+  width: 260px;
+  min-width: 0;
+  max-width: none;
+}
+body[data-view="processes"] #processes-filter-box {
+  display: flex;
+}
+
 .topbar-select {
   width: auto;
   height: 2.1rem;
@@ -610,7 +623,17 @@ body[data-view="dashboard"] #clear-filters-btn,
 body[data-view="dashboard"] #copy-link-button,
 body[data-view="dashboard"] #export-logs-button,
 body[data-view="dashboard"] .live-toggle,
-body[data-view="dashboard"] #stats-strip {
+body[data-view="dashboard"] #stats-strip,
+body[data-view="processes"] #search-omnibox,
+body[data-view="processes"] #time-range-filter,
+body[data-view="processes"] #priority-filter,
+body[data-view="processes"] #filter-panel,
+body[data-view="processes"] #show-command-button,
+body[data-view="processes"] #clear-filters-btn,
+body[data-view="processes"] #copy-link-button,
+body[data-view="processes"] #export-logs-button,
+body[data-view="processes"] .live-toggle,
+body[data-view="processes"] #stats-strip {
   display: none !important;
 }
 /* In dashboard view the minimap rail stays: it shows the services
@@ -1863,4 +1886,146 @@ html[data-ui="mission"] #results table tbody tr:hover {
 }
 #search-omnibox .af-chip-x:hover {
   color: var(--err);
+}
+
+/* =====================================================================
+   Process monitor (htop on a page)
+   ===================================================================== */
+#processes-view {
+  padding: 0.5rem 0 1rem;
+}
+.proc-meters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.8rem 0 0.4rem;
+}
+.proc-meters-hint {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.proc-meter {
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--muted);
+}
+.proc-meter-label {
+  align-self: center;
+  min-width: 0.9rem;
+  text-align: right;
+}
+.proc-meter-track {
+  position: relative;
+  width: 0.75rem;
+  height: 2.4rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.proc-meter-track .proc-bar-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+.proc-meter-pct {
+  align-self: center;
+  min-width: 1.4rem;
+}
+.proc-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.4rem 0;
+}
+.proc-count {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.proc-state-form {
+  display: none;
+}
+/* CPU% cell: a htop-style bar with the number overlaid */
+.proc-table td,
+.proc-table th {
+  white-space: nowrap;
+}
+.proc-table .proc-cmd {
+  white-space: normal;
+  word-break: break-all;
+  max-width: 34rem;
+}
+.proc-pid {
+  font-family: var(--font-mono);
+}
+.proc-num,
+.proc-mem {
+  font-family: var(--font-mono);
+  text-align: right;
+}
+.proc-bar {
+  position: relative;
+  min-width: 5.5rem;
+  height: 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+}
+.proc-bar-fill {
+  height: 100%;
+}
+.proc-bar-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--txt);
+}
+.proc-bar-low {
+  background: var(--ok, #4c9f70);
+  opacity: 0.75;
+}
+.proc-bar-mid {
+  background: #d9a13c;
+}
+.proc-bar-high {
+  background: var(--err, #d9534f);
+}
+.proc-state {
+  display: inline-block;
+  min-width: 1.1rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0 0.3rem;
+  color: var(--muted);
+}
+.proc-state-R {
+  color: #4c9f70;
+  border-color: #4c9f70;
+}
+.proc-state-D {
+  color: #d9a13c;
+  border-color: #d9a13c;
+}
+.proc-state-Z,
+.proc-state-T {
+  color: var(--err, #d9534f);
+  border-color: var(--err, #d9534f);
+}
+.proc-zombie td {
+  opacity: 0.55;
+}
+.proc-actions {
+  text-align: right;
 }
