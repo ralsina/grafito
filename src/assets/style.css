@@ -362,7 +362,7 @@ html[data-ui="fieldnotes"] .grafito-title-link {
   max-width: none;
 }
 body[data-view="dashboard"] #dashboard-filter-box {
-  display: flex !important;
+  display: flex;
 }
 
 /* Process filter box: same hide-by-default strategy as the service
@@ -375,7 +375,7 @@ body[data-view="dashboard"] #dashboard-filter-box {
   max-width: none;
 }
 body[data-view="processes"] #processes-filter-box {
-  display: flex !important;
+  display: flex;
 }
 
 .topbar-select {
@@ -698,9 +698,7 @@ body[data-view] #clear-filters-btn,
 body[data-view] #copy-link-button,
 body[data-view] #export-logs-button,
 body[data-view] .live-toggle,
-body[data-view] #stats-strip,
-body[data-view] #dashboard-filter-box,
-body[data-view] #processes-filter-box {
+body[data-view] #stats-strip {
   display: none !important;
 }
 /* In dashboard view the minimap rail stays: it shows the services
