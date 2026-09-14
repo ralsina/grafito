@@ -611,7 +611,7 @@ module Dashboard
       svg << severity_bars(severity_buckets, oldest, span_sec, width, height)
     end
     svg << %(  <polyline fill="none" stroke="var(--info, steelblue)" stroke-width="2" points="#{polyline_points(points, oldest, span_sec, width, height, &.mem_used_pct)}" />)
-    svg << %(  <polyline fill="none" stroke="var(--err, darkorange)" stroke-width="2" points="#{polyline_points(points, oldest, span_sec, width, height, &.disk_used_pct)}" />)
+    svg << %(  <polyline fill="none" stroke="var(--err, darkorange)" stroke-width="2" stroke-dasharray="4 3" points="#{polyline_points(points, oldest, span_sec, width, height, &.disk_used_pct)}" />)
     svg << %(  <text x="8" y="#{(height - 8).to_i}" class="tl-label">#{points.first.ts.to_s("%m-%d %H:%M")}</text>)
     svg << %(  <text x="#{(width - 8).to_i}" y="#{(height - 8).to_i}" text-anchor="end" class="tl-label">#{points.last.ts.to_s("%m-%d %H:%M")}</text>)
     svg << %(</svg>)
@@ -653,37 +653,6 @@ module Dashboard
       bars << %(    <rect x="#{x.round(2)}" y="#{(base - info_h - warn_h).round(2)}" width="#{bar_width}" height="#{warn_h}" fill="var(--warn)" fill-opacity="0.9" stroke="none" />) if warn_h > 0
       bars << %(    <rect x="#{x.round(2)}" y="#{(base - info_h - warn_h - err_h).round(2)}" width="#{bar_width}" height="#{err_h}" fill="var(--err)" fill-opacity="1" stroke="none" />) if err_h > 0
       bars << %(  </g>)
-    end
-    bars.to_s
-  end
-
-  # Builds one translucent bar per error bucket: same x mapping and
-  # extent as the line series, height scaled so the bucket maximum
-  # reaches the top of the chart. Bars sit behind the lines with a
-  # small gap between them so buckets read as discrete counts.
-  private def error_bars(
-    buckets : Array(Tuple(Time, Int32)),
-    oldest : Time,
-    span_sec : Float64,
-    width : Float64,
-    height : Float64,
-  ) : String
-    padding = 8.0
-    usable = height - 2 * padding
-    # Scale against a reference of at least 10 errors per bucket so a
-    # sparse window (1 error per busy bucket) doesn't render every bar
-    # at full height; busier windows scale to their own maximum.
-    reference = [buckets.max_of(&.[1]).to_f, 10.0].max
-    slot = (width - 2 * padding) / buckets.size
-    bar_width = (slot * 0.7).round(2)
-    bars = IO::Memory.new
-    buckets.each do |bucket_time, count|
-      next if count.zero?
-      x = padding + ((bucket_time - oldest).total_seconds / span_sec) * (width - 2 * padding)
-      bar_height = (count.to_f / reference * usable).round(2)
-      y = (height - padding - bar_height).round(2)
-      bars << %(  <rect x="#{x.round(2)}" y="#{y}" width="#{bar_width}" height="#{bar_height}" )
-      bars << %(fill="var(--err, darkorange)" fill-opacity="0.35" stroke="none" />)
     end
     bars.to_s
   end
