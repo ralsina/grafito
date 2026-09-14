@@ -209,7 +209,9 @@ module ProcessStatus
     ticks = Hash(String, CoreTicks).new
     File.each_line("/proc/stat") do |line|
       fields = line.split
-      next unless fields.size >= 5 && fields[0].starts_with?("cpu")
+      # Only the per-core lines (cpu0, cpu1, ...): the aggregate "cpu"
+      # line is the sum of all of them and must not count as a core.
+      next unless fields.size >= 5 && fields[0] =~ /^cpu\d+$/
       # Idle time includes iowait: the core is not doing work then.
       values = fields[1..].map(&.to_i64?)
       next if values.any?(Nil)
