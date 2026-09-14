@@ -168,7 +168,17 @@ module ProcessDashboard
     cpu_pct = process_info.cpu_pct
     cpu_class = cpu_pct >= 80 ? "proc-bar-high" : (cpu_pct >= 30 ? "proc-bar-mid" : "proc-bar-low")
     HTML.build do
-      tr(class: process_info.zombie? ? "proc-zombie" : "") do
+      # Clicking anywhere on the row opens the process panel (the
+      # sidebar's Detail tab), exactly like the dashboard's unit rows.
+      tr(
+        class: process_info.zombie? ? "proc-zombie" : "",
+        title: "Show details for pid #{process_info.pid}",
+        "hx-get": "process-details?pid=#{process_info.pid}",
+        "hx-target": "#panel-detail-content",
+        "hx-swap": "innerHTML",
+        "hx-on:htmx:before-request": "panelSpinner('panel-detail-content')",
+        "hx-on:htmx:after-request": "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
+      ) do
         td(class: "proc-pid") { text process_info.pid.to_s }
         td { text process_info.user }
         td do
@@ -208,6 +218,9 @@ module ProcessDashboard
         "hx-confirm": "#{title}?",
         "hx-include": "#proc-state-form",
         "hx-indicator": "#loading-spinner",
+        # The row itself opens the detail panel; a signal button must
+        # not trigger it too.
+        "onclick": "event.stopPropagation()",
       ) do
         span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
           text icon
@@ -271,6 +284,158 @@ module ProcessDashboard
     minutes = (total / 60).to_i
     secs = total - minutes * 60
     "%02d:%05.2f" % {minutes, secs}
+  end
+
+  # ## The process detail panel
+  #
+  # Swapped into the sidebar's Detail tab when a table row is clicked,
+  # using the same .service-panel markup the dashboard's unit panel
+  # uses, so the panel's service-view mode (hiding the log-entry tabs)
+  # works unchanged.
+
+  def process_details_fragment(
+    detail : ProcessStatus::ProcessDetail,
+    enable_actions : Bool = false,
+    ai_available : Bool = false,
+  ) : String
+    HTML.build do
+      div(class: "service-panel") do
+        tag("h4") do
+          text "#{detail.command.size > 60 ? detail.command[0...57] + "..." : detail.command} (#{detail.pid})"
+        end
+        div(class: "service-panel-pills") do
+          html state_pill(detail.state)
+          if detail.systemd_unit?
+            span(class: "state-pill") { text detail.unit }
+          end
+        end
+
+        div(class: "service-panel-info proc-detail-info") do
+          div do
+            span(class: "stat-label") { text "User" }
+            span { text "#{detail.user} (#{detail.uid})" }
+          end
+          div do
+            span(class: "stat-label") { text "Parent" }
+            span { text detail.ppid.to_s }
+          end
+          div do
+            span(class: "stat-label") { text "Threads" }
+            span { text detail.threads.to_s }
+          end
+          div do
+            span(class: "stat-label") { text "Started" }
+            span { text detail.started.to_s("%Y-%m-%d %H:%M:%S") }
+          end
+          div do
+            span(class: "stat-label") { text "CPU (avg)" }
+            span { text "%.1f%%" % detail.cpu_pct }
+          end
+          div do
+            span(class: "stat-label") { text "CPU time" }
+            span { text format_cpu_time(detail.cpu_time_sec) }
+          end
+          div do
+            span(class: "stat-label") { text "Memory" }
+            span { text "%.1f%% (%s of RAM)" % {detail.mem_pct, human_size(detail.res_kb)} }
+          end
+          div do
+            span(class: "stat-label") { text "Virtual" }
+            span { text human_size(detail.virt_kb) }
+          end
+        end
+
+        tag("pre", class: "proc-detail-command") do
+          text detail.command
+        end
+
+        if enable_actions
+          div(class: "service-panel-actions") do
+            html signal_button(detail, "term", "skill", "SIGTERM", "Ask #{detail.pid} to exit (SIGTERM)")
+            if detail.stopped?
+              html signal_button(detail, "cont", "play_arrow", "SIGCONT", "Resume #{detail.pid} (SIGCONT)")
+            else
+              html signal_button(detail, "stop", "pause", "SIGSTOP", "Pause #{detail.pid} (SIGSTOP)")
+            end
+            html signal_button(detail, "kill", "dangerous", "SIGKILL", "Force-kill #{detail.pid} (SIGKILL)")
+            span(class: "service-panel-hint") { text "process signals" }
+          end
+        end
+
+        if ai_available
+          div(class: "service-panel-ai") do
+            button(
+              {
+                "class"        => "service-panel-explain",
+                "title"        => "Ask the AI to explain this process and its recent logs",
+                "hx-post"      => "process-explain?pid=#{detail.pid}",
+                "hx-target"    => "#service-ai-content",
+                "hx-swap"      => "innerHTML",
+                "hx-indicator" => "#loading-spinner",
+              }
+            ) do
+              span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+                text "psychology"
+              end
+              text " Explain this process (AI)"
+            end
+            div(id: "service-ai-content") { }
+          end
+        end
+
+        button(
+          class: "service-panel-viewlogs",
+          title: detail.systemd_unit? ? "Show the journal for #{detail.unit}" : "Search the journal for \"#{detail.comm}\"",
+          onclick: "return setProcessLogsFilter(#{detail.unit.to_json}, #{detail.comm.to_json});",
+        ) do
+          span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+            text "article"
+          end
+          text detail.systemd_unit? ? " View logs for #{detail.unit}" : " Search logs for this process"
+        end
+      end
+    end
+  end
+
+  # Error variant swapped into the panel when a signal from the panel
+  # fails (process vanished, permission denied...), mirroring the
+  # dashboard's action error fragment.
+  def process_action_error_fragment(action : String, pid : Int32, message : String) : String
+    HTML.build do
+      div(class: "service-panel service-panel-error") do
+        tag("h4") { text "PID #{pid}" }
+        tag("p") do
+          text "SIG#{action.upcase} failed: #{message}"
+        end
+      end
+    end
+  end
+
+  # One signal button inside the panel. Panel actions refresh the panel
+  # (from=panel) instead of the whole table.
+  private def signal_button(detail : ProcessStatus::ProcessDetail, action : String, icon : String, label : String, title : String) : String
+    HTML.build do
+      button(
+        class: "round-button",
+        title: title,
+        "hx-post": "process/#{detail.pid}/#{action}?from=panel",
+        "hx-target": "#panel-detail-content",
+        "hx-swap": "innerHTML",
+        "hx-confirm": "#{title}?",
+        "hx-indicator": "#loading-spinner",
+      ) do
+        span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+          text icon
+        end
+        text " #{label}"
+      end
+    end
+  end
+
+  private def state_pill(state : String) : String
+    HTML.build do
+      span(class: "state-pill proc-state-#{state}") { text state }
+    end
   end
 
   private def human_size(kilobytes : Int64) : String

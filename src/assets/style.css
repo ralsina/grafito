@@ -2029,3 +2029,29 @@ html[data-ui="mission"] #results table tbody tr:hover {
 .proc-actions {
   text-align: right;
 }
+.proc-detail-command {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 8rem;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+}
+/* The process panel has eight info fields (twice the unit panel's),
+   so it wraps into a two-column grid instead of one flex row. */
+.proc-detail-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+}
+.proc-detail-info > div {
+  min-width: 0;
+}
+.proc-detail-info span:last-child {
+  overflow-wrap: break-word;
+}

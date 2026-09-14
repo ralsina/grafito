@@ -92,6 +92,55 @@ module ProcessStatus
     false
   end
 
+  # Everything the detail panel shows about one process. Read straight
+  # from /proc on demand (the table snapshot only carries the summary);
+  # CPU percentage here is the process's lifetime average, which is the
+  # honest number a single spot read can produce.
+  record ProcessDetail,
+    pid : Int32,
+    user : String,
+    uid : String,
+    state : String,
+    cpu_pct : Float64,
+    mem_pct : Float64,
+    virt_kb : Int64,
+    res_kb : Int64,
+    cpu_time_sec : Float64,
+    threads : Int32,
+    ppid : Int32,
+    started : Time,
+    command : String,
+    unit : String do
+    include JSON::Serializable
+
+    def comm : String
+      # Mirror the table: kernel threads are bracketed comm names.
+      command.starts_with?("[") ? command[1...command.size - 1] : File.basename(command.split(" ").first? || command)
+    end
+
+    def zombie? : Bool
+      state == "Z"
+    end
+
+    def stopped? : Bool
+      state == "T"
+    end
+
+    def systemd_unit? : Bool
+      !unit.empty?
+    end
+  end
+
+  # Reads the detail record for one pid, or nil when the process does
+  # not exist (or died between the panel opening and this read).
+  def self.detail(pid : Int32) : ProcessDetail?
+    {% if flag?(:fake_journal) %}
+      fake_detail(pid)
+    {% else %}
+      real_detail(pid)
+    {% end %}
+  end
+
   # ## Real implementation
 
   private def self.real_snapshot : Snapshot
@@ -272,6 +321,94 @@ module ProcessStatus
     end
   end
 
+  # Builds the detail record from the process's /proc files. The stat
+  # parse reuses the same field layout as the table reader; the extras
+  # (ppid, threads) come from the same tail.
+  private def self.real_detail(pid : Int32) : ProcessDetail?
+    raw = File.read("/proc/#{pid}/stat")
+    tail_start = raw.rindex(')')
+    head_start = raw.index('(')
+    return unless tail_start && head_start
+    comm = raw[head_start + 1...tail_start]
+    fields = raw[tail_start + 1..].split
+    return unless fields.size >= 22
+    detail_from_fields(pid, comm, fields)
+  rescue File::NotFoundError | File::AccessDeniedError
+    nil
+  end
+
+  # Assembles the detail record from the fixed-field tail of a stat
+  # file. The extras (ppid, threads) share the tail with the fields the
+  # table reader uses.
+  private def self.detail_from_fields(pid : Int32, comm : String, fields : Array(String)) : ProcessDetail
+    uid = uid_of(pid)
+    total_ticks = (fields[11].to_i64? || 0i64) + (fields[12].to_i64? || 0i64)
+    starttime = fields[19].to_i64? || 0i64
+    res_kb = (fields[21].to_i64? || 0i64) * page_size_kb
+    mem_total_kb = read_mem_total_kb
+
+    ProcessDetail.new(
+      pid: pid,
+      user: user_names[uid]? || "?",
+      uid: uid,
+      state: fields[0],
+      # Lifetime average: a spot read has no previous delta to diff
+      # against, and this is the same number the table's first render
+      # shows, so the panel never contradicts the table.
+      cpu_pct: lifetime_cpu_pct(total_ticks, starttime, read_uptime_sec),
+      mem_pct: mem_pct_of(res_kb, mem_total_kb),
+      virt_kb: (fields[20].to_i64? || 0i64) // 1024,
+      res_kb: res_kb,
+      cpu_time_sec: total_ticks.to_f / TICKS_PER_SEC,
+      threads: fields[17].to_i32? || 1,
+      ppid: fields[1].to_i32? || 0,
+      started: process_start_time(starttime),
+      command: command_of(pid, comm),
+      unit: cgroup_unit(pid),
+    )
+  end
+
+  private def self.mem_pct_of(res_kb : Int64, mem_total_kb : Int64) : Float64
+    mem_total_kb > 0 ? (res_kb.to_f / mem_total_kb * 100).clamp(0.0, 100.0) : 0.0
+  end
+
+  # Lifetime-average CPU percentage (percent of one core).
+  private def self.lifetime_cpu_pct(total_ticks : Int64, starttime : Int64, uptime_sec : Float64) : Float64
+    age_sec = uptime_sec - starttime.to_f / TICKS_PER_SEC
+    age_sec > 0 ? ((total_ticks.to_f / TICKS_PER_SEC) / age_sec * 100).clamp(0.0, nil) : 0.0
+  end
+
+  # Wall-clock time the process started: boot time plus the stat
+  # starttime offset in ticks.
+  private def self.process_start_time(starttime : Int64) : Time
+    boot = Time.local - read_uptime_sec.seconds
+    boot + (starttime / TICKS_PER_SEC).seconds
+  rescue ex
+    Log.warn(exception: ex) { "Failed to compute process start time" }
+    Time.unix(0)
+  end
+
+  # The systemd unit owning the process, from its cgroup v2 path
+  # (/sys/fs/cgroup is mounted and /proc/[pid]/cgroup reads "0::/...").
+  # Falls back to the legacy controller layout for cgroup v1 hosts.
+  private def self.cgroup_unit(pid : Int32) : String
+    File.each_line("/proc/#{pid}/cgroup") do |line|
+      # 0::/system.slice/nginx.service  or  10:cpu:/system.slice/...
+      path = line.split(':').last?
+      next unless path
+      parts = path.split('/')
+      parts.each do |segment|
+        # Only real units, not slice scopes like system.slice or
+        # user@1000.service sessions' intermediate slices.
+        return segment if segment.ends_with?(".service") && !segment.includes?("@") &&
+                          !segment.starts_with?("systemd-")
+      end
+    end
+    ""
+  rescue File::NotFoundError | File::AccessDeniedError
+    ""
+  end
+
   # cmdline is NUL-separated and empty for kernel threads; the comm name
   # is used for those. Only the first cmdline token is shown (the
   # executable), keeping rows one line tall like htop's default.
@@ -370,28 +507,56 @@ module ProcessStatus
 
   private FAKE_BOOT = Time.local - 20.days
 
+  # pid, user, state, cpu, mem%, virt KB, res KB, command, unit
+  private def self.fake_process_rows
+    angle = (Time.local - FAKE_BOOT).total_seconds / 7.0
+    [
+      {1, "root", "S", 0.5, 0.1, 180_000, 24_000, "/sbin/init splash", "init.scope"},
+      {402, "root", "S", 0.2, 0.4, 320_000, 86_000, "/lib/systemd/systemd-journald", "systemd-journald.service"},
+      {618, "root", "S", 0.1, 0.2, 96_000, 31_000, "/lib/systemd/systemd-udevd", "systemd-udevd.service"},
+      {745, "message+", "S", 0.1, 0.3, 84_000, 42_000, "/usr/bin/dbus-daemon --system", "dbus.service"},
+      {921, "root", "S", 1.8, 1.1, 1_240_000, 212_000, "/usr/bin/dockerd -H fd://", "docker.service"},
+      {1103, "root", "S", 0.3, 0.9, 890_000, 168_000, "/usr/bin/containerd", "containerd.service"},
+      {1240, "www-data", "S", 4.2 + 3.0 * Math.sin(angle), 2.3, 410_000, 452_000, "nginx: worker process", "nginx.service"},
+      {1388, "postgres", "S", 2.6 + 2.5 * Math.cos(angle / 1.3), 6.8, 1_980_000, 1_310_000, "postgres: checkpointer", "postgresql.service"},
+      {1502, "root", "S", 0.4, 0.6, 220_000, 118_000, "/usr/sbin/cron -f -P", "cron.service"},
+      {1666, "ralsina", "S", 0.2, 0.4, 310_000, 79_000, "/usr/bin/fish", ""},
+      {1801, "ralsina", "R", 12.5 + 8.0 * Math.sin(angle / 0.9).abs, 1.9, 2_400_000, 371_000, "grafito", "grafito.service"},
+      {1950, "ralsina", "S", 3.1 + 2.0 * Math.cos(angle / 1.7), 4.4, 3_100_000, 856_000, "code --open-url", ""},
+    ]
+  end
+
+  # A detail record for one of the fake pids; unknown pids read as
+  # "process vanished", like the real reader.
+  private def self.fake_detail(pid : Int32) : ProcessDetail?
+    row = fake_process_rows.find { |entry| entry[0] == pid }
+    return unless row
+    entry_pid, user, state, _cpu, mem_pct, virt, res, command, unit = row
+    ProcessDetail.new(
+      pid: entry_pid,
+      user: user,
+      uid: user == "root" ? "0" : "1000",
+      state: state,
+      cpu_pct: 1.2,
+      mem_pct: mem_pct,
+      virt_kb: virt,
+      res_kb: res,
+      cpu_time_sec: (entry_pid % 97) * 3.7,
+      threads: (entry_pid % 7) + 1,
+      ppid: entry_pid == 1 ? 0 : 1,
+      started: FAKE_BOOT + (entry_pid % 50).minutes,
+      command: command,
+      unit: unit,
+    )
+  end
+
   private def self.fake_snapshot : Snapshot
     now_sec = (Time.local - FAKE_BOOT).total_seconds
     angle = now_sec / 7.0
     cores = 4
 
-    base = [
-      {1, "root", "S", 0.5, 0.1, 180_000, 24_000, "/sbin/init splash"},
-      {402, "root", "S", 0.2, 0.4, 320_000, 86_000, "/lib/systemd/systemd-journald"},
-      {618, "root", "S", 0.1, 0.2, 96_000, 31_000, "/lib/systemd/systemd-udevd"},
-      {745, "message+", "S", 0.1, 0.3, 84_000, 42_000, "/usr/bin/dbus-daemon --system"},
-      {921, "root", "S", 1.8, 1.1, 1_240_000, 212_000, "/usr/bin/dockerd -H fd://"},
-      {1103, "root", "S", 0.3, 0.9, 890_000, 168_000, "/usr/bin/containerd"},
-      {1240, "www-data", "S", 4.2 + 3.0 * Math.sin(angle), 2.3, 410_000, 452_000, "nginx: worker process"},
-      {1388, "postgres", "S", 2.6 + 2.5 * Math.cos(angle / 1.3), 6.8, 1_980_000, 1_310_000, "postgres: checkpointer"},
-      {1502, "root", "S", 0.4, 0.6, 220_000, 118_000, "/usr/sbin/cron -f -P"},
-      {1666, "ralsina", "S", 0.2, 0.4, 310_000, 79_000, "/usr/bin/fish"},
-      {1801, "ralsina", "R", 12.5 + 8.0 * Math.sin(angle / 0.9).abs, 1.9, 2_400_000, 371_000, "grafito"},
-      {1950, "ralsina", "S", 3.1 + 2.0 * Math.cos(angle / 1.7), 4.4, 3_100_000, 856_000, "code --open-url"},
-    ]
-
-    processes = base.map do |entry|
-      pid, user, state, cpu, mem_pct, virt, res, command = entry
+    processes = fake_process_rows.map do |entry|
+      pid, user, state, cpu, mem_pct, virt, res, command, _unit = entry
       ProcessInfo.new(
         pid: pid,
         user: user,

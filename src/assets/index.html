@@ -1796,6 +1796,34 @@
         );
       }
 
+      // --- PROCESS PANEL: VIEW LOGS ---
+      // From the process detail panel: jump into the journal. A
+      // systemd-managed process filters by its unit; anything else
+      // falls back to a text search for the command name.
+      function setProcessLogsFilter(unitName, commandName) {
+        if (unitName) {
+          return setUnitFilterAndTrigger(unitName);
+        }
+        if (window.closeLogPanel) {
+          closeLogPanel();
+        }
+        if (
+          document.getElementById("processes-view") &&
+          !document.getElementById("processes-view").hidden
+        ) {
+          setProcessesVisible(false);
+        }
+        const searchBox = document.getElementById("search-box");
+        if (searchBox) {
+          searchBox.value = commandName;
+          // initial-load-event refetches the logs with every
+          // .log-filter, including the search box (q=).
+          htmx.trigger(document.body, "initial-load-event", {});
+          updateBrowserURL();
+        }
+        return false;
+      }
+
       // --- DASHBOARD SORTING + FILTERS ---
       // The unit table sorting, the service filter and the time window
       // are all applied server-side; the current values are kept in

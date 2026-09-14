@@ -52,10 +52,29 @@ describe "Process routes" do
     response[:body].should contain("proc-table")
   end
 
+  it "GET /processes rows open the detail panel" do
+    response = dispatch_request("GET", "/processes")
+    response[:body].should contain("process-details?pid=")
+    response[:body].should contain("panel-detail-content")
+  end
+
   it "GET /processes accepts sort and filter parameters" do
     response = dispatch_request("GET", "/processes?sort_by=pid&sort_order=asc&filter=nothing-matches")
     response[:status].should eq 200
     response[:body].should contain("No processes match.")
+  end
+
+  it "GET /process-details returns the detail panel fragment" do
+    pid = ProcessStatus.snapshot.processes.first.pid
+    response = dispatch_request("GET", "/process-details?pid=#{pid}")
+    response[:status].should eq 200
+    response[:body].should contain("service-panel")
+    response[:body].should contain(pid.to_s)
+  end
+
+  it "GET /process-details 400s without a pid and 404s for unknown pids" do
+    dispatch_request("GET", "/process-details")[:status].should eq 400
+    dispatch_request("GET", "/process-details?pid=999999")[:status].should eq 404
   end
 
   it "GET /processes is 404 when the view is disabled" do
@@ -88,5 +107,28 @@ describe "Process routes" do
     response[:status].should eq 404
     Grafito.enable_actions = false
     Grafito.auth_configured = false
+  end
+
+  it "POST /process-explain is 503 without an AI provider" do
+    response = dispatch_request("POST", "/process-explain?pid=1")
+    response[:status].should eq 503
+  end
+end
+
+describe ProcessStatus do
+  it "reads a detail record for a live process" do
+    detail = ProcessStatus.detail(Process.pid.to_i32)
+    if detail
+      detail.pid.should eq Process.pid
+      detail.threads.should be >= 1
+      detail.command.size.should be > 0
+      detail.started.year.should be >= 2020
+    else
+      fail("expected a detail record for our own pid")
+    end
+  end
+
+  it "returns nil for processes that do not exist" do
+    ProcessStatus.detail(999_999).should be_nil
   end
 end
