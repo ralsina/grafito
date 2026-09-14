@@ -2057,6 +2057,15 @@ html[data-ui="mission"] #results table tbody tr:hover {
   height: 0.62rem;
   border-radius: 2px;
 }
+.proc-square-total {
+  grid-column: span 2;
+  grid-row: span 2;
+  /* Explicit width: the two spanned columns are content-sized and the
+     total has no intrinsic width, so auto would collapse. */
+  width: calc(0.62rem * 2 + 0.2rem);
+  align-self: stretch;
+  border-radius: 3px;
+}
 .proc-square-low {
   background: var(--accent);
   opacity: 0.55;

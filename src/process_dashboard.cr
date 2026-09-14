@@ -73,16 +73,7 @@ module ProcessDashboard
         html card("Tasks", "#{snapshot.tasks_total} (#{snapshot.tasks_running} R)")
         html card("Memory", memory_label(snapshot), warn: mem_used_pct(snapshot) > 90)
         html card("Load", format_load(snapshot.load1), warn: snapshot.load1 > snapshot.cpu_count)
-        unless snapshot.core_pcts.empty?
-          div(class: "stat proc-meters") do
-            span(class: "stat-label") { text "Per core" }
-            div(class: "proc-squares") do
-              snapshot.core_pcts.each_with_index do |pct, core_index|
-                html core_meter(core_index, pct)
-              end
-            end
-          end
-        end
+        html meters_card(snapshot)
       end
 
       div(class: "dashboard-history proc-history") do
@@ -276,6 +267,38 @@ module ProcessDashboard
           text icon
         end
       end
+    end
+  end
+
+  # The "Per core" summary card: one 2x2 total cell followed by the
+  # per-core squares, or nothing at all before the first poll fills
+  # the per-core readings.
+  private def meters_card(snapshot : ProcessStatus::Snapshot) : String
+    HTML.build do
+      div(class: "stat proc-meters") do
+        span(class: "stat-label") { text "Per core" }
+        div(class: "proc-squares") do
+          unless snapshot.core_pcts.empty?
+            html total_square(snapshot.core_pcts.sum / snapshot.core_pcts.size)
+          end
+          snapshot.core_pcts.each_with_index do |pct, core_index|
+            html core_meter(core_index, pct)
+          end
+        end
+      end
+    end
+  end
+
+  # The machine total as one 2x2 cell leading the grid: banded on the
+  # percent of the whole machine (the average across cores), unlike the
+  # per-core cells which band on percent of one core.
+  private def total_square(avg_pct : Float64) : String
+    fill_class = avg_pct >= 80 ? "proc-square-high" : (avg_pct >= 30 ? "proc-square-mid" : "proc-square-low")
+    HTML.build do
+      span(
+        class: "proc-square proc-square-total #{fill_class}",
+        title: "All cores: #{avg_pct.round(1)}%",
+      ) { }
     end
   end
 
