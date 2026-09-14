@@ -884,6 +884,7 @@ module Grafito
         optional_query_param(env, "sort_by"),
         optional_query_param(env, "sort_order"),
         optional_query_param(env, "filter"),
+        optional_query_param(env, "limit"),
       )
     end
 
@@ -1058,6 +1059,7 @@ module Grafito
       optional_query_param(env, "sort_by"),
       optional_query_param(env, "sort_order"),
       optional_query_param(env, "filter"),
+      optional_query_param(env, "limit"),
     )
   end
 

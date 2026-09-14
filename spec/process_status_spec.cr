@@ -5,7 +5,7 @@ require "../src/process_dashboard"
 describe ProcessDashboard do
   it "renders a fragment from a snapshot" do
     snapshot = ProcessStatus.snapshot
-    html = ProcessDashboard.render_html(snapshot)
+    html = ProcessDashboard.render_html(snapshot, limit: "all")
     html.should contain("proc-table")
     html.should contain("CPU")
     snapshot.processes.each do |process_info|
@@ -36,6 +36,20 @@ describe ProcessDashboard do
     with_actions = ProcessDashboard.render_html(snapshot, enable_actions: true)
     with_actions.should contain("hx-post")
     with_actions.should contain("proc-state-form")
+  end
+
+  it "caps the table unless limit=all is requested" do
+    snapshot = ProcessStatus.snapshot
+    if snapshot.processes.size > ProcessDashboard::ROW_CAP
+      capped = ProcessDashboard.render_html(snapshot)
+      capped.should contain("(top #{ProcessDashboard::ROW_CAP})")
+      capped.should contain("show all")
+      full = ProcessDashboard.render_html(snapshot, limit: "all")
+      full.should contain("show top #{ProcessDashboard::ROW_CAP}")
+      full.should_not contain("(top #{ProcessDashboard::ROW_CAP})")
+    else
+      ProcessDashboard.render_html(snapshot).should_not contain("show all")
+    end
   end
 
   it "formats cpu time like htop's TIME+" do

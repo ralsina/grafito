@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="style.min.css" />
     <title>Grafito Log Viewer</title>
     <script src="htmx.org@1.9.10.js" defer></script>
+    <script src="idiomorph-ext.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
   </head>
   <body
@@ -544,10 +545,10 @@
           id="processes-view"
           hidden
           hx-get="processes"
-          hx-trigger="every 3s[!document.getElementById('processes-view').hidden]"
+          hx-trigger="every 5s[!document.getElementById('processes-view').hidden]"
           hx-include="#processes-view form"
           hx-target="this"
-          hx-swap="innerHTML"
+          hx-swap="morph:innerHTML"
         ></div>
       </main>
 
@@ -1176,6 +1177,9 @@
             if (processFilter && params.get("proc_filter")) {
               processFilter.value = params.get("proc_filter");
             }
+            if (params.get("proc_limit") === "all") {
+              processesView.dataset.showAll = "1";
+            }
             setProcessesVisible(true);
           }
         }
@@ -1554,6 +1558,9 @@
               processesView.dataset.sortOrder || "desc"
             );
           }
+          if (processesView.dataset.showAll) {
+            params.set("proc_limit", "all");
+          }
           const processFilter = document.getElementById("process-filter");
           if (processFilter && processFilter.value.trim()) {
             params.set("proc_filter", processFilter.value.trim());
@@ -1754,12 +1761,34 @@
         if (view.dataset.sortBy) params.set("sort_by", view.dataset.sortBy);
         if (view.dataset.sortOrder)
           params.set("sort_order", view.dataset.sortOrder);
+        if (view.dataset.showAll) params.set("limit", "all");
         const filterInput = document.getElementById("process-filter");
         if (filterInput && filterInput.value.trim()) {
           params.set("filter", filterInput.value.trim());
         }
         const qs = params.toString();
         return qs ? "?" + qs : "";
+      }
+
+      // Toggle between the capped table (top 100 rows, cheap to poll)
+      // and the full list; the choice rides the URL like the rest of
+      // the process view state.
+      function setProcessLimit(showAll) {
+        const view = document.getElementById("processes-view");
+        if (!view) return false;
+        if (showAll) {
+          view.dataset.showAll = "1";
+        } else {
+          delete view.dataset.showAll;
+        }
+        updateProcessesPollUrl();
+        updateBrowserURL();
+        htmx.ajax(
+          "GET",
+          buildUrl("processes") + processesQueryParams(),
+          { target: "#processes-view", swap: "morph:innerHTML" }
+        );
+        return false;
       }
 
       function updateProcessesPollUrl() {

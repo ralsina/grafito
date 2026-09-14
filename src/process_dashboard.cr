@@ -33,21 +33,30 @@ module ProcessDashboard
     "cmd"   => "Command",
   }
 
-  # Renders the process view fragment.
+  # Rows shown by default. The full list is one POST away ("show all");
+  # re-rendering hundreds of rows every few seconds costs CPU on both
+  # ends for rows the user is not looking at.
+  ROW_CAP = 100
+
+  # Renders the process view fragment. `limit` is "all" (unpadded list)
+  # or anything else (capped to ROW_CAP rows after sorting/filtering).
   def render_html(
     snapshot : ProcessStatus::Snapshot,
     enable_actions : Bool = false,
     sort_by : String? = nil,
     sort_order : String? = nil,
     filter : String? = nil,
+    limit : String? = nil,
   ) : String
     sorted = sort_processes(snapshot.processes, sort_by, sort_order)
     needle = filter.to_s.strip.downcase
-    visible = needle.empty? ? sorted : sorted.select do |process_info|
+    matched = needle.empty? ? sorted : sorted.select do |process_info|
       process_info.user.downcase.includes?(needle) ||
         process_info.command.downcase.includes?(needle) ||
         process_info.pid.to_s.includes?(needle)
     end
+    show_all = limit == "all"
+    visible = show_all ? matched : matched.first(ROW_CAP)
 
     HTML.build do
       div(class: "dashboard-grid") do
@@ -69,18 +78,7 @@ module ProcessDashboard
         end
       end
 
-      div(class: "proc-toolbar") do
-        span(class: "proc-count") do
-          text "#{visible.size} of #{snapshot.tasks_total} processes"
-        end
-        # Hidden form carrying the current sort/filter so kill buttons
-        # (which post the refreshed fragment) keep the table's state.
-        form(id: "proc-state-form", class: "proc-state-form") do
-          input(type: "hidden", name: "sort_by", value: sort_by.to_s)
-          input(type: "hidden", name: "sort_order", value: sort_order.to_s)
-          input(type: "hidden", name: "filter", value: filter.to_s)
-        end
-      end
+      html proc_toolbar(snapshot, visible, matched, show_all, sort_by, sort_order, filter)
 
       table(class: "striped dashboard-units proc-table") do
         thead do
@@ -103,6 +101,44 @@ module ProcessDashboard
               html process_row(process_info, enable_actions)
             end
           end
+        end
+      end
+    end
+  end
+
+  # The line above the table: how many rows are shown, the show
+  # all/top-only toggle, and the hidden form carrying the current
+  # sort/filter/limit so kill buttons (which post the refreshed
+  # fragment) keep the table's state.
+  private def proc_toolbar(
+    snapshot : ProcessStatus::Snapshot,
+    visible : Array(ProcessStatus::ProcessInfo),
+    matched : Array(ProcessStatus::ProcessInfo),
+    show_all : Bool,
+    sort_by : String?,
+    sort_order : String?,
+    filter : String?,
+  ) : String
+    HTML.build do
+      div(class: "proc-toolbar") do
+        span(class: "proc-count") do
+          text "#{visible.size} of #{snapshot.tasks_total} processes"
+          if !show_all && matched.size > visible.size
+            text " (top #{ROW_CAP})"
+            a(href: "#", onclick: "return setProcessLimit(true);", title: "Show every matching process") do
+              text " — show all"
+            end
+          elsif show_all && matched.size > ROW_CAP
+            a(href: "#", onclick: "return setProcessLimit(false);", title: "Show only the top #{ROW_CAP} rows") do
+              text " — show top #{ROW_CAP}"
+            end
+          end
+        end
+        form(id: "proc-state-form", class: "proc-state-form") do
+          input(type: "hidden", name: "sort_by", value: sort_by.to_s)
+          input(type: "hidden", name: "sort_order", value: sort_order.to_s)
+          input(type: "hidden", name: "filter", value: filter.to_s)
+          input(type: "hidden", name: "limit", value: show_all ? "all" : "")
         end
       end
     end
