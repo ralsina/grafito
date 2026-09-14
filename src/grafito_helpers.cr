@@ -102,7 +102,8 @@ module Grafito
   end
 
   # Helper to get an optional query parameter, treating empty strings as nil.
-  private def optional_query_param(env : HTTP::Server::Context, key : String) : String?
+  # Public: view modules delegate their own route helpers to these.
+  def optional_query_param(env : HTTP::Server::Context, key : String) : String?
     param = env.params.query[key]?
     param.nil? || param.strip.empty? ? nil : param
   end

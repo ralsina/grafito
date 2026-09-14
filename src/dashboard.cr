@@ -20,6 +20,8 @@ require "log"
 
 require "./system_status"
 require "./metrics_store"
+require "./ai/config"
+require "./ai/request"
 
 module Dashboard
   extend self
@@ -556,5 +558,416 @@ module Dashboard
     else
       "#{minutes}m"
     end
+  end
+
+  # ## Routes
+  #
+  # The dashboard view owns its endpoints: adding a view to grafito
+  # means creating a module like this one with a `register_routes`
+  # method, requiring it in grafito.cr and calling it from
+  # `Grafito.register_routes`. Everything else - the frontend switcher
+  # entry, the view fragment div and the log-chrome hiding CSS - is a
+  # small, purely additive change.
+  # Route helpers of the enclosing Grafito module, re-exposed here so
+  # the route bodies below can use them verbatim.
+  private def self.optional_query_param(env : HTTP::Server::Context, key : String) : String?
+    Grafito.optional_query_param(env, key)
+  end
+
+  private def self.route_path(path : String) : String
+    Grafito.route_path(path)
+  end
+
+  # ameba:disable Metrics/CyclomaticComplexity
+  def self.register_routes
+    # ## The `/status` endpoint
+    #
+    # Returns the current system snapshot (metrics + unit states) plus a
+    # bounded journal error count, as JSON.
+    #
+    # Example usage:
+    # ```text
+    # GET /status
+    # ```
+    get route_path("status") do |env|
+      unless Grafito.dashboard_enabled?
+        env.response.content_type = "application/json"
+        env.response.status_code = 404
+        next {error: "Dashboard is disabled"}.to_json
+      end
+
+      snapshot = SystemStatus.snapshot
+      env.response.content_type = "application/json"
+      {
+        timestamp:        snapshot.timestamp,
+        load1:            snapshot.load1,
+        mem_used_pct:     snapshot.mem_used_pct,
+        disk_used_pct:    snapshot.disk_used_pct,
+        uptime_sec:       snapshot.uptime_sec,
+        units_total:      snapshot.units_total,
+        units_failed:     snapshot.units_failed,
+        errors_last_hour: recent_error_count("-1h"),
+        units:            snapshot.units,
+      }.to_json
+    end
+
+    # ## The `/status/history` endpoint
+    #
+    # Returns the sampled metrics history as JSON. Accepts the usual
+    # relative `since` vocabulary (e.g. `?since=-1d`).
+    get route_path("status/history") do |env|
+      unless Grafito.dashboard_enabled?
+        env.response.content_type = "application/json"
+        env.response.status_code = 404
+        next {error: "Dashboard is disabled"}.to_json
+      end
+
+      since_text = optional_query_param(env, "since") || "-1h"
+      since = parse_since(since_text)
+      if since.nil?
+        env.response.content_type = "application/json"
+        env.response.status_code = 400
+        next {error: "Invalid 'since' parameter: #{since_text}"}.to_json
+      end
+
+      points = Grafito.metrics_store.try(&.history(since)) || [] of Grafito::MetricsStore::MetricPoint
+      env.response.content_type = "application/json"
+      {points: points}.to_json
+    end
+
+    # ## The `/dashboard` endpoint
+    #
+    # Returns the dashboard HTML fragment for HTMX: health cards, history
+    # chart and the unit table. The frontend polls it every 30 seconds.
+    # Parameters:
+    # * `sort_by` (unit, state, sub, description) and `sort_order`
+    #   (asc/desc) control the unit table ordering.
+    # * `unit` filters the unit table by name or description.
+    # * `since` sets the time window for the history chart and the
+    #   error count (e.g. -15m, -1h, -6h, -1d, -7d; default -6h).
+    get route_path("dashboard") do |env|
+      unless Grafito.dashboard_enabled?
+        env.response.status_code = 404
+        next "Dashboard is disabled."
+      end
+      sort_by = optional_query_param(env, "sort_by")
+      sort_order = optional_query_param(env, "sort_order")
+      unit_filter = optional_query_param(env, "unit")
+      since_text = optional_query_param(env, "since")
+      unit_flags = Grafito.enable_actions? ? SystemStatus.unit_flags_map : {} of String => SystemStatus::UnitFileFlags
+      env.response.content_type = "text/html"
+      render_dashboard_fragment(sort_by, sort_order, unit_filter, since_text, unit_flags)
+    end
+
+    # ## The `/unit-details` endpoint
+    #
+    # Returns the service detail fragment for the right sidebar's Detail
+    # tab: state pills, recent error count, optional unit actions and a
+    # "view logs" call.
+    #
+    # Example usage:
+    # ```text
+    # GET /unit-details?name=nginx.service
+    # ```
+    get route_path("unit-details") do |env|
+      unless Grafito.dashboard_enabled?
+        env.response.status_code = 404
+        next "Dashboard is disabled."
+      end
+
+      name = optional_query_param(env, "name")
+      if name.nil? || name.empty? || name.starts_with?('-') || !name.matches?(/^[\w.@-]+$/)
+        halt env, status_code: 400, response: "Missing or invalid unit name."
+      end
+
+      unit_state = SystemStatus.unit_states.find do |unit|
+        unit.unit == name || unit.unit == "#{name}.service"
+      end
+      unless unit_state
+        env.response.status_code = 404
+        next "Unit '#{HTML.escape(name)}' not found."
+      end
+
+      env.response.content_type = "text/html"
+      Dashboard.unit_details_fragment(
+        unit_state,
+        Grafito.enable_actions?,
+        unit_error_count(unit_state.unit),
+        Grafito.enable_actions? ? SystemStatus.unit_flags_map : {} of String => SystemStatus::UnitFileFlags,
+      )
+    end
+
+    # ## The `/unit-explain` endpoint
+    #
+    # `POST /unit-explain?name=<unit>` asks the configured AI provider
+    # to explain the unit's current state using its recent journal
+    # entries. Returns an HTML fragment for the sidebar. 503 when no AI
+    # provider is configured, 404 for unknown units.
+    post route_path("unit-explain") do |env|
+      unless Grafito.dashboard_enabled?
+        env.response.status_code = 404
+        next "Dashboard is disabled."
+      end
+
+      provider = Grafito.ai_provider
+      unless provider
+        env.response.content_type = "application/json"
+        env.response.status_code = 503
+        next {error: "AI features are disabled. Configure a provider key to enable explanations."}.to_json
+      end
+
+      name = optional_query_param(env, "name")
+      if name.nil? || name.empty? || name.starts_with?('-') || !name.matches?(/^[\w.@-]+$/)
+        env.response.content_type = "text/html"
+        env.response.status_code = 400
+        next "Missing or invalid unit name."
+      end
+
+      unit_state = SystemStatus.unit_states.find do |unit|
+        unit.unit == name || unit.unit == "#{name}.service"
+      end
+      unless unit_state
+        env.response.content_type = "text/html"
+        env.response.status_code = 404
+        next "Unit '#{HTML.escape(name)}' not found."
+      end
+
+      flags = Grafito.enable_actions? ? SystemStatus.unit_flags_map[name]? : nil
+      recent = Journalctl.query(since: "-6h", unit: unit_state.unit, lines: 100) || [] of Journalctl::LogEntry
+      errors = recent.count { |entry| entry.priority.to_i? ? entry.priority.to_i <= 3 : false }
+
+      report = String.build do |str|
+        str << "Unit: #{unit_state.unit}\n"
+        str << "Description: #{unit_state.description}\n"
+        str << "Load state: #{unit_state.load_state}\n"
+        str << "Active state: #{unit_state.active_state} (#{unit_state.sub_state})\n"
+        str << "Unit file state: #{flags.try(&.file_state) || "unknown"}\n"
+        str << "Can start: #{flags && !flags.can_start ? "no" : "yes"}\n"
+        str << "Errors (priority <= 3) in recent entries: #{errors}\n"
+        status_output = SystemStatus.unit_status_output(unit_state.unit)
+        if status_output
+          str << "\nsystemctl status output:\n"
+          str << status_output
+          str << "\n" unless status_output.ends_with?("\n")
+        else
+          str << "\nsystemctl status output: unavailable\n"
+        end
+        str << "\nRecent journal entries (last 6h, up to #{recent.size} lines):\n"
+        recent.each do |entry|
+          str << "[#{entry.formatted_timestamp_with_timezone}] [#{entry.formatted_priority}] #{entry.message}\n"
+        end
+      end
+
+      begin
+        request = Grafito::AI::Request.for_unit_diagnosis(report)
+        response = provider.complete(request)
+        Log.info { "AI unit explanation generated for #{unit_state.unit} (#{response.content.size} chars)" }
+        env.response.content_type = "text/html"
+        Dashboard.unit_ai_fragment(response.content)
+      rescue ex : Exception
+        Log.error(exception: ex) { "AI unit explanation failed for #{unit_state.unit}" }
+        env.response.content_type = "text/html"
+        # A 200 keeps htmx swapping so the user sees the failure inline.
+        Dashboard.unit_ai_fragment("AI request failed: #{ex.message}")
+      end
+    end
+
+    # ## The unit action endpoint
+    #
+    # `POST /unit/<name>/<start|stop|restart|enable|disable>` runs
+    # systemctl for the named unit. Gated by `--enable-actions`; what an
+    # action is actually allowed to do is decided by systemd/polkit for
+    # the user Grafito runs as — failures are surfaced verbatim.
+    # Returns the refreshed dashboard fragment (or, for `from=panel`
+    # requests, the refreshed service panel) so the htmx button updates
+    # the view.
+    post route_path("unit/:name/:action") do |env|
+      unless Grafito.dashboard_enabled? && Grafito.enable_actions? && Grafito.auth_configured?
+        env.response.status_code = 403
+        next "Unit actions are disabled. Start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS) to allow them."
+      end
+
+      unit_name = env.params.url["name"]
+      action = env.params.url["action"]
+
+      # Lifecycle and enablement actions; the list is a whitelist too,
+      # so anything else is rejected before reaching systemctl.
+      unless {"start", "stop", "restart", "enable", "disable"}.includes?(action)
+        env.response.status_code = 400
+        next "Invalid action '#{HTML.escape(action)}'."
+      end
+
+      # Unit names come URL-decoded from the router and go straight into
+      # a Process.run argument array (no shell), but reject anything that
+      # could be mistaken for a flag.
+      if unit_name.empty? || unit_name.starts_with?('-') || !unit_name.matches?(/^[\w.@-]+$/)
+        env.response.status_code = 400
+        next "Invalid unit name."
+      end
+
+      known_units = SystemStatus.unit_states.map(&.unit)
+      full_unit = known_units.includes?(unit_name) ? unit_name : "#{unit_name}.service"
+      unless known_units.includes?(full_unit)
+        env.response.status_code = 404
+        next "Unit '#{HTML.escape(unit_name)}' not found."
+      end
+
+      stdout = IO::Memory.new
+      stderr = IO::Memory.new
+      result = Process.run(
+        "systemctl",
+        args: Journalctl.user_flags + [action, full_unit],
+        output: stdout,
+        error: stderr,
+      )
+      unless result.normal_exit?
+        # Authorization and other failures come from systemd itself;
+        # surface them instead of a generic message. Panel requests get
+        # an error fragment swapped into the sidebar (htmx ignores error
+        # statuses, so a success status is needed to show it).
+        from_panel = optional_query_param(env, "from") == "panel"
+        message = stderr.to_s.strip
+        message = "systemctl #{action} #{full_unit} failed." if message.empty?
+        Log.error { "systemctl #{action} #{full_unit} failed: #{message[0..200]}" }
+        if from_panel
+          env.response.status_code = 200
+          env.response.content_type = "text/html"
+          next Dashboard.action_error_fragment(action, full_unit, message)
+        end
+        env.response.status_code = 500
+        next HTML.escape(message)
+      end
+
+      Log.info { "systemctl #{action} #{full_unit} succeeded" }
+      env.response.content_type = "text/html"
+      # Actions triggered from the sidebar refresh the panel instead of
+      # the whole dashboard; the dashboard catches up on its next poll.
+      if optional_query_param(env, "from") == "panel"
+        refreshed = SystemStatus.unit_states.find { |unit| unit.unit == full_unit }
+        if refreshed
+          next Dashboard.unit_details_fragment(
+            refreshed,
+            Grafito.enable_actions?,
+            unit_error_count(full_unit),
+            Grafito.enable_actions? ? SystemStatus.unit_flags_map : {} of String => SystemStatus::UnitFileFlags,
+          )
+        end
+      end
+      render_dashboard_fragment
+    end
+  end
+
+  # ## Dashboard helpers
+
+  # Default time window for the dashboard history chart and error count.
+  DEFAULT_DASHBOARD_SINCE = Time.utc - 6.hours
+
+  # Counts journal entries at priority <= 3 (error or worse) for one
+  # unit since the given relative time. Bounded like the dashboard's
+  # global error count.
+  private def self.unit_error_count(unit_name : String, since : String = "-1h") : Int32
+    return 0 unless Grafito.dashboard_enabled?
+    logs = Journalctl.query(since: since, priority: "3", unit: unit_name, lines: 500)
+    logs ? logs.size : 0
+  end
+
+  # Returns the dashboard HTML fragment used by both GET /dashboard and
+  # the unit-action POST responses. Invalid since values fall back to
+  # the default 6-hour window.
+  private def self.render_dashboard_fragment(
+    sort_by : String? = nil,
+    sort_order : String? = nil,
+    unit_filter : String? = nil,
+    since_text : String? = nil,
+    unit_flags : Hash(String, SystemStatus::UnitFileFlags) = {} of String => SystemStatus::UnitFileFlags,
+  ) : String
+    snapshot = SystemStatus.snapshot
+    since_time = parse_since(since_text.to_s) || DEFAULT_DASHBOARD_SINCE
+    history = Grafito.metrics_store.try(&.history(since_time)) || [] of Grafito::MetricsStore::MetricPoint
+    entries = dashboard_journal_entries(since_text.presence || "-6h")
+    buckets = severity_buckets(entries, history)
+    errors = entries.count { |entry| (entry.priority.to_i? || 7) <= 3 }
+    Dashboard.render_html(
+      snapshot,
+      history,
+      errors,
+      Grafito.enable_actions?,
+      sort_by,
+      sort_order,
+      unit_filter,
+      since_text,
+      unit_flags,
+      buckets,
+    )
+  end
+
+  # Journal entries over the given relative time for the dashboard
+  # chart: all severities, bounded to 5000 entries to keep refreshes
+  # cheap; the chart is a signal, not an audit.
+  private def self.dashboard_journal_entries(since : String) : Array(Journalctl::LogEntry)
+    return [] of Journalctl::LogEntry unless Grafito.dashboard_enabled?
+    Journalctl.query(since: since, lines: 5000) || [] of Journalctl::LogEntry
+  end
+
+  # Buckets journal entries by severity over the exact time span
+  # covered by the metrics history, so the stacked severity bars line
+  # up pixel-for-pixel with the load/memory lines in the combined
+  # chart.
+  private def self.severity_buckets(
+    logs : Array(Journalctl::LogEntry),
+    history : Array(Grafito::MetricsStore::MetricPoint),
+  ) : Array(Timeline::TimelinePoint)
+    return [] of Timeline::TimelinePoint if history.size < 2
+    oldest = history.first.ts
+    span_sec = [(history.last.ts - oldest).total_seconds, 1.0].max
+    bucket_count = 60
+    bucket_sec = span_sec / bucket_count
+    buckets = Array.new(bucket_count) do |index|
+      start_time = oldest + Time::Span.new(seconds: (index * bucket_sec).to_i)
+      {start_time: start_time, count: 0, err: 0, warn: 0, info: 0}
+    end
+    logs.each do |entry|
+      offset = (entry.timestamp - oldest).total_seconds
+      next if offset < 0
+      index = (offset / bucket_sec).to_i
+      next if index >= bucket_count
+      bucket = buckets[index]
+      count = bucket[:count] + 1
+      case entry.priority.to_i? || 7
+      when 0..3
+        buckets[index] = {start_time: bucket[:start_time], count: count, err: bucket[:err] + 1, warn: bucket[:warn], info: bucket[:info]}
+      when 4
+        buckets[index] = {start_time: bucket[:start_time], count: count, err: bucket[:err], warn: bucket[:warn] + 1, info: bucket[:info]}
+      else
+        buckets[index] = {start_time: bucket[:start_time], count: count, err: bucket[:err], warn: bucket[:warn], info: bucket[:info] + 1}
+      end
+    end
+    buckets
+  end
+
+  # Counts journal entries at priority <= 3 (error or worse) since the
+  # given relative time. Bounded to 500 lines to keep dashboard refreshes
+  # cheap; the count is a signal, not an audit.
+  private def self.recent_error_count(since : String) : Int32
+    return 0 unless Grafito.dashboard_enabled?
+    logs = Journalctl.query(since: since, priority: "3", lines: 500)
+    logs ? logs.size : 0
+  end
+
+  # Parses the same relative time vocabulary the logs endpoint uses
+  # (-15m, -1h, -1d, -1M, -1y) into a Time.
+  private def self.parse_since(since_text : String) : Time?
+    match = since_text.strip.match(/^-?(\d+)([mhdMy])$/)
+    return unless match
+
+    amount = match[1].to_i
+    span = case match[2]
+           when "m" then Time::Span.new(minutes: amount)
+           when "h" then Time::Span.new(hours: amount)
+           when "d" then Time::Span.new(days: amount)
+           when "M" then Time::Span.new(days: amount * 30)
+           else          Time::Span.new(days: amount * 365) # "y"
+           end
+    Time.utc - span
   end
 end

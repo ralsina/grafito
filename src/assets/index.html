@@ -781,6 +781,194 @@
         }
       }
 
+      // --- VIEW REGISTRY ---
+      // Adding a view touches exactly four places:
+      //   1. a fragment route in a backend module (each view module has
+      //      a register_routes method called from
+      //      Grafito.register_routes),
+      //   2. a <div id="...-view" hidden hx-get=... hx-trigger=...>
+      //      inside <main> (or reuse #results for a pure log stream),
+      //   3. a button with data-view-mode in the #brand-switcher,
+      //   4. one entry in this registry.
+      // Mutual exclusion, the switcher highlight, URL persistence and
+      // restore, and the on-demand fetch are all generic below.
+      const VIEWS = {
+        logs: {},
+        dashboard: {
+          element: "dashboard-view",
+          endpoint: "dashboard",
+          query: dashboardQueryParams,
+          urlState: function (params, view) {
+            if (view.dataset.unit) params.set("dash_unit", view.dataset.unit);
+            if (view.dataset.since)
+              params.set("dash_since", view.dataset.since);
+            if (view.dataset.sortBy) {
+              params.set("dash_sort_by", view.dataset.sortBy);
+              params.set(
+                "dash_sort_order",
+                view.dataset.sortOrder || "asc"
+              );
+            }
+          },
+          restore: function (params) {
+            const view = document.getElementById("dashboard-view");
+            const filter = document.getElementById("dashboard-unit-filter");
+            if (!view || !filter) return false;
+            const unit = params.get("dash_unit");
+            if (unit) {
+              view.dataset.unit = unit;
+              filter.value = unit;
+            }
+            const since = params.get("dash_since");
+            if (since) view.dataset.since = since;
+            const sortBy = params.get("dash_sort_by");
+            if (sortBy) {
+              view.dataset.sortBy = sortBy;
+              view.dataset.sortOrder =
+                params.get("dash_sort_order") || "asc";
+            }
+            return true;
+          },
+        },
+        compose: { element: "compose-view", endpoint: "compose" },
+        processes: {
+          element: "processes-view",
+          endpoint: "processes",
+          query: processesQueryParams,
+          urlState: function (params, view) {
+            if (view.dataset.sortBy) {
+              params.set("proc_sort_by", view.dataset.sortBy);
+              params.set(
+                "proc_sort_order",
+                view.dataset.sortOrder || "desc"
+              );
+            }
+            if (view.dataset.showAll) params.set("proc_limit", "all");
+            const filter = document.getElementById("process-filter");
+            if (filter && filter.value.trim()) {
+              params.set("proc_filter", filter.value.trim());
+            }
+          },
+          restore: function (params) {
+            const view = document.getElementById("processes-view");
+            const filter = document.getElementById("process-filter");
+            if (!view) return false;
+            const sortBy = params.get("proc_sort_by");
+            if (sortBy) {
+              view.dataset.sortBy = sortBy;
+              view.dataset.sortOrder =
+                params.get("proc_sort_order") || "desc";
+            }
+            if (filter && params.get("proc_filter")) {
+              filter.value = params.get("proc_filter");
+            }
+            if (params.get("proc_limit") === "all") {
+              view.dataset.showAll = "1";
+            }
+            return true;
+          },
+        },
+      };
+
+      // The view currently on screen; "logs" when no other view is.
+      function currentViewMode() {
+        for (const name of Object.keys(VIEWS)) {
+          const config = VIEWS[name];
+          if (!config.element) continue;
+          const element = document.getElementById(config.element);
+          if (element && !element.hidden) return name;
+        }
+        return "logs";
+      }
+
+      function updateViewSwitcher() {
+        const mode = currentViewMode();
+        document
+          .querySelectorAll("#brand-switcher button[data-view-mode]")
+          .forEach(function (button) {
+            const active = button.dataset.viewMode === mode;
+            button.classList.toggle("active", active);
+            button.setAttribute("aria-pressed", active ? "true" : "false");
+          });
+      }
+
+      // The one function every caller uses to show or hide a view.
+      // Opening a view hides every other one; closing the last open
+      // view returns to the log stream.
+      function setViewVisible(view, visible, options) {
+        options = options || {};
+        const config = VIEWS[view];
+        if (!config) return;
+        const results = document.getElementById("results");
+        const element = config.element
+          ? document.getElementById(config.element)
+          : null;
+        if (!results || (view !== "logs" && !element)) return;
+
+        if (!visible) {
+          if (element) element.hidden = true;
+          const open = currentViewMode();
+          if (open === "logs") {
+            results.hidden = false;
+            delete document.body.dataset.view;
+            restoreLogsMinimap();
+          } else {
+            document.body.dataset.view = open;
+          }
+          updateViewSwitcher();
+          if (!options.skipUrlUpdate) updateBrowserURL();
+          return;
+        }
+
+        Object.keys(VIEWS).forEach(function (other) {
+          if (other === view || !VIEWS[other].element) return;
+          const otherElement = document.getElementById(
+            VIEWS[other].element
+          );
+          if (otherElement) otherElement.hidden = true;
+        });
+        if (element) element.hidden = false;
+        results.hidden = view !== "logs";
+        if (view === "logs") {
+          delete document.body.dataset.view;
+        } else {
+          document.body.dataset.view = view;
+        }
+        updateViewSwitcher();
+        if (!options.skipUrlUpdate) updateBrowserURL();
+        if (config.endpoint) {
+          htmx.ajax(
+            "GET",
+            buildUrl(config.endpoint) + (config.query ? config.query() : ""),
+            { target: "#" + config.element, swap: "innerHTML" }
+          );
+        }
+      }
+
+      function closeAllViews(options) {
+        Object.keys(VIEWS).forEach(function (name) {
+          if (name !== "logs") setViewVisible(name, false, options);
+        });
+      }
+
+      function setViewMode(mode) {
+        if (mode !== "logs" && !VIEWS[mode]) return;
+        Object.keys(VIEWS).forEach(function (name) {
+          if (name !== mode) {
+            setViewVisible(name, false, { skipUrlUpdate: true });
+          }
+        });
+        setViewVisible(mode, true);
+      }
+
+      const viewSwitcher = document.getElementById("brand-switcher");
+      if (viewSwitcher) {
+        viewSwitcher.addEventListener("click", function (event) {
+          const button = event.target.closest("button[data-view-mode]");
+          if (button) setViewMode(button.dataset.viewMode);
+        });
+      }
+
       // --- Shared Configuration for Filters ---
       const SHARED_FILTER_CONFIGS = [
         { id: "search-box", param: "q", type: "value" },
@@ -1162,54 +1350,17 @@
           }
         });
 
-        // --- Restore Dashboard / Compose View from URL Parameters ---
-        // A reload (or shared link) with view=dashboard reopens the
-        // dashboard with its filter, time window and sort; view=compose
-        // reopens the compose view.
-        if (params.get("view") === "compose") {
-          setComposeVisible(true);
-        } else if (params.get("view") === "dashboard") {
-          const dashboardView = document.getElementById("dashboard-view");
-          const dashboardFilter = document.getElementById(
-            "dashboard-unit-filter"
-          );
-          if (dashboardView && dashboardFilter) {
-            const dashUnit = params.get("dash_unit");
-            if (dashUnit) {
-              dashboardView.dataset.unit = dashUnit;
-              dashboardFilter.value = dashUnit;
-            }
-            const dashSince = params.get("dash_since");
-            if (dashSince) dashboardView.dataset.since = dashSince;
-            const dashSortBy = params.get("dash_sort_by");
-            if (dashSortBy) {
-              dashboardView.dataset.sortBy = dashSortBy;
-              dashboardView.dataset.sortOrder =
-                params.get("dash_sort_order") || "asc";
-            }
-            setDashboardVisible(true);
-          }
-        }
-
-        // A reload (or shared link) with view=processes reopens the
-        // process monitor with its sort and filter.
-        if (params.get("view") === "processes") {
-          const processesView = document.getElementById("processes-view");
-          const processFilter = document.getElementById("process-filter");
-          if (processesView) {
-            const procSortBy = params.get("proc_sort_by");
-            if (procSortBy) {
-              processesView.dataset.sortBy = procSortBy;
-              processesView.dataset.sortOrder =
-                params.get("proc_sort_order") || "desc";
-            }
-            if (processFilter && params.get("proc_filter")) {
-              processFilter.value = params.get("proc_filter");
-            }
-            if (params.get("proc_limit") === "all") {
-              processesView.dataset.showAll = "1";
-            }
-            setProcessesVisible(true);
+        // --- Restore View from URL Parameters ---
+        // A reload (or shared link) with view=<name> reopens that view;
+        // each view's restore() re-applies its saved state first.
+        const requestedView = params.get("view");
+        if (
+          requestedView &&
+          VIEWS[requestedView] &&
+          VIEWS[requestedView].restore
+        ) {
+          if (VIEWS[requestedView].restore(params)) {
+            setViewVisible(requestedView, true);
           }
         }
 
@@ -1561,46 +1712,15 @@
         const params = buildFilterURLSearchParams();
         // Persist the active view and its state so reloads and
         // shared links land back where the user was.
-        const composeView = document.getElementById("compose-view");
-        if (composeView && !composeView.hidden) {
-          params.set("view", "compose");
-        }
-        const dashboardView = document.getElementById("dashboard-view");
-        if (dashboardView && !dashboardView.hidden) {
-          params.set("view", "dashboard");
-          if (dashboardView.dataset.unit) {
-            params.set("dash_unit", dashboardView.dataset.unit);
+        Object.keys(VIEWS).forEach(function (name) {
+          if (name === "logs") return;
+          const config = VIEWS[name];
+          const element = document.getElementById(config.element);
+          if (element && !element.hidden) {
+            params.set("view", name);
+            if (config.urlState) config.urlState(params, element);
           }
-          if (dashboardView.dataset.since) {
-            params.set("dash_since", dashboardView.dataset.since);
-          }
-          if (dashboardView.dataset.sortBy) {
-            params.set("dash_sort_by", dashboardView.dataset.sortBy);
-            params.set(
-              "dash_sort_order",
-              dashboardView.dataset.sortOrder || "asc"
-            );
-          }
-        }
-        // Same persistence for the process monitor.
-        const processesView = document.getElementById("processes-view");
-        if (processesView && !processesView.hidden) {
-          params.set("view", "processes");
-          if (processesView.dataset.sortBy) {
-            params.set("proc_sort_by", processesView.dataset.sortBy);
-            params.set(
-              "proc_sort_order",
-              processesView.dataset.sortOrder || "desc"
-            );
-          }
-          if (processesView.dataset.showAll) {
-            params.set("proc_limit", "all");
-          }
-          const processFilter = document.getElementById("process-filter");
-          if (processFilter && processFilter.value.trim()) {
-            params.set("proc_filter", processFilter.value.trim());
-          }
-        }
+        });
         renderActiveFilterChips();
 
         let queryString = params.toString();
@@ -1672,18 +1792,7 @@
         // Coming from the dashboard or the compose view (a table link or
         // the sidebar's "view logs" call): switch back to the log stream
         // and close the sidebar, which has served its purpose.
-        const composeView = document.getElementById("compose-view");
-        if (composeView && !composeView.hidden) {
-          setComposeVisible(false);
-        }
-        if (document.getElementById("dashboard-view") &&
-            !document.getElementById("dashboard-view").hidden) {
-          setDashboardVisible(false);
-        }
-        if (document.getElementById("processes-view") &&
-            !document.getElementById("processes-view").hidden) {
-          setProcessesVisible(false);
-        }
+        closeAllViews({ skipUrlUpdate: true });
         if (window.closeLogPanel) {
           closeLogPanel();
         }
@@ -1696,175 +1805,25 @@
         return false; // Prevent default anchor link behavior
       }
 
-      // --- DASHBOARD TOGGLE ---
-      // Shows the server dashboard instead of the log stream. The
-      // dashboard polls /dashboard every 30s only while visible; the
-      // initial content is fetched on demand when it is opened.
-      function setDashboardVisible(visible) {
-        const dashboardView = document.getElementById("dashboard-view");
-        const results = document.getElementById("results");
-        if (!dashboardView || !results) return;
-        // The views are mutually exclusive: opening the dashboard
-        // closes the process monitor, and vice versa.
-        if (visible) setProcessesVisible(false);
-        dashboardView.hidden = !visible;
-        results.hidden = visible;
-        // The views are mutually exclusive: showing one hides the
-        // other(s).
-        const composeView = document.getElementById("compose-view");
-        if (composeView && visible) setComposeVisible(false, {skipUrlUpdate: true});
-        // Switch the page chrome: log filters, export tools, the log
-        // stats strip and the minimap only make sense in log view.
-        if (visible) {
-          document.body.dataset.view = "dashboard";
-        } else if (!composeView || composeView.hidden) {
-          delete document.body.dataset.view;
-          restoreLogsMinimap();
-        }
-        updateViewSwitcher();
-        // Keep the URL in sync with the active view, so a reload (or
-        // any htmx request) neither resurrects a closed dashboard nor
-        // drops an open one.
-        updateBrowserURL();
-        if (visible) {
-          htmx.ajax("GET", buildUrl("dashboard") + dashboardQueryParams(), {
-            target: "#dashboard-view",
-            swap: "innerHTML",
-          });
-        }
+      // --- VIEW WRAPPERS ---
+      // Thin per-view aliases over setViewVisible: they keep the
+      // call sites (URL restore, panel jumps, sort handlers) readable.
+
+      function setDashboardVisible(visible, options) {
+        setViewVisible("dashboard", visible, options);
       }
 
-      // --- VIEW SWITCHER ---
-      // One compact 4-way switch for the main views (logs, dashboard,
-      // compose, processes). The per-view set*Visible functions keep
-      // owning their own state; the switcher just routes and reflects.
-      function currentViewMode() {
-        const dashboardView = document.getElementById("dashboard-view");
-        const composeView = document.getElementById("compose-view");
-        const processesView = document.getElementById("processes-view");
-        if (dashboardView && !dashboardView.hidden) return "dashboard";
-        if (composeView && !composeView.hidden) return "compose";
-        if (processesView && !processesView.hidden) return "processes";
-        return "logs";
-      }
-
-      function updateViewSwitcher() {
-        const mode = currentViewMode();
-        document
-          .querySelectorAll("#brand-switcher button[data-view-mode]")
-          .forEach(function (button) {
-            const active = button.dataset.viewMode === mode;
-            button.classList.toggle("active", active);
-            button.setAttribute("aria-pressed", active ? "true" : "false");
-          });
-      }
-
-      function setViewMode(mode) {
-        if (mode === "dashboard") setDashboardVisible(true);
-        else if (mode === "compose") setComposeVisible(true);
-        else if (mode === "processes") setProcessesVisible(true);
-        else {
-          setDashboardVisible(false);
-          setComposeVisible(false);
-          setProcessesVisible(false);
-        }
-      }
-
-      const viewSwitcher = document.getElementById("brand-switcher");
-      if (viewSwitcher) {
-        viewSwitcher.addEventListener("click", function (event) {
-          const button = event.target.closest("button[data-view-mode]");
-          if (button) setViewMode(button.dataset.viewMode);
-        });
-      }
-
-      // --- COMPOSE TOGGLE ---
-      // Shows the Docker Compose view instead of the log stream (or the
-      // dashboard). Same pattern as the dashboard: the view polls
-      // /compose every 30s only while visible; the initial content is
-      // fetched on demand when it is opened. `options.skipUrlUpdate`
-      // lets the dashboard toggle call this without clobbering the URL
-      // state it is about to write itself.
       function setComposeVisible(visible, options) {
-        const composeView = document.getElementById("compose-view");
-        const results = document.getElementById("results");
-        if (!composeView || !results) return;
-        // Close the dashboard FIRST: it also manages #results' hidden
-        // state, so doing it after would un-hide the log stream over
-        // the compose view. The process monitor gets the same
-        // treatment: only one main view is open at a time.
-        const dashboardView = document.getElementById("dashboard-view");
-        if (dashboardView && visible) {
-          setDashboardVisible(false);
-        }
-        const processesView = document.getElementById("processes-view");
-        if (processesView && visible && !processesView.hidden) {
-          setProcessesVisible(false);
-        }
-        composeView.hidden = !visible;
-        results.hidden = visible;
-        updateViewSwitcher();
-        if (visible) {
-          document.body.dataset.view = "compose";
-        } else if (!dashboardView || dashboardView.hidden) {
-          delete document.body.dataset.view;
-          restoreLogsMinimap();
-        }
-        if (!(options && options.skipUrlUpdate)) {
-          updateBrowserURL();
-        }
-        if (visible) {
-          htmx.ajax("GET", buildUrl("compose"), {
-            target: "#compose-view",
-            swap: "innerHTML",
-          });
-        }
+        setViewVisible("compose", visible, options);
       }
 
-      function toggleCompose() {
-        const composeView = document.getElementById("compose-view");
-        if (composeView) {
-          setComposeVisible(composeView.hidden);
-        }
+      function setProcessesVisible(visible, options) {
+        setViewVisible("processes", visible, options);
       }
-
-      // --- PROCESS MONITOR TOGGLE ---
-      // htop on a page: shows the process table instead of the log
-      // stream. Polls /processes every 3s only while visible; the
-      // initial content is fetched on demand when it is opened.
-      function setProcessesVisible(visible) {
-        const processesView = document.getElementById("processes-view");
-        const results = document.getElementById("results");
-        if (!processesView || !results) return;
-        // Mutual exclusion: opening the process monitor closes the
-        // dashboard and the compose view.
-        if (visible) setDashboardVisible(false);
-        const composeView = document.getElementById("compose-view");
-        if (visible && composeView && !composeView.hidden) {
-          setComposeVisible(false);
-        }
-        processesView.hidden = !visible;
-        results.hidden = visible;
-        if (visible) {
-          document.body.dataset.view = "processes";
-        } else {
-          delete document.body.dataset.view;
-          restoreLogsMinimap();
-        }
-        updateViewSwitcher();
-        updateBrowserURL();
-        if (visible) {
-          htmx.ajax("GET", buildUrl("processes") + processesQueryParams(), {
-            target: "#processes-view",
-            swap: "innerHTML",
-          });
-        }
-      }
-
 
       // --- PROCESS TABLE SORTING + FILTER ---
       // Like the dashboard, the current sort lives in #processes-view's
-      // dataset so the 3s polls and reopening preserve it; the filter
+      // dataset so the polls and reopening preserve it; the filter
       // text lives in the topbar input.
       function processesQueryParams() {
         const view = document.getElementById("processes-view");
@@ -1948,12 +1907,7 @@
         if (window.closeLogPanel) {
           closeLogPanel();
         }
-        if (
-          document.getElementById("processes-view") &&
-          !document.getElementById("processes-view").hidden
-        ) {
-          setProcessesVisible(false);
-        }
+        closeAllViews({ skipUrlUpdate: true });
         const searchBox = document.getElementById("search-box");
         if (searchBox) {
           searchBox.value = commandName;

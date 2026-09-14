@@ -188,6 +188,30 @@ any column (click the headers) and filters by user, pid or command.
 Set `GRAFITO_PROCESSES=false` (or `--processes=false`) to disable the
 process view and its endpoints completely.
 
+### Adding a View
+
+The three auxiliary views (dashboard, compose, processes) are pluggable.
+Adding a fourth touches exactly five small places:
+
+1. **Backend module**: create `src/<name>_dashboard.cr` as a module with
+   a `render_html` fragment and a `register_routes` method that registers
+   its endpoints (see `src/process_dashboard.cr` for the smallest
+   example). Require it and call `register_routes` from
+   `Grafito.register_routes` in `src/grafito.cr`, plus a
+   `--<name>=BOOL` flag if it should be optional.
+2. **Fragment div**: a `<div id="<name>-view" hidden hx-get="<endpoint>"
+   hx-trigger="every Ns[...]">` inside `<main>` in `src/assets/index.html`.
+3. **Switcher button**: a `<button data-view-mode="<name>">` in the
+   `#brand-switcher`.
+4. **Registry entry**: one entry in the `VIEWS` object in
+   `src/assets/index.html` (element id, endpoint, poll query, URL state
+   persistence/restore — see the dashboard and processes entries).
+5. **Optional CSS**: nothing is needed for log-chrome hiding; only add
+   rules if the view brings its own topbar widgets.
+
+Mutual exclusion between views, the switcher highlight, URL
+persistence and restore are all handled generically.
+
 ### Timezone Configuration
 
 Grafito displays timestamps in your local timezone by default, but you can configure it to use any timezone you prefer. This solves the issue of having to mentally convert UTC timestamps to your local time.
