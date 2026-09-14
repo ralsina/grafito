@@ -477,11 +477,11 @@ html[data-ui="fieldnotes"] #mode-switcher button {
 #view-switcher button {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  justify-content: center;
   width: auto;
   flex: none;
   height: 100%;
-  padding: 0 0.65rem;
+  padding: 0 0.55rem;
   background: none;
   border: none;
   border-radius: 0;

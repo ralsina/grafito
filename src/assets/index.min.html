@@ -2,21 +2,17 @@
 <span class=material-icons style=vertical-align:middle;font-size:1rem>content_copy</span>
 Copy</button><form method=dialog style=display:inline><button class=secondary>Close</button></form></footer></article></dialog><div id=app-shell><header id=topbar><div class=brand><span class=brand-mark aria-hidden=true></span>
 <a href=https://grafito.ralsina.me class=grafito-title-link title="Grafito home">grafito</a>
-<span class=brand-sub id=brand-sub>log viewer</span></div><div id=view-switcher role=group aria-label=View><button data-view-mode=logs class=active aria-pressed=true title="Log stream">
+<span class=brand-sub id=brand-sub>log viewer</span></div><div id=view-switcher role=group aria-label=View><button data-view-mode=logs class=active aria-pressed=true aria-label="Log stream" title="Log stream">
 <span class=material-icons aria-hidden=true>receipt_long</span>
-<span>Logs</span>
 </button>
-<button data-view-mode=dashboard aria-pressed=false title="Server dashboard (status, services, history)">
+<button data-view-mode=dashboard aria-pressed=false aria-label="Server dashboard (status, services, history)" title="Server dashboard (status, services, history)">
 <span class=material-icons aria-hidden=true>dashboard</span>
-<span>Dashboard</span>
 </button>
-<button data-view-mode=compose aria-pressed=false title="Docker Compose (stacks, services, actions)">
+<button data-view-mode=compose aria-pressed=false aria-label="Docker Compose (stacks, services, actions)" title="Docker Compose (stacks, services, actions)">
 <span class=material-icons aria-hidden=true>layers</span>
-<span>Compose</span>
 </button>
-<button data-view-mode=processes aria-pressed=false title="Process monitor (htop on a page)">
-<span class=material-icons aria-hidden=true>memory</span>
-<span>Proc</span></button></div><div class=omnibox id=dashboard-filter-box><span class=omnibox-glyph aria-hidden=true>⌕</span>
+<button data-view-mode=processes aria-pressed=false aria-label="Process monitor (htop on a page)" title="Process monitor (htop on a page)">
+<span class=material-icons aria-hidden=true>memory</span></button></div><div class=omnibox id=dashboard-filter-box><span class=omnibox-glyph aria-hidden=true>⌕</span>
 <input type=search id=dashboard-unit-filter name=unit placeholder="Filter services…" title="Filter the services table by unit name or description" aria-label="Filter services" autocomplete=off hx-get=dashboard hx-trigger="input changed delay:600ms" hx-target=#dashboard-view hx-include="#dashboard-view form" hx-swap=innerHTML>
 <kbd>units</kbd></div><div class=omnibox id=processes-filter-box><span class=omnibox-glyph aria-hidden=true>⌕</span>
 <input type=search id=process-filter name=filter placeholder="Filter processes…" title="Filter processes by user, pid or command" aria-label="Filter processes" autocomplete=off hx-get=processes hx-trigger="input changed delay:400ms" hx-target=#processes-view hx-include="#processes-view form" hx-swap=innerHTML>
