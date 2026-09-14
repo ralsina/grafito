@@ -136,6 +136,14 @@
           >
             <span class="material-icons" aria-hidden="true">memory</span>
           </button>
+          <button
+            data-view-mode="homepage"
+            aria-pressed="false"
+            aria-label="Homepage (launcher for self-hosted apps)"
+            title="Homepage (launcher for self-hosted apps)"
+          >
+            <span class="material-icons" aria-hidden="true">home</span>
+          </button>
         </div>
 
         <!-- Service filter for the dashboard view, styled like the log
@@ -576,6 +584,19 @@
           hx-target="this"
           hx-swap="morph:innerHTML"
         ></div>
+
+        <!-- Homepage (toggled by the Homepage button): a launcher for
+             self-hosted apps with an optional weather widget. Polled
+             only while visible; the fragment itself caches weather
+             and reachability results. -->
+        <div
+          id="homepage-view"
+          hidden
+          hx-get="homepage"
+          hx-trigger="every 60s[!document.getElementById('homepage-view').hidden]"
+          hx-target="this"
+          hx-swap="innerHTML"
+        ></div>
       </main>
 
       <aside id="minimap">
@@ -831,6 +852,7 @@
           },
         },
         compose: { element: "compose-view", endpoint: "compose" },
+        homepage: { element: "homepage-view", endpoint: "homepage" },
         processes: {
           element: "processes-view",
           endpoint: "processes",

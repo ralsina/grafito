@@ -20,9 +20,12 @@ require "./compose_dashboard"
 require "./compose_jobs"
 require "./process_status"
 require "./process_dashboard"
+require "./homepage_config"
+require "./homepage"
 
 {% if flag?(:fake_journal) %}
   require "./fake_compose_data"
+  require "./fake_homepage_data"
 {% end %}
 
 require "./gotify/config"
@@ -83,6 +86,13 @@ module Grafito
   # Process view - when enabled, the /processes routes are served and
   # the Processes toggle appears in the frontend.
   class_property? processes_enabled : Bool = true
+
+  # Homepage view - when enabled, the /homepage route is served and
+  # the Homepage toggle appears in the frontend.
+  class_property? homepage_enabled : Bool = true
+
+  # Where the homepage view reads its service list from.
+  class_property homepage_config_path : String = "/etc/grafito/homepage.yml"
 
   # Metrics sampler, nil when the dashboard is disabled (and in specs).
   class_property metrics_store : MetricsStore? = nil
@@ -607,5 +617,6 @@ module Grafito
     Dashboard.register_routes
     ComposeDashboard.register_routes
     ProcessDashboard.register_routes
+    HomepageDashboard.register_routes
   end # register_routes
 end
