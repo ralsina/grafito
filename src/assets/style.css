@@ -632,6 +632,10 @@ body[data-view="dashboard"] #stats-strip {
   flex-wrap: wrap;
   gap: 0.3rem 1rem;
   align-items: center;
+  /* Match the chart's inner padding (8 SVG units, which scale to
+     ~12px at typical widths) so the legend aligns with the plotted
+     area instead of touching the left edge. */
+  padding: 0 0.75rem;
   margin-bottom: 0.25rem;
   font-size: 0.68rem;
   color: var(--muted);
