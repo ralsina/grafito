@@ -117,8 +117,10 @@ module ComposeDashboard
           end
           tbody do
             if compose_stack.services.empty?
-              td(colspan: enable_actions ? "6" : "5", style: "text-align: center; padding: 1em;") do
-                text "No containers found for this stack."
+              tr do
+                td(colspan: enable_actions ? "6" : "5", style: "text-align: center; padding: 1em;") do
+                  text "No containers found for this stack."
+                end
               end
             else
               compose_stack.services.each do |compose_service|

@@ -90,8 +90,10 @@ module Dashboard
           end
           tbody do
             if units.empty?
-              td(colspan: enable_actions ? "5" : "4", style: "text-align: center; padding: 1em;") do
-                text normalize_filter(unit_filter).empty? ? "No systemd units found." : "No units match the filter."
+              tr do
+                td(colspan: enable_actions ? "5" : "4", style: "text-align: center; padding: 1em;") do
+                  text normalize_filter(unit_filter).empty? ? "No systemd units found." : "No units match the filter."
+                end
               end
             else
               units.each do |unit_state|

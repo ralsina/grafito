@@ -98,8 +98,10 @@ module ProcessDashboard
         end
         tbody do
           if visible.empty?
-            td(colspan: (SORT_COLUMNS.size + (enable_actions ? 1 : 0)).to_s, style: "text-align: center; padding: 1em;") do
-              text "No processes match."
+            tr do
+              td(colspan: (SORT_COLUMNS.size + (enable_actions ? 1 : 0)).to_s, style: "text-align: center; padding: 1em;") do
+                text "No processes match."
+              end
             end
           else
             visible.each do |process_info|
