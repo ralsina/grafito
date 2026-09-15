@@ -580,7 +580,6 @@ module Dashboard
     Grafito.route_path(path)
   end
 
-  # ameba:disable Metrics/CyclomaticComplexity
   def self.register_routes
     # ## The `/status` endpoint
     #
@@ -787,7 +786,7 @@ module Dashboard
       if Grafito.reject_cross_site_post?(env)
         halt env, status_code: 403, response: "Cross-site request rejected."
       end
-      unless Grafito.dashboard_enabled? && Grafito.enable_actions? && Grafito.auth_configured?
+      unless Grafito.dashboard_enabled? && Grafito.actions_available?
         env.response.status_code = 403
         next "Unit actions are disabled. Start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS) to allow them."
       end
@@ -817,48 +816,71 @@ module Dashboard
         next "Unit '#{HTML.escape(unit_name)}' not found."
       end
 
-      stdout = IO::Memory.new
-      stderr = IO::Memory.new
-      result = Process.run(
-        "systemctl",
-        args: Journalctl.user_flags + [action, full_unit],
-        output: stdout,
-        error: stderr,
-      )
-      unless result.normal_exit?
-        # Authorization and other failures come from systemd itself;
-        # surface them instead of a generic message. Panel requests get
-        # an error fragment swapped into the sidebar (htmx ignores error
-        # statuses, so a success status is needed to show it).
-        from_panel = optional_query_param(env, "from") == "panel"
-        message = stderr.to_s.strip
-        message = "systemctl #{action} #{full_unit} failed." if message.empty?
-        Log.error { "systemctl #{action} #{full_unit} failed: #{message[0..200]}" }
-        if from_panel
-          env.response.status_code = 200
+      {% if flag?(:demo_mode) %}
+        # Demo build: simulate the systemctl action against the fake
+        # unit table; nothing runs on the host.
+        if refreshed = SystemStatus.apply_unit_action(full_unit, action)
+          Log.info { "Demo mode: systemctl #{action} #{full_unit} simulated" }
           env.response.content_type = "text/html"
-          next Dashboard.action_error_fragment(action, full_unit, message)
+          # Actions triggered from the sidebar refresh the panel instead
+          # of the whole dashboard; the dashboard catches up on its next
+          # poll. Same response shape as the real path below.
+          if optional_query_param(env, "from") == "panel"
+            next Dashboard.unit_details_fragment(
+              refreshed,
+              Grafito.enable_actions?,
+              unit_error_count(full_unit),
+              SystemStatus.unit_flags_map,
+            )
+          end
+          next render_dashboard_fragment
         end
         env.response.status_code = 500
-        next HTML.escape(message)
-      end
-
-      Log.info { "systemctl #{action} #{full_unit} succeeded" }
-      env.response.content_type = "text/html"
-      # Actions triggered from the sidebar refresh the panel instead of
-      # the whole dashboard; the dashboard catches up on its next poll.
-      if optional_query_param(env, "from") == "panel"
-        refreshed = SystemStatus.unit_states.find { |unit| unit.unit == full_unit }
-        if refreshed
-          next Dashboard.unit_details_fragment(
-            refreshed,
-            Grafito.enable_actions?,
-            unit_error_count(full_unit),
-            Grafito.enable_actions? ? SystemStatus.unit_flags_map : {} of String => SystemStatus::UnitFileFlags,
-          )
+        next "Failed to simulate the action."
+      {% else %}
+        stdout = IO::Memory.new
+        stderr = IO::Memory.new
+        result = Process.run(
+          "systemctl",
+          args: Journalctl.user_flags + [action, full_unit],
+          output: stdout,
+          error: stderr,
+        )
+        unless result.normal_exit?
+          # Authorization and other failures come from systemd itself;
+          # surface them instead of a generic message. Panel requests get
+          # an error fragment swapped into the sidebar (htmx ignores error
+          # statuses, so a success status is needed to show it).
+          from_panel = optional_query_param(env, "from") == "panel"
+          message = stderr.to_s.strip
+          message = "systemctl #{action} #{full_unit} failed." if message.empty?
+          Log.error { "systemctl #{action} #{full_unit} failed: #{message[0..200]}" }
+          if from_panel
+            env.response.status_code = 200
+            env.response.content_type = "text/html"
+            next Dashboard.action_error_fragment(action, full_unit, message)
+          end
+          env.response.status_code = 500
+          next HTML.escape(message)
         end
-      end
-      render_dashboard_fragment
+
+        Log.info { "systemctl #{action} #{full_unit} succeeded" }
+        env.response.content_type = "text/html"
+        # Actions triggered from the sidebar refresh the panel instead of
+        # the whole dashboard; the dashboard catches up on its next poll.
+        if optional_query_param(env, "from") == "panel"
+          refreshed = SystemStatus.unit_states.find { |unit| unit.unit == full_unit }
+          if refreshed
+            next Dashboard.unit_details_fragment(
+              refreshed,
+              Grafito.enable_actions?,
+              unit_error_count(full_unit),
+              Grafito.enable_actions? ? SystemStatus.unit_flags_map : {} of String => SystemStatus::UnitFileFlags,
+            )
+          end
+        end
+        render_dashboard_fragment
+      {% end %}
     end
   end
 

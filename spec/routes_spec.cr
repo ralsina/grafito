@@ -85,10 +85,15 @@ describe "Kemal routes" do
       headers = HTTP::Headers{"Sec-Fetch-Site" => "same-origin"}
       response = dispatch_request("POST", "/unit/nginx.service/stop", headers: headers)
 
-      # The CSRF gate passes; the request then hits the actions gate
-      # (403, actions disabled in specs) instead of the CSRF message.
-      response[:status].should eq 403
+      # The CSRF gate passes; the request then reaches the action
+      # handling: a simulated action on demo builds, the actions gate
+      # (403, actions disabled in specs) on real deployments.
       response[:body].should_not contain("Cross-site request rejected.")
+      {% if flag?(:demo_mode) %}
+        response[:status].should eq 200
+      {% else %}
+        response[:status].should eq 403
+      {% end %}
     end
   end
 
@@ -217,16 +222,20 @@ describe "Kemal routes" do
     end
   end
 
-  it "POST unit actions returns 403 when actions are disabled" do
-    Grafito.enable_actions = false
-    begin
-      response = dispatch_request("POST", "/unit/sshd/restart")
-      response[:status].should eq(403)
-      response[:body].should contain("Unit actions are disabled")
-    ensure
+  # Demo builds always simulate actions (see demo_actions_spec.cr);
+  # real deployments gate them behind --enable-actions + auth.
+  {% if !flag?(:demo_mode) %}
+    it "POST unit actions returns 403 when actions are disabled" do
       Grafito.enable_actions = false
+      begin
+        response = dispatch_request("POST", "/unit/sshd/restart")
+        response[:status].should eq(403)
+        response[:body].should contain("Unit actions are disabled")
+      ensure
+        Grafito.enable_actions = false
+      end
     end
-  end
+  {% end %}
 
   it "POST unit actions returns 404 for a nonexistent unit" do
     Grafito.enable_actions = true

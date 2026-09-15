@@ -216,12 +216,15 @@ module ComposeJobs
   end
 
   # Demo-build stand-in: no docker, just a few plausible lines with a
-  # short delay so the polling UI shows a running state first.
+  # short delay so the polling UI shows a running state first. The
+  # leading line says what every demo visitor should know: this is
+  # simulated.
   private def self.run_fake(job : Job) : Nil
     spawn do
       parts = job.title.split(" ", 2)
       action = parts[0]?
       stack_name = parts[1]? || "demo"
+      job.append("Demo mode: this output is simulated")
       lines = FakeComposeData.fake_action_output(stack_name, action.to_s)
       lines.each_line do |line|
         sleep 0.4.seconds

@@ -158,30 +158,108 @@ module SystemStatus
     {} of String => UnitFileFlags
   end
 
-  # Deterministic unit flags for the demo build.
-  private def self.fake_unit_flags_map : Hash(String, UnitFileFlags)
+  # ## Demo state
+  #
+  # The demo build's unit table and unit-file flags are mutable so
+  # simulated actions have visible effects (stopping nginx really
+  # shows it as dead until it is started again). Lazy-seeded and
+  # guarded: dashboard polls and action endpoints run in fibers.
+
+  @@demo_units_mutex = Mutex.new(protection: :checked)
+  @@demo_units : Hash(String, UnitState)? = nil
+  @@demo_unit_flags : Hash(String, UnitFileFlags)? = nil
+
+  # Seeds the demo unit table: a healthy system with one failed unit,
+  # so the dashboard shows every state.
+  private def self.demo_units_seed : Hash(String, UnitState)
+    {
+      "cron.service"        => UnitState.new("cron.service", "loaded", "active", "exited", "Regular background program processing"),
+      "docker.service"      => UnitState.new("docker.service", "loaded", "active", "running", "Docker Application Container Engine"),
+      "fake-broken.service" => UnitState.new("fake-broken.service", "loaded", "failed", "failed", "Fake failing service"),
+      "nginx.service"       => UnitState.new("nginx.service", "loaded", "active", "running", "A high performance web server"),
+      "sshd.service"        => UnitState.new("sshd.service", "loaded", "active", "running", "OpenBSD Secure Shell server"),
+    } of String => UnitState
+  end
+
+  private def self.demo_unit_flags_seed : Hash(String, UnitFileFlags)
     {
       "cron.service"        => UnitFileFlags.new("static", true),
       "fake-broken.service" => UnitFileFlags.new("disabled", true),
       "docker.service"      => UnitFileFlags.new("enabled", true),
       "nginx.service"       => UnitFileFlags.new("enabled", true),
       "sshd.service"        => UnitFileFlags.new("enabled", true),
-    }
+    } of String => UnitFileFlags
   end
 
-  # Deterministic `systemctl status` stand-in for demo builds: a real
-  # looking block for the broken unit, a minimal one for the rest.
+  private def self.demo_units : Hash(String, UnitState)
+    @@demo_units_mutex.synchronize do
+      @@demo_units ||= demo_units_seed
+    end
+  end
+
+  private def self.demo_unit_flags : Hash(String, UnitFileFlags)
+    @@demo_units_mutex.synchronize do
+      @@demo_unit_flags ||= demo_unit_flags_seed
+    end
+  end
+
+  # Simulates one systemctl action against the demo unit table and
+  # returns the refreshed state, or nil for an unknown unit. Demo
+  # builds only: no systemctl runs anywhere.
+  def self.apply_unit_action(unit_name : String, action : String) : UnitState?
+    @@demo_units_mutex.synchronize do
+      units = @@demo_units ||= demo_units_seed
+      unit_state = units[unit_name]?
+      return unless unit_state
+
+      case action
+      when "stop"
+        units[unit_name] = UnitState.new(unit_name, "loaded", "inactive", "dead", unit_state.description)
+      when "start", "restart"
+        # cron is a oneshot unit: it runs and exits.
+        sub = unit_name == "cron.service" ? "exited" : "running"
+        units[unit_name] = UnitState.new(unit_name, "loaded", "active", sub, unit_state.description)
+      when "enable", "disable"
+        flags = @@demo_unit_flags ||= demo_unit_flags_seed
+        if unit_flags = flags[unit_name]?
+          flags[unit_name] = UnitFileFlags.new(action == "enable" ? "enabled" : "disabled", unit_flags.can_start)
+        end
+      end
+      units[unit_name]
+    end
+  end
+
+  # Restores the pristine demo unit table (spec hygiene, container
+  # restarts do the same for the demo site).
+  def self.reset_demo_state : Nil
+    @@demo_units_mutex.synchronize do
+      @@demo_units = nil
+      @@demo_unit_flags = nil
+    end
+  end
+
+  # Unit states for demo builds: the live mutable table.
+  private def self.fake_unit_flags_map : Hash(String, UnitFileFlags)
+    demo_unit_flags.dup
+  end
+
+  # `systemctl status` stand-in for demo builds, derived from the
+  # current simulated state so it stays coherent with actions: a
+  # failed-looking block for failed units, a minimal one for the rest.
   private def self.fake_unit_status_output(unit_name : String) : String?
-    if unit_name == "fake-broken.service"
+    unit_state = demo_units[unit_name]?
+    return unless unit_state
+
+    if unit_state.failed?
       <<-STATUS
-        ● fake-broken.service - Fake failing service
-             Loaded: loaded (/etc/systemd/system/fake-broken.service; enabled; preset: enabled)
+        ● #{unit_name} - Fake failing service
+             Loaded: loaded (/etc/systemd/system/#{unit_name}; enabled; preset: enabled)
              Active: failed (Result: exit-code) since Mon 2026-09-13 09:00:01 UTC; 4min 2s ago
             Process: 998 ExecStart=/usr/bin/fake-broken --run (code=exited, status=1/FAILURE)
               Main PID: 998 (code=exited, status=1/FAILURE)
         STATUS
     else
-      "● #{unit_name}\n     Loaded: loaded\n     Active: active (running)\n   Main PID: 1234\n"
+      "● #{unit_name}\n     Loaded: loaded\n     Active: #{unit_state.active_state} (#{unit_state.sub_state})\n   Main PID: 1234\n"
     end
   end
 
@@ -203,15 +281,10 @@ module SystemStatus
   end
 
   # A small snapshot for demo builds and fake-mode specs, with metrics
-  # that drift over time so charts look alive.
+  # that drift over time so charts look alive. Unit states come from
+  # the mutable demo table, so simulated actions are visible.
   private def self.fake_snapshot : Snapshot
-    units = [
-      UnitState.new("cron.service", "loaded", "active", "exited", "Regular background program processing"),
-      UnitState.new("docker.service", "loaded", "active", "running", "Docker Application Container Engine"),
-      UnitState.new("fake-broken.service", "loaded", "failed", "failed", "Fake failing service"),
-      UnitState.new("nginx.service", "loaded", "active", "running", "A high performance web server"),
-      UnitState.new("sshd.service", "loaded", "active", "running", "OpenBSD Secure Shell server"),
-    ]
+    units = demo_units.values.sort_by!(&.unit)
     metrics = fake_metrics_at(Time.local)
     Snapshot.new(
       timestamp: Time.local,

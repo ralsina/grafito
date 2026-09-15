@@ -510,12 +510,19 @@ module ProcessStatus
   #
   # FAKE_PROCESSES mirrors a small personal server: a handful of system
   # daemons, a web server and a database, with CPU usage that drifts so
-  # the table and meters look alive across polls.
+  # the table and meters look alive across polls. Simulated signals
+  # mutate an overlay: killed pids vanish, others can be paused (T)
+  # and resumed.
 
   private FAKE_BOOT = Time.local - 20.days
 
-  # pid, user, state, cpu, mem%, virt KB, res KB, command, unit
-  private def self.fake_process_rows
+  @@demo_mutex = Mutex.new(protection: :checked)
+  @@demo_killed = Set(Int32).new
+  @@demo_states = {} of Int32 => String
+
+  # pid, user, state, cpu, mem%, virt KB, res KB, command, unit — the
+  # pristine table, without overlays.
+  private def self.fake_process_table
     angle = (Time.local - FAKE_BOOT).total_seconds / 7.0
     [
       {1, "root", "S", 0.5, 0.1, 180_000, 24_000, "/sbin/init splash", "init.scope"},
@@ -531,6 +538,50 @@ module ProcessStatus
       {1801, "ralsina", "R", 12.5 + 8.0 * Math.sin(angle / 0.9).abs, 1.9, 2_400_000, 371_000, "grafito", "grafito.service"},
       {1950, "ralsina", "S", 3.1 + 2.0 * Math.cos(angle / 1.7), 4.4, 3_100_000, 856_000, "code --open-url", ""},
     ]
+  end
+
+  # The live table with the signal overlay applied: killed pids are
+  # gone, paused ones read as T.
+  private def self.fake_process_rows
+    @@demo_mutex.synchronize do
+      fake_process_table.reject { |row| @@demo_killed.includes?(row[0]) }.map do |row|
+        if state_override = @@demo_states[row[0]]?
+          {row[0], row[1], state_override, row[3], row[4], row[5], row[6], row[7], row[8]}
+        else
+          row
+        end
+      end
+    end
+  end
+
+  # Simulates one process signal on the demo world. Returns false for
+  # an unknown pid. Demo builds only: no real process is touched.
+  def self.apply_signal(pid : Int32, action : String) : Bool
+    @@demo_mutex.synchronize do
+      known = !@@demo_killed.includes?(pid) &&
+              fake_process_table.any? { |row| row[0] == pid }
+      return false unless known
+
+      case action
+      when "term", "kill"
+        @@demo_killed.add(pid)
+        @@demo_states.delete(pid)
+      when "stop"
+        @@demo_states[pid] = "T"
+      when "cont"
+        @@demo_states.delete(pid)
+      end
+      true
+    end
+  end
+
+  # Restores the pristine demo process table (spec hygiene, container
+  # restarts do the same for the demo site).
+  def self.reset_demo_state : Nil
+    @@demo_mutex.synchronize do
+      @@demo_killed.clear
+      @@demo_states.clear
+    end
   end
 
   # A detail record for one of the fake pids; unknown pids read as

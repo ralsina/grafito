@@ -20,16 +20,20 @@ require "./spec_helper"
       Grafito.compose_enabled = true
     end
 
-    it "action endpoints are gated by enable-actions + auth" do
+    it "action endpoints simulate without enable-actions or auth" do
       Grafito.enable_actions = false
       Grafito.auth_configured = false
 
       stack_response = dispatch_request("POST", "/compose-stack/webapp/stop")
-      stack_response[:status].should eq(403)
-      stack_response[:body].should contain("Compose actions are disabled")
+      stack_response[:status].should eq(200)
+      stack_response[:body].should contain("compose-output-webapp")
+      # The simulated stop is visible in the fake world.
+      ComposeStatus.stacks.find(&.name.==("webapp")).try(&.status).should eq("exited")
 
       service_response = dispatch_request("POST", "/compose-service/webapp/api/stop")
-      service_response[:status].should eq(403)
+      service_response[:status].should eq(200)
+
+      FakeComposeData.reset_demo_state
     end
 
     it "action endpoints reject unknown actions and names" do

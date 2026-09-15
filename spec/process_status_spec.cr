@@ -98,10 +98,20 @@ describe "Process routes" do
     Grafito.processes_enabled = true
   end
 
-  it "POST /process/:pid/:action is 403 when actions are disabled" do
-    response = dispatch_request("POST", "/process/1/kill")
-    response[:status].should eq 403
-  end
+  {% if flag?(:demo_mode) %}
+    it "POST /process/:pid/:action simulates even when actions are disabled" do
+      response = dispatch_request("POST", "/process/1240/term")
+      response[:status].should eq 200
+      response[:body].should_not contain("Cross-site request rejected")
+    ensure
+      ProcessStatus.reset_demo_state
+    end
+  {% else %}
+    it "POST /process/:pid/:action is 403 when actions are disabled" do
+      response = dispatch_request("POST", "/process/1240/term")
+      response[:status].should eq 403
+    end
+  {% end %}
 
   it "POST /process/:pid/:action rejects unknown actions" do
     # Force the action gate open: auth flags are not set in specs, so

@@ -116,6 +116,24 @@ module Grafito
   # buttons restricted to the --units whitelist.
   class_property? enable_actions : Bool = false
 
+  # True on demo builds (-Ddemo_mode): the UI shows every action and
+  # the action endpoints simulate their effects against the fake data
+  # instead of touching the host.
+  def self.demo_mode? : Bool
+    {% if flag?(:demo_mode) %}
+      true
+    {% else %}
+      false
+    {% end %}
+  end
+
+  # Whether action buttons may be rendered and action endpoints may
+  # run: real deployments need --enable-actions plus authentication,
+  # demo builds simulate everything so they are always allowed.
+  def self.actions_available? : Bool
+    (enable_actions? && auth_configured?) || demo_mode?
+  end
+
   # Helper to build route paths with proper base path handling.
   # Public so each view module can delegate its own route_path to it.
   def self.route_path(path : String) : String

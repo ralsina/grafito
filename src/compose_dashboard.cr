@@ -22,6 +22,7 @@ require "./compose_jobs"
 
 {% if flag?(:demo_mode) %}
   require "./fake_appstore_data"
+  require "./fake_compose_data"
 {% end %}
 
 module ComposeDashboard
@@ -635,7 +636,6 @@ module ComposeDashboard
   #
   # The compose view owns its endpoints (fragment, service details,
   # YAML, logs, stack/service actions and the job output poller).
-  # ameba:disable Metrics/CyclomaticComplexity
   def self.register_routes
     # ## The compose view endpoints
     #
@@ -769,6 +769,11 @@ module ComposeDashboard
         next "The compose file for stack '#{HTML.escape(stack_name)}' is not known; cannot operate on it."
       end
 
+      {% if flag?(:demo_mode) %}
+        # Demo build: the fake world flips state right away, then the
+        # job replays plausible output. No docker runs anywhere.
+        FakeComposeData.apply_stack_action(stack_name, action)
+      {% end %}
       commands = case action
                  when "up"
                    [compose_command_prefix(compose_stack) + ["up", "-d"]]
@@ -832,33 +837,50 @@ module ComposeDashboard
         next "The compose file for stack '#{HTML.escape(stack_name)}' is not known; cannot operate on it."
       end
 
-      args = compose_command_prefix(compose_stack) + [action, compose_service.service]
-      stdout = IO::Memory.new
-      stderr = IO::Memory.new
-      result = Process.run(args[0], args: args[1..], output: stdout, error: stderr)
-      unless result.normal_exit?
-        from_panel = optional_query_param(env, "from") == "panel"
-        message = stderr.to_s.strip
-        message = "docker compose #{action} #{compose_service.service} failed." if message.empty?
-        Log.error { "docker compose #{action} #{compose_service.service} failed: #{message[0..200]}" }
-        if from_panel
-          env.response.status_code = 200
+      {% if flag?(:demo_mode) %}
+        # Demo build: simulate the compose action against the fake
+        # stack state; no docker runs anywhere. Same response shapes as
+        # the real path below.
+        if FakeComposeData.apply_service_action(stack_name, service_name, action) &&
+           (refreshed = ComposeStatus.find_service(stack_name, service_name))
+          Log.info { "Demo mode: docker compose #{action} #{service_name} (stack #{stack_name}) simulated" }
           env.response.content_type = "text/html"
-          next ComposeDashboard.action_error_fragment(action, "#{compose_service.stack}/#{compose_service.service}", message)
+          if optional_query_param(env, "from") == "panel"
+            next ComposeDashboard.service_details_fragment(refreshed, Grafito.enable_actions?)
+          end
+          next ComposeDashboard.render_html(ComposeStatus.stacks, Grafito.enable_actions?)
         end
         env.response.status_code = 500
-        next HTML.escape(message)
-      end
-
-      Log.info { "docker compose #{action} #{compose_service.service} (stack #{compose_service.stack}) succeeded" }
-      env.response.content_type = "text/html"
-      if optional_query_param(env, "from") == "panel"
-        refreshed = ComposeStatus.find_service(stack_name, service_name)
-        if refreshed
-          next ComposeDashboard.service_details_fragment(refreshed, Grafito.enable_actions?)
+        next "Failed to simulate the action."
+      {% else %}
+        args = compose_command_prefix(compose_stack) + [action, compose_service.service]
+        stdout = IO::Memory.new
+        stderr = IO::Memory.new
+        result = Process.run(args[0], args: args[1..], output: stdout, error: stderr)
+        unless result.normal_exit?
+          from_panel = optional_query_param(env, "from") == "panel"
+          message = stderr.to_s.strip
+          message = "docker compose #{action} #{compose_service.service} failed." if message.empty?
+          Log.error { "docker compose #{action} #{compose_service.service} failed: #{message[0..200]}" }
+          if from_panel
+            env.response.status_code = 200
+            env.response.content_type = "text/html"
+            next ComposeDashboard.action_error_fragment(action, "#{compose_service.stack}/#{compose_service.service}", message)
+          end
+          env.response.status_code = 500
+          next HTML.escape(message)
         end
-      end
-      ComposeDashboard.render_html(ComposeStatus.stacks, Grafito.enable_actions?)
+
+        Log.info { "docker compose #{action} #{compose_service.service} (stack #{compose_service.stack}) succeeded" }
+        env.response.content_type = "text/html"
+        if optional_query_param(env, "from") == "panel"
+          refreshed = ComposeStatus.find_service(stack_name, service_name)
+          if refreshed
+            next ComposeDashboard.service_details_fragment(refreshed, Grafito.enable_actions?)
+          end
+        end
+        ComposeDashboard.render_html(ComposeStatus.stacks, Grafito.enable_actions?)
+      {% end %}
     end
 
     # Polling fragment for a compose job's output. The anchor id keeps
@@ -897,10 +919,10 @@ module ComposeDashboard
   end
 
   # True when compose action endpoints may touch docker: the compose
-  # view enabled, actions explicitly enabled, and authentication
-  # configured (the same gate as the unit action endpoint).
+  # view enabled, and actions either explicitly enabled with
+  # authentication or simulated on a demo build.
   private def self.compose_actions_allowed? : Bool
-    Grafito.compose_enabled? && Grafito.enable_actions? && Grafito.auth_configured?
+    Grafito.compose_enabled? && Grafito.actions_available?
   end
 
   # Whitelist for stack and service names coming from URLs: docker

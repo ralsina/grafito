@@ -38,6 +38,7 @@ require "./compose_jobs"
 
 {% if flag?(:demo_mode) %}
   require "./fake_appstore_data"
+  require "./fake_compose_data"
 {% end %}
 
 module ComposeAppStore
@@ -159,9 +160,31 @@ module ComposeAppStore
       end
 
       {% if flag?(:demo_mode) %}
-        job_id = ComposeJobs.start("install #{app_id}", [[] of String])
+        # Demo build: validate against the fixture catalog, add the app
+        # to the fake installed list (its stack appears in the compose
+        # view) and replay the install output. No network, no docker.
+        app = FakeAppStore.find_app(app_id)
+        if app.nil?
+          env.response.status_code = 404
+          next "App '#{HTML.escape(app_id)}' not found in store."
+        end
+
+        if FakeAppStore.find_installed(app.id)
+          env.response.status_code = 409
+          next HTML.build do
+            div(class: "service-panel service-panel-error") do
+              tag("h4") { text "Already installed: #{app.name}" }
+              tag("p") { text "This app is already installed. Use the stack's update button to upgrade it." }
+            end
+          end
+        end
+
+        installed = FakeAppStore.install(app)
+        FakeComposeData.add_installed_stack(installed.project_name, app)
+        Log.info { "Demo mode: app store install of #{installed.project_name} simulated" }
+        job_id = ComposeJobs.start("install #{installed.project_name}", [[] of String])
         env.response.content_type = "text/html"
-        job_fragment(job_id, "appstore-install-#{app_id}")
+        next job_fragment(job_id, "appstore-install-#{installed.project_name}")
       {% else %}
         store = find_store(store_slug)
         if store.nil?
@@ -224,6 +247,10 @@ module ComposeAppStore
 
       job_id : String
       {% if flag?(:demo_mode) %}
+        # Demo build: jump the install to the catalog's version so the
+        # update badge clears, and replay the update output.
+        FakeAppStore.mark_updated(installed.project_name)
+        Log.info { "Demo mode: app store update of #{installed.project_name} simulated" }
         job_id = ComposeJobs.start("update #{installed.project_name}", [[] of String])
       {% else %}
         job_id = ComposeJobs.start_custom("update #{installed.project_name}") do |job|
@@ -261,6 +288,12 @@ module ComposeAppStore
 
       job_id : String
       {% if flag?(:demo_mode) %}
+        # Demo build: drop the install (badge and buttons disappear)
+        # and remove a dynamically installed stack; fixture scenery
+        # stays. Replay the uninstall output.
+        FakeAppStore.uninstall(installed.project_name)
+        FakeComposeData.remove_installed_stack(installed.project_name)
+        Log.info { "Demo mode: app store uninstall of #{installed.project_name} simulated" }
         job_id = ComposeJobs.start("uninstall #{installed.project_name}", [[] of String])
       {% else %}
         job_id = ComposeJobs.start_custom("uninstall #{installed.project_name}") do |job|
@@ -288,10 +321,10 @@ module ComposeAppStore
   end
 
   # The gate for state-changing endpoints, mirroring the compose
-  # dashboard's: view enabled, actions enabled, authentication on.
+  # dashboard's: view enabled, and actions either explicitly enabled
+  # with authentication or simulated on a demo build.
   private def self.actions_allowed? : Bool
-    Grafito.compose_enabled? && Grafito.apps_enabled? &&
-      Grafito.enable_actions? && Grafito.auth_configured?
+    Grafito.compose_enabled? && Grafito.apps_enabled? && Grafito.actions_available?
   end
 
   private def self.actions_rejected_message : String
@@ -375,7 +408,7 @@ module ComposeAppStore
   private def self.installed_app(project_name : String?) : AppStore::InstalledApp?
     return unless project_name
     {% if flag?(:demo_mode) %}
-      FakeAppStore.installed.find(&.project_name.==(project_name))
+      FakeAppStore.find_installed(project_name)
     {% else %}
       AppStore.find_installed(Grafito.data_dir, project_name)
     {% end %}
@@ -483,7 +516,7 @@ module ComposeAppStore
           else
             div(class: "appstore-not-synced") do
               tag("p") { text "This store has not been downloaded yet." }
-              if Grafito.enable_actions? && Grafito.auth_configured?
+              if Grafito.actions_available?
                 button(
                   class: "service-panel-explain",
                   "hx-post": "#{base}/compose-appstore-sync",
@@ -564,7 +597,7 @@ module ComposeAppStore
         if last = AppStore.last_sync(store, Grafito.data_dir)
           span(class: "appstore-synced-at") { text "Store cache synced #{time_ago(last)}" }
         end
-        if Grafito.enable_actions? && Grafito.auth_configured?
+        if Grafito.actions_available?
           button(
             class: "service-panel-explain",
             title: "Re-download the store tarball",
@@ -591,7 +624,7 @@ module ComposeAppStore
             span(class: "tag tag-muted") { text app.version }
           end
           tag("p") { text app.short_desc }
-          if Grafito.enable_actions? && Grafito.auth_configured?
+          if Grafito.actions_available?
             button(
               class: "service-panel-explain",
               "hx-get": "#{base}/compose-appstore-app?store=#{URI.encode_path(store.slug)}&app=#{URI.encode_path(app.id)}",
@@ -715,7 +748,7 @@ module ComposeAppStore
             html form_field(field, input)
           end
 
-          if Grafito.enable_actions? && Grafito.auth_configured?
+          if Grafito.actions_available?
             button(
               class: "service-panel-explain appstore-install-button",
               type: "button",
