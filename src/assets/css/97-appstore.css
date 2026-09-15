@@ -1,0 +1,189 @@
+/* App store (compose view): toolbar entry point, catalog cards,
+   install form and the stack badge for store-installed apps. The
+   catalog renders inside the inspector's Detail panel, so widths are
+   tuned for the sidebar. */
+
+/* "Add app" toolbar button above the summary cards. */
+.compose-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.compose-addapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Catalog: search box and category chips. */
+.appstore-filter {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.appstore-filter input[type="search"] {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.appstore-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.appstore-chip {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--pico-muted-border-color, #ccc);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+
+.appstore-chip:hover {
+  text-decoration: none;
+}
+
+.appstore-chip-active {
+  background: var(--pico-primary-background, #4152af);
+  border-color: var(--pico-primary-background, #4152af);
+  color: var(--pico-primary-inverse, #fff);
+}
+
+/* Sync status line and the not-synced call to action. */
+.appstore-synced,
+.appstore-not-synced {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.appstore-synced-at {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.appstore-empty,
+.appstore-truncated {
+  text-align: center;
+  opacity: 0.7;
+  padding: 0.5rem 0;
+}
+
+/* Catalog cards. */
+.appstore-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.appstore-card {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.5rem;
+  border: 1px solid var(--pico-muted-border-color, #ddd);
+  border-radius: 0.5rem;
+}
+
+.appstore-logo {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.4rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.appstore-logo-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  background: var(--pico-muted-background, #eee);
+}
+
+.appstore-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.appstore-card-body p {
+  font-size: 0.8rem;
+  margin: 0.15rem 0 0.4rem;
+}
+
+.appstore-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Install form. */
+.appstore-form-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.appstore-form-header h4 {
+  margin: 0;
+}
+
+.appstore-desc {
+  font-size: 0.8rem;
+  margin: 0.5rem 0;
+}
+
+.appstore-field {
+  margin-bottom: 0.6rem;
+}
+
+.appstore-field label {
+  display: block;
+  font-size: 0.8rem;
+  margin-bottom: 0.15rem;
+}
+
+.appstore-field input,
+.appstore-field select {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.appstore-field small {
+  display: block;
+  opacity: 0.7;
+  margin-top: 0.1rem;
+}
+
+.appstore-field input[type="checkbox"] {
+  width: auto;
+}
+
+.appstore-errors {
+  margin: 0.5rem 0;
+}
+
+.appstore-errors p {
+  margin: 0.15rem 0;
+  font-size: 0.8rem;
+}
+
+.appstore-install-button {
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+/* Badge on stacks installed from the app store. */
+.appstore-badge {
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+}

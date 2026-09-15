@@ -35,6 +35,11 @@ dependencies:
   # Anthropic/Claude AI provider
   anthropic:
     github: jgaskins/anthropic
+  # Tar archive reader, used to unpack app store tarballs (the stdlib
+  # only ships gzip/zip, not tar)
+  crystar:
+    github: naqvis/crystar
+    version: ">= 0.4.0"
 
 # Faker is used for the demo version which displays
 # fake data.

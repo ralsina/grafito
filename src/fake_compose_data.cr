@@ -145,6 +145,12 @@ module FakeComposeData
       "Pulling #{stack_name} ...\n Container #{stack_name}-web-1  Pulled\n Starting #{stack_name} ...\n Stack #{stack_name} updated"
     when "up"
       "Starting #{stack_name} ...\n Stack #{stack_name} started"
+    when "install"
+      "Rendering #{stack_name} files ...\n Pulling #{stack_name} ...\n Container #{stack_name}-1  Started\n App #{stack_name} installed"
+    when "sync"
+      "Downloading store tarball ...\n Unpacking ...\n Store synced"
+    when "uninstall"
+      "Stopping and removing containers ...\n Removing app files ...\n App #{stack_name} uninstalled"
     else
       "#{action.capitalize} #{stack_name} done"
     end

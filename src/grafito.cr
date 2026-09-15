@@ -18,6 +18,8 @@ require "./dashboard"
 require "./compose_status"
 require "./compose_dashboard"
 require "./compose_jobs"
+require "./app_store"
+require "./compose_appstore"
 require "./process_status"
 require "./process_dashboard"
 require "./homepage_config"
@@ -83,6 +85,14 @@ module Grafito
   # the Compose toggle appears in the frontend.
   class_property? compose_enabled : Bool = true
 
+  # App store - when enabled (and the compose view is), the compose
+  # view offers installing apps from Runtipi-compatible app stores.
+  class_property? apps_enabled : Bool = true
+
+  # Which app stores to offer, as a comma-separated list of
+  # name=tarball-url pairs, parsed by AppStore.parse_stores.
+  class_property appstores_spec : String = "official=https://codeload.github.com/runtipi/runtipi-appstore/tar.gz/refs/heads/master"
+
   # Process view - when enabled, the /processes routes are served and
   # the Processes toggle appears in the frontend.
   class_property? processes_enabled : Bool = true
@@ -93,6 +103,11 @@ module Grafito
 
   # Where the homepage view reads its service list from.
   class_property homepage_config_path : String = "/etc/grafito/homepage.yml"
+
+  # Base directory for on-disk state: dashboard metrics, the app store
+  # caches (appstores/), installed apps (apps/) and their data
+  # (app-data/). Mirrors --data-dir.
+  class_property data_dir : String = "/var/lib/grafito"
 
   # Metrics sampler, nil when the dashboard is disabled (and in specs).
   class_property metrics_store : MetricsStore? = nil
@@ -616,6 +631,7 @@ module Grafito
     # in src/assets/index.html for the frontend side.
     Dashboard.register_routes
     ComposeDashboard.register_routes
+    ComposeAppStore.register_routes
     ProcessDashboard.register_routes
     HomepageDashboard.register_routes
   end # register_routes

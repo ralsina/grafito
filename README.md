@@ -153,6 +153,48 @@ Set `GRAFITO_COMPOSE=false` (or `--compose=false`) to disable the
 compose view and its endpoints completely. Docker must be installed on
 the host running Grafito for anything to show up.
 
+#### App Store (Runtipi-compatible)
+
+The compose view has an **Add app** button (visible when actions are
+enabled): a browsable catalog of [Runtipi](https://runtipi.io)-format
+app stores, so popular self-hosted tools can be installed as ordinary
+compose stacks without writing a YAML file.
+
+* **Catalog**: pick a store, search by name and filter by category.
+  Cards show each app's logo, description and version; the install
+  form asks for a host port plus whatever the app itself needs
+  (Runtipi's `form_fields`: text, number, boolean, dropdown and
+  generated-secrets fields, validated server-side).
+* **Install**: Grafito renders the app's compose file and a `.env`
+  (Runtipi's `APP_*` variables plus your answers; secrets are
+  generated once and persisted) under its data dir, then runs
+  `docker compose pull && up -d` as a streaming job. The app shows up
+  as a normal stack, badged with its name and version, and is reachable
+  on the host port you chose.
+* **Update and uninstall**: stacks installed from a store get update
+  and uninstall buttons. Update re-renders the app when the store
+  ships a newer package (your answers and secrets are kept) and pulls
+  the new images. Uninstall runs `down` and removes the rendered
+  files; app data under `<data-dir>/app-data/` is kept.
+* **Compatibility notes**: store apps are rendered for standalone
+  operation — Runtipi's `x-runtipi` metadata and shared Traefik
+  network are translated (host port mapping, project-local networks),
+  but domain/TLS exposure through Traefik and Runtipi's shared
+  PostgreSQL are not provided. Apps needing those fail at install
+  time, visibly, in the job output.
+
+Stores are configured as a comma-separated list of `name=tarball-url`
+pairs (any git host's archive endpoint works):
+
+```sh
+GRAFITO_APPSTORES="official=https://codeload.github.com/runtipi/runtipi-appstore/tar.gz/refs/heads/master,mine=https://example.com/my-store.tar.gz" grafito --enable-actions
+```
+
+Set `GRAFITO_APPS=false` (or `--apps=false`) to hide the app store
+while keeping the rest of the compose view. Store tarballs are cached
+under `<data-dir>/appstores/` and only re-downloaded when stale or on
+demand.
+
 ### Process Monitor
 
 Click the **Processes** button in the top bar (or share a link with
