@@ -544,10 +544,26 @@ module ProcessDashboard
 
   private def self.cached_journal_entries : Array(Journalctl::LogEntry)
     key = "-6h"
+
+    # Fast path: a fresh cache hit needs no I/O under the lock.
     CHART_CACHE_LOCK.synchronize do
       cached = CHART_CACHE[key]?
-      return cached[:entries] if cached && (Time.local - cached[:at]) < CHART_ENTRY_TTL
-      entries = Dashboard.dashboard_journal_entries(key)
+      if cached && (Time.local - cached[:at]) < CHART_ENTRY_TTL
+        return cached[:entries]
+      end
+    end
+
+    # Miss: run the journalctl subprocess WITHOUT holding the lock, so
+    # concurrent requests are never blocked by this one's I/O. Two
+    # simultaneous cold-cache requests may both query; that is harmless.
+    entries = Dashboard.dashboard_journal_entries(key)
+
+    CHART_CACHE_LOCK.synchronize do
+      # Prefer a cache a concurrent refresher filled while we ran.
+      cached = CHART_CACHE[key]?
+      if cached && (Time.local - cached[:at]) < CHART_ENTRY_TTL
+        return cached[:entries]
+      end
       CHART_CACHE[key] = {entries: entries, at: Time.local}
       entries
     end
