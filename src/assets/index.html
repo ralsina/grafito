@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Chivo:wght@300;400;600;700&family=Chivo+Mono:wght@300;400;500&family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Space+Grotesk:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Chivo:wght@300;400;600;700&family=Chivo+Mono:wght@300;400;500&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -215,6 +215,7 @@
           name="since"
           class="log-filter topbar-select"
           title="Filter logs by time range"
+          aria-label="Filter logs by time range"
           hx-get="logs"
           hx-trigger="change"
           hx-target="#results"
@@ -236,6 +237,7 @@
           name="priority"
           class="log-filter topbar-select"
           title="Filter logs by priority level (show this severity and worse)"
+          aria-label="Filter logs by priority level"
           hx-get="logs"
           hx-trigger="change"
           hx-target="#results"
@@ -486,6 +488,7 @@
               name="live-view"
               role="switch"
               class="log-filter"
+              aria-label="Toggle live log updates"
             />
             <span class="live-dot" aria-hidden="true"></span>
             <span class="topbar-tool-label">Live</span>
@@ -622,6 +625,7 @@
             name="theme"
             role="switch"
             style="margin: 0"
+            aria-label="Toggle dark theme"
           />
           <span class="material-icons" aria-hidden="true">dark_mode</span>
         </label>
@@ -633,33 +637,37 @@
     <!-- Entry inspector side panel: Detail / Context / AI tabs -->
     <aside id="side-panel" aria-label="Entry inspector" role="complementary">
       <div id="side-panel-tabs">
-        <button
-          class="insp-tab active"
-          data-tab="detail"
-          role="tab"
-          aria-selected="true"
-          title="Entry details"
-        >
-          Detail
-        </button>
-        <button
-          class="insp-tab"
-          data-tab="context"
-          role="tab"
-          aria-selected="false"
-          title="Surrounding log entries"
-        >
-          Context
-        </button>
-        <button
-          class="insp-tab"
-          data-tab="ai"
-          role="tab"
-          aria-selected="false"
-          title="AI explanation (if AI is configured)"
-        >
-          AI
-        </button>
+        <!-- display:contents keeps the tabs as flex items of the header
+             bar while giving them a proper tablist parent role. -->
+        <div role="tablist" aria-label="Inspector views" style="display: contents">
+          <button
+            class="insp-tab active"
+            data-tab="detail"
+            role="tab"
+            aria-selected="true"
+            title="Entry details"
+          >
+            Detail
+          </button>
+          <button
+            class="insp-tab"
+            data-tab="context"
+            role="tab"
+            aria-selected="false"
+            title="Surrounding log entries"
+          >
+            Context
+          </button>
+          <button
+            class="insp-tab"
+            data-tab="ai"
+            role="tab"
+            aria-selected="false"
+            title="AI explanation (if AI is configured)"
+          >
+            AI
+          </button>
+        </div>
         <button
           id="side-panel-close"
           class="insp-close"

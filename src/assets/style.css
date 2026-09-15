@@ -14,7 +14,9 @@
 }
 
 :root {
-  --font-display: "Space Grotesk", var(--font-body);
+  /* Two webfonts only (Chivo + Chivo Mono): display text falls back to
+     the body font so the Google Fonts request stays lean. */
+  --font-display: var(--font-body);
   --brand-weight: 600;
 }
 html[data-theme="dark"] {
@@ -1029,6 +1031,10 @@ tr.priority-7 {
 .compose-stack-actions .round-button {
   width: 1.7rem;
   height: 1.7rem;
+  /* 1.7rem shrinks below the 24px touch-target minimum on small
+     screens, where pico.css drops the root font size to 14px. */
+  min-width: 24px;
+  min-height: 24px;
   border-radius: 6px;
   padding: 0;
   display: inline-flex;
@@ -1046,6 +1052,11 @@ tr.priority-7 {
 .compose-stack-actions .round-button:hover {
   color: var(--accent);
   border-color: var(--accent);
+}
+/* The row's action buttons share one cell; keep a small gap between
+   them now that they are no longer separated by table cell borders. */
+.hover-action-cell .round-button:not(:last-child) {
+  margin-right: 0.2rem;
 }
 .hover-action-cell .material-icons,
 .dashboard-action-cell .material-icons,
@@ -1671,6 +1682,13 @@ dialog article dd {
   #results .hover-action-cell .round-button {
     height: 1.7rem;
     width: 1.7rem;
+  }
+  /* Touch-friendly height for the clickable hostname/unit/tag links. */
+  #results .log-hostname-cell a,
+  #results .log-unit-cell a,
+  #results .log-tag-cell a {
+    display: inline-block;
+    padding: 6px 0;
   }
 }
 

@@ -223,13 +223,15 @@ module Grafito
     end
   end
 
-  # Generates a single hover-action button cell for a log entry row.
-  # The htmx buttons share almost all attributes; only the icon, tooltip and
-  # URL differ. The AI button instead triggers a JavaScript function and takes
-  # an onclick handler. `js_arg` is interpolated verbatim and must already be
-  # a valid JavaScript literal (use `.to_json` for strings). `tab` selects
-  # which sidebar pane the response lands in.
-  private def _hover_action_button_cell(
+  # Generates a single hover-action button for a log entry row. All of a
+  # row's buttons share one actions cell (see log_row) so the table keeps
+  # one header column per data column. The htmx buttons share almost all
+  # attributes; only the icon, tooltip and URL differ. The AI button
+  # instead triggers a JavaScript function and takes an onclick handler.
+  # `js_arg` is interpolated verbatim and must already be a valid
+  # JavaScript literal (use `.to_json` for strings). `tab` selects which
+  # sidebar pane the response lands in.
+  private def _hover_action_button(
     title : String,
     icon : String,
     tab : String,
@@ -252,11 +254,9 @@ module Grafito
       })
     end
     HTML.build do
-      td(class: "hover-action-cell", style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
-        button(attributes) do
-          span(class: "material-icons", style: "vertical-align: middle;") do
-            text icon
-          end
+      button(attributes) do
+        span(class: "material-icons", style: "vertical-align: middle;") do
+          text icon
         end
       end
     end
@@ -344,6 +344,7 @@ module Grafito
               # All remaining headers are sortable and will use this block
               th({
                 "style"   => "cursor: pointer; vertical-align: middle;",
+                "scope"   => "col",
                 "hx-get"  => build_url("logs"),
                 "hx-vals" => header[:hx_vals],
                 # Include every .log-filter so column-visibility toggles and
@@ -356,12 +357,18 @@ module Grafito
                 html header[:text]
               end
             end
+            # The per-row hover actions render as an extra <td> with no
+            # matching header, which fails the td-has-header accessibility
+            # rule. Matches the dashboards' plain "Actions" header.
+            th do
+              text "Actions"
+            end
           end
         end
         tbody do
           if logs.empty?
             tr do
-              td(colspan: Math.max(1, headers_to_display.size).to_s, style: "text-align: center; padding: 1em;") do
+              td(colspan: Math.max(1, headers_to_display.size + 1).to_s, style: "text-align: center; padding: 1em;") do
                 text "No log entries found."
               end
             end
@@ -483,45 +490,49 @@ module Grafito
 
         if entry_cursor
           cursor_param = URI::Params.encode({"cursor" => entry_cursor})
-          # Details button
-          html _hover_action_button_cell(
-            title: "View full details for this log entry",
-            icon: "search",
-            tab: "detail",
-            url: "#{build_url("details")}?#{cursor_param}",
-          )
-          # Context button
-          html _hover_action_button_cell(
-            title: "View context for this log entry (e.g., 5 before & 5 after)",
-            icon: "history",
-            tab: "context",
-            url: "#{build_url("context")}?#{cursor_param}",
-          )
-          # Copy-entry button: copies the entry as a journalctl-style
-          # line (timestamp hostname unit[pid]: message).
-          copied_entry_text = String.build do |str|
-            str << entry.formatted_timestamp_with_timezone("%Y-%m-%d %H:%M:%S")
-            str << " " << entry.hostname
-            str << " " << entry.unit
-            if pid = entry.data["_PID"]?
-              str << "[" << pid << "]"
-            end
-            str << ": " << entry.message
-          end
-          html _hover_action_button_cell(
-            title: "Copy this log entry to the clipboard",
-            icon: "content_copy",
-            tab: "copy",
-            onclick: "copyLogEntry(#{copied_entry_text.to_json}, this)",
-          )
-          # AI Explanation button (only shown if AI is enabled)
-          if Grafito.ai_enabled?
-            html _hover_action_button_cell(
-              title: "Ask AI to explain this log entry",
-              icon: "psychology",
-              tab: "ai",
-              onclick: "askAIExplanation(#{entry_cursor.to_json})",
+          # All row actions share ONE cell so the table has exactly one
+          # header column per data column (accessibility: td-has-header).
+          td(class: "hover-action-cell", style: "width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;") do
+            # Details button
+            html _hover_action_button(
+              title: "View full details for this log entry",
+              icon: "search",
+              tab: "detail",
+              url: "#{build_url("details")}?#{cursor_param}",
             )
+            # Context button
+            html _hover_action_button(
+              title: "View context for this log entry (e.g., 5 before & 5 after)",
+              icon: "history",
+              tab: "context",
+              url: "#{build_url("context")}?#{cursor_param}",
+            )
+            # Copy-entry button: copies the entry as a journalctl-style
+            # line (timestamp hostname unit[pid]: message).
+            copied_entry_text = String.build do |str|
+              str << entry.formatted_timestamp_with_timezone("%Y-%m-%d %H:%M:%S")
+              str << " " << entry.hostname
+              str << " " << entry.unit
+              if pid = entry.data["_PID"]?
+                str << "[" << pid << "]"
+              end
+              str << ": " << entry.message
+            end
+            html _hover_action_button(
+              title: "Copy this log entry to the clipboard",
+              icon: "content_copy",
+              tab: "copy",
+              onclick: "copyLogEntry(#{copied_entry_text.to_json}, this)",
+            )
+            # AI Explanation button (only shown if AI is enabled)
+            if Grafito.ai_enabled?
+              html _hover_action_button(
+                title: "Ask AI to explain this log entry",
+                icon: "psychology",
+                tab: "ai",
+                onclick: "askAIExplanation(#{entry_cursor.to_json})",
+              )
+            end
           end
         end
       end
