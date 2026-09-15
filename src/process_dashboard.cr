@@ -600,7 +600,6 @@ module ProcessDashboard
   #
   # The process view owns its endpoints: the polled fragment, the
   # detail panel, the signal actions and the AI explanation.
-  # ameba:disable Metrics/CyclomaticComplexity
   def self.register_routes
     # ## The `/processes` endpoint
     #
@@ -674,7 +673,7 @@ module ProcessDashboard
       if Grafito.reject_cross_site_post?(env)
         halt env, status_code: 403, response: "Cross-site request rejected."
       end
-      unless Grafito.processes_enabled? && Grafito.enable_actions? && Grafito.auth_configured?
+      unless Grafito.processes_enabled? && Grafito.actions_available?
         env.response.status_code = 403
         next "Process actions are disabled. Start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS) to allow them."
       end
@@ -691,35 +690,69 @@ module ProcessDashboard
                end
 
       pid = env.params.url["pid"].to_i32?
-      if pid.nil? || pid <= 1 || !File.exists?("/proc/#{pid}")
+      if pid.nil? || pid <= 0
         env.response.status_code = 404
         next "Process '#{HTML.escape(env.params.url["pid"])}' not found."
       end
 
       from_panel = optional_query_param(env, "from") == "panel"
-      if ProcessStatus.signal(pid, signal)
-        Log.info { "sent SIG#{action.upcase} to pid #{pid}" }
-        env.response.content_type = "text/html"
-        # Panel requests re-render the panel so it shows the state
-        # after the signal (e.g. T after SIGSTOP); the table catches
-        # up on its next 3s poll.
-        if from_panel && (detail = ProcessStatus.detail(pid))
-          next ProcessDashboard.process_details_fragment(detail, Grafito.enable_actions?, !!Grafito.ai_provider)
-        end
-        render_process_fragment(env)
-      else
-        message = "the kernel refused the signal (permissions, or the process just exited)"
-        Log.error { "signal #{action} to pid #{pid} failed" }
-        if from_panel
-          env.response.status_code = 200
+
+      {% if flag?(:demo_mode) %}
+        # Demo build: signals mutate the fake process table; no real
+        # process is touched. init (pid 1) politely refuses, like a
+        # real init would, but with a friendlier message.
+        if pid == 1 && action != "cont"
           env.response.content_type = "text/html"
-          # htmx ignores error statuses, so a success status is needed
-          # to show the failure inside the panel.
-          next ProcessDashboard.process_action_error_fragment(action, pid, message)
+          next Grafito.demo_notice_fragment(
+            action,
+            "pid 1 (init)",
+            "This is demo mode: init stays alive no matter how many times you signal it.",
+          )
         end
-        env.response.status_code = 500
-        "Failed to signal process #{pid}."
-      end
+        if ProcessStatus.apply_signal(pid, action)
+          Log.info { "Demo mode: SIG#{action.upcase} to pid #{pid} simulated" }
+          env.response.content_type = "text/html"
+          # Panel requests re-render the panel so it shows the state
+          # after the signal (e.g. T after SIGSTOP); the table catches
+          # up on its next 3s poll. Same response shapes as the real
+          # path below.
+          if from_panel && (detail = ProcessStatus.detail(pid))
+            next ProcessDashboard.process_details_fragment(detail, Grafito.enable_actions?, !!Grafito.ai_provider)
+          end
+          next render_process_fragment(env)
+        end
+        env.response.status_code = 404
+        next "Process '#{pid}' not found."
+      {% else %}
+        if pid <= 1 || !File.exists?("/proc/#{pid}")
+          env.response.status_code = 404
+          next "Process '#{HTML.escape(env.params.url["pid"])}' not found."
+        end
+
+        if ProcessStatus.signal(pid, signal)
+          Log.info { "sent SIG#{action.upcase} to pid #{pid}" }
+          env.response.content_type = "text/html"
+          # Panel requests re-render the panel so it shows the state
+          # after the signal (e.g. T after SIGSTOP); the table catches
+          # up on its next 3s poll.
+          if from_panel && (detail = ProcessStatus.detail(pid))
+            next ProcessDashboard.process_details_fragment(detail, Grafito.enable_actions?, !!Grafito.ai_provider)
+          end
+          render_process_fragment(env)
+        else
+          message = "the kernel refused the signal (permissions, or the process just exited)"
+          Log.error { "signal #{action} to pid #{pid} failed" }
+          if from_panel
+            env.response.status_code = 200
+            env.response.content_type = "text/html"
+            # htmx ignores error statuses, so a success status is needed
+            # to show the failure inside the panel.
+            next ProcessDashboard.process_action_error_fragment(action, pid, message)
+          end
+          env.response.status_code = 500
+          "Failed to signal process #{pid}."
+        end
+      {% end %}
     end
 
     # ## The `/process-explain` endpoint

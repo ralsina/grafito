@@ -71,7 +71,7 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
   - `providers/anthropic.cr` - Anthropic/Claude API integration
   - `providers/openai_compatible.cr` - OpenAI-compatible API wrapper (Z.AI, OpenAI, Groq, Ollama, etc.)
   - `providers/jimmy.cr` - Built-in ChatJimmy free endpoint (unofficial, only via `GRAFITO_AI_PROVIDER=jimmy`)
-- `src/fake_journal_data.cr` - Fake data generation for demo mode (compile with `--flag=fake_journal`)
+- `src/fake_journal_data.cr` - Fake data generation for demo mode (compile with `--flag=demo_mode`)
 
 ### Dependencies Philosophy
 The project intentionally minimizes dependencies:
@@ -160,7 +160,7 @@ Uses docopt for command-line parsing as explicitly preferred by the maintainer. 
 - `--log-level LEVEL` - Set log level (debug, info, warn, error, fatal)
 
 ### Demo/Development Mode
-- Compile with `--flag=fake_journal` to enable fake data mode for UI development without journal access
+- Compile with `--flag=demo_mode` to enable fake data mode for UI development without journal access
 - Creates realistic-looking log data for testing interface features
 - Useful for development on systems without systemd journals
 
@@ -270,7 +270,7 @@ AI log analysis is optional and provider-agnostic:
 - Use `Journalctl.build_query_command` for constructing journalctl commands
 - Respect timezone configuration via `Grafito.timezone`
 - Handle nil values properly without using `not_nil!`
-- Test with fake data mode by compiling with `--flag=fake_journal`
+- Test with fake data mode by compiling with `--flag=demo_mode`
 
 ### AI Feature Development
 - Inherit from `Grafito::AI::Provider` for new providers

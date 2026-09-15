@@ -123,7 +123,7 @@ private def new_job : ComposeJobs::Job
   # Starts a fake job through the public API so the fragment specs
   # exercise the real object. In non-fake builds, `echo` is instant and
   # harmless.
-  job_id = {% if flag?(:fake_journal) %}
+  job_id = {% if flag?(:demo_mode) %}
              ComposeJobs.start("up spec", [] of Array(String))
            {% else %}
              ComposeJobs.start("up spec", [["true"]])

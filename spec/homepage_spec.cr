@@ -193,7 +193,7 @@ describe "GET /homepage" do
     end
   end
 
-  {% unless flag?(:fake_journal) %}
+  {% unless flag?(:demo_mode) %}
     it "renders setup instructions when the config file is missing" do
       path = "/grafito-spec-does-not-exist/homepage.yml"
       Grafito.homepage_config_path = path
@@ -208,7 +208,7 @@ describe "GET /homepage" do
     end
   {% end %}
 
-  {% unless flag?(:fake_journal) %}
+  {% unless flag?(:demo_mode) %}
     it "renders configured services" do
       path = File.tempname("grafito-homepage", ".yml")
       begin
@@ -235,7 +235,7 @@ describe "GET /homepage" do
     end
   {% end %}
 
-  {% unless flag?(:fake_journal) %}
+  {% unless flag?(:demo_mode) %}
     it "renders setup instructions for an empty config" do
       path = File.tempname("grafito-homepage", ".yml")
       begin
@@ -253,7 +253,7 @@ describe "GET /homepage" do
     end
   {% end %}
 
-  {% unless flag?(:fake_journal) %}
+  {% unless flag?(:demo_mode) %}
     it "renders the parser message for a broken config" do
       path = File.tempname("grafito-homepage", ".yml")
       begin

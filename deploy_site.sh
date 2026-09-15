@@ -3,7 +3,7 @@ set -e
 
 # Build a static arm64 binary with fake journal data for the demo site.
 docker run -i --rm -v "$PWD":/app --platform linux/arm64 --user="$UID" grafito-builder \
-    /bin/sh -c "cd /app && shards build --static -Dfake_journal && strip bin/grafito"
+    /bin/sh -c "cd /app && shards build --static -Ddemo_mode && strip bin/grafito"
 mv bin/grafito bin/grafito-fake-static-linux-arm64
 
 # Package it as the demo image and push it to ghcr.io.

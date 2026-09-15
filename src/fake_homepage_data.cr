@@ -1,6 +1,6 @@
 # # Fake homepage data
 #
-# A deterministic homepage config for demo builds (`-Dfake_journal`),
+# A deterministic homepage config for demo builds (`-Ddemo_mode`),
 # the same idea as the fake journal, systemd and compose data: the
 # page shows its full shape — several groups, every icon style, a
 # weather widget — without a config file on disk.

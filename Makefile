@@ -104,8 +104,8 @@ test:
 
 # The demo/fake-journal surface (compose view, fake data generators) is
 # only compiled with this flag; run both suites for full coverage.
-test-fake:
-	crystal spec -Dfake_journal
+test-demo:
+	crystal spec -Ddemo_mode
 
 .PHONY: website
 website:

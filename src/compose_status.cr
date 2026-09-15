@@ -20,14 +20,14 @@
 # moved or deleted) still show up, with no config files and therefore no
 # stack-level actions.
 #
-# When compiled with `-Dfake_journal` (the demo build) it returns a
+# When compiled with `-Ddemo_mode` (the demo build) it returns a
 # small deterministic snapshot instead, so the compose view works
 # without Docker.
 
 require "json"
 require "log"
 
-{% if flag?(:fake_journal) %}
+{% if flag?(:demo_mode) %}
   require "./fake_compose_data"
 {% end %}
 
@@ -167,7 +167,7 @@ module ComposeStatus
   # Returns the current snapshot of stacks and their services. On the
   # demo build this is fake data; otherwise it queries docker.
   def self.stacks : Array(Stack)
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       FakeComposeData.stacks
     {% else %}
       real_stacks

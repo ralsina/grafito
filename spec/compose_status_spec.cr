@@ -111,7 +111,7 @@ describe ComposeStatus do
     ComposeStatus.find_service("this-stack-does-not-exist-42", "nope").should be_nil
   end
 
-  {% if flag?(:fake_journal) %}
+  {% if flag?(:demo_mode) %}
     it "provides fake stacks for the demo build" do
       stacks = ComposeStatus.stacks
       stacks.size.should be > 0

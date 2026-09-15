@@ -5,6 +5,33 @@ require "faker"        # Add faker for dynamic message generation
 module FakeJournalData
   Log = ::Log.for(self)
 
+  # Recently generated entries by cursor. Fake entries are regenerated
+  # per query, so without this cache a cursor lookup (`/details`,
+  # `/context`) would return a freshly generated random entry instead
+  # of the one the results table actually showed. Cleared wholesale
+  # when it grows past the cap — the demo does not need LRU precision.
+  # Guarded: requests are served from fibers.
+  CURSOR_CACHE       = {} of String => Journalctl::LogEntry
+  CURSOR_CACHE_MUTEX = Mutex.new(protection: :checked)
+  MAX_CURSOR_CACHE   = 1024
+
+  # Stores one generated entry under its own cursor for later lookups.
+  def self.remember_entry(entry : Journalctl::LogEntry) : Nil
+    return unless entry_cursor = entry.data["__CURSOR"]?
+    CURSOR_CACHE_MUTEX.synchronize do
+      CURSOR_CACHE.clear if CURSOR_CACHE.size >= MAX_CURSOR_CACHE
+      CURSOR_CACHE[entry_cursor] = entry
+    end
+  end
+
+  # Returns the previously generated entry for a cursor, if it is
+  # still cached.
+  def self.cached_entry(cursor : String) : Journalctl::LogEntry?
+    CURSOR_CACHE_MUTEX.synchronize do
+      CURSOR_CACHE[cursor]?
+    end
+  end
+
   # A list of sample unit names for generating fake data.
   SAMPLE_UNIT_NAMES = [
     "sshd.service", "nginx.service", "systemd-journald.service",
@@ -100,6 +127,10 @@ module FakeJournalData
       when "--cursor"
         cursor = journalctl_args[i + 1]
         i += 1
+      when "--after-cursor"
+        # Entries "after" a cursor are just fresh neighbors; the value
+        # itself needs no handling.
+        i += 1
       when "-S", "--since"
         since_time = journalctl_args[i + 1]
         i += 1
@@ -182,8 +213,10 @@ module FakeJournalData
       data["__MONOTONIC_TIMESTAMP"] = rand(1_000_000..1_000_000_000).to_s
       # Every entry needs a UNIQUE cursor: the context endpoint highlights
       # entries by cursor, and reusing the --cursor argument here made
-      # every generated entry light up as "the" target entry.
-      data["__CURSOR"] = "fakecursor_#{entries.size}_#{timestamp.to_unix_ms}"
+      # every generated entry light up as "the" target entry. The random
+      # suffix keeps cursors distinct across generation calls, since
+      # cursors are cache keys for later /details and /context lookups.
+      data["__CURSOR"] = "fakecursor_#{timestamp.to_unix_ms}_#{Random::Secure.hex(4)}"
       data["_BOOT_ID"] = "fakebootid1234567890abcdef12345678"
       data["_TRANSPORT"] = ["journal", "stdout", "kernel"].sample
       data["_MACHINE_ID"] = "fake_machine_id_for_#{current_hostname}" # Make machine ID somewhat related to hostname
@@ -232,6 +265,28 @@ module FakeJournalData
     else
       entries.sort_by!(&.timestamp) # Chronological order
     end
+
+    entries.each do |entry|
+      remember_entry(entry)
+    end
+
+    # A `--cursor` lookup asks for THE entry at that cursor: the
+    # details and context endpoints do exactly that. Serve the cached
+    # entry when it is still around; otherwise make the first
+    # generated entry stand in for it, carrying the requested cursor
+    # so the response stays coherent with what the UI asked for. The
+    # remaining entries keep their fresh unique cursors — they are
+    # just context neighbors.
+    if requested_cursor = cursor
+      if cached = cached_entry(requested_cursor)
+        entries.unshift(cached)
+        entries.pop if entries.size > target_n_entries
+      elsif first_entry = entries.first?
+        first_entry.data["__CURSOR"] = requested_cursor
+        remember_entry(first_entry)
+      end
+    end
+
     Log.debug { "Generated #{entries.size} fake log entries. Time window: #{start_time} to #{end_time}. Order: #{reverse ? "reverse chronological" : "chronological"}" }
     entries
   end
