@@ -193,23 +193,26 @@ describe "GET /homepage" do
     end
   end
 
-  it "renders setup instructions when the config file is missing" do
-    path = "/grafito-spec-does-not-exist/homepage.yml"
-    Grafito.homepage_config_path = path
-    begin
-      response = dispatch_request("GET", "/homepage")
-      response[:status].should eq(200)
-      response[:body].should contain("homepage.yml")
-      response[:body].should contain("groups:")
-    ensure
-      Grafito.homepage_config_path = "/etc/grafito/homepage.yml"
+  {% unless flag?(:fake_journal) %}
+    it "renders setup instructions when the config file is missing" do
+      path = "/grafito-spec-does-not-exist/homepage.yml"
+      Grafito.homepage_config_path = path
+      begin
+        response = dispatch_request("GET", "/homepage")
+        response[:status].should eq(200)
+        response[:body].should contain("homepage.yml")
+        response[:body].should contain("groups:")
+      ensure
+        Grafito.homepage_config_path = "/etc/grafito/homepage.yml"
+      end
     end
-  end
+  {% end %}
 
-  it "renders configured services" do
-    path = File.tempname("grafito-homepage", ".yml")
-    begin
-      File.write(path, <<-YAML)
+  {% unless flag?(:fake_journal) %}
+    it "renders configured services" do
+      path = File.tempname("grafito-homepage", ".yml")
+      begin
+        File.write(path, <<-YAML)
         title: Route Lab
         groups:
           - name: Media
@@ -218,48 +221,53 @@ describe "GET /homepage" do
                 url: https://jellyfin.example.com
                 description: Movies
         YAML
-      Grafito.homepage_config_path = path
+        Grafito.homepage_config_path = path
 
-      response = dispatch_request("GET", "/homepage")
+        response = dispatch_request("GET", "/homepage")
 
-      response[:status].should eq(200)
-      response[:body].should contain("Route Lab")
-      response[:body].should contain("Jellyfin")
-    ensure
-      File.delete(path) if File.exists?(path)
-      Grafito.homepage_config_path = "/etc/grafito/homepage.yml"
+        response[:status].should eq(200)
+        response[:body].should contain("Route Lab")
+        response[:body].should contain("Jellyfin")
+      ensure
+        File.delete(path) if File.exists?(path)
+        Grafito.homepage_config_path = "/etc/grafito/homepage.yml"
+      end
     end
-  end
+  {% end %}
 
-  it "renders setup instructions for an empty config" do
-    path = File.tempname("grafito-homepage", ".yml")
-    begin
-      File.write(path, "")
-      Grafito.homepage_config_path = path
+  {% unless flag?(:fake_journal) %}
+    it "renders setup instructions for an empty config" do
+      path = File.tempname("grafito-homepage", ".yml")
+      begin
+        File.write(path, "")
+        Grafito.homepage_config_path = path
 
-      response = dispatch_request("GET", "/homepage")
+        response = dispatch_request("GET", "/homepage")
 
-      response[:status].should eq(200)
-      response[:body].should contain("groups:")
-    ensure
-      File.delete(path) if File.exists?(path)
-      Grafito.homepage_config_path = "/etc/grafito/homepage.yml"
+        response[:status].should eq(200)
+        response[:body].should contain("groups:")
+      ensure
+        File.delete(path) if File.exists?(path)
+        Grafito.homepage_config_path = "/etc/grafito/homepage.yml"
+      end
     end
-  end
+  {% end %}
 
-  it "renders the parser message for a broken config" do
-    path = File.tempname("grafito-homepage", ".yml")
-    begin
-      File.write(path, "groups: [unclosed")
-      Grafito.homepage_config_path = path
+  {% unless flag?(:fake_journal) %}
+    it "renders the parser message for a broken config" do
+      path = File.tempname("grafito-homepage", ".yml")
+      begin
+        File.write(path, "groups: [unclosed")
+        Grafito.homepage_config_path = path
 
-      response = dispatch_request("GET", "/homepage")
+        response = dispatch_request("GET", "/homepage")
 
-      response[:status].should eq(200)
-      response[:body].should contain("Could not read")
-    ensure
-      File.delete(path) if File.exists?(path)
-      Grafito.homepage_config_path = "/etc/grafito/homepage.yml"
+        response[:status].should eq(200)
+        response[:body].should contain("Could not read")
+      ensure
+        File.delete(path) if File.exists?(path)
+        Grafito.homepage_config_path = "/etc/grafito/homepage.yml"
+      end
     end
-  end
+  {% end %}
 end

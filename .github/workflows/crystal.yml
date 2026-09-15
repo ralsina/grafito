@@ -24,3 +24,5 @@ jobs:
       run: mkdir -p bin && crystal build lib/ameba/bin/ameba.cr -o bin/ameba && bin/ameba src spec
     - name: Run tests
       run: crystal spec
+    - name: Run fake-journal (demo) tests
+      run: crystal spec -Dfake_journal

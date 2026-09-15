@@ -130,17 +130,19 @@ describe "Process routes" do
 end
 
 describe ProcessStatus do
-  it "reads a detail record for a live process" do
-    detail = ProcessStatus.detail(Process.pid.to_i32)
-    if detail
-      detail.pid.should eq Process.pid
-      detail.threads.should be >= 1
-      detail.command.size.should be > 0
-      detail.started.year.should be >= 2020
-    else
-      fail("expected a detail record for our own pid")
+  {% unless flag?(:fake_journal) %}
+    it "reads a detail record for a live process" do
+      detail = ProcessStatus.detail(Process.pid.to_i32)
+      if detail
+        detail.pid.should eq Process.pid
+        detail.threads.should be >= 1
+        detail.command.size.should be > 0
+        detail.started.year.should be >= 2020
+      else
+        fail("expected a detail record for our own pid")
+      end
     end
-  end
+  {% end %}
 
   it "returns nil for processes that do not exist" do
     ProcessStatus.detail(999_999).should be_nil

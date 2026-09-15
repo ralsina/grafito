@@ -50,12 +50,14 @@ describe "Kemal routes" do
     Grafito.ai_provider = nil
   end
 
-  it "GET /logs returns an empty state for a unit that has no entries" do
-    response = dispatch_request("GET", "/logs?unit=grafito-no-such-unit-xyz&format=text")
+  {% unless flag?(:fake_journal) %}
+    it "GET /logs returns an empty state for a unit that has no entries" do
+      response = dispatch_request("GET", "/logs?unit=grafito-no-such-unit-xyz&format=text")
 
-    response[:status].should eq(200)
-    response[:body].should contain("No log entries found.")
-  end
+      response[:status].should eq(200)
+      response[:body].should contain("No log entries found.")
+    end
+  {% end %}
 
   it "GET /ai-providers returns JSON with the expected shape" do
     response = dispatch_request("GET", "/ai-providers")
