@@ -50,6 +50,17 @@ describe "Kemal routes" do
     Grafito.ai_provider = nil
   end
 
+  it "GET /server-info reports the demo flag matching the build" do
+    response = dispatch_request("GET", "/server-info")
+
+    response[:status].should eq(200)
+    {% if flag?(:fake_journal) %}
+      response[:body].should contain(%("demo":true))
+    {% else %}
+      response[:body].should contain(%("demo":false))
+    {% end %}
+  end
+
   describe "cross-site POST rejection" do
     it "rejects state-changing POSTs with a cross-site Sec-Fetch-Site" do
       headers = HTTP::Headers{"Sec-Fetch-Site" => "cross-site"}

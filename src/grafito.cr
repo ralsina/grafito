@@ -127,7 +127,6 @@ module Grafito
   end
 
   # Register all Kemal routes (called after base_path is set)
-  # ameba:disable Metrics/CyclomaticComplexity
   def self.register_routes
     if idle_timeout_sec > 0
       use IdleShutdownHandler.new(timeout_sec: idle_timeout_sec, logger: Log)
@@ -261,74 +260,107 @@ module Grafito
       env.response.headers["Cache-Control"] = "no-cache"
       env.response.headers["X-Accel-Buffering"] = "no"
 
-      command = Journalctl.build_follow_command(
-        since: since, unit: unit, tag: tag, query: search_query,
-        priority: priority, hostname: hostname,
-      )
-      Log.info { "Live tail starting: #{command.inspect}" }
-
-      done = Channel(Nil).new
-      process = Process.new(
-        command[0], args: command[1..],
-        output: Process::Redirect::Pipe,
-        error: Process::Redirect::Close,
-      )
-
-      # Heartbeat: a comment line every 15s keeps proxies from timing
-      # the stream out and counts as activity for the idle shutdown
-      # handler (when enabled).
-      spawn do
-        loop do
-          select
-          when done.receive
-            break
-          when timeout(15.seconds)
-            begin
-              env.response.puts ": keepalive"
+      {% if flag?(:fake_journal) %}
+        # Demo build: there is no journal to follow (and no journalctl
+        # binary in the demo container), so the tail emits a fresh fake
+        # entry matching the filters every couple of seconds until the
+        # client goes away.
+        begin
+          env.response.puts ": connected"
+          env.response.flush
+          loop do
+            if entry = Journalctl.fake_follow_entry(unit: unit, tag: tag, query: search_query, priority: priority, hostname: hostname)
+              row = log_row(
+                entry,
+                search_query,
+                show_timestamp: show_timestamp,
+                show_hostname: show_hostname,
+                show_unit: show_unit,
+                show_tag: show_tag,
+                show_priority: show_priority,
+                show_message: show_message,
+              )
+              env.response.puts "event: log"
+              env.response.puts "data: #{row}"
+              env.response.puts ""
               env.response.flush
               IdleShutdownHandler.touch
-            rescue
+            end
+            sleep 2.seconds
+          end
+        rescue IO::Error
+          # Client disconnected — the normal way a tail ends.
+        end
+      {% else %}
+        command = Journalctl.build_follow_command(
+          since: since, unit: unit, tag: tag, query: search_query,
+          priority: priority, hostname: hostname,
+        )
+        Log.info { "Live tail starting: #{command.inspect}" }
+
+        done = Channel(Nil).new
+        process = Process.new(
+          command[0], args: command[1..],
+          output: Process::Redirect::Pipe,
+          error: Process::Redirect::Close,
+        )
+
+        # Heartbeat: a comment line every 15s keeps proxies from timing
+        # the stream out and counts as activity for the idle shutdown
+        # handler (when enabled).
+        spawn do
+          loop do
+            select
+            when done.receive
               break
+            when timeout(15.seconds)
+              begin
+                env.response.puts ": keepalive"
+                env.response.flush
+                IdleShutdownHandler.touch
+              rescue
+                break
+              end
             end
           end
         end
-      end
 
-      begin
-        env.response.puts ": connected"
-        env.response.flush
-        process.output.each_line do |line|
-          next if line.strip.empty?
-          begin
-            entry = Journalctl::LogEntry.from_json(line)
-          rescue
-            next
-          end
-          next unless Journalctl.allowed_unit?(entry)
-
-          row = log_row(
-            entry,
-            search_query,
-            show_timestamp: show_timestamp,
-            show_hostname: show_hostname,
-            show_unit: show_unit,
-            show_tag: show_tag,
-            show_priority: show_priority,
-            show_message: show_message,
-          )
-          env.response.puts "event: log"
-          env.response.puts "data: #{row}"
-          env.response.puts ""
+        begin
+          env.response.puts ": connected"
           env.response.flush
+          process.output.each_line do |line|
+            next if line.strip.empty?
+            begin
+              entry = Journalctl::LogEntry.from_json(line)
+            rescue
+              next
+            end
+            next unless Journalctl.allowed_unit?(entry)
+
+            row = log_row(
+              entry,
+              search_query,
+              show_timestamp: show_timestamp,
+              show_hostname: show_hostname,
+              show_unit: show_unit,
+              show_tag: show_tag,
+              show_priority: show_priority,
+              show_message: show_message,
+            )
+            env.response.puts "event: log"
+            env.response.puts "data: #{row}"
+            env.response.puts ""
+            env.response.flush
+          end
+        rescue IO::Error
+          # Client disconnected — the normal way a tail ends.
+        ensure
+          done.send(nil)
+          process.signal(Signal::TERM) rescue nil
+          process.wait rescue nil
+          Log.info { "Live tail ended" }
         end
-      rescue IO::Error
-        # Client disconnected — the normal way a tail ends.
-      ensure
-        done.send(nil)
-        process.signal(Signal::TERM) rescue nil
-        process.wait rescue nil
-        Log.info { "Live tail ended" }
-      end
+      {% end %}
     end
 
     # ## The `/services` endpoint
@@ -508,6 +540,18 @@ module Grafito
         # or if the count was invalid (though we check count above).
         env.response.print "<p class=\"error\">Could not retrieve context for cursor: #{HTML.escape(cursor)}. The entry might not exist or an error occurred.</p>"
       end
+    end
+
+    # ## The `/server-info` endpoint
+    #
+    # Tiny build-level capability blob the frontend fetches once at
+    # boot. `demo` marks fake-data builds (the public demo site), so
+    # the UI can show its "this is demo mode" disclaimer and the like.
+    get route_path("server-info") do |env|
+      env.response.content_type = "application/json"
+      {
+        demo: {% if flag?(:fake_journal) %} true {% else %} false {% end %},
+      }.to_json
     end
 
     # ## The `/ai-providers` endpoint

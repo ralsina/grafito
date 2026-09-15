@@ -281,6 +281,24 @@ document.addEventListener("DOMContentLoaded", function () {
   loadAIProviders();
   // --- END AI PROVIDER SECTION ---
 
+  // --- DEMO MODE DISCLAIMER ---
+  // Fake-data (demo site) builds say so in the status bar; real
+  // deployments stay quiet. The flag rides on a tiny boot-time fetch
+  // so the served HTML is identical for both builds. Failure is
+  // purely cosmetic: the banner simply stays hidden.
+  fetch(buildUrl("server-info"))
+    .then((response) => response.json())
+    .then((info) => {
+      if (info && info.demo) {
+        const banner = document.getElementById("demo-banner");
+        if (banner) banner.hidden = false;
+      }
+    })
+    .catch(() => {
+      /* no server-info: not fatal, keep the banner hidden */
+    });
+  // --- END DEMO MODE DISCLAIMER ---
+
   // --- COLUMN VISIBILITY PERSISTENCE ---
   const COLUMN_VISIBILITY_CHECKBOX_IDS = [
     "col-visible-timestamp",

@@ -242,6 +242,32 @@ class Journalctl
     command + filter_match_args(since, unit, tag, query, priority, hostname)
   end
 
+  {% if flag?(:fake_journal) %}
+    # Demo-build stand-in for the follow stream: one fresh fake entry
+    # matching the current filters, so the SSE live tail has something
+    # to emit without a journal to follow. The window is pinned to the
+    # last minute — a fresh arrival, like a real tail would deliver —
+    # and the query's `since` deliberately plays no role, since it only
+    # makes sense for historical searches. Nil when the filters are too
+    # restrictive to generate a matching entry this tick.
+    def self.fake_follow_entry(
+      unit : String? = nil,
+      tag : String? = nil,
+      query : String? = nil,
+      priority : String? = nil,
+      hostname : String? = nil,
+    ) : LogEntry?
+      args = ["-S", "-1m"]
+      args += ["-u", unit] if unit
+      args += ["-t", tag] if tag
+      args += ["-g", query] if query
+      args += ["-p", priority] if priority
+      args << "_HOSTNAME=#{hostname}" if hostname
+      entries = FakeJournalData.fake_run_journalctl_and_parse(args + ["-n", "1"], "Live tail (fake entry)")
+      entries.first?
+    end
+  {% end %}
+
   # The shared filter arguments (since/units/tags/query/priority/
   # hostname) used by both the one-shot and follow command builders.
   private def self.filter_match_args(
