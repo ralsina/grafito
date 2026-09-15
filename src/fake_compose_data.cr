@@ -1,6 +1,6 @@
 # # Fake compose data
 #
-# Deterministic compose stacks for demo builds (`-Dfake_journal`), the
+# Deterministic compose stacks for demo builds (`-Ddemo_mode`), the
 # same idea as the fake journal and systemd data: a running stack, a
 # stack with an unhealthy service and a stopped one, and one orphaned
 # project whose compose files are gone, so every UI state is visible

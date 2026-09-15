@@ -2,8 +2,8 @@ require "spec"
 require "../src/grafito"
 
 # The demo-build stand-in for the SSE live tail. Only exists on
-# fake_journal builds, so the whole file is compile-time guarded.
-{% if flag?(:fake_journal) %}
+# demo_mode builds, so the whole file is compile-time guarded.
+{% if flag?(:demo_mode) %}
   describe "Journalctl.fake_follow_entry" do
     it "returns a fresh entry (timestamp within the last minute)" do
       if entry = Journalctl.fake_follow_entry

@@ -406,7 +406,7 @@ module HomepageDashboard
   private def self.render_config_fragment : String
     path = Grafito.homepage_config_path
 
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       # The demo build has no real config file; it ships a fake
       # homepage so the view shows its full shape. Weather still comes
       # from the live API when the demo has internet, and the status

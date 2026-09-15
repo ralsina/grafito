@@ -130,7 +130,7 @@ describe "Process routes" do
 end
 
 describe ProcessStatus do
-  {% unless flag?(:fake_journal) %}
+  {% unless flag?(:demo_mode) %}
     it "reads a detail record for a live process" do
       detail = ProcessStatus.detail(Process.pid.to_i32)
       if detail

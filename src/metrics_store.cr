@@ -111,7 +111,7 @@ module Grafito
     ) : MetricsStore
       store = new(data_dir)
       store.prune(retention_days)
-      {% if flag?(:fake_journal) %}
+      {% if flag?(:demo_mode) %}
         # Demo builds pre-seed a day of plausible history so the chart
         # is full from the first page load instead of growing a stub.
         seed_fake_history(store, 24.hours, 5.minutes)

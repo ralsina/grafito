@@ -36,7 +36,7 @@ require "./app_store"
 require "./compose_dashboard"
 require "./compose_jobs"
 
-{% if flag?(:fake_journal) %}
+{% if flag?(:demo_mode) %}
   require "./fake_appstore_data"
 {% end %}
 
@@ -158,7 +158,7 @@ module ComposeAppStore
         next "Missing or invalid store/app id."
       end
 
-      {% if flag?(:fake_journal) %}
+      {% if flag?(:demo_mode) %}
         job_id = ComposeJobs.start("install #{app_id}", [[] of String])
         env.response.content_type = "text/html"
         job_fragment(job_id, "appstore-install-#{app_id}")
@@ -223,7 +223,7 @@ module ComposeAppStore
       end
 
       job_id : String
-      {% if flag?(:fake_journal) %}
+      {% if flag?(:demo_mode) %}
         job_id = ComposeJobs.start("update #{installed.project_name}", [[] of String])
       {% else %}
         job_id = ComposeJobs.start_custom("update #{installed.project_name}") do |job|
@@ -260,7 +260,7 @@ module ComposeAppStore
       end
 
       job_id : String
-      {% if flag?(:fake_journal) %}
+      {% if flag?(:demo_mode) %}
         job_id = ComposeJobs.start("uninstall #{installed.project_name}", [[] of String])
       {% else %}
         job_id = ComposeJobs.start_custom("uninstall #{installed.project_name}") do |job|
@@ -327,7 +327,7 @@ module ComposeAppStore
   end
 
   private def self.stores : Array(AppStore::Store)
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       FakeAppStore.stores
     {% else %}
       AppStore.parse_stores(Grafito.appstores_spec)
@@ -339,7 +339,7 @@ module ComposeAppStore
   end
 
   private def self.store_catalog(store : AppStore::Store) : Array(AppStore::AppInfo)
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       FakeAppStore.list_apps
     {% else %}
       AppStore.list_apps(store, Grafito.data_dir)
@@ -347,7 +347,7 @@ module ComposeAppStore
   end
 
   private def self.store_app(store : AppStore::Store, app_id : String) : AppStore::AppInfo?
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       FakeAppStore.find_app(app_id)
     {% else %}
       AppStore.find_app(store, Grafito.data_dir, app_id)
@@ -355,7 +355,7 @@ module ComposeAppStore
   end
 
   private def self.store_synced?(store : AppStore::Store) : Bool
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       true
     {% else %}
       AppStore.synced?(store, Grafito.data_dir)
@@ -363,7 +363,7 @@ module ComposeAppStore
   end
 
   private def self.store_description(store : AppStore::Store, app_id : String) : String
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       FakeAppStore.description(app_id)
     {% else %}
       AppStore.app_description(store, Grafito.data_dir, app_id)
@@ -374,7 +374,7 @@ module ComposeAppStore
   # the badge and its buttons are visible without docker.
   private def self.installed_app(project_name : String?) : AppStore::InstalledApp?
     return unless project_name
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       FakeAppStore.installed.find(&.project_name.==(project_name))
     {% else %}
       AppStore.find_installed(Grafito.data_dir, project_name)
@@ -613,7 +613,7 @@ module ComposeAppStore
   # builds never have logos (and never touch the data dir), so their
   # cards fall back to the initial-letter avatar.
   private def self.logo_present?(store_slug : String, app_id : String) : Bool
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       false
     {% else %}
       !AppStore.app_logo_path(Grafito.data_dir, store_slug, app_id).nil?

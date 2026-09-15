@@ -25,7 +25,7 @@ require "./process_dashboard"
 require "./homepage_config"
 require "./homepage"
 
-{% if flag?(:fake_journal) %}
+{% if flag?(:demo_mode) %}
   require "./fake_compose_data"
   require "./fake_homepage_data"
 {% end %}
@@ -260,7 +260,7 @@ module Grafito
       env.response.headers["Cache-Control"] = "no-cache"
       env.response.headers["X-Accel-Buffering"] = "no"
 
-      {% if flag?(:fake_journal) %}
+      {% if flag?(:demo_mode) %}
         # Demo build: there is no journal to follow (and no journalctl
         # binary in the demo container), so the tail emits a fresh fake
         # entry matching the filters every couple of seconds until the
@@ -550,7 +550,7 @@ module Grafito
     get route_path("server-info") do |env|
       env.response.content_type = "application/json"
       {
-        demo: {% if flag?(:fake_journal) %} true {% else %} false {% end %},
+        demo: {% if flag?(:demo_mode) %} true {% else %} false {% end %},
       }.to_json
     end
 

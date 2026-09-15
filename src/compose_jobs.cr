@@ -17,7 +17,7 @@ require "mutex"
 require "process"
 require "random"
 
-{% if flag?(:fake_journal) %}
+{% if flag?(:demo_mode) %}
   require "./fake_compose_data"
 {% end %}
 
@@ -91,7 +91,7 @@ module ComposeJobs
       prune_locked
       JOBS[id] = job
     end
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       run_fake(job)
     {% else %}
       run_real(job, commands)
@@ -122,7 +122,7 @@ module ComposeJobs
       prune_locked
       JOBS[id] = job
     end
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       run_fake(job)
     {% else %}
       # `callback` (not `runner`) because the block capture is not

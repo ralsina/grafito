@@ -1,6 +1,6 @@
 # # Fake app store data
 #
-# The demo build (-Dfake_journal) has no network, no docker and no
+# The demo build (-Ddemo_mode) has no network, no docker and no
 # writable data dir, but its compose view still shows the app store
 # surface: a small fixture catalog, one fixture install (so the stack
 # badge and its update/uninstall buttons are visible), and job output

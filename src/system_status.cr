@@ -6,14 +6,14 @@
 # shells out to `systemctl` and `df`, the same way [journalctl.cr](journalctl.cr.html)
 # shells out to `journalctl`.
 #
-# When compiled with `-Dfake_journal` (the demo build) it returns a small
+# When compiled with `-Ddemo_mode` (the demo build) it returns a small
 # deterministic snapshot instead, so the dashboard works without systemd.
 
 require "json"
 require "log"
 require "time"
 
-{% if flag?(:fake_journal) %}
+{% if flag?(:demo_mode) %}
   require "./fake_journal_data"
 {% end %}
 
@@ -56,7 +56,7 @@ module SystemStatus
   # Returns the current system snapshot. On the demo build this is fake
   # data; otherwise it reads /proc and queries systemctl.
   def self.snapshot : Snapshot
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       fake_snapshot
     {% else %}
       real_snapshot
@@ -76,7 +76,7 @@ module SystemStatus
   # lines kept untruncated so the model sees clean, complete output.
   # Returns nil when systemctl fails (unit vanished, no systemd session).
   def self.unit_status_output(unit_name : String) : String?
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       fake_unit_status_output(unit_name)
     {% else %}
       command = ["systemctl"] + Journalctl.user_flags +
@@ -117,7 +117,7 @@ module SystemStatus
   # Units with no unit file state (e.g. generated ones) are omitted,
   # and the dashboard hides enable/disable for them.
   def self.unit_flags_map : Hash(String, UnitFileFlags)
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       fake_unit_flags_map
     {% else %}
       unit_names = snapshot.units.map(&.unit)

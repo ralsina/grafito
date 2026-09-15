@@ -2,8 +2,8 @@ require "./spec_helper"
 
 # Route-level specs for the compose view. These dispatch requests
 # through Kemal's route handler directly (like routes_spec.cr), and use
-# the fake compose data, so they only make sense with -Dfake_journal.
-{% if flag?(:fake_journal) %}
+# the fake compose data, so they only make sense with -Ddemo_mode.
+{% if flag?(:demo_mode) %}
   describe "Kemal compose routes" do
     it "GET /compose renders the stack view" do
       Grafito.compose_enabled = true

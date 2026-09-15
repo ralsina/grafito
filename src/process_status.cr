@@ -12,7 +12,7 @@
 # in class state guarded by a mutex, which works because the process
 # view is polled by a single htmx timer.
 #
-# When compiled with `-Dfake_journal` (the demo build) it returns
+# When compiled with `-Ddemo_mode` (the demo build) it returns
 # plausible, time-varying fake processes instead.
 
 require "json"
@@ -74,7 +74,7 @@ module ProcessStatus
 
   # Returns the current process snapshot (fake data on the demo build).
   def self.snapshot : Snapshot
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       fake_snapshot
     {% else %}
       real_snapshot
@@ -134,7 +134,7 @@ module ProcessStatus
   # Reads the detail record for one pid, or nil when the process does
   # not exist (or died between the panel opening and this read).
   def self.detail(pid : Int32) : ProcessDetail?
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       fake_detail(pid)
     {% else %}
       real_detail(pid)

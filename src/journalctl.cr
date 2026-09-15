@@ -2,7 +2,7 @@ require "json"
 require "time"
 require "log"
 
-{% if flag?(:fake_journal) %}
+{% if flag?(:demo_mode) %}
   require "./fake_journal_data" # For fake data generation
 {% end %}
 
@@ -242,7 +242,7 @@ class Journalctl
     command + filter_match_args(since, unit, tag, query, priority, hostname)
   end
 
-  {% if flag?(:fake_journal) %}
+  {% if flag?(:demo_mode) %}
     # Demo-build stand-in for the follow stream: one fresh fake entry
     # matching the current filters, so the SSE live tail has something
     # to emit without a journal to follow. The window is pinned to the
@@ -454,7 +454,7 @@ class Journalctl
     {% if flag?(:no_systemctl) %}
       Log.warn { "Journalctl.known_service_units: Systemctl is disabled by configuration." }
       return nil
-    {% elsif flag?(:fake_journal) %}
+    {% elsif flag?(:demo_mode) %}
       Log.info { "Journalctl.known_service_units: Using FAKE service units." }
       fake_units = FakeJournalData::SAMPLE_UNIT_NAMES.compact.uniq.sort
       Log.debug { "Returning #{fake_units.size} fake service units." }
@@ -558,7 +558,7 @@ class Journalctl
   #   An Array(LogEntry) parsed from the command output, or an empty array on failure.
   private def self.run_journalctl_and_parse(journalctl_args : Array(String), log_context_message : String) : Array(LogEntry)
     command = ["journalctl"] + journalctl_args
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       Log.info { "#{log_context_message}: Using FAKE journal data." }
       # The fake function's arguments are prefixed with '_' indicating they might not be fully used.
       # It's designed to match the signature for easy swapping.

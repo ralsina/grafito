@@ -3,8 +3,8 @@ require "./spec_helper"
 # Route-level specs for the app store endpoints. These dispatch
 # requests through Kemal's route handler directly (like
 # compose_routes_spec.cr) and use the fake store data, so they only
-# make sense with -Dfake_journal.
-{% if flag?(:fake_journal) %}
+# make sense with -Ddemo_mode.
+{% if flag?(:demo_mode) %}
   FORM_HEADERS = HTTP::Headers{"Content-Type" => "application/x-www-form-urlencoded"}
 
   describe "Kemal app store routes" do

@@ -2,7 +2,7 @@ require "./spec_helper"
 
 # SystemStatus specs. In plain mode these run against the real system
 # (like the journalctl specs), so they only assert basic invariants.
-# With `-Dfake_journal` the fake snapshot is deterministic.
+# With `-Ddemo_mode` the fake snapshot is deterministic.
 describe SystemStatus do
   it "returns a snapshot with sane values" do
     snapshot = SystemStatus.snapshot
@@ -253,7 +253,7 @@ describe Dashboard do
     html.should contain("No units match the filter.")
   end
 
-  {% if flag?(:fake_journal) %}
+  {% if flag?(:demo_mode) %}
     it "shows contextual panel actions based on state and enablement" do
       snapshot = SystemStatus.snapshot
       broken = snapshot.units.find(&.unit.==("fake-broken.service"))
@@ -429,7 +429,7 @@ private def point_at(seconds_ago : Int32, mem : Float64, disk : Float64) : Grafi
   )
 end
 
-{% if flag?(:fake_journal) %}
+{% if flag?(:demo_mode) %}
   it "generates clamped, varying fake metrics" do
     a = SystemStatus.fake_metrics_at(Time.utc)
     b = SystemStatus.fake_metrics_at(Time.utc + 7.minutes)

@@ -20,7 +20,7 @@ require "./app_store"
 require "./compose_status"
 require "./compose_jobs"
 
-{% if flag?(:fake_journal) %}
+{% if flag?(:demo_mode) %}
   require "./fake_appstore_data"
 {% end %}
 
@@ -91,7 +91,7 @@ module ComposeDashboard
   # have no on-disk installs; their fixture badge comes from the fake
   # data module instead.
   private def installed_apps_by_project : Hash(String, AppStore::InstalledApp)
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       FakeAppStore.installed.index_by(&.project_name)
     {% else %}
       AppStore.installed(Grafito.data_dir).index_by(&.project_name)
@@ -305,7 +305,7 @@ module ComposeDashboard
   # reports the fixture install as updatable so the UI is exercised.
   private def update_available_version(installed : AppStore::InstalledApp?) : String?
     return unless installed
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       FakeAppStore.update_available(installed)
     {% else %}
       store_app = AppStore.store_app_for(Grafito.data_dir, installed)
@@ -884,7 +884,7 @@ module ComposeDashboard
   # The compose.yaml text for one stack. Demo builds have no real files
   # behind the fake stacks, so they serve generated content instead.
   private def self.compose_yaml_content(compose_stack : ComposeStatus::Stack) : String
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       FakeComposeData.compose_yaml(compose_stack.name)
     {% else %}
       begin

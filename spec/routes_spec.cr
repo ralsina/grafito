@@ -54,7 +54,7 @@ describe "Kemal routes" do
     response = dispatch_request("GET", "/server-info")
 
     response[:status].should eq(200)
-    {% if flag?(:fake_journal) %}
+    {% if flag?(:demo_mode) %}
       response[:body].should contain(%("demo":true))
     {% else %}
       response[:body].should contain(%("demo":false))
@@ -92,7 +92,7 @@ describe "Kemal routes" do
     end
   end
 
-  {% unless flag?(:fake_journal) %}
+  {% unless flag?(:demo_mode) %}
     it "GET /logs returns an empty state for a unit that has no entries" do
       response = dispatch_request("GET", "/logs?unit=grafito-no-such-unit-xyz&format=text")
 
@@ -195,7 +195,7 @@ describe "Kemal routes" do
   end
 
   it "GET /unit-details renders the service panel fragment" do
-    # Uses the real unit list (plain mode) or the fake one (-Dfake_journal);
+    # Uses the real unit list (plain mode) or the fake one (-Ddemo_mode);
     # both include at least one unit, but the name is unknown here, so
     # just assert a valid unit renders its "View logs" call.
     units = SystemStatus.snapshot.units
