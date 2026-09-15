@@ -1292,12 +1292,13 @@
         // A reload (or shared link) with view=<name> reopens that view;
         // each view's restore() re-applies its saved state first.
         const requestedView = params.get("view");
-        if (
-          requestedView &&
-          VIEWS[requestedView] &&
-          VIEWS[requestedView].restore
-        ) {
-          if (VIEWS[requestedView].restore(params)) {
+        if (requestedView && VIEWS[requestedView]) {
+          // Views with state re-apply it first; stateless views (like
+          // compose) just open.
+          if (
+            !VIEWS[requestedView].restore ||
+            VIEWS[requestedView].restore(params)
+          ) {
             setViewVisible(requestedView, true);
           }
         }

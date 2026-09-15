@@ -43,8 +43,12 @@ module ComposeDashboard
           text "No Docker Compose stacks found. Is docker installed and running?"
         end
       else
-        stacks.each do |compose_stack|
-          html stack_section(compose_stack, enable_actions)
+        # One container for all stacks: CSS turns it into two columns on
+        # wide viewports.
+        div(class: "compose-stacks") do
+          stacks.each do |compose_stack|
+            html stack_section(compose_stack, enable_actions)
+          end
         end
       end
     end

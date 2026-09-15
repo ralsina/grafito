@@ -1733,8 +1733,21 @@ dialog article dd {
   padding: 2em;
   color: var(--muted);
 }
+/* Stack cards: one column normally, two side by side on wide
+   viewports (each card keeps its natural height). */
+.compose-stacks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25em;
+}
+@media (min-width: 1200px) {
+  .compose-stacks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
 .compose-stack {
-  margin-bottom: 1.25em;
+  margin-bottom: 0;
   background: var(--panel-2);
   border: 1px solid var(--line);
   border-radius: 10px;
