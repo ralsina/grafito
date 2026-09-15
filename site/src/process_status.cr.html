@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>process_status.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;font-weight: 600;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;font-style: italic;}.nc {color: #7cafc2;}.no {color: #dc9656;}.nd {color: #dc9656;font-style: italic;}.nf {color: #7cafc2;}.nn {color: #ba8baf;font-style: italic;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.m {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.s {color: #a1b56c;}.lsi {color: #a16946;}.sr {color: #86c1b9;}.ss {color: #dc9656;}.p {color: #d8d8d8;}.tw {color: #d8d8d8;}.cm {color: #585858;font-style: italic;}.s1 {color: #a1b56c;}.lso {color: #a1b56c;}.sc {color: #a1b56c;}.sb {color: #a1b56c;}.sa {color: #dc9656;}.sd {color: #7cafc2;font-style: italic;}.se {color: #a16946;}.lnf {color: #dc9656;}.lnh {color: #dc9656;}.lni {color: #dc9656;}.lno {color: #dc9656;}.lnb {color: #dc9656;}.kr {color: #ba8baf;font-weight: 600;}.kd {color: #ba8baf;font-style: italic;}.kn {color: #ba8baf;}.kp {color: #ba8baf;font-style: italic;}.kc {color: #ab4642;}.cs {color: #a16946;font-weight: 600;}.ch {color: #585858;font-weight: 600;}.gh {color: #7cafc2;font-weight: 600;}.gu {color: #7cafc2;font-weight: 600;font-style: italic;}.gs {color: #ab4642;font-weight: 600;}.ge {color: #dc9656;font-style: italic;}.gd {color: #ab4642;}.gi {color: #a1b56c;}.gp {color: #7cafc2;}.go {color: #d8d8d8;}.gt {color: #ab4642;}.gr {color: #ab4642;}.gl {color: #d8d8d8;text-decoration: underline;}.x {color: #d8d8d8;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Apathy */
+/* Author: Jannik Siebert (https://github.com/janniks) */
+
+:root {
+    --pico-background-color: #031a16; /* Default backround */
+    --pico-color: #81b5ac; /* Default foreground */
+    --pico-text-selection-color: #184e45; /* Selection background */
+    --pico-primary: #96883e; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #184e45;
+    --pico-primary-hover: #3e7996; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-weight: 300;
+        overflow: visible;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 2.5%, #0b342d 2.5%);
+        background-size: 2000% 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #5f9c92;
+        background-color: #031a16;
+        margin-top: auto;
+    }
+    code, div.code>pre>code {
+        font-family: 'Chivo Mono', monospace !important;
+        padding: .15rem;
+        background-color: #0b342d !important;
+    }
+
+    code>span {
+        font-family: 'Chivo Mono', monospace !important;
+    }
+
+    div.doc>pre>code {
+        overflow-x: auto !important;
+    }
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_dashboard.cr.html"><span>src/compose_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_jobs.cr.html"><span>src/compose_jobs.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_status.cr.html"><span>src/compose_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_compose_data.cr.html"><span>src/fake_compose_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_homepage_data.cr.html"><span>src/fake_homepage_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/homepage.cr.html"><span>src/homepage.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/homepage_config.cr.html"><span>src/homepage_config.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/metrics_store.cr.html"><span>src/metrics_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_dashboard.cr.html"><span>src/process_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/process_status.cr</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/system_status.cr.html"><span>src/system_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/weather.cr.html"><span>src/weather.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="process-status" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#process-status" class="anchor">↦</a>
+        </span>
+        <h1>Process status</h1>
+<p>The process view is grafito's &quot;htop on a page&quot;: a snapshot of every
+process on the machine with per-process CPU/memory usage, plus the
+per-core CPU meters that make htop feel like htop.</p>
+<p>Like <a href="system_status.cr.html">system_status.cr</a> this reads <code>/proc</code>
+directly instead of adding dependencies. The one subtle part is
+per-process CPU percentage: <code>/proc/[pid]/stat</code> only exposes <em>cumulative</em>
+CPU time, so usage must be computed as a delta between two reads.
+The module keeps the last reading (process ticks and per-core totals)
+in class state guarded by a mutex, which works because the process
+view is polled by a single htmx timer.</p>
+<p>When compiled with <code>-Dfake_journal</code> (the demo build) it returns
+plausible, time-varying fake processes instead.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-18"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">json</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-19"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-20"></span><span class="t"></span>
+<span id="line-21"></span><span class="nk">module</span><span class="t"> </span><span class="no">ProcessStatus</span><span class="t"></span>
+<span id="line-22"></span><span class="t">  </span><span class="no">Log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="nk">for</span><span class="t">(</span><span class="nk">self</span><span class="t">)</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+        <p>Kernel reports CPU time in clock ticks; Linux's userspace-visible
+tick rate (USER_HZ) has been 100 forever.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-26"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">TICKS_PER_SEC</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">100</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>One process as shown in the table. CPU percentage is &quot;percent of one
+core&quot; like htop's default, so a multicore thread can exceed 100.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-30"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">record</span><span class="t"> </span><span class="no">ProcessInfo</span><span class="t">,</span><span class="t"></span>
+<span id="line-31"></span><span class="t">    </span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-32"></span><span class="t">    </span><span class="t">user</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-33"></span><span class="t">    </span><span class="t">cpu_pct</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-34"></span><span class="t">    </span><span class="t">mem_pct</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-35"></span><span class="t">    </span><span class="t">virt_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-36"></span><span class="t">    </span><span class="t">res_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-37"></span><span class="t">    </span><span class="t">state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-38"></span><span class="t">    </span><span class="t">cpu_time_sec</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-39"></span><span class="t">    </span><span class="t">command</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-40"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-41"></span><span class="t"></span>
+<span id="line-42"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">zombie?</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-43"></span><span class="t">      </span><span class="t">state</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Z</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-44"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-45"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>Point-in-time view of the whole machine for the process view.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-48"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">record</span><span class="t"> </span><span class="no">Snapshot</span><span class="t">,</span><span class="t"></span>
+<span id="line-49"></span><span class="t">    </span><span class="t">timestamp</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">,</span><span class="t"></span>
+<span id="line-50"></span><span class="t">    </span><span class="t">cpu_count</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-51"></span><span class="t">    </span><span class="t">core_pcts</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Float64</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-52"></span><span class="t">    </span><span class="t">load1</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-53"></span><span class="t">    </span><span class="t">mem_total_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-54"></span><span class="t">    </span><span class="t">mem_used_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-55"></span><span class="t">    </span><span class="t">tasks_total</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-56"></span><span class="t">    </span><span class="t">tasks_running</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-57"></span><span class="t">    </span><span class="t">processes</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">ProcessInfo</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-58"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-59"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>Cumulative per-core CPU ticks, kept between reads to compute deltas.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-62"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="t">record</span><span class="t"> </span><span class="no">CoreTicks</span><span class="t">,</span><span class="t"> </span><span class="t">total</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"> </span><span class="t">idle</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>Cumulative per-process ticks, keyed by pid.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-65"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="t">record</span><span class="t"> </span><span class="no">ProcTicks</span><span class="t">,</span><span class="t"> </span><span class="t">total</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"> </span><span class="t">born_ms</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>The previous reading. Mutated under MUTEX only.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-68"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="no">CORE_TICKS</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">CoreTicks</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-69"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="no">PROC_TICKS</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">Int32</span><span class="t">,</span><span class="t"> </span><span class="no">ProcTicks</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-70"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="no">MUTEX</span><span class="t">      </span><span class="o">=</span><span class="t"> </span><span class="no">Mutex</span><span class="t">.</span><span class="t">new</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>Monotonic reference for millisecond timestamps of readings.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-73"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="no">BOOT_INSTANT</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">instant</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>Returns the current process snapshot (fake data on the demo build).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-76"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Snapshot</span><span class="t"></span>
+<span id="line-77"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-78"></span><span class="t">      </span><span class="t">fake_snapshot</span><span class="t"></span>
+<span id="line-79"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">else</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-80"></span><span class="t">      </span><span class="t">real_snapshot</span><span class="t"></span>
+<span id="line-81"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-82"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>Sends a signal to a process. Returns false when the process does not
+exist or the kernel/polkit refuses; the error message is surfaced
+verbatim to the caller.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-87"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">signal</span><span class="t">(</span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"> </span><span class="t">signal</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Signal</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-88"></span><span class="t">    </span><span class="no">Process</span><span class="t">.</span><span class="t">signal</span><span class="t">(</span><span class="t">signal</span><span class="t">,</span><span class="t"> </span><span class="t">pid</span><span class="t">)</span><span class="t"></span>
+<span id="line-89"></span><span class="t">    </span><span class="l">true</span><span class="t"></span>
+<span id="line-90"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-91"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">signal </span><span class="lsi">#{</span><span class="t">signal</span><span class="t"></span><span class="lsi">}</span><span class="s"> to pid </span><span class="lsi">#{</span><span class="t">pid</span><span class="t"></span><span class="lsi">}</span><span class="s"> failed</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-92"></span><span class="t">    </span><span class="l">false</span><span class="t"></span>
+<span id="line-93"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
+        <p>Everything the detail panel shows about one process. Read straight
+from /proc on demand (the table snapshot only carries the summary);
+CPU percentage here is the process's lifetime average, which is the
+honest number a single spot read can produce.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-99"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">record</span><span class="t"> </span><span class="no">ProcessDetail</span><span class="t">,</span><span class="t"></span>
+<span id="line-100"></span><span class="t">    </span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-101"></span><span class="t">    </span><span class="t">user</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-102"></span><span class="t">    </span><span class="t">uid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-103"></span><span class="t">    </span><span class="t">state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-104"></span><span class="t">    </span><span class="t">cpu_pct</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-105"></span><span class="t">    </span><span class="t">mem_pct</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-106"></span><span class="t">    </span><span class="t">virt_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-107"></span><span class="t">    </span><span class="t">res_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-108"></span><span class="t">    </span><span class="t">cpu_time_sec</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-109"></span><span class="t">    </span><span class="t">threads</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-110"></span><span class="t">    </span><span class="t">ppid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-111"></span><span class="t">    </span><span class="t">started</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">,</span><span class="t"></span>
+<span id="line-112"></span><span class="t">    </span><span class="t">command</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-113"></span><span class="t">    </span><span class="t">unit</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-114"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-115"></span><span class="t"></span>
+<span id="line-116"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">comm</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-11" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-11" class="anchor">↦</a>
+        </span>
+        <p>Mirror the table: kernel threads are bracketed comm names.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-118"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">command</span><span class="t">.</span><span class="t">starts_with?</span><span class="t">(</span><span class="s">&quot;</span><span class="s">[</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">command</span><span class="t">[</span><span class="m">1</span><span class="t">...</span><span class="t">command</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="m">1</span><span class="t">]</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">File</span><span class="t">.</span><span class="t">basename</span><span class="t">(</span><span class="t">command</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">.</span><span class="t">first?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">command</span><span class="t">)</span><span class="t"></span>
+<span id="line-119"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-120"></span><span class="t"></span>
+<span id="line-121"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">zombie?</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-122"></span><span class="t">      </span><span class="t">state</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Z</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-123"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-124"></span><span class="t"></span>
+<span id="line-125"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">stopped?</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-126"></span><span class="t">      </span><span class="t">state</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">T</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-127"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-128"></span><span class="t"></span>
+<span id="line-129"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">systemd_unit?</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-130"></span><span class="t">      </span><span class="o">!</span><span class="t">unit</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-131"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-132"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-12" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-12" class="anchor">↦</a>
+        </span>
+        <p>Reads the detail record for one pid, or nil when the process does
+not exist (or died between the panel opening and this read).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-136"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">detail</span><span class="t">(</span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">ProcessDetail</span><span class="t">?</span><span class="t"></span>
+<span id="line-137"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-138"></span><span class="t">      </span><span class="t">fake_detail</span><span class="t">(</span><span class="t">pid</span><span class="t">)</span><span class="t"></span>
+<span id="line-139"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">else</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-140"></span><span class="t">      </span><span class="t">real_detail</span><span class="t">(</span><span class="t">pid</span><span class="t">)</span><span class="t"></span>
+<span id="line-141"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-142"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-13" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-13" class="anchor">↦</a>
+        </span>
+        <h2>Real implementation</h2>
+
+    </div>
+    <div class="code">
+        <span id="line-146"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">real_snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Snapshot</span><span class="t"></span>
+<span id="line-147"></span><span class="t">    </span><span class="t">core_ticks</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">read_core_ticks</span><span class="t"></span>
+<span id="line-148"></span><span class="t">    </span><span class="t">mem_total_kb</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">read_mem_total_kb</span><span class="t"></span>
+<span id="line-149"></span><span class="t"></span>
+<span id="line-150"></span><span class="t">    </span><span class="no">MUTEX</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-151"></span><span class="t">      </span><span class="t">previous_cores</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">CORE_TICKS</span><span class="t">.</span><span class="t">dup</span><span class="t"></span>
+<span id="line-152"></span><span class="t">      </span><span class="t">previous_procs</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">PROC_TICKS</span><span class="t">.</span><span class="t">dup</span><span class="t"></span>
+<span id="line-153"></span><span class="t">      </span><span class="t">now_ms</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="no">Time</span><span class="t">.</span><span class="t">instant</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="no">BOOT_INSTANT</span><span class="t">)</span><span class="t">.</span><span class="t">total_milliseconds</span><span class="t">.</span><span class="t">to_i64</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-14" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-14" class="anchor">↦</a>
+        </span>
+        <p>Per-core usage percentages from the tick deltas. First read
+yields empty meters; the next poll (3s later) fills them in.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-157"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">core_pcts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-158"></span><span class="t">      </span><span class="t">core_ticks</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">name</span><span class="t">,</span><span class="t"> </span><span class="t">ticks</span><span class="o">|</span><span class="t"></span>
+<span id="line-159"></span><span class="t">        </span><span class="t">previous</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">previous_cores</span><span class="t">[</span><span class="t">name</span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-160"></span><span class="t">        </span><span class="nk">next</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">previous</span><span class="t"></span>
+<span id="line-161"></span><span class="t">        </span><span class="t">delta_total</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">ticks</span><span class="t">.</span><span class="t">total</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">previous</span><span class="t">.</span><span class="t">total</span><span class="t"></span>
+<span id="line-162"></span><span class="t">        </span><span class="t">delta_idle</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">ticks</span><span class="t">.</span><span class="t">idle</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">previous</span><span class="t">.</span><span class="t">idle</span><span class="t"></span>
+<span id="line-163"></span><span class="t">        </span><span class="nk">next</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">delta_total</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"></span>
+<span id="line-164"></span><span class="t">        </span><span class="t">core_pcts</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">(</span><span class="t">(</span><span class="t">delta_total</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">delta_idle</span><span class="t">)</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">delta_total</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="m">100</span><span class="t">)</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">0.0</span><span class="t">,</span><span class="t"> </span><span class="m">100.0</span><span class="t">)</span><span class="t"></span>
+<span id="line-165"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-166"></span><span class="t">      </span><span class="t">core_pcts</span><span class="t">.</span><span class="t">sort!</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-15" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-15" class="anchor">↦</a>
+        </span>
+        <p>Rebuild the tick caches: entries for vanished pids disappear,
+new pids start with their process-start time as reference.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-170"><pre class="b" ><code class="b"><span class="t">      </span><span class="no">CORE_TICKS</span><span class="t">.</span><span class="t">clear</span><span class="t"></span>
+<span id="line-171"></span><span class="t">      </span><span class="t">core_ticks</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">name</span><span class="t">,</span><span class="t"> </span><span class="t">ticks</span><span class="o">|</span><span class="t"> </span><span class="no">CORE_TICKS</span><span class="t">[</span><span class="t">name</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">ticks</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-172"></span><span class="t">      </span><span class="no">PROC_TICKS</span><span class="t">.</span><span class="t">clear</span><span class="t"></span>
+<span id="line-173"></span><span class="t"></span>
+<span id="line-174"></span><span class="t">      </span><span class="t">uptime_sec</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">read_uptime_sec</span><span class="t"></span>
+<span id="line-175"></span><span class="t">      </span><span class="t">processes</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">read_processes</span><span class="t">(</span><span class="t">previous_procs</span><span class="t">,</span><span class="t"> </span><span class="t">now_ms</span><span class="t">,</span><span class="t"> </span><span class="t">mem_total_kb</span><span class="t">,</span><span class="t"> </span><span class="t">uptime_sec</span><span class="t">)</span><span class="t"></span>
+<span id="line-176"></span><span class="t">      </span><span class="t">processes</span><span class="t">.</span><span class="t">sort_by!</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">info</span><span class="o">|</span><span class="t"> </span><span class="o">-</span><span class="t">info</span><span class="t">.</span><span class="t">cpu_pct</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-177"></span><span class="t"></span>
+<span id="line-178"></span><span class="t">      </span><span class="t">running</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">processes</span><span class="t">.</span><span class="t">count</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">state</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="s">&quot;</span><span class="s">R</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-179"></span><span class="t">      </span><span class="t">used_kb</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">mem_total_kb</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">read_mem_available_kb</span><span class="t"></span>
+<span id="line-180"></span><span class="t">      </span><span class="no">Snapshot</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-181"></span><span class="t">        </span><span class="t">timestamp</span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t">,</span><span class="t"></span>
+<span id="line-182"></span><span class="t">        </span><span class="t">cpu_count</span><span class="t">:</span><span class="t"> </span><span class="t">core_pcts</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">core_pcts</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">cpu_count</span><span class="t">,</span><span class="t"></span>
+<span id="line-183"></span><span class="t">        </span><span class="t">core_pcts</span><span class="t">:</span><span class="t"> </span><span class="t">core_pcts</span><span class="t">,</span><span class="t"></span>
+<span id="line-184"></span><span class="t">        </span><span class="t">load1</span><span class="t">:</span><span class="t"> </span><span class="t">read_load1</span><span class="t">,</span><span class="t"></span>
+<span id="line-185"></span><span class="t">        </span><span class="t">mem_total_kb</span><span class="t">:</span><span class="t"> </span><span class="t">mem_total_kb</span><span class="t">,</span><span class="t"></span>
+<span id="line-186"></span><span class="t">        </span><span class="t">mem_used_kb</span><span class="t">:</span><span class="t"> </span><span class="t">used_kb</span><span class="t">,</span><span class="t"></span>
+<span id="line-187"></span><span class="t">        </span><span class="t">tasks_total</span><span class="t">:</span><span class="t"> </span><span class="t">processes</span><span class="t">.</span><span class="t">size</span><span class="t">,</span><span class="t"></span>
+<span id="line-188"></span><span class="t">        </span><span class="t">tasks_running</span><span class="t">:</span><span class="t"> </span><span class="t">running</span><span class="t">,</span><span class="t"></span>
+<span id="line-189"></span><span class="t">        </span><span class="t">processes</span><span class="t">:</span><span class="t"> </span><span class="t">processes</span><span class="t">,</span><span class="t"></span>
+<span id="line-190"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-191"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-192"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-193"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to read process snapshot</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-194"></span><span class="t">    </span><span class="no">Snapshot</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-195"></span><span class="t">      </span><span class="t">timestamp</span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t">,</span><span class="t"></span>
+<span id="line-196"></span><span class="t">      </span><span class="t">cpu_count</span><span class="t">:</span><span class="t"> </span><span class="m">1</span><span class="t">,</span><span class="t"></span>
+<span id="line-197"></span><span class="t">      </span><span class="t">core_pcts</span><span class="t">:</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-198"></span><span class="t">      </span><span class="t">load1</span><span class="t">:</span><span class="t"> </span><span class="m">0.0</span><span class="t">,</span><span class="t"></span>
+<span id="line-199"></span><span class="t">      </span><span class="t">mem_total_kb</span><span class="t">:</span><span class="t"> </span><span class="m">0</span><span class="t">,</span><span class="t"></span>
+<span id="line-200"></span><span class="t">      </span><span class="t">mem_used_kb</span><span class="t">:</span><span class="t"> </span><span class="m">0</span><span class="t">,</span><span class="t"></span>
+<span id="line-201"></span><span class="t">      </span><span class="t">tasks_total</span><span class="t">:</span><span class="t"> </span><span class="m">0</span><span class="t">,</span><span class="t"></span>
+<span id="line-202"></span><span class="t">      </span><span class="t">tasks_running</span><span class="t">:</span><span class="t"> </span><span class="m">0</span><span class="t">,</span><span class="t"></span>
+<span id="line-203"></span><span class="t">      </span><span class="t">processes</span><span class="t">:</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">ProcessInfo</span><span class="t">,</span><span class="t"></span>
+<span id="line-204"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-205"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-16" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-16" class="anchor">↦</a>
+        </span>
+        <p>Reads cumulative CPU ticks for &quot;cpu&quot; (named &quot;all&quot;) and every &quot;cpuN&quot;.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-208"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">read_core_ticks</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">CoreTicks</span><span class="t">)</span><span class="t"></span>
+<span id="line-209"></span><span class="t">    </span><span class="t">ticks</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">CoreTicks</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-210"></span><span class="t">    </span><span class="no">File</span><span class="t">.</span><span class="t">each_line</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc/stat</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
+<span id="line-211"></span><span class="t">      </span><span class="t">fields</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">split</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-17" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-17" class="anchor">↦</a>
+        </span>
+        <p>Only the per-core lines (cpu0, cpu1, ...): the aggregate &quot;cpu&quot;
+line is the sum of all of them and must not count as a core.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-214"><pre class="b" ><code class="b"><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">fields</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="m">5</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t"> </span><span class="o">=~</span><span class="t"> </span><span class="s">/</span><span class="s">^cpu</span><span class="s">\d</span><span class="s">+$</span><span class="s">/</span><span class="s"></span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-18" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-18" class="anchor">↦</a>
+        </span>
+        <p>Idle time includes iowait: the core is not doing work then.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-216"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">values</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">1</span><span class="t">..</span><span class="t">]</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">to_i64?</span><span class="t">)</span><span class="t"></span>
+<span id="line-217"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">values</span><span class="t">.</span><span class="t">any?</span><span class="t">(</span><span class="no">Nil</span><span class="t">)</span><span class="t"></span>
+<span id="line-218"></span><span class="t">      </span><span class="t">total</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">values</span><span class="t">.</span><span class="t">compact</span><span class="t">.</span><span class="t">sum</span><span class="t"></span>
+<span id="line-219"></span><span class="t">      </span><span class="t">idle</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">values</span><span class="t">[</span><span class="m">3</span><span class="t">]</span><span class="t">?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t">)</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">(</span><span class="t">values</span><span class="t">[</span><span class="m">4</span><span class="t">]</span><span class="t">?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t">)</span><span class="t"></span>
+<span id="line-220"></span><span class="t">      </span><span class="t">ticks</span><span class="t">[</span><span class="t">fields</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">CoreTicks</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">total</span><span class="t">,</span><span class="t"> </span><span class="t">idle</span><span class="t">)</span><span class="t"></span>
+<span id="line-221"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-222"></span><span class="t">    </span><span class="t">ticks</span><span class="t"></span>
+<span id="line-223"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-19" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-19" class="anchor">↦</a>
+        </span>
+        <p>Parses every /proc/[pid]/stat into a ProcessInfo. The second field
+(comm) is parenthesized and may itself contain spaces and parens, so
+everything after the last ')' is the fixed-field tail.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-228"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">read_processes</span><span class="t">(</span><span class="t"></span>
+<span id="line-229"></span><span class="t">    </span><span class="t">previous_procs</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">Int32</span><span class="t">,</span><span class="t"> </span><span class="no">ProcTicks</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-230"></span><span class="t">    </span><span class="t">now_ms</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-231"></span><span class="t">    </span><span class="t">mem_total_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-232"></span><span class="t">    </span><span class="t">uptime_sec</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-233"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">ProcessInfo</span><span class="t">)</span><span class="t"></span>
+<span id="line-234"></span><span class="t">    </span><span class="t">infos</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">ProcessInfo</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-20" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-20" class="anchor">↦</a>
+        </span>
+        <p>Read once per snapshot, not once per process: this poll runs every
+few seconds and /etc/passwd does not change between pids.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-237"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">users</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">user_names</span><span class="t"></span>
+<span id="line-238"></span><span class="t"></span>
+<span id="line-239"></span><span class="t">    </span><span class="no">Dir</span><span class="t">.</span><span class="t">children</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t"></span>
+<span id="line-240"></span><span class="t">      </span><span class="t">pid</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">to_i32?</span><span class="t"></span>
+<span id="line-241"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">pid</span><span class="t"></span>
+<span id="line-242"></span><span class="t">      </span><span class="t">info</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">process_info</span><span class="t">(</span><span class="t">pid</span><span class="t">,</span><span class="t"> </span><span class="t">users</span><span class="t">,</span><span class="t"> </span><span class="t">previous_procs</span><span class="t">,</span><span class="t"> </span><span class="t">now_ms</span><span class="t">,</span><span class="t"> </span><span class="t">mem_total_kb</span><span class="t">,</span><span class="t"> </span><span class="t">uptime_sec</span><span class="t">)</span><span class="t"></span>
+<span id="line-243"></span><span class="t">      </span><span class="t">infos</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">info</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">info</span><span class="t"></span>
+<span id="line-244"></span><span class="t">    </span><span class="nk">rescue</span><span class="t"> </span><span class="no">File</span><span class="no">::</span><span class="no">NotFoundError</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="no">File</span><span class="no">::</span><span class="no">AccessDeniedError</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-21" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-21" class="anchor">↦</a>
+        </span>
+        <p>The process vanished between listing and reading; skip it.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-246"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-247"></span><span class="t">    </span><span class="t">infos</span><span class="t"></span>
+<span id="line-248"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-22" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-22" class="anchor">↦</a>
+        </span>
+        <p>Turns one pid's /proc/[pid]/stat into a ProcessInfo, or nil when the
+entry is not a process directory with a well-formed stat file.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-252"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">process_info</span><span class="t">(</span><span class="t"></span>
+<span id="line-253"></span><span class="t">    </span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-254"></span><span class="t">    </span><span class="t">users</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-255"></span><span class="t">    </span><span class="t">previous_procs</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">Int32</span><span class="t">,</span><span class="t"> </span><span class="no">ProcTicks</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-256"></span><span class="t">    </span><span class="t">now_ms</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-257"></span><span class="t">    </span><span class="t">mem_total_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-258"></span><span class="t">    </span><span class="t">uptime_sec</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-259"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">ProcessInfo</span><span class="t">?</span><span class="t"></span>
+<span id="line-260"></span><span class="t">    </span><span class="t">raw</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">File</span><span class="t">.</span><span class="t">read</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc/</span><span class="lsi">#{</span><span class="t">pid</span><span class="t"></span><span class="lsi">}</span><span class="s">/stat</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-261"></span><span class="t">    </span><span class="t">tail_start</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">raw</span><span class="t">.</span><span class="t">rindex</span><span class="t">(</span><span class="sc">&#39;)&#39;</span><span class="t">)</span><span class="t"></span>
+<span id="line-262"></span><span class="t">    </span><span class="t">head_start</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">raw</span><span class="t">.</span><span class="t">index</span><span class="t">(</span><span class="sc">&#39;(&#39;</span><span class="t">)</span><span class="t"></span>
+<span id="line-263"></span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">tail_start</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">head_start</span><span class="t"></span>
+<span id="line-264"></span><span class="t">    </span><span class="t">comm</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">raw</span><span class="t">[</span><span class="t">head_start</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">1</span><span class="t">...</span><span class="t">tail_start</span><span class="t">]</span><span class="t"></span>
+<span id="line-265"></span><span class="t">    </span><span class="t">fields</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">raw</span><span class="t">[</span><span class="t">tail_start</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">1</span><span class="t">..</span><span class="t">]</span><span class="t">.</span><span class="t">split</span><span class="t"></span>
+<span id="line-266"></span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">fields</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="m">22</span><span class="t"></span>
+<span id="line-267"></span><span class="t">    </span><span class="t">process_info_from_fields</span><span class="t">(</span><span class="t">pid</span><span class="t">,</span><span class="t"> </span><span class="t">comm</span><span class="t">,</span><span class="t"> </span><span class="t">users</span><span class="t">,</span><span class="t"> </span><span class="t">fields</span><span class="t">,</span><span class="t"> </span><span class="t">previous_procs</span><span class="t">,</span><span class="t"> </span><span class="t">now_ms</span><span class="t">,</span><span class="t"> </span><span class="t">mem_total_kb</span><span class="t">,</span><span class="t"> </span><span class="t">uptime_sec</span><span class="t">)</span><span class="t"></span>
+<span id="line-268"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-23" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-23" class="anchor">↦</a>
+        </span>
+        <p>Assembles the ProcessInfo from the fixed-field tail of a stat file.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-271"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">process_info_from_fields</span><span class="t">(</span><span class="t"></span>
+<span id="line-272"></span><span class="t">    </span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-273"></span><span class="t">    </span><span class="t">comm</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-274"></span><span class="t">    </span><span class="t">users</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-275"></span><span class="t">    </span><span class="t">fields</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-276"></span><span class="t">    </span><span class="t">previous_procs</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">Int32</span><span class="t">,</span><span class="t"> </span><span class="no">ProcTicks</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-277"></span><span class="t">    </span><span class="t">now_ms</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-278"></span><span class="t">    </span><span class="t">mem_total_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-279"></span><span class="t">    </span><span class="t">uptime_sec</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-280"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">ProcessInfo</span><span class="t"></span>
+<span id="line-281"></span><span class="t">    </span><span class="t">utime</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">11</span><span class="t">]</span><span class="t">.</span><span class="t">to_i64?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t"></span>
+<span id="line-282"></span><span class="t">    </span><span class="t">stime</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">12</span><span class="t">]</span><span class="t">.</span><span class="t">to_i64?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t"></span>
+<span id="line-283"></span><span class="t">    </span><span class="t">starttime</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">19</span><span class="t">]</span><span class="t">.</span><span class="t">to_i64?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t"></span>
+<span id="line-284"></span><span class="t">    </span><span class="t">vsize</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">20</span><span class="t">]</span><span class="t">.</span><span class="t">to_i64?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t"></span>
+<span id="line-285"></span><span class="t">    </span><span class="t">rss_pages</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">21</span><span class="t">]</span><span class="t">.</span><span class="t">to_i64?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t"></span>
+<span id="line-286"></span><span class="t"></span>
+<span id="line-287"></span><span class="t">    </span><span class="t">total_ticks</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">utime</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">stime</span><span class="t"></span>
+<span id="line-288"></span><span class="t">    </span><span class="t">cpu_pct</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">cpu_percentage</span><span class="t">(</span><span class="t">pid</span><span class="t">,</span><span class="t"> </span><span class="t">total_ticks</span><span class="t">,</span><span class="t"> </span><span class="t">starttime</span><span class="t">,</span><span class="t"> </span><span class="t">previous_procs</span><span class="t">,</span><span class="t"> </span><span class="t">now_ms</span><span class="t">,</span><span class="t"> </span><span class="t">uptime_sec</span><span class="t">)</span><span class="t"></span>
+<span id="line-289"></span><span class="t">    </span><span class="no">PROC_TICKS</span><span class="t">[</span><span class="t">pid</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">ProcTicks</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">total_ticks</span><span class="t">,</span><span class="t"> </span><span class="t">now_ms</span><span class="t">)</span><span class="t"></span>
+<span id="line-290"></span><span class="t"></span>
+<span id="line-291"></span><span class="t">    </span><span class="t">res_kb</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">rss_pages</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">page_size_kb</span><span class="t"></span>
+<span id="line-292"></span><span class="t">    </span><span class="t">mem_pct</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">mem_total_kb</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">res_kb</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">mem_total_kb</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="m">100</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-293"></span><span class="t">    </span><span class="no">ProcessInfo</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-294"></span><span class="t">      </span><span class="t">pid</span><span class="t">:</span><span class="t"> </span><span class="t">pid</span><span class="t">,</span><span class="t"></span>
+<span id="line-295"></span><span class="t">      </span><span class="t">user</span><span class="t">:</span><span class="t"> </span><span class="t">users</span><span class="t">[</span><span class="t">uid_of</span><span class="t">(</span><span class="t">pid</span><span class="t">)</span><span class="t">]</span><span class="t">?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="s">&quot;</span><span class="s">?</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-296"></span><span class="t">      </span><span class="t">cpu_pct</span><span class="t">:</span><span class="t"> </span><span class="t">cpu_pct</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">0.0</span><span class="t">,</span><span class="t"> </span><span class="m">100.0</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">cpu_count</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-297"></span><span class="t">      </span><span class="t">mem_pct</span><span class="t">:</span><span class="t"> </span><span class="t">mem_pct</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">0.0</span><span class="t">,</span><span class="t"> </span><span class="m">100.0</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-298"></span><span class="t">      </span><span class="t">virt_kb</span><span class="t">:</span><span class="t"> </span><span class="t">vsize</span><span class="t"> </span><span class="o">//</span><span class="t"> </span><span class="m">1024</span><span class="t">,</span><span class="t"></span>
+<span id="line-299"></span><span class="t">      </span><span class="t">res_kb</span><span class="t">:</span><span class="t"> </span><span class="t">res_kb</span><span class="t">,</span><span class="t"></span>
+<span id="line-300"></span><span class="t">      </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-301"></span><span class="t">      </span><span class="t">cpu_time_sec</span><span class="t">:</span><span class="t"> </span><span class="t">total_ticks</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="no">TICKS_PER_SEC</span><span class="t">,</span><span class="t"></span>
+<span id="line-302"></span><span class="t">      </span><span class="t">command</span><span class="t">:</span><span class="t"> </span><span class="t">command_of</span><span class="t">(</span><span class="t">pid</span><span class="t">,</span><span class="t"> </span><span class="t">comm</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-303"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-304"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-24" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-24" class="anchor">↦</a>
+        </span>
+        <p>Percent of one core used by the process since the previous reading,
+or its lifetime average on the first sighting so the very first
+render is not all zeroes.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-309"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">cpu_percentage</span><span class="t">(</span><span class="t"></span>
+<span id="line-310"></span><span class="t">    </span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"></span>
+<span id="line-311"></span><span class="t">    </span><span class="t">total_ticks</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-312"></span><span class="t">    </span><span class="t">starttime</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-313"></span><span class="t">    </span><span class="t">previous_procs</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">Int32</span><span class="t">,</span><span class="t"> </span><span class="no">ProcTicks</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-314"></span><span class="t">    </span><span class="t">now_ms</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"></span>
+<span id="line-315"></span><span class="t">    </span><span class="t">uptime_sec</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-316"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-317"></span><span class="t">    </span><span class="t">previous</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">previous_procs</span><span class="t">[</span><span class="t">pid</span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-318"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">previous</span><span class="t"></span>
+<span id="line-319"></span><span class="t">      </span><span class="t">delta_ms</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">now_ms</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">previous</span><span class="t">.</span><span class="t">born_ms</span><span class="t"></span>
+<span id="line-320"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">delta_ms</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"></span>
+<span id="line-321"></span><span class="t">        </span><span class="t">(</span><span class="t">(</span><span class="t">total_ticks</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">previous</span><span class="t">.</span><span class="t">total</span><span class="t">)</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="no">TICKS_PER_SEC</span><span class="t">)</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">(</span><span class="t">delta_ms</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">1000</span><span class="t">)</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="m">100</span><span class="t"></span>
+<span id="line-322"></span><span class="t">      </span><span class="nk">else</span><span class="t"></span>
+<span id="line-323"></span><span class="t">        </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-324"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-325"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-326"></span><span class="t">      </span><span class="t">age_sec</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">uptime_sec</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">starttime</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="no">TICKS_PER_SEC</span><span class="t"></span>
+<span id="line-327"></span><span class="t">      </span><span class="t">age_sec</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">(</span><span class="t">total_ticks</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="no">TICKS_PER_SEC</span><span class="t">)</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">age_sec</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="m">100</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-328"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-329"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-25" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-25" class="anchor">↦</a>
+        </span>
+        <p>Builds the detail record from the process's /proc files. The stat
+parse reuses the same field layout as the table reader; the extras
+(ppid, threads) come from the same tail.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-334"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">real_detail</span><span class="t">(</span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">ProcessDetail</span><span class="t">?</span><span class="t"></span>
+<span id="line-335"></span><span class="t">    </span><span class="t">raw</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">File</span><span class="t">.</span><span class="t">read</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc/</span><span class="lsi">#{</span><span class="t">pid</span><span class="t"></span><span class="lsi">}</span><span class="s">/stat</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-336"></span><span class="t">    </span><span class="t">tail_start</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">raw</span><span class="t">.</span><span class="t">rindex</span><span class="t">(</span><span class="sc">&#39;)&#39;</span><span class="t">)</span><span class="t"></span>
+<span id="line-337"></span><span class="t">    </span><span class="t">head_start</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">raw</span><span class="t">.</span><span class="t">index</span><span class="t">(</span><span class="sc">&#39;(&#39;</span><span class="t">)</span><span class="t"></span>
+<span id="line-338"></span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">tail_start</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">head_start</span><span class="t"></span>
+<span id="line-339"></span><span class="t">    </span><span class="t">comm</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">raw</span><span class="t">[</span><span class="t">head_start</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">1</span><span class="t">...</span><span class="t">tail_start</span><span class="t">]</span><span class="t"></span>
+<span id="line-340"></span><span class="t">    </span><span class="t">fields</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">raw</span><span class="t">[</span><span class="t">tail_start</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">1</span><span class="t">..</span><span class="t">]</span><span class="t">.</span><span class="t">split</span><span class="t"></span>
+<span id="line-341"></span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">fields</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="m">22</span><span class="t"></span>
+<span id="line-342"></span><span class="t">    </span><span class="t">detail_from_fields</span><span class="t">(</span><span class="t">pid</span><span class="t">,</span><span class="t"> </span><span class="t">comm</span><span class="t">,</span><span class="t"> </span><span class="t">fields</span><span class="t">)</span><span class="t"></span>
+<span id="line-343"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="no">File</span><span class="no">::</span><span class="no">NotFoundError</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="no">File</span><span class="no">::</span><span class="no">AccessDeniedError</span><span class="t"></span>
+<span id="line-344"></span><span class="t">    </span><span class="l">nil</span><span class="t"></span>
+<span id="line-345"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-26" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-26" class="anchor">↦</a>
+        </span>
+        <p>Assembles the detail record from the fixed-field tail of a stat
+file. The extras (ppid, threads) share the tail with the fields the
+table reader uses.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-350"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">detail_from_fields</span><span class="t">(</span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"> </span><span class="t">comm</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">fields</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">ProcessDetail</span><span class="t"></span>
+<span id="line-351"></span><span class="t">    </span><span class="t">uid</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">uid_of</span><span class="t">(</span><span class="t">pid</span><span class="t">)</span><span class="t"></span>
+<span id="line-352"></span><span class="t">    </span><span class="t">total_ticks</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">fields</span><span class="t">[</span><span class="m">11</span><span class="t">]</span><span class="t">.</span><span class="t">to_i64?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t">)</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">(</span><span class="t">fields</span><span class="t">[</span><span class="m">12</span><span class="t">]</span><span class="t">.</span><span class="t">to_i64?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t">)</span><span class="t"></span>
+<span id="line-353"></span><span class="t">    </span><span class="t">starttime</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">19</span><span class="t">]</span><span class="t">.</span><span class="t">to_i64?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t"></span>
+<span id="line-354"></span><span class="t">    </span><span class="t">res_kb</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="t">fields</span><span class="t">[</span><span class="m">21</span><span class="t">]</span><span class="t">.</span><span class="t">to_i64?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t">)</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">page_size_kb</span><span class="t"></span>
+<span id="line-355"></span><span class="t">    </span><span class="t">mem_total_kb</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">read_mem_total_kb</span><span class="t"></span>
+<span id="line-356"></span><span class="t"></span>
+<span id="line-357"></span><span class="t">    </span><span class="no">ProcessDetail</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-358"></span><span class="t">      </span><span class="t">pid</span><span class="t">:</span><span class="t"> </span><span class="t">pid</span><span class="t">,</span><span class="t"></span>
+<span id="line-359"></span><span class="t">      </span><span class="t">user</span><span class="t">:</span><span class="t"> </span><span class="t">user_names</span><span class="t">[</span><span class="t">uid</span><span class="t">]</span><span class="t">?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="s">&quot;</span><span class="s">?</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-360"></span><span class="t">      </span><span class="t">uid</span><span class="t">:</span><span class="t"> </span><span class="t">uid</span><span class="t">,</span><span class="t"></span>
+<span id="line-361"></span><span class="t">      </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">,</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-27" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-27" class="anchor">↦</a>
+        </span>
+        <p>Lifetime average: a spot read has no previous delta to diff
+against, and this is the same number the table's first render
+shows, so the panel never contradicts the table.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-365"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">cpu_pct</span><span class="t">:</span><span class="t"> </span><span class="t">lifetime_cpu_pct</span><span class="t">(</span><span class="t">total_ticks</span><span class="t">,</span><span class="t"> </span><span class="t">starttime</span><span class="t">,</span><span class="t"> </span><span class="t">read_uptime_sec</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-366"></span><span class="t">      </span><span class="t">mem_pct</span><span class="t">:</span><span class="t"> </span><span class="t">mem_pct_of</span><span class="t">(</span><span class="t">res_kb</span><span class="t">,</span><span class="t"> </span><span class="t">mem_total_kb</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-367"></span><span class="t">      </span><span class="t">virt_kb</span><span class="t">:</span><span class="t"> </span><span class="t">(</span><span class="t">fields</span><span class="t">[</span><span class="m">20</span><span class="t">]</span><span class="t">.</span><span class="t">to_i64?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t">)</span><span class="t"> </span><span class="o">//</span><span class="t"> </span><span class="m">1024</span><span class="t">,</span><span class="t"></span>
+<span id="line-368"></span><span class="t">      </span><span class="t">res_kb</span><span class="t">:</span><span class="t"> </span><span class="t">res_kb</span><span class="t">,</span><span class="t"></span>
+<span id="line-369"></span><span class="t">      </span><span class="t">cpu_time_sec</span><span class="t">:</span><span class="t"> </span><span class="t">total_ticks</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="no">TICKS_PER_SEC</span><span class="t">,</span><span class="t"></span>
+<span id="line-370"></span><span class="t">      </span><span class="t">threads</span><span class="t">:</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">17</span><span class="t">]</span><span class="t">.</span><span class="t">to_i32?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">1</span><span class="t">,</span><span class="t"></span>
+<span id="line-371"></span><span class="t">      </span><span class="t">ppid</span><span class="t">:</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">1</span><span class="t">]</span><span class="t">.</span><span class="t">to_i32?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0</span><span class="t">,</span><span class="t"></span>
+<span id="line-372"></span><span class="t">      </span><span class="t">started</span><span class="t">:</span><span class="t"> </span><span class="t">process_start_time</span><span class="t">(</span><span class="t">starttime</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-373"></span><span class="t">      </span><span class="t">command</span><span class="t">:</span><span class="t"> </span><span class="t">command_of</span><span class="t">(</span><span class="t">pid</span><span class="t">,</span><span class="t"> </span><span class="t">comm</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-374"></span><span class="t">      </span><span class="t">unit</span><span class="t">:</span><span class="t"> </span><span class="t">cgroup_unit</span><span class="t">(</span><span class="t">pid</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-375"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-376"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-377"></span><span class="t"></span>
+<span id="line-378"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">mem_pct_of</span><span class="t">(</span><span class="t">res_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"> </span><span class="t">mem_total_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-379"></span><span class="t">    </span><span class="t">mem_total_kb</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">(</span><span class="t">res_kb</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">mem_total_kb</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="m">100</span><span class="t">)</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">0.0</span><span class="t">,</span><span class="t"> </span><span class="m">100.0</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-380"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-28" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-28" class="anchor">↦</a>
+        </span>
+        <p>Lifetime-average CPU percentage (percent of one core).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-383"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">lifetime_cpu_pct</span><span class="t">(</span><span class="t">total_ticks</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"> </span><span class="t">starttime</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">,</span><span class="t"> </span><span class="t">uptime_sec</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-384"></span><span class="t">    </span><span class="t">age_sec</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">uptime_sec</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">starttime</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="no">TICKS_PER_SEC</span><span class="t"></span>
+<span id="line-385"></span><span class="t">    </span><span class="t">age_sec</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">(</span><span class="t">(</span><span class="t">total_ticks</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="no">TICKS_PER_SEC</span><span class="t">)</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="t">age_sec</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="m">100</span><span class="t">)</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">0.0</span><span class="t">,</span><span class="t"> </span><span class="l">nil</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-386"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-29" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-29" class="anchor">↦</a>
+        </span>
+        <p>Wall-clock time the process started: boot time plus the stat
+starttime offset in ticks.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-390"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">process_start_time</span><span class="t">(</span><span class="t">starttime</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t"></span>
+<span id="line-391"></span><span class="t">    </span><span class="t">boot</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">read_uptime_sec</span><span class="t">.</span><span class="t">seconds</span><span class="t"></span>
+<span id="line-392"></span><span class="t">    </span><span class="t">boot</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">(</span><span class="t">starttime</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="no">TICKS_PER_SEC</span><span class="t">)</span><span class="t">.</span><span class="t">seconds</span><span class="t"></span>
+<span id="line-393"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-394"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to compute process start time</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-395"></span><span class="t">    </span><span class="no">Time</span><span class="t">.</span><span class="t">unix</span><span class="t">(</span><span class="m">0</span><span class="t">)</span><span class="t"></span>
+<span id="line-396"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-30" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-30" class="anchor">↦</a>
+        </span>
+        <p>The systemd unit owning the process, from its cgroup v2 path
+(/sys/fs/cgroup is mounted and /proc/[pid]/cgroup reads &quot;0::/...&quot;).
+Falls back to the legacy controller layout for cgroup v1 hosts.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-401"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">cgroup_unit</span><span class="t">(</span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-402"></span><span class="t">    </span><span class="no">File</span><span class="t">.</span><span class="t">each_line</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc/</span><span class="lsi">#{</span><span class="t">pid</span><span class="t"></span><span class="lsi">}</span><span class="s">/cgroup</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-31" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-31" class="anchor">↦</a>
+        </span>
+        <p>0::/system.slice/nginx.service  or  10:cpu:/system.slice/...</p>
+
+    </div>
+    <div class="code">
+        <span id="line-404"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="sc">&#39;:&#39;</span><span class="t">)</span><span class="t">.</span><span class="t">last?</span><span class="t"></span>
+<span id="line-405"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">path</span><span class="t"></span>
+<span id="line-406"></span><span class="t">      </span><span class="t">parts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">path</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="sc">&#39;/&#39;</span><span class="t">)</span><span class="t"></span>
+<span id="line-407"></span><span class="t">      </span><span class="t">parts</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">segment</span><span class="o">|</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-32" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-32" class="anchor">↦</a>
+        </span>
+        <p>Only real units, not slice scopes like system.slice or
+user@1000.service sessions' intermediate slices.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-410"><pre class="b" ><code class="b"><span class="t">        </span><span class="nk">return</span><span class="t"> </span><span class="t">segment</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">segment</span><span class="t">.</span><span class="t">ends_with?</span><span class="t">(</span><span class="s">&quot;</span><span class="s">.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">segment</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="s">&quot;</span><span class="s">@</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"></span>
+<span id="line-411"></span><span class="t">                          </span><span class="o">!</span><span class="t">segment</span><span class="t">.</span><span class="t">starts_with?</span><span class="t">(</span><span class="s">&quot;</span><span class="s">systemd-</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-412"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-413"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-414"></span><span class="t">    </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-415"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="no">File</span><span class="no">::</span><span class="no">NotFoundError</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="no">File</span><span class="no">::</span><span class="no">AccessDeniedError</span><span class="t"></span>
+<span id="line-416"></span><span class="t">    </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-417"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-33" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-33" class="anchor">↦</a>
+        </span>
+        <p>cmdline is NUL-separated and empty for kernel threads; the comm name
+is used for those. Only the first cmdline token is shown (the
+executable), keeping rows one line tall like htop's default.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-422"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">command_of</span><span class="t">(</span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">,</span><span class="t"> </span><span class="t">comm</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-423"></span><span class="t">    </span><span class="t">raw</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">File</span><span class="t">.</span><span class="t">read</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc/</span><span class="lsi">#{</span><span class="t">pid</span><span class="t"></span><span class="lsi">}</span><span class="s">/cmdline</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-424"></span><span class="t">    </span><span class="t">first</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">raw</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="sc">&#39;\0&#39;</span><span class="t">)</span><span class="t">.</span><span class="t">first?</span><span class="t"></span>
+<span id="line-425"></span><span class="t">    </span><span class="t">command</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">first</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">strip</span><span class="t"></span>
+<span id="line-426"></span><span class="t">    </span><span class="t">command</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">[</span><span class="lsi">#{</span><span class="t">comm</span><span class="t"></span><span class="lsi">}</span><span class="s">]</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">command</span><span class="t"></span>
+<span id="line-427"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="no">File</span><span class="no">::</span><span class="no">NotFoundError</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="no">File</span><span class="no">::</span><span class="no">AccessDeniedError</span><span class="t"></span>
+<span id="line-428"></span><span class="t">    </span><span class="s">&quot;</span><span class="s">[</span><span class="lsi">#{</span><span class="t">comm</span><span class="t"></span><span class="lsi">}</span><span class="s">]</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-429"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-34" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-34" class="anchor">↦</a>
+        </span>
+        <p>Real (not effective) uid from /proc/[pid]/status, so processes
+running as root show as root even when they dropped privileges.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-433"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">uid_of</span><span class="t">(</span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-434"></span><span class="t">    </span><span class="no">File</span><span class="t">.</span><span class="t">each_line</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc/</span><span class="lsi">#{</span><span class="t">pid</span><span class="t"></span><span class="lsi">}</span><span class="s">/status</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
+<span id="line-435"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">starts_with?</span><span class="t">(</span><span class="s">&quot;</span><span class="s">Uid:</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-436"></span><span class="t">        </span><span class="nk">return</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">split</span><span class="t">[</span><span class="m">1</span><span class="t">]</span><span class="t"></span>
+<span id="line-437"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-438"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-439"></span><span class="t">    </span><span class="s">&quot;</span><span class="s">?</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-440"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="no">File</span><span class="no">::</span><span class="no">NotFoundError</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="no">File</span><span class="no">::</span><span class="no">AccessDeniedError</span><span class="t"></span>
+<span id="line-441"></span><span class="t">    </span><span class="s">&quot;</span><span class="s">?</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-442"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-35" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-35" class="anchor">↦</a>
+        </span>
+        <p>uid =&gt; name from /etc/passwd, read once per snapshot.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-445"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">user_names</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"></span>
+<span id="line-446"></span><span class="t">    </span><span class="t">users</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-447"></span><span class="t">    </span><span class="nk">begin</span><span class="t"></span>
+<span id="line-448"></span><span class="t">      </span><span class="no">File</span><span class="t">.</span><span class="t">each_line</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/etc/passwd</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-36" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-36" class="anchor">↦</a>
+        </span>
+        <p>name:password:uid:gid:gecos:home:shell — key on the uid.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-450"><pre class="b" ><code class="b"><span class="t">        </span><span class="t">fields</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="sc">&#39;:&#39;</span><span class="t">)</span><span class="t"></span>
+<span id="line-451"></span><span class="t">        </span><span class="t">users</span><span class="t">[</span><span class="t">fields</span><span class="t">[</span><span class="m">2</span><span class="t">]</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fields</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">fields</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="m">3</span><span class="t"></span>
+<span id="line-452"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-453"></span><span class="t">    </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-454"></span><span class="t">      </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to read /etc/passwd</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-455"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-456"></span><span class="t">    </span><span class="t">users</span><span class="t"></span>
+<span id="line-457"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-458"></span><span class="t"></span>
+<span id="line-459"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">read_load1</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-460"></span><span class="t">    </span><span class="no">File</span><span class="t">.</span><span class="t">read</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc/loadavg</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">.</span><span class="t">split</span><span class="t">.</span><span class="t">first?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">to_f?</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-461"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-462"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to read load average</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-463"></span><span class="t">    </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-464"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-465"></span><span class="t"></span>
+<span id="line-466"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">read_uptime_sec</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-467"></span><span class="t">    </span><span class="no">File</span><span class="t">.</span><span class="t">read</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc/uptime</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">.</span><span class="t">split</span><span class="t">.</span><span class="t">first?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">to_f?</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-468"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-469"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to read uptime</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-470"></span><span class="t">    </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-471"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-472"></span><span class="t"></span>
+<span id="line-473"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">read_mem_total_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t"></span>
+<span id="line-474"></span><span class="t">    </span><span class="t">meminfo_value</span><span class="t">(</span><span class="s">&quot;</span><span class="s">MemTotal</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-475"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-476"></span><span class="t"></span>
+<span id="line-477"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">read_mem_available_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t"></span>
+<span id="line-478"></span><span class="t">    </span><span class="t">meminfo_value</span><span class="t">(</span><span class="s">&quot;</span><span class="s">MemAvailable</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-479"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-480"></span><span class="t"></span>
+<span id="line-481"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">meminfo_value</span><span class="t">(</span><span class="t">key</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t"></span>
+<span id="line-482"></span><span class="t">    </span><span class="no">File</span><span class="t">.</span><span class="t">each_line</span><span class="t">(</span><span class="s">&quot;</span><span class="s">/proc/meminfo</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
+<span id="line-483"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">starts_with?</span><span class="t">(</span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">key</span><span class="t"></span><span class="lsi">}</span><span class="s">:</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-484"></span><span class="t">        </span><span class="nk">return</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">split</span><span class="t">[</span><span class="m">1</span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">to_i64?</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0i64</span><span class="t"></span>
+<span id="line-485"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-486"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-487"></span><span class="t">    </span><span class="m">0i64</span><span class="t"></span>
+<span id="line-488"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-489"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to read </span><span class="lsi">#{</span><span class="t">key</span><span class="t"></span><span class="lsi">}</span><span class="s"> from meminfo</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-490"></span><span class="t">    </span><span class="m">0i64</span><span class="t"></span>
+<span id="line-491"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-492"></span><span class="t"></span>
+<span id="line-493"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">page_size_kb</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int64</span><span class="t"></span>
+<span id="line-494"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:windows</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-495"></span><span class="t">      </span><span class="m">4i64</span><span class="t"></span>
+<span id="line-496"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">else</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-497"></span><span class="t">      </span><span class="t">(</span><span class="no">LibC</span><span class="t">.</span><span class="t">sysconf</span><span class="t">(</span><span class="no">LibC</span><span class="no">::</span><span class="no">SC_PAGESIZE</span><span class="t">)</span><span class="t"> </span><span class="o">//</span><span class="t"> </span><span class="m">1024</span><span class="t">)</span><span class="t">.</span><span class="t">to_i64</span><span class="t"></span>
+<span id="line-498"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-499"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"></span>
+<span id="line-500"></span><span class="t">    </span><span class="m">4i64</span><span class="t"></span>
+<span id="line-501"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-502"></span><span class="t"></span>
+<span id="line-503"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">cpu_count</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"></span>
+<span id="line-504"></span><span class="t">    </span><span class="no">System</span><span class="t">.</span><span class="t">cpu_count</span><span class="t"></span>
+<span id="line-505"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"></span>
+<span id="line-506"></span><span class="t">    </span><span class="m">1</span><span class="t"></span>
+<span id="line-507"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-37" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-37" class="anchor">↦</a>
+        </span>
+        <h2>Demo build</h2>
+<p>FAKE_PROCESSES mirrors a small personal server: a handful of system
+daemons, a web server and a database, with CPU usage that drifts so
+the table and meters look alive across polls.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-515"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="no">FAKE_BOOT</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="m">20</span><span class="t">.</span><span class="t">days</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-38" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-38" class="anchor">↦</a>
+        </span>
+        <p>pid, user, state, cpu, mem%, virt KB, res KB, command, unit</p>
+
+    </div>
+    <div class="code">
+        <span id="line-518"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fake_process_rows</span><span class="t"></span>
+<span id="line-519"></span><span class="t">    </span><span class="t">angle</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="no">FAKE_BOOT</span><span class="t">)</span><span class="t">.</span><span class="t">total_seconds</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">7.0</span><span class="t"></span>
+<span id="line-520"></span><span class="t">    </span><span class="t">[</span><span class="t"></span>
+<span id="line-521"></span><span class="t">      </span><span class="t">{</span><span class="m">1</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">root</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">S</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">0.5</span><span class="t">,</span><span class="t"> </span><span class="m">0.1</span><span class="t">,</span><span class="t"> </span><span class="m">180_000</span><span class="t">,</span><span class="t"> </span><span class="m">24_000</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">/sbin/init splash</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">init.scope</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-522"></span><span class="t">      </span><span class="t">{</span><span class="m">402</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">root</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">S</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">0.2</span><span class="t">,</span><span class="t"> </span><span class="m">0.4</span><span class="t">,</span><span class="t"> </span><span class="m">320_000</span><span class="t">,</span><span class="t"> </span><span class="m">86_000</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">/lib/systemd/systemd-journald</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">systemd-journald.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-523"></span><span class="t">      </span><span class="t">{</span><span class="m">618</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">root</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">S</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">0.1</span><span class="t">,</span><span class="t"> </span><span class="m">0.2</span><span class="t">,</span><span class="t"> </span><span class="m">96_000</span><span class="t">,</span><span class="t"> </span><span class="m">31_000</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">/lib/systemd/systemd-udevd</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">systemd-udevd.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-524"></span><span class="t">      </span><span class="t">{</span><span class="m">745</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">message+</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">S</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">0.1</span><span class="t">,</span><span class="t"> </span><span class="m">0.3</span><span class="t">,</span><span class="t"> </span><span class="m">84_000</span><span class="t">,</span><span class="t"> </span><span class="m">42_000</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">/usr/bin/dbus-daemon --system</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">dbus.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-525"></span><span class="t">      </span><span class="t">{</span><span class="m">921</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">root</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">S</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">1.8</span><span class="t">,</span><span class="t"> </span><span class="m">1.1</span><span class="t">,</span><span class="t"> </span><span class="m">1_240_000</span><span class="t">,</span><span class="t"> </span><span class="m">212_000</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">/usr/bin/dockerd -H fd://</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">docker.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-526"></span><span class="t">      </span><span class="t">{</span><span class="m">1103</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">root</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">S</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">0.3</span><span class="t">,</span><span class="t"> </span><span class="m">0.9</span><span class="t">,</span><span class="t"> </span><span class="m">890_000</span><span class="t">,</span><span class="t"> </span><span class="m">168_000</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">/usr/bin/containerd</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">containerd.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-527"></span><span class="t">      </span><span class="t">{</span><span class="m">1240</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">www-data</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">S</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">4.2</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">3.0</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="no">Math</span><span class="t">.</span><span class="t">sin</span><span class="t">(</span><span class="t">angle</span><span class="t">)</span><span class="t">,</span><span class="t"> </span><span class="m">2.3</span><span class="t">,</span><span class="t"> </span><span class="m">410_000</span><span class="t">,</span><span class="t"> </span><span class="m">452_000</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">nginx: worker process</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">nginx.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-528"></span><span class="t">      </span><span class="t">{</span><span class="m">1388</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">postgres</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">S</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">2.6</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">2.5</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="no">Math</span><span class="t">.</span><span class="t">cos</span><span class="t">(</span><span class="t">angle</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">1.3</span><span class="t">)</span><span class="t">,</span><span class="t"> </span><span class="m">6.8</span><span class="t">,</span><span class="t"> </span><span class="m">1_980_000</span><span class="t">,</span><span class="t"> </span><span class="m">1_310_000</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">postgres: checkpointer</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">postgresql.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-529"></span><span class="t">      </span><span class="t">{</span><span class="m">1502</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">root</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">S</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">0.4</span><span class="t">,</span><span class="t"> </span><span class="m">0.6</span><span class="t">,</span><span class="t"> </span><span class="m">220_000</span><span class="t">,</span><span class="t"> </span><span class="m">118_000</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">/usr/sbin/cron -f -P</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">cron.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-530"></span><span class="t">      </span><span class="t">{</span><span class="m">1666</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">ralsina</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">S</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">0.2</span><span class="t">,</span><span class="t"> </span><span class="m">0.4</span><span class="t">,</span><span class="t"> </span><span class="m">310_000</span><span class="t">,</span><span class="t"> </span><span class="m">79_000</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">/usr/bin/fish</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-531"></span><span class="t">      </span><span class="t">{</span><span class="m">1801</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">ralsina</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">R</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">12.5</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">8.0</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="no">Math</span><span class="t">.</span><span class="t">sin</span><span class="t">(</span><span class="t">angle</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">0.9</span><span class="t">)</span><span class="t">.</span><span class="t">abs</span><span class="t">,</span><span class="t"> </span><span class="m">1.9</span><span class="t">,</span><span class="t"> </span><span class="m">2_400_000</span><span class="t">,</span><span class="t"> </span><span class="m">371_000</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">grafito</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">grafito.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-532"></span><span class="t">      </span><span class="t">{</span><span class="m">1950</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">ralsina</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">S</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">3.1</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">2.0</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="no">Math</span><span class="t">.</span><span class="t">cos</span><span class="t">(</span><span class="t">angle</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">1.7</span><span class="t">)</span><span class="t">,</span><span class="t"> </span><span class="m">4.4</span><span class="t">,</span><span class="t"> </span><span class="m">3_100_000</span><span class="t">,</span><span class="t"> </span><span class="m">856_000</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">code --open-url</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-533"></span><span class="t">    </span><span class="t">]</span><span class="t"></span>
+<span id="line-534"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-39" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-39" class="anchor">↦</a>
+        </span>
+        <p>A detail record for one of the fake pids; unknown pids read as
+&quot;process vanished&quot;, like the real reader.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-538"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fake_detail</span><span class="t">(</span><span class="t">pid</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">ProcessDetail</span><span class="t">?</span><span class="t"></span>
+<span id="line-539"></span><span class="t">    </span><span class="t">row</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fake_process_rows</span><span class="t">.</span><span class="t">find</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t"> </span><span class="t">entry</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="t">pid</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-540"></span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">row</span><span class="t"></span>
+<span id="line-541"></span><span class="t">    </span><span class="t">entry_pid</span><span class="t">,</span><span class="t"> </span><span class="t">user</span><span class="t">,</span><span class="t"> </span><span class="t">state</span><span class="t">,</span><span class="t"> </span><span class="t">_cpu</span><span class="t">,</span><span class="t"> </span><span class="t">mem_pct</span><span class="t">,</span><span class="t"> </span><span class="t">virt</span><span class="t">,</span><span class="t"> </span><span class="t">res</span><span class="t">,</span><span class="t"> </span><span class="t">command</span><span class="t">,</span><span class="t"> </span><span class="t">unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">row</span><span class="t"></span>
+<span id="line-542"></span><span class="t">    </span><span class="no">ProcessDetail</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-543"></span><span class="t">      </span><span class="t">pid</span><span class="t">:</span><span class="t"> </span><span class="t">entry_pid</span><span class="t">,</span><span class="t"></span>
+<span id="line-544"></span><span class="t">      </span><span class="t">user</span><span class="t">:</span><span class="t"> </span><span class="t">user</span><span class="t">,</span><span class="t"></span>
+<span id="line-545"></span><span class="t">      </span><span class="t">uid</span><span class="t">:</span><span class="t"> </span><span class="t">user</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">root</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">0</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">1000</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-546"></span><span class="t">      </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="t">state</span><span class="t">,</span><span class="t"></span>
+<span id="line-547"></span><span class="t">      </span><span class="t">cpu_pct</span><span class="t">:</span><span class="t"> </span><span class="m">1.2</span><span class="t">,</span><span class="t"></span>
+<span id="line-548"></span><span class="t">      </span><span class="t">mem_pct</span><span class="t">:</span><span class="t"> </span><span class="t">mem_pct</span><span class="t">,</span><span class="t"></span>
+<span id="line-549"></span><span class="t">      </span><span class="t">virt_kb</span><span class="t">:</span><span class="t"> </span><span class="t">virt</span><span class="t">,</span><span class="t"></span>
+<span id="line-550"></span><span class="t">      </span><span class="t">res_kb</span><span class="t">:</span><span class="t"> </span><span class="t">res</span><span class="t">,</span><span class="t"></span>
+<span id="line-551"></span><span class="t">      </span><span class="t">cpu_time_sec</span><span class="t">:</span><span class="t"> </span><span class="t">(</span><span class="t">entry_pid</span><span class="t"> </span><span class="o">%</span><span class="t"> </span><span class="m">97</span><span class="t">)</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="m">3.7</span><span class="t">,</span><span class="t"></span>
+<span id="line-552"></span><span class="t">      </span><span class="t">threads</span><span class="t">:</span><span class="t"> </span><span class="t">(</span><span class="t">entry_pid</span><span class="t"> </span><span class="o">%</span><span class="t"> </span><span class="m">7</span><span class="t">)</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">1</span><span class="t">,</span><span class="t"></span>
+<span id="line-553"></span><span class="t">      </span><span class="t">ppid</span><span class="t">:</span><span class="t"> </span><span class="t">entry_pid</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="m">1</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="m">1</span><span class="t">,</span><span class="t"></span>
+<span id="line-554"></span><span class="t">      </span><span class="t">started</span><span class="t">:</span><span class="t"> </span><span class="no">FAKE_BOOT</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">(</span><span class="t">entry_pid</span><span class="t"> </span><span class="o">%</span><span class="t"> </span><span class="m">50</span><span class="t">)</span><span class="t">.</span><span class="t">minutes</span><span class="t">,</span><span class="t"></span>
+<span id="line-555"></span><span class="t">      </span><span class="t">command</span><span class="t">:</span><span class="t"> </span><span class="t">command</span><span class="t">,</span><span class="t"></span>
+<span id="line-556"></span><span class="t">      </span><span class="t">unit</span><span class="t">:</span><span class="t"> </span><span class="t">unit</span><span class="t">,</span><span class="t"></span>
+<span id="line-557"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-558"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-559"></span><span class="t"></span>
+<span id="line-560"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fake_snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Snapshot</span><span class="t"></span>
+<span id="line-561"></span><span class="t">    </span><span class="t">now_sec</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="no">FAKE_BOOT</span><span class="t">)</span><span class="t">.</span><span class="t">total_seconds</span><span class="t"></span>
+<span id="line-562"></span><span class="t">    </span><span class="t">angle</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">now_sec</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">7.0</span><span class="t"></span>
+<span id="line-563"></span><span class="t">    </span><span class="t">cores</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">4</span><span class="t"></span>
+<span id="line-564"></span><span class="t"></span>
+<span id="line-565"></span><span class="t">    </span><span class="t">processes</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fake_process_rows</span><span class="t">.</span><span class="t">map</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t"></span>
+<span id="line-566"></span><span class="t">      </span><span class="t">pid</span><span class="t">,</span><span class="t"> </span><span class="t">user</span><span class="t">,</span><span class="t"> </span><span class="t">state</span><span class="t">,</span><span class="t"> </span><span class="t">cpu</span><span class="t">,</span><span class="t"> </span><span class="t">mem_pct</span><span class="t">,</span><span class="t"> </span><span class="t">virt</span><span class="t">,</span><span class="t"> </span><span class="t">res</span><span class="t">,</span><span class="t"> </span><span class="t">command</span><span class="t">,</span><span class="t"> </span><span class="t">_unit</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t"></span>
+<span id="line-567"></span><span class="t">      </span><span class="no">ProcessInfo</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-568"></span><span class="t">        </span><span class="t">pid</span><span class="t">:</span><span class="t"> </span><span class="t">pid</span><span class="t">,</span><span class="t"></span>
+<span id="line-569"></span><span class="t">        </span><span class="t">user</span><span class="t">:</span><span class="t"> </span><span class="t">user</span><span class="t">,</span><span class="t"></span>
+<span id="line-570"></span><span class="t">        </span><span class="t">cpu_pct</span><span class="t">:</span><span class="t"> </span><span class="t">cpu</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">0.0</span><span class="t">,</span><span class="t"> </span><span class="m">400.0</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-571"></span><span class="t">        </span><span class="t">mem_pct</span><span class="t">:</span><span class="t"> </span><span class="t">mem_pct</span><span class="t">,</span><span class="t"></span>
+<span id="line-572"></span><span class="t">        </span><span class="t">virt_kb</span><span class="t">:</span><span class="t"> </span><span class="t">virt</span><span class="t">,</span><span class="t"></span>
+<span id="line-573"></span><span class="t">        </span><span class="t">res_kb</span><span class="t">:</span><span class="t"> </span><span class="t">res</span><span class="t">,</span><span class="t"></span>
+<span id="line-574"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="t">state</span><span class="t">,</span><span class="t"></span>
+<span id="line-575"></span><span class="t">        </span><span class="t">cpu_time_sec</span><span class="t">:</span><span class="t"> </span><span class="t">(</span><span class="t">pid</span><span class="t"> </span><span class="o">%</span><span class="t"> </span><span class="m">97</span><span class="t">)</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="m">3.7</span><span class="t">,</span><span class="t"></span>
+<span id="line-576"></span><span class="t">        </span><span class="t">command</span><span class="t">:</span><span class="t"> </span><span class="t">command</span><span class="t">,</span><span class="t"></span>
+<span id="line-577"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-578"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-579"></span><span class="t">    </span><span class="t">processes</span><span class="t">.</span><span class="t">sort_by!</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">info</span><span class="o">|</span><span class="t"> </span><span class="o">-</span><span class="t">info</span><span class="t">.</span><span class="t">cpu_pct</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-580"></span><span class="t"></span>
+<span id="line-581"></span><span class="t">    </span><span class="t">core_pcts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="m">0</span><span class="t">...</span><span class="t">cores</span><span class="t">)</span><span class="t">.</span><span class="t">map</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">core</span><span class="o">|</span><span class="t"></span>
+<span id="line-582"></span><span class="t">      </span><span class="t">(</span><span class="m">25.0</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">20.0</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="no">Math</span><span class="t">.</span><span class="t">sin</span><span class="t">(</span><span class="t">angle</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">core</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="m">1.4</span><span class="t">)</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="m">-3.0</span><span class="t">..</span><span class="m">3.0</span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">1.0</span><span class="t">,</span><span class="t"> </span><span class="m">100.0</span><span class="t">)</span><span class="t"></span>
+<span id="line-583"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-584"></span><span class="t">    </span><span class="t">mem_used_pct</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="m">58.0</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">6.0</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="no">Math</span><span class="t">.</span><span class="t">sin</span><span class="t">(</span><span class="t">angle</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">3.0</span><span class="t">)</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="m">-1.0</span><span class="t">..</span><span class="m">1.0</span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="t">clamp</span><span class="t">(</span><span class="m">5.0</span><span class="t">,</span><span class="t"> </span><span class="m">95.0</span><span class="t">)</span><span class="t"></span>
+<span id="line-585"></span><span class="t"></span>
+<span id="line-586"></span><span class="t">    </span><span class="no">Snapshot</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-587"></span><span class="t">      </span><span class="t">timestamp</span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">local</span><span class="t">,</span><span class="t"></span>
+<span id="line-588"></span><span class="t">      </span><span class="t">cpu_count</span><span class="t">:</span><span class="t"> </span><span class="t">cores</span><span class="t">,</span><span class="t"></span>
+<span id="line-589"></span><span class="t">      </span><span class="t">core_pcts</span><span class="t">:</span><span class="t"> </span><span class="t">core_pcts</span><span class="t">,</span><span class="t"></span>
+<span id="line-590"></span><span class="t">      </span><span class="t">load1</span><span class="t">:</span><span class="t"> </span><span class="m">1.6</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">0.7</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="no">Math</span><span class="t">.</span><span class="t">sin</span><span class="t">(</span><span class="t">angle</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">2.0</span><span class="t">)</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">rand</span><span class="t">(</span><span class="m">-0.2</span><span class="t">..</span><span class="m">0.4</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-591"></span><span class="t">      </span><span class="t">mem_total_kb</span><span class="t">:</span><span class="t"> </span><span class="m">16_000_000</span><span class="t">,</span><span class="t"></span>
+<span id="line-592"></span><span class="t">      </span><span class="t">mem_used_kb</span><span class="t">:</span><span class="t"> </span><span class="t">(</span><span class="m">16_000_000</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="t">mem_used_pct</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">100</span><span class="t">)</span><span class="t">.</span><span class="t">to_i64</span><span class="t">,</span><span class="t"></span>
+<span id="line-593"></span><span class="t">      </span><span class="t">tasks_total</span><span class="t">:</span><span class="t"> </span><span class="t">processes</span><span class="t">.</span><span class="t">size</span><span class="t">,</span><span class="t"></span>
+<span id="line-594"></span><span class="t">      </span><span class="t">tasks_running</span><span class="t">:</span><span class="t"> </span><span class="t">processes</span><span class="t">.</span><span class="t">count</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">state</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="s">&quot;</span><span class="s">R</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-595"></span><span class="t">      </span><span class="t">processes</span><span class="t">:</span><span class="t"> </span><span class="t">processes</span><span class="t">,</span><span class="t"></span>
+<span id="line-596"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-597"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-598"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Apathy
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

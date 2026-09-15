@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>homepage.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;font-weight: 600;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;font-style: italic;}.nc {color: #7cafc2;}.no {color: #dc9656;}.nd {color: #dc9656;font-style: italic;}.nf {color: #7cafc2;}.nn {color: #ba8baf;font-style: italic;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.m {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.s {color: #a1b56c;}.lsi {color: #a16946;}.sr {color: #86c1b9;}.ss {color: #dc9656;}.p {color: #d8d8d8;}.tw {color: #d8d8d8;}.cm {color: #585858;font-style: italic;}.s1 {color: #a1b56c;}.lso {color: #a1b56c;}.sc {color: #a1b56c;}.sb {color: #a1b56c;}.sa {color: #dc9656;}.sd {color: #7cafc2;font-style: italic;}.se {color: #a16946;}.lnf {color: #dc9656;}.lnh {color: #dc9656;}.lni {color: #dc9656;}.lno {color: #dc9656;}.lnb {color: #dc9656;}.kr {color: #ba8baf;font-weight: 600;}.kd {color: #ba8baf;font-style: italic;}.kn {color: #ba8baf;}.kp {color: #ba8baf;font-style: italic;}.kc {color: #ab4642;}.cs {color: #a16946;font-weight: 600;}.ch {color: #585858;font-weight: 600;}.gh {color: #7cafc2;font-weight: 600;}.gu {color: #7cafc2;font-weight: 600;font-style: italic;}.gs {color: #ab4642;font-weight: 600;}.ge {color: #dc9656;font-style: italic;}.gd {color: #ab4642;}.gi {color: #a1b56c;}.gp {color: #7cafc2;}.go {color: #d8d8d8;}.gt {color: #ab4642;}.gr {color: #ab4642;}.gl {color: #d8d8d8;text-decoration: underline;}.x {color: #d8d8d8;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Apathy */
+/* Author: Jannik Siebert (https://github.com/janniks) */
+
+:root {
+    --pico-background-color: #031a16; /* Default backround */
+    --pico-color: #81b5ac; /* Default foreground */
+    --pico-text-selection-color: #184e45; /* Selection background */
+    --pico-primary: #96883e; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #184e45;
+    --pico-primary-hover: #3e7996; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-weight: 300;
+        overflow: visible;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 2.5%, #0b342d 2.5%);
+        background-size: 2000% 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #5f9c92;
+        background-color: #031a16;
+        margin-top: auto;
+    }
+    code, div.code>pre>code {
+        font-family: 'Chivo Mono', monospace !important;
+        padding: .15rem;
+        background-color: #0b342d !important;
+    }
+
+    code>span {
+        font-family: 'Chivo Mono', monospace !important;
+    }
+
+    div.doc>pre>code {
+        overflow-x: auto !important;
+    }
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_dashboard.cr.html"><span>src/compose_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_jobs.cr.html"><span>src/compose_jobs.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_status.cr.html"><span>src/compose_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_compose_data.cr.html"><span>src/fake_compose_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_homepage_data.cr.html"><span>src/fake_homepage_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/homepage.cr</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/homepage_config.cr.html"><span>src/homepage_config.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/metrics_store.cr.html"><span>src/metrics_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_dashboard.cr.html"><span>src/process_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_status.cr.html"><span>src/process_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/system_status.cr.html"><span>src/system_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/weather.cr.html"><span>src/weather.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="homepage-view" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#homepage-view" class="anchor">↦</a>
+        </span>
+        <h1>Homepage view</h1>
+<p>A launcher page for self-hosted apps, in the spirit of
+<a href="https://gethomepage.dev">gethomepage</a> but deliberately smaller: a
+list of service cards grouped by category, an optional weather
+widget (see <a href="weather.cr.html">weather.cr</a>), and optional up/down
+dots for services that opt into reachability checks.</p>
+<p>Like the dashboard and compose views, it is an HTMX fragment: the
+frontend polls <code>GET /homepage</code> every 60 seconds and swaps it into
+<code>#homepage-view</code>. The list of services comes from a YAML file (see
+<a href="homepage_config.cr.html">homepage_config.cr</a>); nothing about the
+page is stored in a database.</p>
+<p>Weather is fetched per fragment render but cached inside the
+Weather module; reachability checks are cached here for a minute,
+run concurrently, and are strictly opt-in per service.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-19"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">html_builder</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-20"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">http/client</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-21"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-22"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">mutex</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-23"></span><span class="t"></span>
+<span id="line-24"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./homepage_config</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-25"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./weather</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-26"></span><span class="t"></span>
+<span id="line-27"></span><span class="nk">module</span><span class="t"> </span><span class="no">HomepageDashboard</span><span class="t"></span>
+<span id="line-28"></span><span class="t">  </span><span class="nk">extend</span><span class="t"> </span><span class="nk">self</span><span class="t"></span>
+<span id="line-29"></span><span class="t"></span>
+<span id="line-30"></span><span class="t">  </span><span class="no">Log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="nk">for</span><span class="t">(</span><span class="nk">self</span><span class="t">)</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+        <p>How long reachability results are reused across fragment renders.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-33"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">STATUS_CACHE_TTL</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">60</span><span class="t">.</span><span class="t">seconds</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>How long a single reachability probe may take. Checked
+concurrently, so the fragment render is bounded by this, not by
+the number of services. Generous on purpose: grafito itself
+blocks its event loop while journalctl runs (it can take well
+over a second), which would make a tight timeout read as &quot;down&quot;.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-40"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">CHECK_TIMEOUT</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">2.5</span><span class="t">.</span><span class="t">seconds</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>@@status_cache slot: fetch time and the last probe results.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-43"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">@@status_mutex</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Mutex</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-44"></span><span class="t">  </span><span class="t">@@status_cache</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">{</span><span class="no">Time</span><span class="t">,</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">Bool</span><span class="t">)</span><span class="t">}</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>Renders the homepage fragment. Pure: <code>weather_snapshot</code> and
+<code>statuses</code> are provided by the caller so specs can render without
+touching the network.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-49"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">render_html</span><span class="t">(</span><span class="t"></span>
+<span id="line-50"></span><span class="t">    </span><span class="t">config</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">HomepageConfig</span><span class="no">::</span><span class="no">Config</span><span class="t">,</span><span class="t"></span>
+<span id="line-51"></span><span class="t">    </span><span class="t">weather_snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Weather</span><span class="no">::</span><span class="no">Snapshot</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"></span>
+<span id="line-52"></span><span class="t">    </span><span class="t">statuses</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">Bool</span><span class="t">)</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">{</span><span class="t">}</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="no">Bool</span><span class="t">,</span><span class="t"></span>
+<span id="line-53"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-54"></span><span class="t">    </span><span class="no">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-55"></span><span class="t">      </span><span class="t">div</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-top</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-56"></span><span class="t">        </span><span class="t">tag</span><span class="t">(</span><span class="s">&quot;</span><span class="s">h2</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-57"></span><span class="t">          </span><span class="t">text</span><span class="t"> </span><span class="t">config</span><span class="t">.</span><span class="t">title</span><span class="t"></span>
+<span id="line-58"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-59"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">weather_config</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">config</span><span class="t">.</span><span class="t">weather</span><span class="t"></span>
+<span id="line-60"></span><span class="t">          </span><span class="t">html</span><span class="t"> </span><span class="t">weather_fragment</span><span class="t">(</span><span class="t">weather_config</span><span class="t">,</span><span class="t"> </span><span class="t">weather_snapshot</span><span class="t">)</span><span class="t"></span>
+<span id="line-61"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-62"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-63"></span><span class="t"></span>
+<span id="line-64"></span><span class="t">      </span><span class="nk">unless</span><span class="t"> </span><span class="t">config</span><span class="t">.</span><span class="t">groups</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-65"></span><span class="t">        </span><span class="t">div</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-grid</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-66"></span><span class="t">          </span><span class="t">config</span><span class="t">.</span><span class="t">groups</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">group</span><span class="o">|</span><span class="t"></span>
+<span id="line-67"></span><span class="t">            </span><span class="t">html</span><span class="t"> </span><span class="t">group_fragment</span><span class="t">(</span><span class="t">group</span><span class="t">,</span><span class="t"> </span><span class="t">statuses</span><span class="t">)</span><span class="t"></span>
+<span id="line-68"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-69"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-70"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-71"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-72"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>The weather strip: current conditions, feels-like, humidity, wind
+and today's range. When the snapshot is nil (fetch failed) it says
+so quietly instead of disappearing, so the layout stays stable.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-77"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">weather_fragment</span><span class="t">(</span><span class="t">config</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">HomepageConfig</span><span class="no">::</span><span class="no">Weather</span><span class="t">,</span><span class="t"> </span><span class="t">snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Weather</span><span class="no">::</span><span class="no">Snapshot</span><span class="t">?</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-78"></span><span class="t">    </span><span class="t">imperial</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">config</span><span class="t">.</span><span class="t">imperial?</span><span class="t"></span>
+<span id="line-79"></span><span class="t">    </span><span class="no">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-80"></span><span class="t">      </span><span class="t">div</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-weather</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-81"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">snapshot</span><span class="t"></span>
+<span id="line-82"></span><span class="t">          </span><span class="t">condition</span><span class="t">,</span><span class="t"> </span><span class="t">icon</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Weather</span><span class="t">.</span><span class="t">describe</span><span class="t">(</span><span class="t">snapshot</span><span class="t">.</span><span class="t">code</span><span class="t">)</span><span class="t"></span>
+<span id="line-83"></span><span class="t">          </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">material-icons homepage-weather-icon</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">title</span><span class="t">:</span><span class="t"> </span><span class="t">condition</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-84"></span><span class="t">            </span><span class="t">text</span><span class="t"> </span><span class="t">icon</span><span class="t"></span>
+<span id="line-85"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-86"></span><span class="t">          </span><span class="t">div</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-weather-main</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-87"></span><span class="t">            </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-weather-temp</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-88"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="t">format_temperature</span><span class="t">(</span><span class="t">snapshot</span><span class="t">.</span><span class="t">temperature</span><span class="t">,</span><span class="t"> </span><span class="t">imperial</span><span class="t">)</span><span class="t"></span>
+<span id="line-89"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-90"></span><span class="t">            </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-weather-cond</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-91"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="t">condition</span><span class="t"></span>
+<span id="line-92"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-93"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-94"></span><span class="t">          </span><span class="t">div</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-weather-details</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-95"></span><span class="t">            </span><span class="nk">if</span><span class="t"> </span><span class="t">apparent</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">apparent</span><span class="t"></span>
+<span id="line-96"></span><span class="t">              </span><span class="t">div</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-97"></span><span class="t">                </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Feels like </span><span class="lsi">#{</span><span class="t">format_temperature</span><span class="t">(</span><span class="t">apparent</span><span class="t">,</span><span class="t"> </span><span class="t">imperial</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-98"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-99"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-100"></span><span class="t">            </span><span class="nk">if</span><span class="t"> </span><span class="t">humidity</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">humidity</span><span class="t"></span>
+<span id="line-101"></span><span class="t">              </span><span class="t">div</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-102"></span><span class="t">                </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Humidity </span><span class="lsi">#{</span><span class="t">humidity</span><span class="t">.</span><span class="t">round</span><span class="t">.</span><span class="t">to_i</span><span class="t"></span><span class="lsi">}</span><span class="s">%</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-103"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-104"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-105"></span><span class="t">            </span><span class="nk">if</span><span class="t"> </span><span class="t">wind</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">wind_speed</span><span class="t"></span>
+<span id="line-106"></span><span class="t">              </span><span class="t">div</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-107"></span><span class="t">                </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Wind </span><span class="lsi">#{</span><span class="t">format_wind</span><span class="t">(</span><span class="t">wind</span><span class="t">,</span><span class="t"> </span><span class="t">imperial</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-108"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-109"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-110"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-111"></span><span class="t">          </span><span class="nk">if</span><span class="t"> </span><span class="t">daily</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">today_range</span><span class="t">(</span><span class="t">snapshot</span><span class="t">,</span><span class="t"> </span><span class="t">imperial</span><span class="t">)</span><span class="t"></span>
+<span id="line-112"></span><span class="t">            </span><span class="t">div</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-weather-details</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-113"></span><span class="t">              </span><span class="t">div</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-114"></span><span class="t">                </span><span class="t">text</span><span class="t"> </span><span class="t">daily</span><span class="t"></span>
+<span id="line-115"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-116"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-117"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-118"></span><span class="t">          </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-weather-location</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-119"></span><span class="t">            </span><span class="t">text</span><span class="t"> </span><span class="t">config</span><span class="t">.</span><span class="t">location</span><span class="t"></span>
+<span id="line-120"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-121"></span><span class="t">        </span><span class="nk">else</span><span class="t"></span>
+<span id="line-122"></span><span class="t">          </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">material-icons homepage-weather-icon</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">title</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Weather unavailable</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-123"></span><span class="t">            </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">cloud_off</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-124"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-125"></span><span class="t">          </span><span class="t">div</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-weather-main</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-126"></span><span class="t">            </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-weather-cond homepage-weather-muted</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-127"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Weather unavailable</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-128"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-129"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-130"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-131"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-132"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-133"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>&quot;High 23.1° · Low 12.3°&quot; for today, or nil when the forecast data
+is missing (and nothing should be shown rather than placeholders).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-137"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">today_range</span><span class="t">(</span><span class="t">snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Weather</span><span class="no">::</span><span class="no">Snapshot</span><span class="t">,</span><span class="t"> </span><span class="t">imperial</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t"></span>
+<span id="line-138"></span><span class="t">    </span><span class="t">max</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">temp_max</span><span class="t"></span>
+<span id="line-139"></span><span class="t">    </span><span class="t">min</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">temp_min</span><span class="t"></span>
+<span id="line-140"></span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">max</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">min</span><span class="t">.</span><span class="nk">nil?</span><span class="t"></span>
+<span id="line-141"></span><span class="t">    </span><span class="s">&quot;</span><span class="s">High </span><span class="lsi">#{</span><span class="t">format_temperature</span><span class="t">(</span><span class="t">max</span><span class="t">,</span><span class="t"> </span><span class="t">imperial</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s"> · Low </span><span class="lsi">#{</span><span class="t">format_temperature</span><span class="t">(</span><span class="t">min</span><span class="t">,</span><span class="t"> </span><span class="t">imperial</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-142"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>One group card: a title and its services as launch rows.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-145"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">group_fragment</span><span class="t">(</span><span class="t"></span>
+<span id="line-146"></span><span class="t">    </span><span class="t">group</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">HomepageConfig</span><span class="no">::</span><span class="no">Group</span><span class="t">,</span><span class="t"></span>
+<span id="line-147"></span><span class="t">    </span><span class="t">statuses</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">Bool</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-148"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-149"></span><span class="t">    </span><span class="no">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-150"></span><span class="t">      </span><span class="t">div</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-group</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-151"></span><span class="t">        </span><span class="t">div</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-group-title</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-152"></span><span class="t">          </span><span class="t">text</span><span class="t"> </span><span class="t">group</span><span class="t">.</span><span class="t">name</span><span class="t"></span>
+<span id="line-153"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-154"></span><span class="t">        </span><span class="t">group</span><span class="t">.</span><span class="t">services</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">service</span><span class="o">|</span><span class="t"></span>
+<span id="line-155"></span><span class="t">          </span><span class="t">html</span><span class="t"> </span><span class="t">service_fragment</span><span class="t">(</span><span class="t">service</span><span class="t">,</span><span class="t"> </span><span class="t">statuses</span><span class="t">[</span><span class="t">service</span><span class="t">.</span><span class="t">url</span><span class="t">]</span><span class="t">?</span><span class="t">)</span><span class="t"></span>
+<span id="line-156"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-157"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-158"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-159"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>One launch row: icon, name and optional description, optionally a
+reachability dot, the whole row being the link to the app.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-163"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">service_fragment</span><span class="t">(</span><span class="t">service</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">HomepageConfig</span><span class="no">::</span><span class="no">Service</span><span class="t">,</span><span class="t"> </span><span class="t">status</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t">?</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-164"></span><span class="t">    </span><span class="no">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-165"></span><span class="t">      </span><span class="t">tag</span><span class="t">(</span><span class="s">&quot;</span><span class="s">a</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">{</span><span class="t"></span>
+<span id="line-166"></span><span class="t">        </span><span class="s">&quot;</span><span class="s">class</span><span class="s">&quot;</span><span class="s"></span><span class="t">  </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-service</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-167"></span><span class="t">        </span><span class="s">&quot;</span><span class="s">href</span><span class="s">&quot;</span><span class="s"></span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">service</span><span class="t">.</span><span class="t">url</span><span class="t">,</span><span class="t"></span>
+<span id="line-168"></span><span class="t">        </span><span class="s">&quot;</span><span class="s">title</span><span class="s">&quot;</span><span class="s"></span><span class="t">  </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">service</span><span class="t">.</span><span class="t">description</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">service</span><span class="t">.</span><span class="t">name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">service</span><span class="t">.</span><span class="t">description</span><span class="t">,</span><span class="t"></span>
+<span id="line-169"></span><span class="t">        </span><span class="s">&quot;</span><span class="s">target</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">_blank</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-170"></span><span class="t">        </span><span class="s">&quot;</span><span class="s">rel</span><span class="s">&quot;</span><span class="s"></span><span class="t">    </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">noopener noreferrer</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-171"></span><span class="t">      </span><span class="t">}</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-172"></span><span class="t">        </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-service-icon</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-173"></span><span class="t">          </span><span class="t">html</span><span class="t"> </span><span class="t">icon_fragment</span><span class="t">(</span><span class="t">service</span><span class="t">.</span><span class="t">icon</span><span class="t">)</span><span class="t"></span>
+<span id="line-174"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-175"></span><span class="t">        </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-service-text</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-176"></span><span class="t">          </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-service-name</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-177"></span><span class="t">            </span><span class="t">text</span><span class="t"> </span><span class="t">service</span><span class="t">.</span><span class="t">name</span><span class="t"></span>
+<span id="line-178"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-179"></span><span class="t">          </span><span class="nk">unless</span><span class="t"> </span><span class="t">service</span><span class="t">.</span><span class="t">description</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-180"></span><span class="t">            </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-service-desc</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-181"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="t">service</span><span class="t">.</span><span class="t">description</span><span class="t"></span>
+<span id="line-182"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-183"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-184"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-185"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">service</span><span class="t">.</span><span class="t">check?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">status</span><span class="t">.</span><span class="nk">is_a?</span><span class="t">(</span><span class="no">Bool</span><span class="t">)</span><span class="t"></span>
+<span id="line-186"></span><span class="t">          </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-dot homepage-dot-</span><span class="lsi">#{</span><span class="t">status</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">up</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">down</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-187"></span><span class="t">            </span><span class="t">title</span><span class="t">:</span><span class="t"> </span><span class="t">status</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Reachable</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Not reachable</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-188"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-189"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-190"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-191"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>Renders the configured icon: an image URL becomes an <img>, a
+non-ASCII string is an emoji, anything else is treated as a
+Material Icons ligature (falling back to a generic apps icon when
+unset). html_builder escapes both text and attributes, so even a
+nonsensical config can only produce harmless markup.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-198"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">icon_fragment</span><span class="t">(</span><span class="t">icon</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-199"></span><span class="t">    </span><span class="t">trimmed</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">icon</span><span class="t">.</span><span class="t">strip</span><span class="t"></span>
+<span id="line-200"></span><span class="t">    </span><span class="no">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-201"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">trimmed</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-202"></span><span class="t">        </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">material-icons</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">aria-hidden</span><span class="s">&quot;</span><span class="s"></span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">true</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-203"></span><span class="t">          </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">apps</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-204"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-205"></span><span class="t">      </span><span class="nk">elsif</span><span class="t"> </span><span class="t">image_url?</span><span class="t">(</span><span class="t">trimmed</span><span class="t">)</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
+        <p>Self-closing, so built as a raw string: tag() would append a
+closing </img>.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-208"><pre class="b" ><code class="b"><span class="t">        </span><span class="t">html</span><span class="t"> </span><span class="s">%(</span><span class="s">&lt;img src=&quot;</span><span class="lsi">#{</span><span class="no">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">trimmed</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot; alt=&quot;&quot; loading=&quot;lazy&quot; /&gt;</span><span class="s">)</span><span class="s"></span><span class="t"></span>
+<span id="line-209"></span><span class="t">      </span><span class="nk">elsif</span><span class="t"> </span><span class="t">trimmed</span><span class="t">.</span><span class="t">ascii_only?</span><span class="t"></span>
+<span id="line-210"></span><span class="t">        </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">material-icons</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">aria-hidden</span><span class="s">&quot;</span><span class="s"></span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">true</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-211"></span><span class="t">          </span><span class="t">text</span><span class="t"> </span><span class="t">trimmed</span><span class="t"></span>
+<span id="line-212"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-213"></span><span class="t">      </span><span class="nk">else</span><span class="t"></span>
+<span id="line-214"></span><span class="t">        </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-emoji</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">aria-hidden</span><span class="s">&quot;</span><span class="s"></span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">true</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-215"></span><span class="t">          </span><span class="t">text</span><span class="t"> </span><span class="t">trimmed</span><span class="t"></span>
+<span id="line-216"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-217"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-218"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-219"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-11" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-11" class="anchor">↦</a>
+        </span>
+        <p>True for absolute http(s) URLs, the only image sources accepted.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-222"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">image_url?</span><span class="t">(</span><span class="t">icon</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-223"></span><span class="t">    </span><span class="t">uri</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">URI</span><span class="t">.</span><span class="t">parse</span><span class="t">(</span><span class="t">icon</span><span class="t">)</span><span class="t"></span>
+<span id="line-224"></span><span class="t">    </span><span class="t">uri</span><span class="t">.</span><span class="t">host</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">http</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">https</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">uri</span><span class="t">.</span><span class="t">scheme</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="l">false</span><span class="t"></span>
+<span id="line-225"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="no">URI</span><span class="no">::</span><span class="no">Error</span><span class="t"></span>
+<span id="line-226"></span><span class="t">    </span><span class="l">false</span><span class="t"></span>
+<span id="line-227"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-12" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-12" class="anchor">↦</a>
+        </span>
+        <p>Formats a Celsius temperature, converting for imperial locales.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-230"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">format_temperature</span><span class="t">(</span><span class="t">celsius</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"> </span><span class="t">imperial</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-231"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">imperial</span><span class="t"></span>
+<span id="line-232"></span><span class="t">      </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">(</span><span class="t">celsius</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="m">9</span><span class="t"> </span><span class="o">/</span><span class="t"> </span><span class="m">5</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">32</span><span class="t">)</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="m">1</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">°F</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-233"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-234"></span><span class="t">      </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">celsius</span><span class="t">.</span><span class="t">round</span><span class="t">(</span><span class="m">1</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">°C</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-235"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-236"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-13" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-13" class="anchor">↦</a>
+        </span>
+        <p>Formats a km/h wind speed, converting for imperial locales. Wind
+is shown without decimals: it is not that precise anyway.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-240"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">format_wind</span><span class="t">(</span><span class="t">kmh</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"> </span><span class="t">imperial</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-241"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">imperial</span><span class="t"></span>
+<span id="line-242"></span><span class="t">      </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">(</span><span class="t">kmh</span><span class="t"> </span><span class="o">*</span><span class="t"> </span><span class="m">0.621371</span><span class="t">)</span><span class="t">.</span><span class="t">round</span><span class="t">.</span><span class="t">to_i</span><span class="t"></span><span class="lsi">}</span><span class="s"> mph</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-243"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-244"></span><span class="t">      </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">kmh</span><span class="t">.</span><span class="t">round</span><span class="t">.</span><span class="t">to_i</span><span class="t"></span><span class="lsi">}</span><span class="s"> km/h</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-245"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-246"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-14" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-14" class="anchor">↦</a>
+        </span>
+        <h2>Reachability checks</h2>
+<p>Probes every service marked <code>check: true</code> concurrently (one fiber
+each, bounded by CHECK_TIMEOUT) and reports whether it answered
+with anything below HTTP 500. Any response counts as &quot;up&quot;: login
+redirects, auth walls and 404s all mean the app is alive.</p>
+
+    </div>
+    <div class="code">
+
+    </div>
+</div>
+
+<div id="section-15" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-15" class="anchor">↦</a>
+        </span>
+        <p>Cached results when they are fresh enough and cover exactly the
+currently-checked URLs; a fresh probe run otherwise.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-257"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">service_statuses</span><span class="t">(</span><span class="t">services</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">HomepageConfig</span><span class="no">::</span><span class="no">Service</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">Bool</span><span class="t">)</span><span class="t"></span>
+<span id="line-258"></span><span class="t">    </span><span class="t">urls</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">services</span><span class="t">.</span><span class="nk">select</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">check?</span><span class="t">)</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">url</span><span class="t">)</span><span class="t">.</span><span class="t">uniq!</span><span class="t"></span>
+<span id="line-259"></span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="t">{</span><span class="t">}</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">urls</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-260"></span><span class="t"></span>
+<span id="line-261"></span><span class="t">    </span><span class="t">@@status_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-262"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">slot</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@@status_cache</span><span class="t"></span>
+<span id="line-263"></span><span class="t">        </span><span class="t">fetched_at</span><span class="t">,</span><span class="t"> </span><span class="t">cached</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">slot</span><span class="t"></span>
+<span id="line-264"></span><span class="t">        </span><span class="t">covers_all</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">cached</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="t">urls</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">urls</span><span class="t">.</span><span class="t">all?</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">url</span><span class="o">|</span><span class="t"> </span><span class="t">cached</span><span class="t">.</span><span class="t">has_key?</span><span class="t">(</span><span class="t">url</span><span class="t">)</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-265"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">covers_all</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">(</span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">fetched_at</span><span class="t">)</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="no">STATUS_CACHE_TTL</span><span class="t"></span>
+<span id="line-266"></span><span class="t">          </span><span class="nk">return</span><span class="t"> </span><span class="t">cached</span><span class="t"></span>
+<span id="line-267"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-268"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-269"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-270"></span><span class="t"></span>
+<span id="line-271"></span><span class="t">    </span><span class="t">statuses</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">probe_all</span><span class="t">(</span><span class="t">urls</span><span class="t">)</span><span class="t"></span>
+<span id="line-272"></span><span class="t">    </span><span class="t">@@status_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-273"></span><span class="t">      </span><span class="t">@@status_cache</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">{</span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t">,</span><span class="t"> </span><span class="t">statuses</span><span class="t">}</span><span class="t"></span>
+<span id="line-274"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-275"></span><span class="t">    </span><span class="t">statuses</span><span class="t"></span>
+<span id="line-276"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-277"></span><span class="t"></span>
+<span id="line-278"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">probe_all</span><span class="t">(</span><span class="t">urls</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">Bool</span><span class="t">)</span><span class="t"></span>
+<span id="line-279"></span><span class="t">    </span><span class="t">results</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">Bool</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-280"></span><span class="t">    </span><span class="t">channel</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Channel</span><span class="t">(</span><span class="t">{</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">Bool</span><span class="t">}</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">urls</span><span class="t">.</span><span class="t">size</span><span class="t">)</span><span class="t"></span>
+<span id="line-281"></span><span class="t">    </span><span class="t">urls</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">url</span><span class="o">|</span><span class="t"></span>
+<span id="line-282"></span><span class="t">      </span><span class="t">spawn</span><span class="t">(</span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-check</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-283"></span><span class="t">        </span><span class="t">channel</span><span class="t">.</span><span class="t">send</span><span class="t">(</span><span class="t">{</span><span class="t">url</span><span class="t">,</span><span class="t"> </span><span class="t">reachable?</span><span class="t">(</span><span class="t">url</span><span class="t">)</span><span class="t">}</span><span class="t">)</span><span class="t"></span>
+<span id="line-284"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-285"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-286"></span><span class="t">    </span><span class="t">urls</span><span class="t">.</span><span class="t">size</span><span class="t">.</span><span class="t">times</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-287"></span><span class="t">      </span><span class="t">url</span><span class="t">,</span><span class="t"> </span><span class="t">up</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">channel</span><span class="t">.</span><span class="t">receive</span><span class="t"></span>
+<span id="line-288"></span><span class="t">      </span><span class="t">results</span><span class="t">[</span><span class="t">url</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">up</span><span class="t"></span>
+<span id="line-289"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-290"></span><span class="t">    </span><span class="t">results</span><span class="t"></span>
+<span id="line-291"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-292"></span><span class="t"></span>
+<span id="line-293"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">reachable?</span><span class="t">(</span><span class="t">url</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-294"></span><span class="t">    </span><span class="t">uri</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">URI</span><span class="t">.</span><span class="t">parse</span><span class="t">(</span><span class="t">url</span><span class="t">)</span><span class="t"></span>
+<span id="line-295"></span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="l">false</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">uri</span><span class="t">.</span><span class="t">host</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">http</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">https</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">uri</span><span class="t">.</span><span class="t">scheme</span><span class="t">)</span><span class="t"></span>
+<span id="line-296"></span><span class="t">    </span><span class="t">client</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HTTP</span><span class="no">::</span><span class="no">Client</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">uri</span><span class="t">)</span><span class="t"></span>
+<span id="line-297"></span><span class="t">    </span><span class="t">client</span><span class="t">.</span><span class="t">connect_timeout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">CHECK_TIMEOUT</span><span class="t"></span>
+<span id="line-298"></span><span class="t">    </span><span class="t">client</span><span class="t">.</span><span class="t">read_timeout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">CHECK_TIMEOUT</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-16" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-16" class="anchor">↦</a>
+        </span>
+        <p>Identity encoding: only the status code matters, and Crystal's
+transparent deflate decoding chokes on some servers' zlib
+streams, which would read as &quot;down&quot;.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-302"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">headers</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HTTP</span><span class="no">::</span><span class="no">Headers</span><span class="t">{</span><span class="s">&quot;</span><span class="s">Accept-Encoding</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">identity</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t"></span>
+<span id="line-303"></span><span class="t">    </span><span class="t">response</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">client</span><span class="t">.</span><span class="t">get</span><span class="t">(</span><span class="t">uri</span><span class="t">.</span><span class="t">request_target</span><span class="t">,</span><span class="t"> </span><span class="t">headers</span><span class="t">:</span><span class="t"> </span><span class="t">headers</span><span class="t">)</span><span class="t"></span>
+<span id="line-304"></span><span class="t">    </span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="m">500</span><span class="t"></span>
+<span id="line-305"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"></span>
+<span id="line-306"></span><span class="t">    </span><span class="l">false</span><span class="t"></span>
+<span id="line-307"></span><span class="t">  </span><span class="nk">ensure</span><span class="t"></span>
+<span id="line-308"></span><span class="t">    </span><span class="t">client</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">close</span><span class="t">)</span><span class="t"></span>
+<span id="line-309"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-17" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-17" class="anchor">↦</a>
+        </span>
+        <h2>Fragments for the broken cases</h2>
+
+    </div>
+    <div class="code">
+
+    </div>
+</div>
+
+<div id="section-18" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-18" class="anchor">↦</a>
+        </span>
+        <p>Shown when there is no config file (or it is empty): the view
+teaches how to configure itself, so enabling the view is a no-op
+until it has something to show.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-316"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">setup_hint_fragment</span><span class="t">(</span><span class="t">path</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-317"></span><span class="t">    </span><span class="no">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-318"></span><span class="t">      </span><span class="t">div</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-setup</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-319"></span><span class="t">        </span><span class="t">tag</span><span class="t">(</span><span class="s">&quot;</span><span class="s">h2</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-320"></span><span class="t">          </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Homepage</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-321"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-322"></span><span class="t">        </span><span class="t">tag</span><span class="t">(</span><span class="s">&quot;</span><span class="s">p</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-323"></span><span class="t">          </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Create </span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-324"></span><span class="t">          </span><span class="t">tag</span><span class="t">(</span><span class="s">&quot;</span><span class="s">code</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="t">text</span><span class="t"> </span><span class="t">path</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-325"></span><span class="t">          </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s"> to list your self-hosted apps here. For example:</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-326"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-327"></span><span class="t">        </span><span class="t">tag</span><span class="t">(</span><span class="s">&quot;</span><span class="s">pre</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-328"></span><span class="t">          </span><span class="t">tag</span><span class="t">(</span><span class="s">&quot;</span><span class="s">code</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-329"></span><span class="t">            </span><span class="t">text</span><span class="t"> </span><span class="no">EXAMPLE_CONFIG</span><span class="t"></span>
+<span id="line-330"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-331"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-332"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-333"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-334"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-19" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-19" class="anchor">↦</a>
+        </span>
+        <p>Shown when the config file exists but cannot be parsed; the
+message is YAML's own so it points at the offending line.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-338"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">error_fragment</span><span class="t">(</span><span class="t">path</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">message</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-339"></span><span class="t">    </span><span class="no">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-340"></span><span class="t">      </span><span class="t">div</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">homepage-setup homepage-setup-error</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-341"></span><span class="t">        </span><span class="t">tag</span><span class="t">(</span><span class="s">&quot;</span><span class="s">h2</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-342"></span><span class="t">          </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Homepage</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-343"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-344"></span><span class="t">        </span><span class="t">tag</span><span class="t">(</span><span class="s">&quot;</span><span class="s">p</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-345"></span><span class="t">          </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Could not read </span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-346"></span><span class="t">          </span><span class="t">tag</span><span class="t">(</span><span class="s">&quot;</span><span class="s">code</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="t">text</span><span class="t"> </span><span class="t">path</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-347"></span><span class="t">          </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">:</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-348"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-349"></span><span class="t">        </span><span class="t">tag</span><span class="t">(</span><span class="s">&quot;</span><span class="s">pre</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-350"></span><span class="t">          </span><span class="t">text</span><span class="t"> </span><span class="t">message</span><span class="t"></span>
+<span id="line-351"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-352"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-353"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-354"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-355"></span><span class="t"></span>
+<span id="line-356"></span><span class="t">  </span><span class="no">EXAMPLE_CONFIG</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&lt;&lt;-YAML</span><span class="t"></span>
+<span id="line-357"></span><span class="s">    title: Homelab</span><span class="s"></span>
+<span id="line-358"></span><span class="s"></span>
+<span id="line-359">    weather:</span><span class="s"></span>
+<span id="line-360">      latitude: -34.9</span><span class="s"></span>
+<span id="line-361">      longitude: -56.16</span><span class="s"></span>
+<span id="line-362">      location: Montevideo</span><span class="s"></span>
+<span id="line-363"></span><span class="s"></span>
+<span id="line-364">    groups:</span><span class="s"></span>
+<span id="line-365">      - name: Media</span><span class="s"></span>
+<span id="line-366">        services:</span><span class="s"></span>
+<span id="line-367">          - name: Jellyfin</span><span class="s"></span>
+<span id="line-368">            url: https://jellyfin.example.com</span><span class="s"></span>
+<span id="line-369">            description: Movies and series</span><span class="s"></span>
+<span id="line-370">            icon: play_circle</span><span class="s"></span>
+<span id="line-371">            check: true</span><span class="s"></span>
+<span id="line-372">      - name: Utilities</span><span class="s"></span>
+<span id="line-373">        services:</span><span class="s"></span>
+<span id="line-374">          - name: Home Assistant</span><span class="s"></span>
+<span id="line-375">            url: https://ha.example.com</span><span class="s"></span>
+<span id="line-376">    YAML</span><span class="s"></span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-20" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-20" class="anchor">↦</a>
+        </span>
+        <h2>Routes</h2>
+<p>The view owns its endpoint, like every other view module. Adding
+a view means one module with a <code>register_routes</code> method, a
+require, a call from <code>Grafito.register_routes</code>, and the small
+frontend addition in index.html's VIEWS registry.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-384"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">route_path</span><span class="t">(</span><span class="t">path</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-385"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">route_path</span><span class="t">(</span><span class="t">path</span><span class="t">)</span><span class="t"></span>
+<span id="line-386"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-387"></span><span class="t"></span>
+<span id="line-388"></span><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">register_routes</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-21" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-21" class="anchor">↦</a>
+        </span>
+        <h2>The <code>/homepage</code> endpoint</h2>
+<p>Returns the homepage HTML fragment for HTMX: the weather widget
+(when configured), the service groups and their status dots.
+The frontend polls it every 60 seconds.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-394"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">get</span><span class="t"> </span><span class="t">route_path</span><span class="t">(</span><span class="s">&quot;</span><span class="s">homepage</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">env</span><span class="o">|</span><span class="t"></span>
+<span id="line-395"></span><span class="t">      </span><span class="nk">unless</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">homepage_enabled?</span><span class="t"></span>
+<span id="line-396"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">404</span><span class="t"></span>
+<span id="line-397"></span><span class="t">        </span><span class="nk">next</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Homepage view is disabled.</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-398"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-399"></span><span class="t">      </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">text/html</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-400"></span><span class="t">      </span><span class="t">render_config_fragment</span><span class="t"></span>
+<span id="line-401"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-402"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-22" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-22" class="anchor">↦</a>
+        </span>
+        <p>Loads, renders, and degrades: a missing or empty config renders
+setup instructions, a broken one renders the parser's complaint.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-406"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">render_config_fragment</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-407"></span><span class="t">    </span><span class="t">path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">homepage_config_path</span><span class="t"></span>
+<span id="line-408"></span><span class="t"></span>
+<span id="line-409"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-23" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-23" class="anchor">↦</a>
+        </span>
+        <p>The demo build has no real config file; it ships a fake
+homepage so the view shows its full shape. Weather still comes
+from the live API when the demo has internet, and the status
+dots are fixed so every state is visible.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-414"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">config</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">FakeHomepageData</span><span class="t">.</span><span class="t">config</span><span class="t"></span>
+<span id="line-415"></span><span class="t">      </span><span class="t">statuses</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">FakeHomepageData</span><span class="t">.</span><span class="t">statuses</span><span class="t"></span>
+<span id="line-416"></span><span class="t">      </span><span class="t">weather_snapshot</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">config</span><span class="t">.</span><span class="t">weather</span><span class="t">.</span><span class="t">try</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">weather_config</span><span class="o">|</span><span class="t"></span>
+<span id="line-417"></span><span class="t">        </span><span class="no">Weather</span><span class="t">.</span><span class="t">snapshot</span><span class="t">(</span><span class="t">weather_config</span><span class="t">.</span><span class="t">latitude</span><span class="t">,</span><span class="t"> </span><span class="t">weather_config</span><span class="t">.</span><span class="t">longitude</span><span class="t">)</span><span class="t"></span>
+<span id="line-418"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-419"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">render_html</span><span class="t">(</span><span class="t">config</span><span class="t">,</span><span class="t"> </span><span class="t">weather_snapshot</span><span class="t">,</span><span class="t"> </span><span class="t">statuses</span><span class="t">)</span><span class="t"></span>
+<span id="line-420"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-421"></span><span class="t"></span>
+<span id="line-422"></span><span class="t">    </span><span class="nk">unless</span><span class="t"> </span><span class="no">File</span><span class="t">.</span><span class="t">exists?</span><span class="t">(</span><span class="t">path</span><span class="t">)</span><span class="t"></span>
+<span id="line-423"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">setup_hint_fragment</span><span class="t">(</span><span class="t">path</span><span class="t">)</span><span class="t"></span>
+<span id="line-424"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-425"></span><span class="t"></span>
+<span id="line-426"></span><span class="t">    </span><span class="t">config</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HomepageConfig</span><span class="no">::</span><span class="no">Config</span><span class="t">.</span><span class="t">load</span><span class="t">(</span><span class="t">path</span><span class="t">)</span><span class="t"></span>
+<span id="line-427"></span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="t">setup_hint_fragment</span><span class="t">(</span><span class="t">path</span><span class="t">)</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">config</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-428"></span><span class="t"></span>
+<span id="line-429"></span><span class="t">    </span><span class="t">weather_snapshot</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">config</span><span class="t">.</span><span class="t">weather</span><span class="t">.</span><span class="t">try</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">weather_config</span><span class="o">|</span><span class="t"></span>
+<span id="line-430"></span><span class="t">      </span><span class="no">Weather</span><span class="t">.</span><span class="t">snapshot</span><span class="t">(</span><span class="t">weather_config</span><span class="t">.</span><span class="t">latitude</span><span class="t">,</span><span class="t"> </span><span class="t">weather_config</span><span class="t">.</span><span class="t">longitude</span><span class="t">)</span><span class="t"></span>
+<span id="line-431"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-432"></span><span class="t">    </span><span class="t">statuses</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">service_statuses</span><span class="t">(</span><span class="t">config</span><span class="t">.</span><span class="t">groups</span><span class="t">.</span><span class="t">flat_map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">services</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-433"></span><span class="t">    </span><span class="t">render_html</span><span class="t">(</span><span class="t">config</span><span class="t">,</span><span class="t"> </span><span class="t">weather_snapshot</span><span class="t">,</span><span class="t"> </span><span class="t">statuses</span><span class="t">)</span><span class="t"></span>
+<span id="line-434"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-24" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-24" class="anchor">↦</a>
+        </span>
+        <p>Body locals are nilable in rescue, so the path is read again.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-436"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">message</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">ex</span><span class="t">.</span><span class="nk">class</span><span class="t">.</span><span class="t">name</span><span class="t"></span>
+<span id="line-437"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Homepage fragment failed: </span><span class="lsi">#{</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-438"></span><span class="t">    </span><span class="t">error_fragment</span><span class="t">(</span><span class="no">Grafito</span><span class="t">.</span><span class="t">homepage_config_path</span><span class="t">,</span><span class="t"> </span><span class="t">message</span><span class="t">)</span><span class="t"></span>
+<span id="line-439"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-440"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Apathy
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>shard.yml</title>
+    <title>fake_homepage_data.cr</title>
     <!-- Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -159,7 +159,7 @@
 
             <li>
 
-                <span>shard.yml</span>
+                <a href="shard.yml.html"><span>shard.yml</span></a>
 
             </li>
 
@@ -195,7 +195,7 @@
 
             <li>
 
-                <a href="src/fake_homepage_data.cr.html"><span>src/fake_homepage_data.cr</span></a>
+                <span>src/fake_homepage_data.cr</span>
 
             </li>
 
@@ -285,23 +285,75 @@
 
 </div>
 
-<div id="section-0" class="grid">
+<div id="fake-homepage-data" class="grid">
     <div class="doc">
         <span class="anchor">
-            <a href="#section-0" class="anchor">↦</a>
+            <a href="#fake-homepage-data" class="anchor">↦</a>
         </span>
+        <h1>Fake homepage data</h1>
+<p>A deterministic homepage config for demo builds (<code>-Dfake_journal</code>),
+the same idea as the fake journal, systemd and compose data: the
+page shows its full shape — several groups, every icon style, a
+weather widget — without a config file on disk.</p>
+<p>Status dots are fixed by URL so the demo always shows a mix of up
+and down services without probing anything over the network; the
+weather widget calls the live Open-Meteo API and quietly shows its
+&quot;unavailable&quot; state when offline.</p>
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="nt">name</span><span class="p">:</span><span class="tw"> </span><span class="l">grafito</span><span class="tw"></span>
-<span id="line-2"></span><span class="tw"></span><span class="nt">version</span><span class="p">:</span><span class="tw"> </span><span class="m">1.1</span><span class="m">.1</span><span class="tw"></span>
-<span id="line-3"></span><span class="tw"></span>
-<span id="line-4"></span><span class="tw"></span><span class="nt">authors</span><span class="p">:</span><span class="tw"></span>
-<span id="line-5"></span><span class="tw"></span><span class="tw">  </span><span class="t">- </span><span class="l">Roberto Alsina &lt;roberto.alsina@gmail.com&gt;</span><span class="tw"></span>
-<span id="line-6"></span><span class="tw"></span>
-<span id="line-7"></span><span class="tw"></span><span class="nt">targets</span><span class="p">:</span><span class="tw"></span>
-<span id="line-8"></span><span class="tw"></span><span class="tw">  </span><span class="nt">grafito</span><span class="p">:</span><span class="tw"></span>
-<span id="line-9"></span><span class="tw"></span><span class="tw">    </span><span class="nt">main</span><span class="p">:</span><span class="tw"> </span><span class="l">src/main.cr</span></code></pre></span>
+        <span id="line-13"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./homepage_config</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-14"></span><span class="t"></span>
+<span id="line-15"></span><span class="nk">module</span><span class="t"> </span><span class="no">FakeHomepageData</span><span class="t"></span>
+<span id="line-16"></span><span class="t">  </span><span class="no">CONFIG_YAML</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&lt;&lt;-YAML</span><span class="t"></span>
+<span id="line-17"></span><span class="s">    title: Demo Homelab</span><span class="s"></span>
+<span id="line-18"></span><span class="s"></span>
+<span id="line-19">    weather:</span><span class="s"></span>
+<span id="line-20">      latitude: -34.9</span><span class="s"></span>
+<span id="line-21">      longitude: -56.16</span><span class="s"></span>
+<span id="line-22">      location: Montevideo</span><span class="s"></span>
+<span id="line-23"></span><span class="s"></span>
+<span id="line-24">    groups:</span><span class="s"></span>
+<span id="line-25">      - name: Media</span><span class="s"></span>
+<span id="line-26">        services:</span><span class="s"></span>
+<span id="line-27">          - name: Jellyfin</span><span class="s"></span>
+<span id="line-28">            url: https://jellyfin.demo.ralsina.me</span><span class="s"></span>
+<span id="line-29">            description: Movies and series</span><span class="s"></span>
+<span id="line-30">            icon: play_circle</span><span class="s"></span>
+<span id="line-31">            check: true</span><span class="s"></span>
+<span id="line-32">          - name: Navidrome</span><span class="s"></span>
+<span id="line-33">            url: https://music.demo.ralsina.me</span><span class="s"></span>
+<span id="line-34">            description: Music streaming</span><span class="s"></span>
+<span id="line-35">            icon: library_music</span><span class="s"></span>
+<span id="line-36">            check: true</span><span class="s"></span>
+<span id="line-37">      - name: Productivity</span><span class="s"></span>
+<span id="line-38">        services:</span><span class="s"></span>
+<span id="line-39">          - name: Nextcloud</span><span class="s"></span>
+<span id="line-40">            url: https://cloud.demo.ralsina.me</span><span class="s"></span>
+<span id="line-41">            description: Files, calendar and contacts</span><span class="s"></span>
+<span id="line-42">            icon: cloud</span><span class="s"></span>
+<span id="line-43">            check: true</span><span class="s"></span>
+<span id="line-44">          - name: Vaultwarden</span><span class="s"></span>
+<span id="line-45">            url: https://vault.demo.ralsina.me</span><span class="s"></span>
+<span id="line-46">            description: Password manager</span><span class="s"></span>
+<span id="line-47">            icon: 🔐</span><span class="s"></span>
+<span id="line-48">      - name: Automation</span><span class="s"></span>
+<span id="line-49">        services:</span><span class="s"></span>
+<span id="line-50">          - name: Home Assistant</span><span class="s"></span>
+<span id="line-51">            url: https://ha.demo.ralsina.me</span><span class="s"></span>
+<span id="line-52">            description: House controls</span><span class="s"></span>
+<span id="line-53">            icon: home</span><span class="s"></span>
+<span id="line-54">            check: true</span><span class="s"></span>
+<span id="line-55">          - name: Gitea</span><span class="s"></span>
+<span id="line-56">            url: https://git.demo.ralsina.me</span><span class="s"></span>
+<span id="line-57">            description: Code hosting</span><span class="s"></span>
+<span id="line-58">            icon: https://raw.githubusercontent.com/go-gitea/gitea/main/assets/logo.svg</span><span class="s"></span>
+<span id="line-59">            check: true</span><span class="s"></span>
+<span id="line-60">    YAML</span><span class="s"></span><span class="t"></span>
+<span id="line-61"></span><span class="t"></span>
+<span id="line-62"></span><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">config</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">HomepageConfig</span><span class="no">::</span><span class="no">Config</span><span class="t"></span>
+<span id="line-63"></span><span class="t">    </span><span class="no">HomepageConfig</span><span class="no">::</span><span class="no">Config</span><span class="t">.</span><span class="t">from_yaml</span><span class="t">(</span><span class="no">CONFIG_YAML</span><span class="t">)</span><span class="t"></span>
+<span id="line-64"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -310,71 +362,17 @@
         <span class="anchor">
             <a href="#section-1" class="anchor">↦</a>
         </span>
-        <p>Trying to keep dependencies to a minimum.</p>
-<ul>
-<li><code>kemal</code> and <code>kemal-basic-auth</code> to make this a web app</li>
-<li><code>docopt</code> because I like it and it's small</li>
-<li><code>baked-file-system</code> because it <em>must</em> be a single binary</li>
-<li><code>html_builder</code> because generating complex HTML tables without it
-makes for horrible-looking code</li>
-</ul>
+        <p>One unreachable service (the music one) so the down state is
+visible; everything else reports up.</p>
 
     </div>
     <div class="code">
-        <span id="line-19"><pre class="b" ><code class="b"><span class="nt">dependencies</span><span class="p">:</span><span class="tw"></span>
-<span id="line-20"></span><span class="tw"></span><span class="tw">  </span><span class="nt">baked_file_system</span><span class="p">:</span><span class="tw"></span>
-<span id="line-21"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/baked_file_system</span><span class="tw"></span>
-<span id="line-22"></span><span class="tw">    </span><span class="nt">branch</span><span class="p">:</span><span class="tw"> </span><span class="l">master</span><span class="tw"></span>
-<span id="line-23"></span><span class="tw">  </span><span class="nt">docopt</span><span class="p">:</span><span class="tw"></span>
-<span id="line-24"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/docopt.cr</span><span class="tw"></span>
-<span id="line-25"></span><span class="tw">  </span><span class="nt">docopt-config</span><span class="p">:</span><span class="tw"></span>
-<span id="line-26"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/docopt-config</span><span class="tw"></span>
-<span id="line-27"></span><span class="tw">  </span><span class="nt">html_builder</span><span class="p">:</span><span class="tw"></span>
-<span id="line-28"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">crystal-lang/html_builder</span><span class="tw"></span>
-<span id="line-29"></span><span class="tw">  </span><span class="nt">kemal</span><span class="p">:</span><span class="tw"></span>
-<span id="line-30"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">kemalcr/kemal</span><span class="tw"></span>
-<span id="line-31"></span><span class="tw">  </span><span class="nt">kemal-basic-auth</span><span class="p">:</span><span class="tw"></span>
-<span id="line-32"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">kemalcr/kemal-basic-auth</span><span class="tw"></span>
-<span id="line-33"></span><span class="tw">  </span><span class="nt">baked_file_handler</span><span class="p">:</span><span class="tw"></span>
-<span id="line-34"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/baked_file_handler</span></code></pre></span>
-    </div>
-</div>
-
-<div id="section-2" class="grid">
-    <div class="doc">
-        <span class="anchor">
-            <a href="#section-2" class="anchor">↦</a>
-        </span>
-        <p>Anthropic/Claude AI provider</p>
-
-    </div>
-    <div class="code">
-        <span id="line-36"><pre class="b" ><code class="b"><span class="tw">  </span><span class="nt">anthropic</span><span class="p">:</span><span class="tw"></span>
-<span id="line-37"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">jgaskins/anthropic</span></code></pre></span>
-    </div>
-</div>
-
-<div id="section-3" class="grid">
-    <div class="doc">
-        <span class="anchor">
-            <a href="#section-3" class="anchor">↦</a>
-        </span>
-        <p>Faker is used for the demo version which displays
-fake data.</p>
-
-    </div>
-    <div class="code">
-        <span id="line-41"><pre class="b" ><code class="b"><span class="nt">development_dependencies</span><span class="p">:</span><span class="tw"></span>
-<span id="line-42"></span><span class="tw"></span><span class="tw">  </span><span class="nt">ameba</span><span class="p">:</span><span class="tw"></span>
-<span id="line-43"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">crystal-ameba/ameba</span><span class="tw"></span>
-<span id="line-44"></span><span class="tw">  </span><span class="nt">faker</span><span class="p">:</span><span class="tw"></span>
-<span id="line-45"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">askn/faker</span><span class="tw"></span>
-<span id="line-46"></span><span class="tw">  </span><span class="nt">webmock</span><span class="p">:</span><span class="tw"></span>
-<span id="line-47"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">manastech/webmock.cr</span><span class="tw"></span>
-<span id="line-48"></span><span class="tw"></span>
-<span id="line-49"></span><span class="tw"></span><span class="nt">crystal</span><span class="p">:</span><span class="tw"> </span><span class="s2">&quot;&gt;=1.16.0&quot;</span><span class="tw"></span>
-<span id="line-50"></span><span class="tw"></span>
-<span id="line-51"></span><span class="tw"></span><span class="nt">license</span><span class="p">:</span><span class="tw"> </span><span class="l">MIT</span></code></pre></span>
+        <span id="line-68"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">statuses</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">Bool</span><span class="t">)</span><span class="t"></span>
+<span id="line-69"></span><span class="t">    </span><span class="t">config</span><span class="t">.</span><span class="t">groups</span><span class="t">.</span><span class="t">flat_map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">services</span><span class="t">)</span><span class="t">.</span><span class="nk">select</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">check?</span><span class="t">)</span><span class="t">.</span><span class="t">to_h</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">service</span><span class="o">|</span><span class="t"></span>
+<span id="line-70"></span><span class="t">      </span><span class="t">{</span><span class="t">service</span><span class="t">.</span><span class="t">url</span><span class="t">,</span><span class="t"> </span><span class="t">service</span><span class="t">.</span><span class="t">name</span><span class="t"> </span><span class="o">!=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Navidrome</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t"></span>
+<span id="line-71"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-72"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-73"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 

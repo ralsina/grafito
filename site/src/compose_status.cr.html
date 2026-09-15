@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>compose_status.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;font-weight: 600;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;font-style: italic;}.nc {color: #7cafc2;}.no {color: #dc9656;}.nd {color: #dc9656;font-style: italic;}.nf {color: #7cafc2;}.nn {color: #ba8baf;font-style: italic;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.m {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.s {color: #a1b56c;}.lsi {color: #a16946;}.sr {color: #86c1b9;}.ss {color: #dc9656;}.p {color: #d8d8d8;}.tw {color: #d8d8d8;}.cm {color: #585858;font-style: italic;}.s1 {color: #a1b56c;}.lso {color: #a1b56c;}.sc {color: #a1b56c;}.sb {color: #a1b56c;}.sa {color: #dc9656;}.sd {color: #7cafc2;font-style: italic;}.se {color: #a16946;}.lnf {color: #dc9656;}.lnh {color: #dc9656;}.lni {color: #dc9656;}.lno {color: #dc9656;}.lnb {color: #dc9656;}.kr {color: #ba8baf;font-weight: 600;}.kd {color: #ba8baf;font-style: italic;}.kn {color: #ba8baf;}.kp {color: #ba8baf;font-style: italic;}.kc {color: #ab4642;}.cs {color: #a16946;font-weight: 600;}.ch {color: #585858;font-weight: 600;}.gh {color: #7cafc2;font-weight: 600;}.gu {color: #7cafc2;font-weight: 600;font-style: italic;}.gs {color: #ab4642;font-weight: 600;}.ge {color: #dc9656;font-style: italic;}.gd {color: #ab4642;}.gi {color: #a1b56c;}.gp {color: #7cafc2;}.go {color: #d8d8d8;}.gt {color: #ab4642;}.gr {color: #ab4642;}.gl {color: #d8d8d8;text-decoration: underline;}.x {color: #d8d8d8;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Apathy */
+/* Author: Jannik Siebert (https://github.com/janniks) */
+
+:root {
+    --pico-background-color: #031a16; /* Default backround */
+    --pico-color: #81b5ac; /* Default foreground */
+    --pico-text-selection-color: #184e45; /* Selection background */
+    --pico-primary: #96883e; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #184e45;
+    --pico-primary-hover: #3e7996; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-weight: 300;
+        overflow: visible;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 2.5%, #0b342d 2.5%);
+        background-size: 2000% 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #5f9c92;
+        background-color: #031a16;
+        margin-top: auto;
+    }
+    code, div.code>pre>code {
+        font-family: 'Chivo Mono', monospace !important;
+        padding: .15rem;
+        background-color: #0b342d !important;
+    }
+
+    code>span {
+        font-family: 'Chivo Mono', monospace !important;
+    }
+
+    div.doc>pre>code {
+        overflow-x: auto !important;
+    }
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_dashboard.cr.html"><span>src/compose_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_jobs.cr.html"><span>src/compose_jobs.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/compose_status.cr</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_compose_data.cr.html"><span>src/fake_compose_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_homepage_data.cr.html"><span>src/fake_homepage_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/homepage.cr.html"><span>src/homepage.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/homepage_config.cr.html"><span>src/homepage_config.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/metrics_store.cr.html"><span>src/metrics_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_dashboard.cr.html"><span>src/process_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_status.cr.html"><span>src/process_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/system_status.cr.html"><span>src/system_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/weather.cr.html"><span>src/weather.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="compose-status" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#compose-status" class="anchor">↦</a>
+        </span>
+        <h1>Compose status</h1>
+<p>The compose view needs a snapshot of the Docker Compose stacks running
+on this machine: which stacks exist, which services are up, their
+health, and enough information (config file paths, container names) to
+operate on them. This module gathers that by shelling out to the
+<code>docker</code> CLI, the same way <a href="system_status.cr.html">system_status.cr</a>
+shells out to <code>systemctl</code>.</p>
+<p>Two calls per refresh, no docker API client:</p>
+<ul>
+<li><code>docker compose ls --all --format json</code> gives the stack list with
+the compose file paths, which stack actions need (so commands don't
+depend on the working directory).</li>
+<li><code>docker ps -a --format '{{json .}}'</code> gives every container with its
+Compose labels (<code>com.docker.compose.project</code>,
+<code>com.docker.compose.service</code>), state, health and ports.</li>
+</ul>
+<p>Containers whose project is missing from <code>compose ls</code> (config files
+moved or deleted) still show up, with no config files and therefore no
+stack-level actions.</p>
+<p>When compiled with <code>-Dfake_journal</code> (the demo build) it returns a
+small deterministic snapshot instead, so the compose view works
+without Docker.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-27"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">json</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-28"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-29"></span><span class="t"></span>
+<span id="line-30"></span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-31"></span><span class="t">  </span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./fake_compose_data</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-32"></span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-33"></span><span class="t"></span>
+<span id="line-34"></span><span class="nk">module</span><span class="t"> </span><span class="no">ComposeStatus</span><span class="t"></span>
+<span id="line-35"></span><span class="t">  </span><span class="no">Log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="nk">for</span><span class="t">(</span><span class="nk">self</span><span class="t">)</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+        <p>One container of a compose stack, as shown in the service table.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-38"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="no">Service</span><span class="t"></span>
+<span id="line-39"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-40"></span><span class="t"></span>
+<span id="line-41"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">stack</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-42"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">service</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-43"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">container</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-44"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-45"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">health</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-46"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">image</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-47"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">ports</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-48"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">status_text</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-49"></span><span class="t"></span>
+<span id="line-50"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">initialize</span><span class="t">(</span><span class="t"></span>
+<span id="line-51"></span><span class="t">      </span><span class="t">@stack</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">@service</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">@container</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-52"></span><span class="t">      </span><span class="t">@state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">@health</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">@image</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-53"></span><span class="t">      </span><span class="t">@ports</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">@status_text</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-54"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-55"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-56"></span><span class="t"></span>
+<span id="line-57"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">running?</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-58"></span><span class="t">      </span><span class="t">state</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-59"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>Docker reports an empty health for containers without a
+healthcheck; those are neither healthy nor unhealthy.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-63"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">unhealthy?</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-64"></span><span class="t">      </span><span class="t">health</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">unhealthy</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-65"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-66"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>A compose stack: the <code>compose ls</code> metadata plus its containers.
+<code>config_files</code> may be empty when the containers exist but the
+compose files are gone; stack-level actions are impossible then.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-71"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="no">Stack</span><span class="t"></span>
+<span id="line-72"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-73"></span><span class="t"></span>
+<span id="line-74"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-75"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">status</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-76"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">config_files</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t"></span>
+<span id="line-77"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">services</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Service</span><span class="t">)</span><span class="t"></span>
+<span id="line-78"></span><span class="t"></span>
+<span id="line-79"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">initialize</span><span class="t">(</span><span class="t"></span>
+<span id="line-80"></span><span class="t">      </span><span class="t">@name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">@status</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-81"></span><span class="t">      </span><span class="t">@config_files</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">,</span><span class="t"> </span><span class="t">@services</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Service</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-82"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-83"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-84"></span><span class="t"></span>
+<span id="line-85"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">running_count</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"></span>
+<span id="line-86"></span><span class="t">      </span><span class="t">services</span><span class="t">.</span><span class="t">count</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">running?</span><span class="t">)</span><span class="t"></span>
+<span id="line-87"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-88"></span><span class="t"></span>
+<span id="line-89"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">unhealthy_count</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"></span>
+<span id="line-90"></span><span class="t">      </span><span class="t">services</span><span class="t">.</span><span class="t">count</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">unhealthy?</span><span class="t">)</span><span class="t"></span>
+<span id="line-91"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>True when the stack's compose files are known, so <code>up -d</code>-style
+actions (which need -f) are possible.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-95"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">actionable?</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-96"></span><span class="t">      </span><span class="o">!</span><span class="t">config_files</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-97"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-98"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>The raw fields of one line of <code>docker ps --format '{{json .}}'</code> that
+we care about. JSON::Serializable ignores unknown keys, so the rest
+of docker's output is simply not mapped. Fields vary by CLI version:
+Labels may be a JSON object, a comma-joined &quot;k=v&quot; string, or null;
+Ports may be a string or null. So Labels is kept raw and normalized
+by labels_or_empty, and Ports is nilable.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-106"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="no">RawContainer</span><span class="t"></span>
+<span id="line-107"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-108"></span><span class="t"></span>
+<span id="line-109"></span><span class="t">    </span><span class="t">@[</span><span class="no">JSON</span><span class="no">::</span><span class="no">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Names</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">]</span><span class="t"></span>
+<span id="line-110"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">names</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-111"></span><span class="t"></span>
+<span id="line-112"></span><span class="t">    </span><span class="t">@[</span><span class="no">JSON</span><span class="no">::</span><span class="no">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Image</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">]</span><span class="t"></span>
+<span id="line-113"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">image</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-114"></span><span class="t"></span>
+<span id="line-115"></span><span class="t">    </span><span class="t">@[</span><span class="no">JSON</span><span class="no">::</span><span class="no">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">State</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">]</span><span class="t"></span>
+<span id="line-116"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-117"></span><span class="t"></span>
+<span id="line-118"></span><span class="t">    </span><span class="t">@[</span><span class="no">JSON</span><span class="no">::</span><span class="no">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Status</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">]</span><span class="t"></span>
+<span id="line-119"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">status</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-120"></span><span class="t"></span>
+<span id="line-121"></span><span class="t">    </span><span class="t">@[</span><span class="no">JSON</span><span class="no">::</span><span class="no">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Ports</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">]</span><span class="t"></span>
+<span id="line-122"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">ports</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t"></span>
+<span id="line-123"></span><span class="t"></span>
+<span id="line-124"></span><span class="t">    </span><span class="t">@[</span><span class="no">JSON</span><span class="no">::</span><span class="no">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Labels</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">]</span><span class="t"></span>
+<span id="line-125"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">labels</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Any</span><span class="t">?</span><span class="t"></span>
+<span id="line-126"></span><span class="t"></span>
+<span id="line-127"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">ports_or_empty</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-128"></span><span class="t">      </span><span class="t">ports</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-129"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>Normalizes the Labels field to a plain hash, whatever shape the
+docker CLI chose to emit.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-133"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">labels_or_empty</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"></span>
+<span id="line-134"></span><span class="t">      </span><span class="t">result</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-135"></span><span class="t">      </span><span class="t">raw</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">labels</span><span class="t"></span>
+<span id="line-136"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">result</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">raw</span><span class="t">.</span><span class="nk">nil?</span><span class="t"></span>
+<span id="line-137"></span><span class="t">      </span><span class="nk">case</span><span class="t"> </span><span class="t">raw</span><span class="t">.</span><span class="t">raw</span><span class="t"></span>
+<span id="line-138"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="no">Hash</span><span class="t"></span>
+<span id="line-139"></span><span class="t">        </span><span class="t">raw</span><span class="t">.</span><span class="t">as_h</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">key</span><span class="t">,</span><span class="t"> </span><span class="t">value</span><span class="o">|</span><span class="t"></span>
+<span id="line-140"></span><span class="t">          </span><span class="t">result</span><span class="t">[</span><span class="t">key</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">value</span><span class="t">.</span><span class="t">as_s?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">value</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-141"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-142"></span><span class="t">      </span><span class="nk">when</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-143"></span><span class="t">        </span><span class="t">raw</span><span class="t">.</span><span class="t">as_s</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="sc">&#39;,&#39;</span><span class="t">)</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">pair</span><span class="o">|</span><span class="t"></span>
+<span id="line-144"></span><span class="t">          </span><span class="t">key</span><span class="t">,</span><span class="t"> </span><span class="t">_</span><span class="t">,</span><span class="t"> </span><span class="t">value</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">pair</span><span class="t">.</span><span class="t">partition</span><span class="t">(</span><span class="s">&quot;</span><span class="s">=</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-145"></span><span class="t">          </span><span class="t">result</span><span class="t">[</span><span class="t">key</span><span class="t">.</span><span class="t">strip</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">value</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">key</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-146"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-147"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-148"></span><span class="t">      </span><span class="t">result</span><span class="t"></span>
+<span id="line-149"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-150"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>The raw fields of one entry of <code>docker compose ls --format json</code>,
+mapped the same way as RawContainer.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-154"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="no">RawStack</span><span class="t"></span>
+<span id="line-155"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-156"></span><span class="t"></span>
+<span id="line-157"></span><span class="t">    </span><span class="t">@[</span><span class="no">JSON</span><span class="no">::</span><span class="no">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Name</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">]</span><span class="t"></span>
+<span id="line-158"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-159"></span><span class="t"></span>
+<span id="line-160"></span><span class="t">    </span><span class="t">@[</span><span class="no">JSON</span><span class="no">::</span><span class="no">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Status</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">]</span><span class="t"></span>
+<span id="line-161"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">status</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-162"></span><span class="t"></span>
+<span id="line-163"></span><span class="t">    </span><span class="t">@[</span><span class="no">JSON</span><span class="no">::</span><span class="no">Field</span><span class="t">(</span><span class="t">key</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">ConfigFiles</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">]</span><span class="t"></span>
+<span id="line-164"></span><span class="t">    </span><span class="t">getter</span><span class="t"> </span><span class="t">config_files</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-165"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>Returns the current snapshot of stacks and their services. On the
+demo build this is fake data; otherwise it queries docker.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-169"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">stacks</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Stack</span><span class="t">)</span><span class="t"></span>
+<span id="line-170"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-171"></span><span class="t">      </span><span class="no">FakeComposeData</span><span class="t">.</span><span class="t">stacks</span><span class="t"></span>
+<span id="line-172"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">else</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-173"></span><span class="t">      </span><span class="t">real_stacks</span><span class="t"></span>
+<span id="line-174"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-175"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>Finds one stack by name, used by the detail/action endpoints to
+validate that a stack name comes from the live snapshot.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-179"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">find_stack</span><span class="t">(</span><span class="t">name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Stack</span><span class="t">?</span><span class="t"></span>
+<span id="line-180"></span><span class="t">    </span><span class="t">stacks</span><span class="t">.</span><span class="t">find</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">name</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-181"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
+        <p>Finds one service of one stack, used by the service detail/action
+endpoints for the same whitelist purpose.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-185"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">find_service</span><span class="t">(</span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">service_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Service</span><span class="t">?</span><span class="t"></span>
+<span id="line-186"></span><span class="t">    </span><span class="t">find_stack</span><span class="t">(</span><span class="t">stack_name</span><span class="t">)</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">services</span><span class="t">.</span><span class="t">find</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">service</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">service_name</span><span class="t">)</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-187"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-188"></span><span class="t"></span>
+<span id="line-189"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">real_stacks</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Stack</span><span class="t">)</span><span class="t"></span>
+<span id="line-190"></span><span class="t">    </span><span class="t">ls_output</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">run_docker</span><span class="t">(</span><span class="t">[</span><span class="s">&quot;</span><span class="s">compose</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">ls</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">--all</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">--format</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">json</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">)</span><span class="t"></span>
+<span id="line-191"></span><span class="t">    </span><span class="t">ps_output</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">run_docker</span><span class="t">(</span><span class="t">[</span><span class="s">&quot;</span><span class="s">ps</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">-a</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">--format</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">{{json .}}</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">)</span><span class="t"></span>
+<span id="line-192"></span><span class="t"></span>
+<span id="line-193"></span><span class="t">    </span><span class="t">stack_meta</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parse_stack_meta</span><span class="t">(</span><span class="t">ls_output</span><span class="t">)</span><span class="t"></span>
+<span id="line-194"></span><span class="t">    </span><span class="t">containers</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parse_containers</span><span class="t">(</span><span class="t">ps_output</span><span class="t">)</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-11" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-11" class="anchor">↦</a>
+        </span>
+        <p>Group containers by their compose project label.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-197"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">by_project</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Hash</span><span class="t">(</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Service</span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-198"></span><span class="t">    </span><span class="t">containers</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">container</span><span class="o">|</span><span class="t"></span>
+<span id="line-199"></span><span class="t">      </span><span class="t">labels</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">container</span><span class="t">.</span><span class="t">labels_or_empty</span><span class="t"></span>
+<span id="line-200"></span><span class="t">      </span><span class="t">project</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">labels</span><span class="t">[</span><span class="s">&quot;</span><span class="s">com.docker.compose.project</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-201"></span><span class="t">      </span><span class="t">service</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">labels</span><span class="t">[</span><span class="s">&quot;</span><span class="s">com.docker.compose.service</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-202"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">project</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">service</span><span class="t"></span>
+<span id="line-203"></span><span class="t">      </span><span class="t">by_project</span><span class="t">[</span><span class="t">project</span><span class="t">]</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Service</span><span class="t"></span>
+<span id="line-204"></span><span class="t">      </span><span class="t">by_project</span><span class="t">[</span><span class="t">project</span><span class="t">]</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-205"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="t">project</span><span class="t">,</span><span class="t"></span>
+<span id="line-206"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="t">service</span><span class="t">,</span><span class="t"></span>
+<span id="line-207"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="t">container</span><span class="t">.</span><span class="t">names</span><span class="t">,</span><span class="t"></span>
+<span id="line-208"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="t">container</span><span class="t">.</span><span class="t">state</span><span class="t">,</span><span class="t"></span>
+<span id="line-209"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="t">health_of</span><span class="t">(</span><span class="t">container</span><span class="t">.</span><span class="t">status</span><span class="t">,</span><span class="t"> </span><span class="t">container</span><span class="t">.</span><span class="t">state</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-210"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="t">container</span><span class="t">.</span><span class="t">image</span><span class="t">,</span><span class="t"></span>
+<span id="line-211"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="t">container</span><span class="t">.</span><span class="t">ports_or_empty</span><span class="t">,</span><span class="t"></span>
+<span id="line-212"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="t">container</span><span class="t">.</span><span class="t">status</span><span class="t">,</span><span class="t"></span>
+<span id="line-213"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-214"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-12" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-12" class="anchor">↦</a>
+        </span>
+        <p>Stacks known to <code>compose ls</code> first (with config files), then any
+container-only projects (config files unknown), sorted by name.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-218"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">result</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Stack</span><span class="t"></span>
+<span id="line-219"></span><span class="t">    </span><span class="t">stack_meta</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">meta</span><span class="o">|</span><span class="t"></span>
+<span id="line-220"></span><span class="t">      </span><span class="t">result</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="no">Stack</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-221"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="t">meta</span><span class="t">[</span><span class="s">&quot;</span><span class="s">name</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-222"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="t">meta</span><span class="t">[</span><span class="s">&quot;</span><span class="s">status</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-223"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="t">meta</span><span class="t">[</span><span class="s">&quot;</span><span class="s">config_files</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-224"></span><span class="t">        </span><span class="t">services</span><span class="t">:</span><span class="t"> </span><span class="t">(</span><span class="t">by_project</span><span class="t">[</span><span class="t">meta</span><span class="t">[</span><span class="s">&quot;</span><span class="s">name</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">]</span><span class="t">?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Service</span><span class="t">)</span><span class="t">.</span><span class="t">sort_by</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">service</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-225"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-226"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-227"></span><span class="t">    </span><span class="t">(</span><span class="t">by_project</span><span class="t">.</span><span class="t">keys</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">stack_meta</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">[</span><span class="s">&quot;</span><span class="s">name</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="t">sort</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">orphan</span><span class="o">|</span><span class="t"></span>
+<span id="line-228"></span><span class="t">      </span><span class="t">result</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="no">Stack</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-229"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="t">orphan</span><span class="t">,</span><span class="t"></span>
+<span id="line-230"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-231"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-232"></span><span class="t">        </span><span class="t">services</span><span class="t">:</span><span class="t"> </span><span class="t">by_project</span><span class="t">[</span><span class="t">orphan</span><span class="t">]</span><span class="t">.</span><span class="t">sort_by</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">service</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-233"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-234"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-235"></span><span class="t">    </span><span class="t">result</span><span class="t">.</span><span class="t">sort_by</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">name</span><span class="t">)</span><span class="t"></span>
+<span id="line-236"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-13" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-13" class="anchor">↦</a>
+        </span>
+        <p>Parses <code>docker compose ls --format json</code> output into a metadata map
+per stack: name, status and the list of compose file paths.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-240"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">parse_stack_meta</span><span class="t">(</span><span class="t">output</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">NamedTuple</span><span class="t">(</span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-241"></span><span class="t">    </span><span class="t">parsed</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">JSON</span><span class="t">.</span><span class="t">parse</span><span class="t">(</span><span class="t">output</span><span class="t">)</span><span class="t"></span>
+<span id="line-242"></span><span class="t">    </span><span class="t">entries</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parsed</span><span class="t">.</span><span class="t">as_a?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Any</span><span class="t"></span>
+<span id="line-243"></span><span class="t">    </span><span class="t">entries</span><span class="t">.</span><span class="t">compact_map</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t"></span>
+<span id="line-244"></span><span class="t">      </span><span class="t">name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">[</span><span class="s">&quot;</span><span class="s">Name</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">as_s</span><span class="t">)</span><span class="t"></span>
+<span id="line-245"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="o">!</span><span class="t">name</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">name</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-246"></span><span class="t">      </span><span class="t">config_files</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">[</span><span class="s">&quot;</span><span class="s">ConfigFiles</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">as_s</span><span class="t">)</span><span class="t"></span>
+<span id="line-247"></span><span class="t">        </span><span class="t">.</span><span class="t">try</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">files</span><span class="o">|</span><span class="t"> </span><span class="t">files</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="sc">&#39;,&#39;</span><span class="t">)</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">strip</span><span class="t">)</span><span class="t">.</span><span class="t">reject</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">empty?</span><span class="t">)</span><span class="t"> </span><span class="t">}</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-248"></span><span class="t">      </span><span class="t">{</span><span class="t"></span>
+<span id="line-249"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t">         </span><span class="t">name</span><span class="t">,</span><span class="t"></span>
+<span id="line-250"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t">       </span><span class="t">entry</span><span class="t">[</span><span class="s">&quot;</span><span class="s">Status</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">as_s</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-251"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="t">config_files</span><span class="t">,</span><span class="t"></span>
+<span id="line-252"></span><span class="t">      </span><span class="t">}</span><span class="t"></span>
+<span id="line-253"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-254"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-255"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to parse docker compose ls output</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-256"></span><span class="t">    </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">NamedTuple</span><span class="t">(</span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-257"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-14" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-14" class="anchor">↦</a>
+        </span>
+        <p>Parses <code>docker ps --format '{{json .}}'</code> output: one JSON object
+per line. Malformed lines are skipped, so one bad line doesn't hide
+every stack.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-262"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">parse_containers</span><span class="t">(</span><span class="t">output</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">RawContainer</span><span class="t">)</span><span class="t"></span>
+<span id="line-263"></span><span class="t">    </span><span class="t">containers</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">RawContainer</span><span class="t"></span>
+<span id="line-264"></span><span class="t">    </span><span class="t">output</span><span class="t">.</span><span class="t">each_line</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
+<span id="line-265"></span><span class="t">      </span><span class="nk">next</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">line</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-266"></span><span class="t">      </span><span class="nk">begin</span><span class="t"></span>
+<span id="line-267"></span><span class="t">        </span><span class="t">containers</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="no">RawContainer</span><span class="t">.</span><span class="t">from_json</span><span class="t">(</span><span class="t">line</span><span class="t">)</span><span class="t"></span>
+<span id="line-268"></span><span class="t">      </span><span class="nk">rescue</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">ParseException</span><span class="t"></span>
+<span id="line-269"></span><span class="t">        </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Skipping malformed docker ps line: </span><span class="lsi">#{</span><span class="t">line</span><span class="t">[</span><span class="m">0</span><span class="t">..</span><span class="m">80</span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-270"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-271"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-272"></span><span class="t">    </span><span class="t">containers</span><span class="t"></span>
+<span id="line-273"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-274"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Failed to parse docker ps output</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-275"></span><span class="t">    </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">RawContainer</span><span class="t"></span>
+<span id="line-276"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-15" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-15" class="anchor">↦</a>
+        </span>
+        <p>Extracts the healthcheck verdict from the <code>docker ps</code> Status string
+(e.g. &quot;Up 2 hours (healthy)&quot;). Falls back to &quot;starting&quot; for running
+containers with a healthcheck that hasn't reported yet, or &quot;&quot; when
+the container has no healthcheck.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-282"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">health_of</span><span class="t">(</span><span class="t">status</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-283"></span><span class="t">    </span><span class="t">match</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">status</span><span class="t">.</span><span class="t">match</span><span class="t">(</span><span class="s">/</span><span class="s">\(</span><span class="s">(healthy|unhealthy|starting)</span><span class="s">\)</span><span class="s">/</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-284"></span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="t">match</span><span class="t">[</span><span class="m">1</span><span class="t">]</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">match</span><span class="t"></span>
+<span id="line-285"></span><span class="t">    </span><span class="t">state</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">status</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="s">&quot;</span><span class="s">(health</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">starting</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-286"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-16" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-16" class="anchor">↦</a>
+        </span>
+        <p>Runs docker and returns its stdout, or &quot;&quot; when docker is missing or
+fails. A missing binary is the normal &quot;no docker on this host&quot; case
+and stays quiet; real failures are logged. Public because the
+compose-logs endpoint uses it for <code>docker compose logs</code>.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-292"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">run_docker</span><span class="t">(</span><span class="t">args</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-293"></span><span class="t">    </span><span class="t">stdout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">IO</span><span class="no">::</span><span class="no">Memory</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-294"></span><span class="t">    </span><span class="t">stderr</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">IO</span><span class="no">::</span><span class="no">Memory</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-295"></span><span class="t">    </span><span class="t">result</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Process</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="s">&quot;</span><span class="s">docker</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">args</span><span class="t">:</span><span class="t"> </span><span class="t">args</span><span class="t">,</span><span class="t"> </span><span class="t">output</span><span class="t">:</span><span class="t"> </span><span class="t">stdout</span><span class="t">,</span><span class="t"> </span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="t">stderr</span><span class="t">)</span><span class="t"></span>
+<span id="line-296"></span><span class="t">    </span><span class="nk">unless</span><span class="t"> </span><span class="t">result</span><span class="t">.</span><span class="t">normal_exit?</span><span class="t"></span>
+<span id="line-297"></span><span class="t">      </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">docker </span><span class="lsi">#{</span><span class="t">args</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s"> failed with exit code </span><span class="lsi">#{</span><span class="t">result</span><span class="t">.</span><span class="t">system_exit_status</span><span class="t"></span><span class="lsi">}</span><span class="s">: </span><span class="lsi">#{</span><span class="t">stderr</span><span class="t">.</span><span class="t">to_s</span><span class="t">[</span><span class="m">0</span><span class="t">..</span><span class="m">200</span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-298"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-299"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-300"></span><span class="t">    </span><span class="t">stdout</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-301"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="no">File</span><span class="no">::</span><span class="no">NotFoundError</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-17" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-17" class="anchor">↦</a>
+        </span>
+        <p>Environments without docker: no stacks to show.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-303"><pre class="b" ><code class="b"><span class="t">    </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-304"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-305"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">docker </span><span class="lsi">#{</span><span class="t">args</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s"> failed</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-306"></span><span class="t">    </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-307"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-308"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Apathy
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

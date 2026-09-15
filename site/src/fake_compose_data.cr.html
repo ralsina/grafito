@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>fake_compose_data.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;font-weight: 600;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;font-style: italic;}.nc {color: #7cafc2;}.no {color: #dc9656;}.nd {color: #dc9656;font-style: italic;}.nf {color: #7cafc2;}.nn {color: #ba8baf;font-style: italic;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.m {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.s {color: #a1b56c;}.lsi {color: #a16946;}.sr {color: #86c1b9;}.ss {color: #dc9656;}.p {color: #d8d8d8;}.tw {color: #d8d8d8;}.cm {color: #585858;font-style: italic;}.s1 {color: #a1b56c;}.lso {color: #a1b56c;}.sc {color: #a1b56c;}.sb {color: #a1b56c;}.sa {color: #dc9656;}.sd {color: #7cafc2;font-style: italic;}.se {color: #a16946;}.lnf {color: #dc9656;}.lnh {color: #dc9656;}.lni {color: #dc9656;}.lno {color: #dc9656;}.lnb {color: #dc9656;}.kr {color: #ba8baf;font-weight: 600;}.kd {color: #ba8baf;font-style: italic;}.kn {color: #ba8baf;}.kp {color: #ba8baf;font-style: italic;}.kc {color: #ab4642;}.cs {color: #a16946;font-weight: 600;}.ch {color: #585858;font-weight: 600;}.gh {color: #7cafc2;font-weight: 600;}.gu {color: #7cafc2;font-weight: 600;font-style: italic;}.gs {color: #ab4642;font-weight: 600;}.ge {color: #dc9656;font-style: italic;}.gd {color: #ab4642;}.gi {color: #a1b56c;}.gp {color: #7cafc2;}.go {color: #d8d8d8;}.gt {color: #ab4642;}.gr {color: #ab4642;}.gl {color: #d8d8d8;text-decoration: underline;}.x {color: #d8d8d8;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Apathy */
+/* Author: Jannik Siebert (https://github.com/janniks) */
+
+:root {
+    --pico-background-color: #031a16; /* Default backround */
+    --pico-color: #81b5ac; /* Default foreground */
+    --pico-text-selection-color: #184e45; /* Selection background */
+    --pico-primary: #96883e; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #184e45;
+    --pico-primary-hover: #3e7996; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-weight: 300;
+        overflow: visible;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 2.5%, #0b342d 2.5%);
+        background-size: 2000% 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #5f9c92;
+        background-color: #031a16;
+        margin-top: auto;
+    }
+    code, div.code>pre>code {
+        font-family: 'Chivo Mono', monospace !important;
+        padding: .15rem;
+        background-color: #0b342d !important;
+    }
+
+    code>span {
+        font-family: 'Chivo Mono', monospace !important;
+    }
+
+    div.doc>pre>code {
+        overflow-x: auto !important;
+    }
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_dashboard.cr.html"><span>src/compose_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_jobs.cr.html"><span>src/compose_jobs.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_status.cr.html"><span>src/compose_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/fake_compose_data.cr</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_homepage_data.cr.html"><span>src/fake_homepage_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/homepage.cr.html"><span>src/homepage.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/homepage_config.cr.html"><span>src/homepage_config.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/metrics_store.cr.html"><span>src/metrics_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_dashboard.cr.html"><span>src/process_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_status.cr.html"><span>src/process_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/system_status.cr.html"><span>src/system_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/weather.cr.html"><span>src/weather.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="fake-compose-data" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#fake-compose-data" class="anchor">↦</a>
+        </span>
+        <h1>Fake compose data</h1>
+<p>Deterministic compose stacks for demo builds (<code>-Dfake_journal</code>), the
+same idea as the fake journal and systemd data: a running stack, a
+stack with an unhealthy service and a stopped one, and one orphaned
+project whose compose files are gone, so every UI state is visible
+without Docker.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-9"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./compose_status</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-10"></span><span class="t"></span>
+<span id="line-11"></span><span class="nk">module</span><span class="t"> </span><span class="no">FakeComposeData</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+        <p>Plausible compose.yaml content for the web stack's YAML view.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-13"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">WEB_COMPOSE_YAML</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&lt;&lt;-YAML</span><span class="t"></span>
+<span id="line-14"></span><span class="s">    services:</span><span class="s"></span>
+<span id="line-15">      web:</span><span class="s"></span>
+<span id="line-16">        image: nginx:1.27-alpine</span><span class="s"></span>
+<span id="line-17">        ports:</span><span class="s"></span>
+<span id="line-18">          - &quot;8080:80&quot;</span><span class="s"></span>
+<span id="line-19">        healthcheck:</span><span class="s"></span>
+<span id="line-20">          test: [&quot;CMD&quot;, &quot;wget&quot;, &quot;-q&quot;, &quot;-O&quot;, &quot;-&quot;, &quot;http://localhost/&quot;]</span><span class="s"></span>
+<span id="line-21">          interval: 30s</span><span class="s"></span>
+<span id="line-22">      api:</span><span class="s"></span>
+<span id="line-23">        image: ghcr.io/example/webapp-api:latest</span><span class="s"></span>
+<span id="line-24">        environment:</span><span class="s"></span>
+<span id="line-25">          DATABASE_URL: postgres://db:5432/webapp</span><span class="s"></span>
+<span id="line-26">        depends_on:</span><span class="s"></span>
+<span id="line-27">          - db</span><span class="s"></span>
+<span id="line-28">        healthcheck:</span><span class="s"></span>
+<span id="line-29">          test: [&quot;CMD&quot;, &quot;curl&quot;, &quot;-f&quot;, &quot;http://localhost:3000/healthz&quot;]</span><span class="s"></span>
+<span id="line-30">          interval: 15s</span><span class="s"></span>
+<span id="line-31">          retries: 3</span><span class="s"></span>
+<span id="line-32">      db:</span><span class="s"></span>
+<span id="line-33">        image: postgres:16-alpine</span><span class="s"></span>
+<span id="line-34">        volumes:</span><span class="s"></span>
+<span id="line-35">          - db-data:/var/lib/postgresql/data</span><span class="s"></span>
+<span id="line-36">    volumes:</span><span class="s"></span>
+<span id="line-37">      db-data:</span><span class="s"></span>
+<span id="line-38">    YAML</span><span class="s"></span><span class="t"></span>
+<span id="line-39"></span><span class="t"></span>
+<span id="line-40"></span><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">stacks</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">)</span><span class="t"></span>
+<span id="line-41"></span><span class="t">    </span><span class="t">web_services</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
+<span id="line-42"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-43"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-44"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">api</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-45"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp-api-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-46"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-47"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">unhealthy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-48"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">ghcr.io/example/webapp-api:latest</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-49"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-50"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Up 2 hours (unhealthy)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-51"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-52"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-53"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-54"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">db</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-55"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp-db-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-56"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-57"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">healthy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-58"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">postgres:16-alpine</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-59"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">127.0.0.1:5432-&gt;5432/tcp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-60"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Up 3 days (healthy)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-61"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-62"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-63"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-64"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">web</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-65"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp-web-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-66"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-67"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">healthy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-68"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">nginx:1.27-alpine</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-69"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">0.0.0.0:8080-&gt;80/tcp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-70"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Up 3 days (healthy)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-71"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-72"></span><span class="t">    </span><span class="t">]</span><span class="t"></span>
+<span id="line-73"></span><span class="t">    </span><span class="t">monitoring_services</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
+<span id="line-74"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-75"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-76"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">gotify</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-77"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring-gotify-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-78"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-79"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">starting</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-80"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">gotify/server:latest</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-81"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">0.0.0.0:8081-&gt;80/tcp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-82"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Up 20 seconds (health: starting)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-83"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-84"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-85"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-86"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">vector</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-87"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring-vector-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-88"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">exited</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-89"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-90"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">timberio/vector:latest-alpine</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-91"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-92"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Exited (0) 5 minutes ago</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-93"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-94"></span><span class="t">    </span><span class="t">]</span><span class="t"></span>
+<span id="line-95"></span><span class="t">    </span><span class="t">[</span><span class="t"></span>
+<span id="line-96"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-97"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-98"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running(1)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-99"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">/opt/stacks/monitoring/compose.yaml</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-100"></span><span class="t">        </span><span class="t">services</span><span class="t">:</span><span class="t"> </span><span class="t">monitoring_services</span><span class="t">,</span><span class="t"></span>
+<span id="line-101"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-102"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-103"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-104"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running(3)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-105"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">/opt/stacks/webapp/compose.yaml</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-106"></span><span class="t">        </span><span class="t">services</span><span class="t">:</span><span class="t"> </span><span class="t">web_services</span><span class="t">,</span><span class="t"></span>
+<span id="line-107"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>An orphaned project: containers exist but the compose files are
+gone, so no stack-level actions are possible.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-110"><pre class="b" ><code class="b"><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-111"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">legacy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-112"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-113"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-114"></span><span class="t">        </span><span class="t">services</span><span class="t">:</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
+<span id="line-115"></span><span class="t">          </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-116"></span><span class="t">            </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">legacy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-117"></span><span class="t">            </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">old-app</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-118"></span><span class="t">            </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">legacy-old-app-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-119"></span><span class="t">            </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">exited</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-120"></span><span class="t">            </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-121"></span><span class="t">            </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">example/old-app:1.0</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-122"></span><span class="t">            </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-123"></span><span class="t">            </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Exited (0) 2 months ago</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-124"></span><span class="t">          </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-125"></span><span class="t">        </span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-126"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-127"></span><span class="t">    </span><span class="t">]</span><span class="t"></span>
+<span id="line-128"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>The fake compose.yaml served by the YAML view for the web stack;
+other stacks get a generic placeholder so the view is never empty.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-132"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">compose_yaml</span><span class="t">(</span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-133"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">stack_name</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-134"></span><span class="t">      </span><span class="no">WEB_COMPOSE_YAML</span><span class="t"></span>
+<span id="line-135"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-136"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">#</span><span class="s"> </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s">\n</span><span class="s">services: {}</span><span class="s">\n</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-137"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-138"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>Fake output for the job runner so the demo build can show the live
+output view for any action.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-142"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fake_action_output</span><span class="t">(</span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">action</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-143"></span><span class="t">    </span><span class="nk">case</span><span class="t"> </span><span class="t">action</span><span class="t"></span>
+<span id="line-144"></span><span class="t">    </span><span class="nk">when</span><span class="t"> </span><span class="s">&quot;</span><span class="s">update</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-145"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">Pulling </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> ...</span><span class="s">\n</span><span class="s"> Container </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s">-web-1  Pulled</span><span class="s">\n</span><span class="s"> Starting </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> ...</span><span class="s">\n</span><span class="s"> Stack </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> updated</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-146"></span><span class="t">    </span><span class="nk">when</span><span class="t"> </span><span class="s">&quot;</span><span class="s">up</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-147"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">Starting </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> ...</span><span class="s">\n</span><span class="s"> Stack </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> started</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-148"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-149"></span><span class="t">      </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">action</span><span class="t">.</span><span class="t">capitalize</span><span class="t"></span><span class="lsi">}</span><span class="s"> </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> done</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-150"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-151"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-152"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Apathy
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

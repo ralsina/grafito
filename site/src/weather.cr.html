@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>weather.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;font-weight: 600;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;font-style: italic;}.nc {color: #7cafc2;}.no {color: #dc9656;}.nd {color: #dc9656;font-style: italic;}.nf {color: #7cafc2;}.nn {color: #ba8baf;font-style: italic;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.m {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.s {color: #a1b56c;}.lsi {color: #a16946;}.sr {color: #86c1b9;}.ss {color: #dc9656;}.p {color: #d8d8d8;}.tw {color: #d8d8d8;}.cm {color: #585858;font-style: italic;}.s1 {color: #a1b56c;}.lso {color: #a1b56c;}.sc {color: #a1b56c;}.sb {color: #a1b56c;}.sa {color: #dc9656;}.sd {color: #7cafc2;font-style: italic;}.se {color: #a16946;}.lnf {color: #dc9656;}.lnh {color: #dc9656;}.lni {color: #dc9656;}.lno {color: #dc9656;}.lnb {color: #dc9656;}.kr {color: #ba8baf;font-weight: 600;}.kd {color: #ba8baf;font-style: italic;}.kn {color: #ba8baf;}.kp {color: #ba8baf;font-style: italic;}.kc {color: #ab4642;}.cs {color: #a16946;font-weight: 600;}.ch {color: #585858;font-weight: 600;}.gh {color: #7cafc2;font-weight: 600;}.gu {color: #7cafc2;font-weight: 600;font-style: italic;}.gs {color: #ab4642;font-weight: 600;}.ge {color: #dc9656;font-style: italic;}.gd {color: #ab4642;}.gi {color: #a1b56c;}.gp {color: #7cafc2;}.go {color: #d8d8d8;}.gt {color: #ab4642;}.gr {color: #ab4642;}.gl {color: #d8d8d8;text-decoration: underline;}.x {color: #d8d8d8;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Apathy */
+/* Author: Jannik Siebert (https://github.com/janniks) */
+
+:root {
+    --pico-background-color: #031a16; /* Default backround */
+    --pico-color: #81b5ac; /* Default foreground */
+    --pico-text-selection-color: #184e45; /* Selection background */
+    --pico-primary: #96883e; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #184e45;
+    --pico-primary-hover: #3e7996; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-weight: 300;
+        overflow: visible;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 2.5%, #0b342d 2.5%);
+        background-size: 2000% 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #5f9c92;
+        background-color: #031a16;
+        margin-top: auto;
+    }
+    code, div.code>pre>code {
+        font-family: 'Chivo Mono', monospace !important;
+        padding: .15rem;
+        background-color: #0b342d !important;
+    }
+
+    code>span {
+        font-family: 'Chivo Mono', monospace !important;
+    }
+
+    div.doc>pre>code {
+        overflow-x: auto !important;
+    }
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_dashboard.cr.html"><span>src/compose_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_jobs.cr.html"><span>src/compose_jobs.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_status.cr.html"><span>src/compose_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_compose_data.cr.html"><span>src/fake_compose_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_homepage_data.cr.html"><span>src/fake_homepage_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/homepage.cr.html"><span>src/homepage.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/homepage_config.cr.html"><span>src/homepage_config.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/metrics_store.cr.html"><span>src/metrics_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_dashboard.cr.html"><span>src/process_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_status.cr.html"><span>src/process_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/system_status.cr.html"><span>src/system_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/weather.cr</span>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="weather" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#weather" class="anchor">↦</a>
+        </span>
+        <h1>Weather</h1>
+<p>The homepage view shows a small weather widget. Instead of growing a
+weather provider abstraction (or an API key requirement), it uses
+<a href="https://open-meteo.com">Open-Meteo</a>: free, keyless and accurate
+enough for a homepage widget.</p>
+<p>The module fetches current conditions plus today's forecast for one
+coordinate pair, caches the result in memory for half an hour, and
+degrades gracefully: any failure yields <code>nil</code>, which the widget
+renders as &quot;weather unavailable&quot; instead of breaking the page.
+Snapshots always carry metric units; converting to imperial is done
+at render time so the cache does not depend on user settings.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-15"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">http/client</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-16"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">json</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-17"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-18"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">mutex</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-19"></span><span class="t"></span>
+<span id="line-20"></span><span class="nk">module</span><span class="t"> </span><span class="no">Weather</span><span class="t"></span>
+<span id="line-21"></span><span class="t">  </span><span class="no">Log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="nk">for</span><span class="t">(</span><span class="nk">self</span><span class="t">)</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+        <p>How long a forecast stays fresh. Weather does not change fast
+enough to justify hammering the API from a 60-second page poll.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-25"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">CACHE_TTL</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">30</span><span class="t">.</span><span class="t">minutes</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>Bounds on the outbound call so a slow API cannot hold a fragment
+render hostage for longer than a few seconds.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-29"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">CONNECT_TIMEOUT</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">3</span><span class="t">.</span><span class="t">seconds</span><span class="t"></span>
+<span id="line-30"></span><span class="t">  </span><span class="no">READ_TIMEOUT</span><span class="t">    </span><span class="o">=</span><span class="t"> </span><span class="m">5</span><span class="t">.</span><span class="t">seconds</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>One weather reading, ready to render. All values are metric:
+degrees Celsius and kilometers per hour. Built by the module from
+the parsed API response, not deserialized directly.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-35"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="no">Snapshot</span><span class="t"></span>
+<span id="line-36"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">temperature</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-37"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">apparent</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"></span>
+<span id="line-38"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">humidity</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"></span>
+<span id="line-39"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">wind_speed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"></span>
+<span id="line-40"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">code</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"></span>
+<span id="line-41"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">daily_code</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">?</span><span class="t"></span>
+<span id="line-42"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">temp_max</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"></span>
+<span id="line-43"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">temp_min</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"></span>
+<span id="line-44"></span><span class="t"></span>
+<span id="line-45"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">initialize</span><span class="t">(</span><span class="t"></span>
+<span id="line-46"></span><span class="t">      </span><span class="t">@temperature</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"></span>
+<span id="line-47"></span><span class="t">      </span><span class="t">@apparent</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"></span>
+<span id="line-48"></span><span class="t">      </span><span class="t">@humidity</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"></span>
+<span id="line-49"></span><span class="t">      </span><span class="t">@wind_speed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"></span>
+<span id="line-50"></span><span class="t">      </span><span class="t">@code</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">0</span><span class="t">,</span><span class="t"></span>
+<span id="line-51"></span><span class="t">      </span><span class="t">@daily_code</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"></span>
+<span id="line-52"></span><span class="t">      </span><span class="t">@temp_max</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"></span>
+<span id="line-53"></span><span class="t">      </span><span class="t">@temp_min</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"></span>
+<span id="line-54"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-55"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-56"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>Cache slot: latitude, longitude, fetch time and the snapshot.
+Protected by a mutex because Kemal answers requests concurrently.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-60"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">@@mutex</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Mutex</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-61"></span><span class="t">  </span><span class="t">@@cache</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">{</span><span class="no">Float64</span><span class="t">,</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"> </span><span class="no">Time</span><span class="t">,</span><span class="t"> </span><span class="no">Snapshot</span><span class="t">}</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>Returns a (possibly stale) snapshot for the coordinates, refreshing
+the cache when it is empty, for different coordinates or expired.
+A failed refresh falls back to whatever is cached, however old:
+an outdated temperature beats a broken widget.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-67"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">snapshot</span><span class="t">(</span><span class="t">latitude</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"> </span><span class="t">longitude</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Snapshot</span><span class="t">?</span><span class="t"></span>
+<span id="line-68"></span><span class="t">    </span><span class="t">cached_snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Snapshot</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-69"></span><span class="t">    </span><span class="t">need_fetch</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t"></span>
+<span id="line-70"></span><span class="t"></span>
+<span id="line-71"></span><span class="t">    </span><span class="t">@@mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-72"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">slot</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@@cache</span><span class="t"></span>
+<span id="line-73"></span><span class="t">        </span><span class="t">lat</span><span class="t">,</span><span class="t"> </span><span class="t">lon</span><span class="t">,</span><span class="t"> </span><span class="t">fetched_at</span><span class="t">,</span><span class="t"> </span><span class="t">cached</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">slot</span><span class="t"></span>
+<span id="line-74"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">lat</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="t">latitude</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">lon</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="t">longitude</span><span class="t"></span>
+<span id="line-75"></span><span class="t">          </span><span class="t">cached_snapshot</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">cached</span><span class="t"></span>
+<span id="line-76"></span><span class="t">          </span><span class="t">need_fetch</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">(</span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="t">fetched_at</span><span class="t">)</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="no">CACHE_TTL</span><span class="t"></span>
+<span id="line-77"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-78"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-79"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-80"></span><span class="t"></span>
+<span id="line-81"></span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="t">cached_snapshot</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">need_fetch</span><span class="t"></span>
+<span id="line-82"></span><span class="t"></span>
+<span id="line-83"></span><span class="t">    </span><span class="t">fresh</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">fetch</span><span class="t">(</span><span class="t">latitude</span><span class="t">,</span><span class="t"> </span><span class="t">longitude</span><span class="t">)</span><span class="t"></span>
+<span id="line-84"></span><span class="t">    </span><span class="t">@@mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-85"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">fresh</span><span class="t"></span>
+<span id="line-86"></span><span class="t">        </span><span class="t">@@cache</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">{</span><span class="t">latitude</span><span class="t">,</span><span class="t"> </span><span class="t">longitude</span><span class="t">,</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t">,</span><span class="t"> </span><span class="t">fresh</span><span class="t">}</span><span class="t"></span>
+<span id="line-87"></span><span class="t">        </span><span class="t">fresh</span><span class="t"></span>
+<span id="line-88"></span><span class="t">      </span><span class="nk">else</span><span class="t"></span>
+<span id="line-89"></span><span class="t">        </span><span class="t">cached_snapshot</span><span class="t"></span>
+<span id="line-90"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-91"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-92"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-93"></span><span class="t"></span>
+<span id="line-94"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fetch</span><span class="t">(</span><span class="t">latitude</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"> </span><span class="t">longitude</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Snapshot</span><span class="t">?</span><span class="t"></span>
+<span id="line-95"></span><span class="t">    </span><span class="t">uri</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">URI</span><span class="t">.</span><span class="t">parse</span><span class="t">(</span><span class="t">api_url</span><span class="t">(</span><span class="t">latitude</span><span class="t">,</span><span class="t"> </span><span class="t">longitude</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-96"></span><span class="t">    </span><span class="t">client</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HTTP</span><span class="no">::</span><span class="no">Client</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">uri</span><span class="t">)</span><span class="t"></span>
+<span id="line-97"></span><span class="t">    </span><span class="t">client</span><span class="t">.</span><span class="t">connect_timeout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">CONNECT_TIMEOUT</span><span class="t"></span>
+<span id="line-98"></span><span class="t">    </span><span class="t">client</span><span class="t">.</span><span class="t">read_timeout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">READ_TIMEOUT</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>Ask for an uncompressed body: Crystal's transparent deflate
+decoding chokes on some servers' zlib streams (observed with
+open-meteo.com), and the forecast payload is tiny anyway.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-102"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">headers</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HTTP</span><span class="no">::</span><span class="no">Headers</span><span class="t">{</span><span class="s">&quot;</span><span class="s">Accept-Encoding</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">identity</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t"></span>
+<span id="line-103"></span><span class="t">    </span><span class="t">response</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">client</span><span class="t">.</span><span class="t">get</span><span class="t">(</span><span class="t">uri</span><span class="t">.</span><span class="t">request_target</span><span class="t">,</span><span class="t"> </span><span class="t">headers</span><span class="t">:</span><span class="t"> </span><span class="t">headers</span><span class="t">)</span><span class="t"></span>
+<span id="line-104"></span><span class="t">    </span><span class="nk">return</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">response</span><span class="t">.</span><span class="t">status</span><span class="t">.</span><span class="t">ok?</span><span class="t"></span>
+<span id="line-105"></span><span class="t">    </span><span class="t">parse</span><span class="t">(</span><span class="t">response</span><span class="t">.</span><span class="t">body</span><span class="t">)</span><span class="t"></span>
+<span id="line-106"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Exception</span><span class="t"></span>
+<span id="line-107"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Weather fetch failed: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-108"></span><span class="t">    </span><span class="l">nil</span><span class="t"></span>
+<span id="line-109"></span><span class="t">  </span><span class="nk">ensure</span><span class="t"></span>
+<span id="line-110"></span><span class="t">    </span><span class="t">client</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">close</span><span class="t">)</span><span class="t"></span>
+<span id="line-111"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>The Open-Meteo forecast URL: current conditions and a 3-day daily
+forecast, auto-detected timezone, metric units.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-115"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">api_url</span><span class="t">(</span><span class="t">latitude</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">,</span><span class="t"> </span><span class="t">longitude</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-116"></span><span class="t">    </span><span class="t">params</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">URI</span><span class="no">::</span><span class="no">Params</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">form</span><span class="o">|</span><span class="t"></span>
+<span id="line-117"></span><span class="t">      </span><span class="t">form</span><span class="t">.</span><span class="t">add</span><span class="t">(</span><span class="s">&quot;</span><span class="s">latitude</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">latitude</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t"></span>
+<span id="line-118"></span><span class="t">      </span><span class="t">form</span><span class="t">.</span><span class="t">add</span><span class="t">(</span><span class="s">&quot;</span><span class="s">longitude</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">longitude</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t"></span>
+<span id="line-119"></span><span class="t">      </span><span class="t">form</span><span class="t">.</span><span class="t">add</span><span class="t">(</span><span class="s">&quot;</span><span class="s">current</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-120"></span><span class="t">      </span><span class="t">form</span><span class="t">.</span><span class="t">add</span><span class="t">(</span><span class="s">&quot;</span><span class="s">daily</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">weather_code,temperature_2m_max,temperature_2m_min</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-121"></span><span class="t">      </span><span class="t">form</span><span class="t">.</span><span class="t">add</span><span class="t">(</span><span class="s">&quot;</span><span class="s">forecast_days</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">1</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-122"></span><span class="t">      </span><span class="t">form</span><span class="t">.</span><span class="t">add</span><span class="t">(</span><span class="s">&quot;</span><span class="s">timezone</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">auto</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-123"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-124"></span><span class="t">    </span><span class="s">&quot;</span><span class="s">https://api.open-meteo.com/v1/forecast?</span><span class="lsi">#{</span><span class="t">params</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-125"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>Parses an Open-Meteo response into a Snapshot. The API is stable
+but this defends against partial answers: anything missing just
+stays nil on the snapshot.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-130"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">parse</span><span class="t">(</span><span class="t">body</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Snapshot</span><span class="t">?</span><span class="t"></span>
+<span id="line-131"></span><span class="t">    </span><span class="t">payload</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">OpenMeteoResponse</span><span class="t">.</span><span class="t">from_json</span><span class="t">(</span><span class="t">body</span><span class="t">)</span><span class="t"></span>
+<span id="line-132"></span><span class="t">    </span><span class="t">daily</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">payload</span><span class="t">.</span><span class="t">daily</span><span class="t"></span>
+<span id="line-133"></span><span class="t">    </span><span class="no">Snapshot</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-134"></span><span class="t">      </span><span class="t">temperature</span><span class="t">:</span><span class="t"> </span><span class="t">payload</span><span class="t">.</span><span class="t">current</span><span class="t">.</span><span class="t">temperature_2m</span><span class="t">,</span><span class="t"></span>
+<span id="line-135"></span><span class="t">      </span><span class="t">apparent</span><span class="t">:</span><span class="t"> </span><span class="t">payload</span><span class="t">.</span><span class="t">current</span><span class="t">.</span><span class="t">apparent_temperature</span><span class="t">,</span><span class="t"></span>
+<span id="line-136"></span><span class="t">      </span><span class="t">humidity</span><span class="t">:</span><span class="t"> </span><span class="t">payload</span><span class="t">.</span><span class="t">current</span><span class="t">.</span><span class="t">relative_humidity_2m</span><span class="t">,</span><span class="t"></span>
+<span id="line-137"></span><span class="t">      </span><span class="t">wind_speed</span><span class="t">:</span><span class="t"> </span><span class="t">payload</span><span class="t">.</span><span class="t">current</span><span class="t">.</span><span class="t">wind_speed_10m</span><span class="t">,</span><span class="t"></span>
+<span id="line-138"></span><span class="t">      </span><span class="t">code</span><span class="t">:</span><span class="t"> </span><span class="t">payload</span><span class="t">.</span><span class="t">current</span><span class="t">.</span><span class="t">weather_code</span><span class="t">,</span><span class="t"></span>
+<span id="line-139"></span><span class="t">      </span><span class="t">daily_code</span><span class="t">:</span><span class="t"> </span><span class="t">daily</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">weather_code</span><span class="t">.</span><span class="t">first?</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-140"></span><span class="t">      </span><span class="t">temp_max</span><span class="t">:</span><span class="t"> </span><span class="t">daily</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">temperature_2m_max</span><span class="t">.</span><span class="t">first?</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-141"></span><span class="t">      </span><span class="t">temp_min</span><span class="t">:</span><span class="t"> </span><span class="t">daily</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">temperature_2m_min</span><span class="t">.</span><span class="t">first?</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-142"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-143"></span><span class="t">  </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">ParseException</span><span class="t"></span>
+<span id="line-144"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Malformed weather response: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-145"></span><span class="t">    </span><span class="l">nil</span><span class="t"></span>
+<span id="line-146"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>Response shape of the Open-Meteo forecast endpoint, trimmed to the
+fields the widget shows. Internal detail, but public: the JSON
+mapping macros can't reference private constants.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-151"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="no">OpenMeteoResponse</span><span class="t"></span>
+<span id="line-152"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-153"></span><span class="t"></span>
+<span id="line-154"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">current</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Current</span><span class="t"></span>
+<span id="line-155"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">daily</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Daily</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-156"></span><span class="t"></span>
+<span id="line-157"></span><span class="t">    </span><span class="nk">class</span><span class="t"> </span><span class="no">Current</span><span class="t"></span>
+<span id="line-158"></span><span class="t">      </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-159"></span><span class="t"></span>
+<span id="line-160"></span><span class="t">      </span><span class="t">property</span><span class="t"> </span><span class="t">temperature_2m</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-161"></span><span class="t">      </span><span class="t">property</span><span class="t"> </span><span class="t">apparent_temperature</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"></span>
+<span id="line-162"></span><span class="t">      </span><span class="t">property</span><span class="t"> </span><span class="t">relative_humidity_2m</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"></span>
+<span id="line-163"></span><span class="t">      </span><span class="t">property</span><span class="t"> </span><span class="t">weather_code</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">0</span><span class="t"></span>
+<span id="line-164"></span><span class="t">      </span><span class="t">property</span><span class="t"> </span><span class="t">wind_speed_10m</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t">?</span><span class="t"></span>
+<span id="line-165"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-166"></span><span class="t"></span>
+<span id="line-167"></span><span class="t">    </span><span class="nk">class</span><span class="t"> </span><span class="no">Daily</span><span class="t"></span>
+<span id="line-168"></span><span class="t">      </span><span class="nk">include</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-169"></span><span class="t"></span>
+<span id="line-170"></span><span class="t">      </span><span class="t">property</span><span class="t"> </span><span class="t">weather_code</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Int32</span><span class="t">)</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Int32</span><span class="t"></span>
+<span id="line-171"></span><span class="t">      </span><span class="t">property</span><span class="t"> </span><span class="t">temperature_2m_max</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Float64</span><span class="t">)</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-172"></span><span class="t">      </span><span class="t">property</span><span class="t"> </span><span class="t">temperature_2m_min</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Float64</span><span class="t">)</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-173"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-174"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
+        <p>Human label and Material icon name for a WMO weather interpretation
+code (Open-Meteo's vocabulary). Icons are classic Material Icons
+ligatures so no extra font is loaded.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-179"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">DESCRIPTIONS</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">{</span><span class="t"></span>
+<span id="line-180"></span><span class="t">    </span><span class="m">0</span><span class="t">..</span><span class="m">0</span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">Clear sky</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">wb_sunny</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-181"></span><span class="t">    </span><span class="m">1</span><span class="t">..</span><span class="m">1</span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">Mostly clear</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">wb_sunny</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-182"></span><span class="t">    </span><span class="m">2</span><span class="t">..</span><span class="m">2</span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">Partly cloudy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">cloud</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-183"></span><span class="t">    </span><span class="m">3</span><span class="t">..</span><span class="m">3</span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">Overcast</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">wb_cloudy</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-184"></span><span class="t">    </span><span class="m">45</span><span class="t">..</span><span class="m">48</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">Fog</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">cloud</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-185"></span><span class="t">    </span><span class="m">51</span><span class="t">..</span><span class="m">57</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">Drizzle</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">grain</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-186"></span><span class="t">    </span><span class="m">61</span><span class="t">..</span><span class="m">67</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">Rain</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">opacity</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-187"></span><span class="t">    </span><span class="m">71</span><span class="t">..</span><span class="m">77</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">Snow</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">ac_unit</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-188"></span><span class="t">    </span><span class="m">80</span><span class="t">..</span><span class="m">82</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">Showers</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">opacity</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-189"></span><span class="t">    </span><span class="m">85</span><span class="t">..</span><span class="m">86</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">Snow showers</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">ac_unit</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-190"></span><span class="t">    </span><span class="m">95</span><span class="t">..</span><span class="m">99</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">Thunderstorm</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">flash_on</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">,</span><span class="t"></span>
+<span id="line-191"></span><span class="t">  </span><span class="t">}</span><span class="t"></span>
+<span id="line-192"></span><span class="t"></span>
+<span id="line-193"></span><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">describe</span><span class="t">(</span><span class="t">code</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">{</span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="no">String</span><span class="t">}</span><span class="t"></span>
+<span id="line-194"></span><span class="t">    </span><span class="no">DESCRIPTIONS</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">range</span><span class="t">,</span><span class="t"> </span><span class="t">description</span><span class="o">|</span><span class="t"></span>
+<span id="line-195"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="t">description</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">range</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">code</span><span class="t">)</span><span class="t"></span>
+<span id="line-196"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-197"></span><span class="t">    </span><span class="t">{</span><span class="s">&quot;</span><span class="s">Unknown</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">help_outline</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t"></span>
+<span id="line-198"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-199"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Apathy
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

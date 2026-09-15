@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>homepage_config.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;font-weight: 600;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;font-style: italic;}.nc {color: #7cafc2;}.no {color: #dc9656;}.nd {color: #dc9656;font-style: italic;}.nf {color: #7cafc2;}.nn {color: #ba8baf;font-style: italic;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.m {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.s {color: #a1b56c;}.lsi {color: #a16946;}.sr {color: #86c1b9;}.ss {color: #dc9656;}.p {color: #d8d8d8;}.tw {color: #d8d8d8;}.cm {color: #585858;font-style: italic;}.s1 {color: #a1b56c;}.lso {color: #a1b56c;}.sc {color: #a1b56c;}.sb {color: #a1b56c;}.sa {color: #dc9656;}.sd {color: #7cafc2;font-style: italic;}.se {color: #a16946;}.lnf {color: #dc9656;}.lnh {color: #dc9656;}.lni {color: #dc9656;}.lno {color: #dc9656;}.lnb {color: #dc9656;}.kr {color: #ba8baf;font-weight: 600;}.kd {color: #ba8baf;font-style: italic;}.kn {color: #ba8baf;}.kp {color: #ba8baf;font-style: italic;}.kc {color: #ab4642;}.cs {color: #a16946;font-weight: 600;}.ch {color: #585858;font-weight: 600;}.gh {color: #7cafc2;font-weight: 600;}.gu {color: #7cafc2;font-weight: 600;font-style: italic;}.gs {color: #ab4642;font-weight: 600;}.ge {color: #dc9656;font-style: italic;}.gd {color: #ab4642;}.gi {color: #a1b56c;}.gp {color: #7cafc2;}.go {color: #d8d8d8;}.gt {color: #ab4642;}.gr {color: #ab4642;}.gl {color: #d8d8d8;text-decoration: underline;}.x {color: #d8d8d8;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Apathy */
+/* Author: Jannik Siebert (https://github.com/janniks) */
+
+:root {
+    --pico-background-color: #031a16; /* Default backround */
+    --pico-color: #81b5ac; /* Default foreground */
+    --pico-text-selection-color: #184e45; /* Selection background */
+    --pico-primary: #96883e; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #184e45;
+    --pico-primary-hover: #3e7996; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-weight: 300;
+        overflow: visible;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 2.5%, #0b342d 2.5%);
+        background-size: 2000% 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #5f9c92;
+        background-color: #031a16;
+        margin-top: auto;
+    }
+    code, div.code>pre>code {
+        font-family: 'Chivo Mono', monospace !important;
+        padding: .15rem;
+        background-color: #0b342d !important;
+    }
+
+    code>span {
+        font-family: 'Chivo Mono', monospace !important;
+    }
+
+    div.doc>pre>code {
+        overflow-x: auto !important;
+    }
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_dashboard.cr.html"><span>src/compose_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_jobs.cr.html"><span>src/compose_jobs.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_status.cr.html"><span>src/compose_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_compose_data.cr.html"><span>src/fake_compose_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_homepage_data.cr.html"><span>src/fake_homepage_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/homepage.cr.html"><span>src/homepage.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/homepage_config.cr</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/metrics_store.cr.html"><span>src/metrics_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_dashboard.cr.html"><span>src/process_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_status.cr.html"><span>src/process_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/system_status.cr.html"><span>src/system_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/weather.cr.html"><span>src/weather.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="homepage-configuration" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#homepage-configuration" class="anchor">↦</a>
+        </span>
+        <h1>Homepage configuration</h1>
+<p>The homepage view — a launcher for self-hosted apps, in the spirit
+of <a href="https://gethomepage.dev">gethomepage</a> but deliberately smaller —
+is configured with a YAML file (default <code>/etc/grafito/homepage.yml</code>,
+override with <code>--homepage-config</code>):</p>
+<pre class="b" ><code class="b"><span class="nt">title</span><span class="p">:</span><span class="tw"> </span><span class="l">Homelab</span><span class="tw">
+</span><span class="tw">
+</span><span class="tw"></span><span class="nt">weather</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">  </span><span class="nt">latitude</span><span class="p">:</span><span class="tw"> </span><span class="t">-</span><span class="m">34.9</span><span class="tw">
+</span><span class="tw">  </span><span class="nt">longitude</span><span class="p">:</span><span class="tw"> </span><span class="t">-</span><span class="m">56.16</span><span class="tw">
+</span><span class="tw">  </span><span class="nt">location</span><span class="p">:</span><span class="tw"> </span><span class="l">Montevideo</span><span class="tw">
+</span><span class="tw">  </span><span class="nt">units</span><span class="p">:</span><span class="tw"> </span><span class="l">metric</span><span class="tw"> </span><span class="c"># or imperial</span><span class="tw">
+</span><span class="tw">
+</span><span class="tw"></span><span class="nt">groups</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">  </span><span class="t">- </span><span class="nt">name</span><span class="p">:</span><span class="tw"> </span><span class="l">Media</span><span class="tw">
+</span><span class="tw">    </span><span class="nt">services</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">      </span><span class="t">- </span><span class="nt">name</span><span class="p">:</span><span class="tw"> </span><span class="l">Jellyfin</span><span class="tw">
+</span><span class="tw">        </span><span class="nt">url</span><span class="p">:</span><span class="tw"> </span><span class="l">https://jellyfin.example.com</span><span class="tw">
+</span><span class="tw">        </span><span class="nt">description</span><span class="p">:</span><span class="tw"> </span><span class="l">Movies and series</span><span class="tw">
+</span><span class="tw">        </span><span class="nt">icon</span><span class="p">:</span><span class="tw"> </span><span class="l">play_circle</span><span class="tw"> </span><span class="c"># Material icon, emoji or image URL</span><span class="tw">
+</span><span class="tw">        </span><span class="nt">check</span><span class="p">:</span><span class="tw"> </span><span class="kc">true</span><span class="tw"> </span><span class="c"># show an up/down dot for this service</span><span class="tw">
+</span><span class="tw">  </span><span class="t">- </span><span class="nt">name</span><span class="p">:</span><span class="tw"> </span><span class="l">Utilities</span><span class="tw">
+</span><span class="tw">    </span><span class="nt">services</span><span class="p">:</span><span class="tw">
+</span><span class="tw"></span><span class="tw">      </span><span class="t">- </span><span class="nt">name</span><span class="p">:</span><span class="tw"> </span><span class="l">Home Assistant</span><span class="tw">
+</span><span class="tw">        </span><span class="nt">url</span><span class="p">:</span><span class="tw"> </span><span class="l">https://ha.example.com</span></code></pre><p>Everything except a service's name and URL is optional. When the
+file does not exist the view renders setup instructions instead, so
+enabling the view costs nothing until it is configured.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-35"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">yaml</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-36"></span><span class="t"></span>
+<span id="line-37"></span><span class="nk">module</span><span class="t"> </span><span class="no">HomepageConfig</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+        <p>One launchable app. <code>icon</code> accepts a Material Icons ligature name
+(&quot;jellyfin&quot; does not exist, but &quot;play_circle&quot; does), an emoji, or
+an image URL for the dashboard-icons crowd. <code>check</code> opts the
+service into reachability monitoring (a colored dot).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-42"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="no">Service</span><span class="t"></span>
+<span id="line-43"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">YAML</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-44"></span><span class="t"></span>
+<span id="line-45"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-46"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">url</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-47"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">description</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-48"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">icon</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-49"></span><span class="t">    </span><span class="t">property?</span><span class="t"> </span><span class="t">check</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">false</span><span class="t"></span>
+<span id="line-50"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>A titled column of services, rendered as one card.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-53"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="no">Group</span><span class="t"></span>
+<span id="line-54"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">YAML</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-55"></span><span class="t"></span>
+<span id="line-56"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-57"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">services</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Service</span><span class="t">)</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Service</span><span class="t"></span>
+<span id="line-58"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <p>Optional weather widget settings. Coordinates are required (they
+are the whole point); the location name is purely cosmetic.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-62"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="no">Weather</span><span class="t"></span>
+<span id="line-63"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">YAML</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-64"></span><span class="t"></span>
+<span id="line-65"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">latitude</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-66"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">longitude</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Float64</span><span class="t"></span>
+<span id="line-67"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">location</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-68"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">units</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">metric</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-69"></span><span class="t"></span>
+<span id="line-70"></span><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">imperial?</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-71"></span><span class="t">      </span><span class="t">units</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">downcase</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">imperial</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-72"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-73"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-74"></span><span class="t"></span>
+<span id="line-75"></span><span class="t">  </span><span class="nk">class</span><span class="t"> </span><span class="no">Config</span><span class="t"></span>
+<span id="line-76"></span><span class="t">    </span><span class="nk">include</span><span class="t"> </span><span class="no">YAML</span><span class="no">::</span><span class="no">Serializable</span><span class="t"></span>
+<span id="line-77"></span><span class="t"></span>
+<span id="line-78"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">title</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Home</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-79"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">weather</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Weather</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-80"></span><span class="t">    </span><span class="t">property</span><span class="t"> </span><span class="t">groups</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Group</span><span class="t">)</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Group</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>True when the config has nothing at all to show: the view then
+renders its setup hint, like a missing file would.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-84"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">empty?</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-85"></span><span class="t">      </span><span class="t">groups</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">weather</span><span class="t">.</span><span class="nk">nil?</span><span class="t"></span>
+<span id="line-86"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>Reads and parses the config file. Raises on unreadable files and
+invalid YAML; an empty file is a valid (empty) config, which
+YAML::Serializable has no zero-argument constructor for, hence
+the empty mapping.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-92"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">load</span><span class="t">(</span><span class="t">path</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Config</span><span class="t"></span>
+<span id="line-93"></span><span class="t">      </span><span class="t">raw</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">File</span><span class="t">.</span><span class="t">read</span><span class="t">(</span><span class="t">path</span><span class="t">)</span><span class="t"></span>
+<span id="line-94"></span><span class="t">      </span><span class="t">raw</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="no">Config</span><span class="t">.</span><span class="t">from_yaml</span><span class="t">(</span><span class="s">&quot;</span><span class="s">{}</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Config</span><span class="t">.</span><span class="t">from_yaml</span><span class="t">(</span><span class="t">raw</span><span class="t">)</span><span class="t"></span>
+<span id="line-95"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-96"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-97"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Apathy
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

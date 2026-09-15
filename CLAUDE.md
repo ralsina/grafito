@@ -50,7 +50,14 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
 - `src/journalctl.cr` - Journal log parsing and filtering logic
 - `src/grafito_helpers.cr` - HTML generation helpers
 - `src/timeline.cr` - Timeline visualization
-- `src/baked_handler.cr` - Serves embedded assets
+- `src/dashboard.cr`, `src/compose_dashboard.cr`, `src/compose_jobs.cr`,
+  `src/compose_status.cr` - Server dashboard and Docker Compose views
+- `src/process_dashboard.cr`, `src/process_status.cr` - Process monitor view
+- `src/homepage.cr`, `src/homepage_config.cr`, `src/weather.cr` - Homepage
+  launcher view with weather widget
+- `src/gotify/` - Gotify push notification client and alert rules
+- Embedded assets are served with the `baked_file_handler` shard
+  (assets under `src/assets/` are compiled into the binary)
 - `src/ai/` - AI provider abstraction layer for log analysis
   - `config.cr` - AI configuration and provider detection
   - `provider.cr` - Abstract base class for AI providers
