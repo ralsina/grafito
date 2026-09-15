@@ -632,7 +632,8 @@
             class="console-button"
             href="https://grafito-demo.ralsina.me"
             target="_blank"
-            >View Demo Site</a
+            title="Fake data, fully interactive: every button works, nothing touches a real host"
+            >Try the Interactive Demo</a
           >
         </div>
 
@@ -721,7 +722,7 @@
         </div>
       </article>
 
-      <p class="section-label">modules 02–10 — capabilities</p>
+      <p class="section-label">modules 02–16 — capabilities</p>
       <div class="features-grid">
         <article class="panel">
           <h2><span class="module-id">02</span>Powerful Filtering</h2>
@@ -793,11 +794,10 @@
           <h2><span class="module-id">09</span>AI-Powered Log Analysis</h2>
           <p>
             Stuck on a confusing error? Get intelligent explanations from LLMs
-            with a single click. The AI analyzes log context to explain what
-            went wrong, potential causes, and suggested solutions. Uses
-            affordable
-            <a href="https://z.ai" target="_blank">z.ai</a> API - completely
-            optional!
+            with a single click, and ask follow-up questions in context.
+            Works with Anthropic, OpenAI, Groq, Together, any
+            OpenAI-compatible endpoint (local Ollama included) and more —
+            completely optional!
           </p>
         </article>
 
@@ -806,6 +806,64 @@
           <p>
             A modern, clutter-free interface. Supports both light and dark modes
             to match your preference and reduce eye strain.
+          </p>
+        </article>
+
+        <article class="panel">
+          <h2><span class="module-id">11</span>Server Dashboard</h2>
+          <p>
+            More than logs: a dashboard with system health, the state of your
+            systemd units, and a history chart of memory, disk and load —
+            sampled in the background, stored as plain JSONL, no database.
+            Optional Gotify push alerts for failing units and full disks.
+          </p>
+        </article>
+
+        <article class="panel">
+          <h2><span class="module-id">12</span>Docker Compose View</h2>
+          <p>
+            See your compose stacks, the services inside each one, and their
+            health at a glance. Start, stop, restart and update stacks with
+            job output streaming live into the page, Dockge-style. Read the
+            compose.yaml, tail service logs.
+          </p>
+        </article>
+
+        <article class="panel">
+          <h2><span class="module-id">13</span>App Store</h2>
+          <p>
+            Install popular self-hosted apps without writing YAML: a
+            Runtipi-compatible app store that renders catalog apps as ordinary
+            compose stacks — pick a port, fill in the form, and Grafito pulls
+            and runs it. Updates and uninstalls included.
+          </p>
+        </article>
+
+        <article class="panel">
+          <h2><span class="module-id">14</span>Process Monitor</h2>
+          <p>
+            htop on a page: per-core CPU meters and a live process table that
+            sorts by any column and filters by user, pid or command. Click a
+            row for full /proc details and a jump into its logs.
+          </p>
+        </article>
+
+        <article class="panel">
+          <h2><span class="module-id">15</span>Homepage Launcher</h2>
+          <p>
+            A simple start page for your self-hosted apps: service cards
+            grouped your way, up/down reachability dots, and an optional
+            weather widget. Configured with one small YAML file.
+          </p>
+        </article>
+
+        <article class="panel">
+          <h2><span class="module-id">16</span>Opt-in Actions & Security</h2>
+          <p>
+            Every privileged operation (unit control, process signals, stack
+            actions, app installs) is off by default and gated behind
+            authentication. Cross-site POSTs are rejected, and a docs page
+            shows how to put it safely behind a TLS reverse proxy.
           </p>
         </article>
       </div>

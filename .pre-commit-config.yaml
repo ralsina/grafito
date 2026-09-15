@@ -26,8 +26,9 @@ repos:
           - id: markdownlint
             # README.md and CHANGELOG.md are formatted by hand/tools with
             # tables, screenshots and generated sections that routinely
-            # violate line-length and header-increment rules.
-            exclude: '^content|^README\.md$|^CHANGELOG\.md$|^CLAUDE\.md$'
+            # violate line-length and header-increment rules; .copilot/
+            # notes predate the hook and have the same problem.
+            exclude: '^content|^README\.md$|^CHANGELOG\.md$|^CLAUDE\.md$|^\.copilot/'
     - repo: https://github.com/mrtazz/checkmake
       rev: 0.2.2
       hooks:

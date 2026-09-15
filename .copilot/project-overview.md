@@ -55,9 +55,19 @@ Grafito is a simple, self-contained web-based log viewer for systemd's `journalc
    - Log frequency histogram generation
    - SVG chart rendering for log distribution
 
-6. **Asset Handler** (`src/baked_handler.cr`)
-   - Serves embedded static files from binary
-   - Custom Kemal handler for asset delivery
+6. **Asset Handler** (`src/assets.cr`)
+   - Serves embedded static files from binary (via the
+     `baked_file_handler` shard)
+   - Includes the llmstxt.org `llms.txt` served at `/llms.txt`
+
+7. **Auxiliary views** (`src/dashboard.cr`, `src/compose_dashboard.cr`,
+   `src/compose_appstore.cr` + `src/app_store.cr`,
+   `src/process_dashboard.cr`, `src/homepage.cr`)
+   - Server dashboard with metrics history (`src/metrics_store.cr`,
+     `src/system_status.cr`), Docker Compose view with a
+     Runtipi-compatible app store, process monitor, homepage launcher
+   - Opt-in state-changing actions, gated behind `--enable-actions`
+     plus authentication
 
 ### Frontend Structure
 
@@ -90,7 +100,7 @@ Grafito is a simple, self-contained web-based log viewer for systemd's `journalc
 - **Priority Levels**: Emergency through Debug (0-7)
 
 ### User Interface
-- **Live View**: Auto-refresh every 10 seconds
+- **Live View**: SSE live tail via `/logs/stream` (polling fallback)
 - **Column Visibility**: Toggle timestamp, hostname, unit, priority, message columns
 - **Sortable Headers**: Click to sort by any column
 - **Detail View**: Expandable log entry details with full JSON
@@ -144,7 +154,12 @@ grafito/
 │   ├── journalctl.cr        # journalctl wrapper
 │   ├── grafito_helpers.cr   # Utility functions
 │   ├── timeline.cr          # Log visualization
-│   ├── baked_handler.cr     # Asset serving
+│   ├── assets.cr            # Asset serving (+ llms.txt)
+│   ├── dashboard.cr         # Server dashboard view
+│   ├── compose_dashboard.cr # Docker Compose view
+│   ├── compose_appstore.cr  # App store endpoints
+│   ├── process_dashboard.cr # Process monitor view
+│   ├── homepage.cr          # Homepage launcher view
 │   └── assets/              # Frontend files
 │       ├── index.html       # Main app UI
 │       ├── style.css        # Styles
@@ -189,5 +204,6 @@ grafito/
 
 ### Data Privacy
 - No log persistence beyond systemd journal
-- No external network calls except for fonts/icons
+- Outbound calls only when features opt in: AI providers, the weather
+  widget (Open-Meteo), Gotify alerts and app store downloads
 - All processing happens server-side

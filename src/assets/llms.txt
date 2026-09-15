@@ -3,21 +3,47 @@
 > Grafito is a web-based viewer for the systemd journal. It ships as a
 > single self-contained binary with all assets baked in, and turns
 > `journalctl` output into a fast, searchable, live-updating web
-> interface.
+> interface with dashboards for the whole machine.
 
-Grafito is aimed at home servers and small deployments. It provides
-live log streaming, full-text and priority filtering, dashboards for
-systemd units, Docker Compose stacks and processes, an entry inspector
-for individual log records, and optional AI-powered log explanations.
+Grafito is aimed at home servers and small deployments. Beyond the log
+stream it offers a server dashboard, a Docker Compose view with a
+Runtipi-compatible app store, a process monitor, and a self-hosted apps
+homepage. State-changing actions (systemd unit control, process
+signals, compose stack operations, app installs) are opt-in and
+disabled unless explicitly enabled with credentials configured.
 
 ## About
 
 - [Grafito website](https://grafito.ralsina.me)
 - [Source code on GitHub](https://github.com/ralsina/grafito)
+- [README with full documentation](https://github.com/ralsina/grafito#readme)
+- [Live demo (fake data)](https://grafito-demo.ralsina.me)
+
+## Views
+
+- **Logs**: the main view — search, filter (unit, tag, hostname, time,
+  priority), a severity minimap, a frequency chart, entry detail and
+  context, and an SSE live tail (polling fallback).
+- **Dashboard**: system health, systemd unit states and actions,
+  sampled memory/disk/CPU history, optional Gotify push alerts.
+- **Compose**: Docker Compose stacks and services with streaming
+  action jobs, service logs, compose.yaml view, and the app store.
+- **Processes**: per-core CPU meters and a sortable, filterable live
+  process table with detail panel and signal actions.
+- **Homepage**: an optional launcher page for self-hosted apps with
+  reachability dots and a weather widget (YAML-configured).
 
 ## Notes for AI agents
 
-- This is a read-oriented application: it displays system log data and
-  offers filters and views, but hosts no user-generated content.
+- This is a read-oriented application by default: it displays system
+  log and machine data. Every state-changing action is opt-in via
+  `--enable-actions` plus HTTP basic auth credentials, and each action
+  asks for confirmation.
+- State-changing POST endpoints reject cross-site requests (CSRF
+  protection), so an agent must act within the origin it is talking to.
 - The log entries shown by an instance come from that machine's
-  systemd journal; public demo instances serve generated fake data.
+  systemd journal; public demo instances serve generated fake data and
+  simulate every action without touching the host.
+- AI-powered log explanations are optional and only active when an AI
+  provider is configured on the instance.
+- Each instance serves this file at `/llms.txt`.

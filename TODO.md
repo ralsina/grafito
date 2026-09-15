@@ -2,7 +2,7 @@
 
 * Formalize API
 * Write MCP
-* Maybe add z.ai integration
+* ✅ Maybe add z.ai integration (the `z_ai` provider)
 * ✅ Handle configurable URLs
 * ✅ Authentication
 * ✅ Better error handling (client side!)
@@ -14,8 +14,8 @@
 * ✅ Implement "context": link an entry to unfiltered nearby entries.
 * ✅ Implement "detail": show all the fields in a table for a specific entry
 * ✅ Use <https://github.com/crystal-lang/html_builder> to build HTML
-* Make it literate, push through crycco, produce nice site
-* ✅ Replace emoji icons with actual icons (see https://fonts.google.com/icons)
+* ✅ Make it literate, push through crycco, produce nice site (`make website`)
+* ✅ Replace emoji icons with actual icons (see <https://fonts.google.com/icons>)
 * ✅ Use minified assets automatically
 * ✅ Package for arch (with systemd service)
 * ✅ Create install script

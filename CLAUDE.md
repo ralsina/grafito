@@ -20,6 +20,7 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
 
 ### Testing and Quality
 - `make test` - Run all tests
+- `make test-demo` - Run the demo-mode test suite (`crystal spec -Ddemo_mode`)
 - `crystal spec` - Run tests using Crystal spec framework
 - `crystal spec spec/journalctl_spec.cr` - Run specific test file
 - `make lint` - Run Ameba linter with auto-fix
@@ -46,12 +47,17 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
 
 ### Core Components
 - `src/main.cr` - Entry point with docopt CLI parsing and Kemal server setup
-- `src/grafito.cr` - HTTP routes and web interface
+- `src/grafito.cr` - HTTP routes and web interface, including the
+  `/logs/stream` SSE live tail and the `/server-info` demo-disclaimer endpoint
 - `src/journalctl.cr` - Journal log parsing and filtering logic
 - `src/grafito_helpers.cr` - HTML generation helpers
 - `src/timeline.cr` - Timeline visualization
+- `src/assets.cr` - Baked asset serving (via `baked_file_handler`),
+  including the llmstxt.org `llms.txt`
 - `src/dashboard.cr`, `src/compose_dashboard.cr`, `src/compose_jobs.cr`,
   `src/compose_status.cr` - Server dashboard and Docker Compose views
+- `src/metrics_store.cr`, `src/system_status.cr` - Dashboard metrics
+  sampling (JSONL history under the data dir) and current-status API
 - `src/app_store.cr`, `src/compose_appstore.cr` - Runtipi-compatible app
   store for the compose view (catalog, install/update/uninstall of apps
   as compose stacks; fetching, parsing and rendering in app_store.cr,
@@ -71,7 +77,11 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
   - `providers/anthropic.cr` - Anthropic/Claude API integration
   - `providers/openai_compatible.cr` - OpenAI-compatible API wrapper (Z.AI, OpenAI, Groq, Ollama, etc.)
   - `providers/jimmy.cr` - Built-in ChatJimmy free endpoint (unofficial, only via `GRAFITO_AI_PROVIDER=jimmy`)
-- `src/fake_journal_data.cr` - Fake data generation for demo mode (compile with `--flag=demo_mode`)
+- `src/fake_journal_data.cr` - Fake journal generation for demo mode
+  (compile with `-Ddemo_mode`), with a cursor cache so detail/context
+  lookups stay coherent; `src/fake_compose_data.cr`,
+  `src/fake_homepage_data.cr` and `src/fake_appstore_data.cr` fake the
+  other views the same way
 
 ### Dependencies Philosophy
 The project intentionally minimizes dependencies:
@@ -116,6 +126,10 @@ To access all system logs, the application needs to run as a user in the `system
 - Uses Crystal's built-in spec framework
 - Tests cover: journalctl parsing, timeline generation, helper functions, timezone handling, AI providers
 - Run `crystal spec` to execute all tests before committing
+- Run both suites for full coverage: `crystal spec` and
+  `crystal spec -Ddemo_mode` (aka `make test-demo`) — the demo-only
+  surface (fake data, simulated actions in `spec/demo_actions_spec.cr`)
+  is only compiled with the flag
 - Individual test files can be run: `crystal spec spec/journalctl_spec.cr`
 - AI provider tests: `crystal spec spec/ai/`
 
@@ -158,11 +172,29 @@ Uses docopt for command-line parsing as explicitly preferred by the maintainer. 
 - `--timezone TIMEZONE` / `-t TIMEZONE` - Timezone for timestamps (default: local)
 - `--base-path PATH` - Base path for deployment (default: /)
 - `--log-level LEVEL` - Set log level (debug, info, warn, error, fatal)
+- `--enable-actions` - Opt-in state-changing actions (unit control,
+  process signals, compose and app store operations; requires auth)
+- `--data-dir PATH` - Metrics history, app store caches, installed apps
+  (default: /var/lib/grafito)
+- View toggles, each `--<name>=BOOL`: `--dashboard`, `--compose`,
+  `--apps`, `--processes`, `--homepage` (all default true; env vars
+  `GRAFITO_<NAME>` work too, e.g. `GRAFITO_COMPOSE=false`)
+- `--idle-timeout-sec=N` - Shut down after N seconds without requests
+  (for socket activation)
 
-### Demo/Development Mode
-- Compile with `--flag=demo_mode` to enable fake data mode for UI development without journal access
-- Creates realistic-looking log data for testing interface features
-- Useful for development on systems without systemd journals
+### Demo Mode
+- Compile with `-Ddemo_mode` (e.g. `shards build -Ddemo_mode`, specs
+  via `make test-demo`) to build a fully interactive fake-data mode
+- Every view renders fake data (`fake_journal_data.cr`,
+  `fake_compose_data.cr`, `fake_homepage_data.cr`,
+  `fake_appstore_data.cr`) and every action endpoint simulates its
+  effect on the fake world — no docker/systemctl/journalctl command
+  can ever run on the host
+- The status bar shows a "demo mode" disclaimer, fetched once from
+  `GET /server-info`
+- Used for the public demo site (see `deploy_site.sh`,
+  `Dockerfile.demo`, `demo-site/compose.yml`) and for UI development
+  on machines without a systemd journal
 
 ### AI Features Configuration
 AI log analysis is optional and provider-agnostic:
@@ -244,13 +276,17 @@ AI log analysis is optional and provider-agnostic:
 
 ### Docker Deployment
 - `Dockerfile` - Standard Docker build
-- `Dockerfile.static` - Static binary build for cross-compilation
+- `Dockerfile.static` - Static-build toolchain image (the compile step
+  runs in `docker run` via `build_static.sh`)
+- `Dockerfile.demo` - Demo image: a `-Ddemo_mode` static arm64 binary,
+  built and pushed by `deploy_site.sh` as
+  `ghcr.io/ralsina/grafito-demo-arm64`
 - Images available for AMD64 and ARM64 architectures
 - Example: `docker run -p 3000:3000 -v /var/log/journal:/var/log/journal ghcr.io/ralsina/grafito:latest`
 
 ### Systemd Service
-- `grafito.service` - Production systemd service file
-- `grafito-fake.service` - Demo mode with fake data
+- `grafito.service` - Production systemd service file (a socket-activation variant is documented in the README)
+- The public demo runs as a docker compose stack (`demo-site/compose.yml`), not as a systemd unit
 - Uses DynamicUser for security
 - Runs with systemd-journal group for log access
 

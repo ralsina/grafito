@@ -16,8 +16,11 @@ directly from your web browser.
   <img src="screenshots/mobile.png" width="14%" alt="Mobile layout" />
 </p>
 
-There is a live demo with fake logs (and AI enabled) at
-[grafito-demo.ralsina.me](https://grafito-demo.ralsina.me).
+There is a live demo with fake logs at
+[grafito-demo.ralsina.me](https://grafito-demo.ralsina.me). Demo
+builds are fully interactive: every action button works against the
+fake world (and the AI explanations are enabled), while nothing ever
+runs on the demo host.
 
 Key features include:
 
@@ -26,7 +29,8 @@ Key features include:
 * **Inspector side panel** - clicking any log entry opens a Detail tab;
   Context shows the surrounding entries with the inspected one
   highlighted, and the AI tab holds the explanation.
-* Real-time log viewing (with an optional auto-refresh) and an
+* Live log tailing over Server-Sent Events (with an automatic fallback
+  to polling) and an
   interactive severity minimap with hover previews and click-to-jump.
 * An event frequency chart with adaptive buckets: click a bar to jump
   to that moment in the log.
@@ -41,6 +45,8 @@ Key features include:
 * **Homepage view** - a launcher for your self-hosted apps with
   optional weather widget and reachability dots, configured with a
   simple YAML file.
+* An `llms.txt` (llmstxt.org format) served from every instance at
+  `/llms.txt` for AI agents browsing the site.
 * A dynamic user interface powered by HTMX for a smooth experience.
 * Embedded assets (HTML, favicon) for easy deployment as a single
   binary.
@@ -345,6 +351,11 @@ Then set `GRAFITO_AUTH_USER` / `GRAFITO_AUTH_PASS` and add
 and the privileged commands they authorize. Grafito logs a warning at
 startup if actions are enabled on a non-loopback bind address.
 
+As a second layer of defense, all state-changing POST endpoints reject
+cross-site requests: browsers' `Sec-Fetch-Site` header is honored, and
+`Origin`/`Referer` are checked against the host when present, so a
+malicious page cannot ride your session to trigger actions.
+
 If you don't need actions remotely, bind to `127.0.0.1` and skip
 `--enable-actions` entirely — everything else (logs, dashboard,
 compose, processes) works read-only.
@@ -433,7 +444,7 @@ After installation, Grafito should be running and accessible at `http://<your_se
 ### Prebuilt Binaries
 
 To install from prebuilt binaries, download the latest release from the
-[releases page](github.com/ralsina/grafito/releases). The binaries are
+[releases page](https://github.com/ralsina/grafito/releases). The binaries are
 available for linux, both x86_64 and arm64 architectures. You can get an example
 `grafito.service` [from the repository.](https://github.com/ralsina/grafito/blob/main/grafito.service)
 
