@@ -227,6 +227,80 @@ class Journalctl
     Grafito.user_mode? ? ["--user"] : [] of String
   end
 
+  # Builds the journalctl command array for a live follow tail (-f).
+  # Shares the filter parsing with build_query_command via
+  # filter_match_args; adds no -n/-r (the tail runs indefinitely).
+  def self.build_follow_command(
+    since : String? = nil,
+    unit : String? = nil,
+    tag : String? = nil,
+    query : String? = nil,
+    priority : String? = nil,
+    hostname : String? = nil,
+  ) : Array(String)
+    command = ["journalctl", "-f", "-m", "-o", "json"] + user_flags
+    command + filter_match_args(since, unit, tag, query, priority, hostname)
+  end
+
+  # The shared filter arguments (since/units/tags/query/priority/
+  # hostname) used by both the one-shot and follow command builders.
+  private def self.filter_match_args(
+    since : String?,
+    unit : String?,
+    tag : String?,
+    query : String?,
+    priority : String?,
+    hostname : String?,
+  ) : Array(String)
+    args = [] of String
+
+    if since
+      args << "-S" << since
+    end
+
+    if unit
+      # Split the unit string into words and add -u for each word
+      unit.split.each do |u_word|
+        args << "-u" << u_word unless u_word.strip.empty? # Avoid adding empty strings
+      end
+    end
+
+    if tag
+      tag.split.each do |word|
+        if word.starts_with?('-') && word.size > 1
+          # Tags to exclude
+          args << "-T" << word[1..] # Add -T flag and the word without the leading '-'
+        elsif !word.starts_with? '-'
+          # Tags to include
+          args << "-t" << word # Add -t flag and the word
+        end
+      end
+    end
+
+    if query
+      # Check if the query string matches the pattern for a direct field=value filter.
+      # Examples: _SYSTEMD_UNIT=foo.service, MESSAGE=bar, MY_VAR=baz
+      # Field names are typically uppercase and may start with an underscore.
+      # The regex checks for an optional leading underscore, then one or more uppercase alphanumeric characters (or underscore) for the field name,
+      # followed by an equals sign and any characters for the value.
+      if query.matches?(/^_{0,1}[A-Z0-9_]+=.*$/)
+        args << query # Pass verbatim as a journalctl match
+      else
+        args << "-g" << query # Use as a general text search pattern with -g
+      end
+    end
+
+    if priority
+      args << "-p" << priority
+    end
+
+    if hostname && !hostname.strip.empty?
+      # Add as a match filter for the _HOSTNAME field
+      args << "_HOSTNAME=#{hostname.strip}"
+    end
+    args
+  end
+
   # Builds the journalctl command array based on the provided filters.
   # This is a private helper method.
   def self.build_query_command(
@@ -242,51 +316,7 @@ class Journalctl
 
     command << "-m" << "-o" << "json" << "-n" << lines.to_s << "-r"
 
-    if since
-      command << "-S" << since
-    end
-
-    if unit
-      # Split the unit string into words and add -u for each word
-      unit.split.each do |u_word|
-        command << "-u" << u_word unless u_word.strip.empty? # Avoid adding empty strings
-      end
-    end
-
-    if tag
-      tag.split.each do |word|
-        if word.starts_with?('-') && word.size > 1
-          # Tags to exclude
-          command << "-T" << word[1..] # Add -T flag and the word without the leading '-'
-        elsif !word.starts_with? '-'
-          # Tags to include
-          command << "-t" << word # Add -t flag and the word
-        end
-      end
-    end
-
-    if query
-      # Check if the query string matches the pattern for a direct field=value filter.
-      # Examples: _SYSTEMD_UNIT=foo.service, MESSAGE=bar, MY_VAR=baz
-      # Field names are typically uppercase and may start with an underscore.
-      # The regex checks for an optional leading underscore, then one or more uppercase alphanumeric characters (or underscore) for the field name,
-      # followed by an equals sign and any characters for the value.
-      if query.matches?(/^_{0,1}[A-Z0-9_]+=.*$/)
-        command << query # Pass verbatim as a journalctl match
-      else
-        command << "-g" << query # Use as a general text search pattern with -g
-      end
-    end
-
-    if priority
-      command << "-p" << priority
-    end
-
-    if hostname && !hostname.strip.empty?
-      # Add as a match filter for the _HOSTNAME field
-      command << "_HOSTNAME=#{hostname.strip}"
-    end
-    command
+    command + filter_match_args(since, unit, tag, query, priority, hostname)
   end
 
   # Queries the logs based on the provided criteria.
@@ -541,7 +571,7 @@ class Journalctl
   end
 
   # Per-entry variant of filter_allowed_units for the streaming parser.
-  private def self.allowed_unit?(entry : LogEntry) : Bool
+  def self.allowed_unit?(entry : LogEntry) : Bool
     allowed_units = Grafito.allowed_units
     return true unless allowed_units
 

@@ -529,7 +529,7 @@
         <div
           id="live-view-poller"
           hx-get="logs"
-          hx-trigger="every 10s[document.getElementById('live-view').checked], live-poll from:body"
+          hx-trigger="every 10s[document.getElementById('live-view').checked && !window.__liveSSEActive], live-poll from:body"
           hx-target="#results"
           hx-include=".log-filter"
         ></div>

@@ -18,6 +18,8 @@ module Grafito
       @timeout_sec = timeout_sec
       @logger = logger
       @channel = Channel(Nil).new
+      # Expose the channel to the class-level touch (SSE keepalive).
+      @@touch_channel = @channel
       spawn(name: "IdleShutdownHandler(#{timeout_sec}s)") do
         # Loop forever, exiting when timeout_sec passes without a new request
         loop do
@@ -38,6 +40,14 @@ module Grafito
       end
       call_next(context)
     end
+
+    # Long-lived responses (SSE streams) count as activity too: their
+    # keepalive loop touches the handler periodically.
+    def self.touch
+      @@touch_channel.try(&.send(nil))
+    end
+
+    @@touch_channel : Channel(Nil)? = nil
   end
 
   # Sets cache headers appropriate for each asset type: HTML documents
@@ -68,6 +78,10 @@ module Grafito
     COMPRESSIBLE = /^text\/|^application\/(json|javascript)/
 
     def call(context)
+      # Streaming responses (SSE) never return from call_next, so
+      # buffering them here would hold the stream open forever.
+      return call_next(context) if context.request.path.ends_with?("/stream")
+
       accepts = context.request.headers["Accept-Encoding"]?
       if accepts.try(&.includes?("gzip"))
         original_output = context.response.output
@@ -353,130 +367,161 @@ module Grafito
             end
           else
             logs.each do |entry|
-              row_classes = ["log-row-hover-actions", "priority-#{entry.priority.to_i}"]
-              entry_cursor = entry.data["__CURSOR"]?
-              is_target = !highlight_cursor.nil? && entry_cursor == highlight_cursor
-              if is_target
-                row_classes << "highlighted-row"
-                row_classes << "context-target"
-              end
-              # The cursor rides on the row so a plain click can open the
-              # detail tab in the sidebar.
-              row_attributes = {"class" => row_classes.join(" ")}
-              row_attributes["data-cursor"] = entry_cursor if entry_cursor
-              row_attributes["data-epoch"] = entry.timestamp.to_unix.to_s
-              tr(row_attributes) do
-                if show_timestamp
-                  td(class: "log-timestamp-cell", style: "white-space: nowrap; min-width: 14ch;") do
-                    if is_target
-                      span(class: "context-target-badge") do
-                        text "this entry"
-                      end
-                      text " "
-                    end
-                    # Using timezone-aware timestamp format: MM-DD HH:MM:SS
-                    text entry.formatted_timestamp_with_timezone("%m-%d %H:%M:%S")
-                  end
-                end
-                if show_hostname
-                  td(class: "log-hostname-cell") do
-                    # Make the hostname clickable to set the filter
-                    display_hostname = HTML.escape(entry.hostname)
-                    js_arg_hostname = entry.hostname.to_json # Ensures proper JS string escaping
-                    a(href: "#", onclick: "return setHostnameFilterAndTrigger(#{js_arg_hostname});") do
-                      text display_hostname
-                    end
-                  end
-                end
-                if show_unit
-                  td(class: "log-unit-cell") do
-                    # Make the unit name clickable to set the filter
-                    display_unit_name = HTML.escape(entry.unit)
-                    # JSON.generate creates a valid JavaScript string literal, e.g., "\"my-unit\""
-                    js_arg_unit_name = entry.unit.to_json
-                    a(href: "#", onclick: "return setUnitFilterAndTrigger(#{js_arg_unit_name});") do
-                      text display_unit_name
-                    end
-                  end
-                end
-                if show_tag
-                  td(class: "log-tag-cell") do
-                    # Make the tag clickable to set the filter, like the
-                    # unit and hostname cells.
-                    if !entry.tag.strip.empty?
-                      display_tag = HTML.escape(entry.tag)
-                      js_arg_tag = entry.tag.to_json
-                      a(href: "#", onclick: "return setTagFilterAndTrigger(#{js_arg_tag});") do
-                        text display_tag
-                      end
-                    end
-                  end
-                end
-                if show_priority
-                  td(class: "log-priority-cell") do
-                    span(class: "tag") do
-                      text HTML.escape(entry.formatted_priority)
-                    end
-                  end
-                end
-                if show_message
-                  escaped_message = HTML.escape(entry.message)
-                  highlighted_message = if search_query && !search_query.strip.empty?
-                                          pattern = Regex.escape(search_query)
-                                          escaped_message.gsub(/#{pattern}/i, "<mark>\\0</mark>")
-                                        else
-                                          escaped_message
-                                        end
-                  td(class: "log-message-cell") do
-                    html highlighted_message
-                  end
-                end
+              html log_row(
+                entry,
+                search_query,
+                show_timestamp: show_timestamp,
+                show_hostname: show_hostname,
+                show_unit: show_unit,
+                show_tag: show_tag,
+                show_priority: show_priority,
+                show_message: show_message,
+                highlight_cursor: highlight_cursor,
+              )
+            end
+          end
+        end
+      end
+    end
+  end
 
-                if entry_cursor
-                  cursor_param = URI::Params.encode({"cursor" => entry_cursor})
-                  # Details button
-                  html _hover_action_button_cell(
-                    title: "View full details for this log entry",
-                    icon: "search",
-                    tab: "detail",
-                    url: "#{build_url("details")}?#{cursor_param}",
-                  )
-                  # Context button
-                  html _hover_action_button_cell(
-                    title: "View context for this log entry (e.g., 5 before & 5 after)",
-                    icon: "history",
-                    tab: "context",
-                    url: "#{build_url("context")}?#{cursor_param}",
-                  )
-                  # Copy-entry button: copies the entry as a journalctl-style
-                  # line (timestamp hostname unit[pid]: message).
-                  copied_entry_text = String.build do |str|
-                    str << entry.formatted_timestamp_with_timezone("%Y-%m-%d %H:%M:%S")
-                    str << " " << entry.hostname
-                    str << " " << entry.unit
-                    if pid = entry.data["_PID"]?
-                      str << "[" << pid << "]"
-                    end
-                    str << ": " << entry.message
-                  end
-                  html _hover_action_button_cell(
-                    title: "Copy this log entry to the clipboard",
-                    icon: "content_copy",
-                    tab: "copy",
-                    onclick: "copyLogEntry(#{copied_entry_text.to_json}, this)",
-                  )
-                  # AI Explanation button (only shown if AI is enabled)
-                  if Grafito.ai_enabled?
-                    html _hover_action_button_cell(
-                      title: "Ask AI to explain this log entry",
-                      icon: "psychology",
-                      tab: "ai",
-                      onclick: "askAIExplanation(#{entry_cursor.to_json})",
-                    )
-                  end
-                end
+  # Renders one log entry as a table row (including hover action
+  # buttons). Shared by html_log_output and the SSE live tail.
+  # (Moved verbatim out of html_log_output — one branch per optional
+  # cell is inherent to the markup.)
+  # ameba:disable Metrics/CyclomaticComplexity
+  def log_row(
+    entry : Journalctl::LogEntry,
+    search_query : String?,
+    show_timestamp : Bool = true,
+    show_hostname : Bool = true,
+    show_unit : Bool = true,
+    show_tag : Bool = true,
+    show_priority : Bool = true,
+    show_message : Bool = true,
+    highlight_cursor : String? = nil,
+  ) : String
+    row_classes = ["log-row-hover-actions", "priority-#{entry.priority.to_i}"]
+    entry_cursor = entry.data["__CURSOR"]?
+    is_target = !highlight_cursor.nil? && entry_cursor == highlight_cursor
+    if is_target
+      row_classes << "highlighted-row"
+      row_classes << "context-target"
+    end
+    # The cursor rides on the row so a plain click can open the
+    # detail tab in the sidebar.
+    row_attributes = {"class" => row_classes.join(" ")}
+    row_attributes["data-cursor"] = entry_cursor if entry_cursor
+    row_attributes["data-epoch"] = entry.timestamp.to_unix.to_s
+    HTML.build do
+      tr(row_attributes) do
+        if show_timestamp
+          td(class: "log-timestamp-cell", style: "white-space: nowrap; min-width: 14ch;") do
+            if is_target
+              span(class: "context-target-badge") do
+                text "this entry"
+              end
+              text " "
+            end
+            # Using timezone-aware timestamp format: MM-DD HH:MM:SS
+            text entry.formatted_timestamp_with_timezone("%m-%d %H:%M:%S")
+          end
+        end
+        if show_hostname
+          td(class: "log-hostname-cell") do
+            # Make the hostname clickable to set the filter
+            display_hostname = HTML.escape(entry.hostname)
+            js_arg_hostname = entry.hostname.to_json # Ensures proper JS string escaping
+            a(href: "#", onclick: "return setHostnameFilterAndTrigger(#{js_arg_hostname});") do
+              text display_hostname
+            end
+          end
+        end
+        if show_unit
+          td(class: "log-unit-cell") do
+            # Make the unit name clickable to set the filter
+            display_unit_name = HTML.escape(entry.unit)
+            # JSON.generate creates a valid JavaScript string literal, e.g., "\"my-unit\""
+            js_arg_unit_name = entry.unit.to_json
+            a(href: "#", onclick: "return setUnitFilterAndTrigger(#{js_arg_unit_name});") do
+              text display_unit_name
+            end
+          end
+        end
+        if show_tag
+          td(class: "log-tag-cell") do
+            # Make the tag clickable to set the filter, like the
+            # unit and hostname cells.
+            if !entry.tag.strip.empty?
+              display_tag = HTML.escape(entry.tag)
+              js_arg_tag = entry.tag.to_json
+              a(href: "#", onclick: "return setTagFilterAndTrigger(#{js_arg_tag});") do
+                text display_tag
               end
             end
+          end
+        end
+        if show_priority
+          td(class: "log-priority-cell") do
+            span(class: "tag") do
+              text HTML.escape(entry.formatted_priority)
+            end
+          end
+        end
+        if show_message
+          escaped_message = HTML.escape(entry.message)
+          highlighted_message = if search_query && !search_query.strip.empty?
+                                  pattern = Regex.escape(search_query)
+                                  escaped_message.gsub(/#{pattern}/i, "<mark>\\0</mark>")
+                                else
+                                  escaped_message
+                                end
+          td(class: "log-message-cell") do
+            html highlighted_message
+          end
+        end
+
+        if entry_cursor
+          cursor_param = URI::Params.encode({"cursor" => entry_cursor})
+          # Details button
+          html _hover_action_button_cell(
+            title: "View full details for this log entry",
+            icon: "search",
+            tab: "detail",
+            url: "#{build_url("details")}?#{cursor_param}",
+          )
+          # Context button
+          html _hover_action_button_cell(
+            title: "View context for this log entry (e.g., 5 before & 5 after)",
+            icon: "history",
+            tab: "context",
+            url: "#{build_url("context")}?#{cursor_param}",
+          )
+          # Copy-entry button: copies the entry as a journalctl-style
+          # line (timestamp hostname unit[pid]: message).
+          copied_entry_text = String.build do |str|
+            str << entry.formatted_timestamp_with_timezone("%Y-%m-%d %H:%M:%S")
+            str << " " << entry.hostname
+            str << " " << entry.unit
+            if pid = entry.data["_PID"]?
+              str << "[" << pid << "]"
+            end
+            str << ": " << entry.message
+          end
+          html _hover_action_button_cell(
+            title: "Copy this log entry to the clipboard",
+            icon: "content_copy",
+            tab: "copy",
+            onclick: "copyLogEntry(#{copied_entry_text.to_json}, this)",
+          )
+          # AI Explanation button (only shown if AI is enabled)
+          if Grafito.ai_enabled?
+            html _hover_action_button_cell(
+              title: "Ask AI to explain this log entry",
+              icon: "psychology",
+              tab: "ai",
+              onclick: "askAIExplanation(#{entry_cursor.to_json})",
+            )
           end
         end
       end

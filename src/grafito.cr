@@ -219,6 +219,103 @@ module Grafito
       end
     end
 
+    # ## The `/logs/stream` endpoint (SSE live tail)
+    #
+    # Server-sent events: one `journalctl -f -o json` per connection with
+    # the current filters, each incoming entry parsed and emitted as a
+    # rendered `log` event the frontend prepends to the results table.
+    # Heartbeat comments every 15s keep proxies and idle timers honest.
+    get route_path("logs/stream") do |env|
+      since = optional_query_param(env, "since")
+      unit = optional_query_param(env, "unit")
+      tag = optional_query_param(env, "tag")
+      search_query = optional_query_param(env, "q")
+      priority = optional_query_param(env, "priority")
+      hostname = optional_query_param(env, "hostname")
+
+      # Column visibility matches the /logs table so streamed rows are
+      # shaped exactly like the ones already on screen.
+      show_timestamp = env.params.query.has_key?("col-visible-timestamp")
+      show_hostname = env.params.query.has_key?("col-visible-hostname")
+      show_unit = env.params.query.has_key?("col-visible-unit")
+      show_tag = env.params.query.has_key?("col-visible-tag")
+      show_priority = env.params.query.has_key?("col-visible-priority")
+      show_message = env.params.query.has_key?("col-visible-message")
+
+      env.response.content_type = "text/event-stream"
+      env.response.headers["Cache-Control"] = "no-cache"
+      env.response.headers["X-Accel-Buffering"] = "no"
+
+      command = Journalctl.build_follow_command(
+        since: since, unit: unit, tag: tag, query: search_query,
+        priority: priority, hostname: hostname,
+      )
+      Log.info { "Live tail starting: #{command.inspect}" }
+
+      done = Channel(Nil).new
+      process = Process.new(
+        command[0], args: command[1..],
+        output: Process::Redirect::Pipe,
+        error: Process::Redirect::Close,
+      )
+
+      # Heartbeat: a comment line every 15s keeps proxies from timing
+      # the stream out and counts as activity for the idle shutdown
+      # handler (when enabled).
+      spawn do
+        loop do
+          select
+          when done.receive
+            break
+          when timeout(15.seconds)
+            begin
+              env.response.puts ": keepalive"
+              env.response.flush
+              IdleShutdownHandler.touch
+            rescue
+              break
+            end
+          end
+        end
+      end
+
+      begin
+        env.response.puts ": connected"
+        env.response.flush
+        process.output.each_line do |line|
+          next if line.strip.empty?
+          begin
+            entry = Journalctl::LogEntry.from_json(line)
+          rescue
+            next
+          end
+          next unless Journalctl.allowed_unit?(entry)
+
+          row = log_row(
+            entry,
+            search_query,
+            show_timestamp: show_timestamp,
+            show_hostname: show_hostname,
+            show_unit: show_unit,
+            show_tag: show_tag,
+            show_priority: show_priority,
+            show_message: show_message,
+          )
+          env.response.puts "event: log"
+          env.response.puts "data: #{row}"
+          env.response.puts ""
+          env.response.flush
+        end
+      rescue IO::Error
+        # Client disconnected — the normal way a tail ends.
+      ensure
+        done.send(nil)
+        process.signal(Signal::TERM) rescue nil
+        process.wait rescue nil
+        Log.info { "Live tail ended" }
+      end
+    end
+
     # ## The `/services` endpoint
     #
     # Exposes the list of known service units. The frontend uses
