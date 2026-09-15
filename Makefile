@@ -57,14 +57,31 @@ lint:
 	@echo "Linting Crystal code (Ameba --fix also formats)..."
 	ameba --fix $(CRYSTAL_SRC_DIR)
 
-# --- Minify Specific Assets ---
+# --- Frontend assets ---
+# CSS and JS are edited as small modules under css/ and js/ and
+# concatenated (in filename order — keep the numeric prefixes) into the
+# served artifacts, which are then minified. The concatenated and
+# minified files are committed so the binary build needs no extra
+# tooling beyond `minify`.
+CSS_MODULES := $(wildcard $(ASSETS_DIR)/css/*.css)
+JS_MODULES  := $(wildcard $(ASSETS_DIR)/js/*.js)
 INDEX_HTML_SRC := $(ASSETS_DIR)/index.html
 INDEX_HTML_MIN := $(ASSETS_DIR)/index.min.html
 STYLE_CSS_SRC := $(ASSETS_DIR)/style.css
 STYLE_CSS_MIN := $(ASSETS_DIR)/style.min.css
+APP_JS_SRC := $(ASSETS_DIR)/app.js
+APP_JS_MIN := $(ASSETS_DIR)/app.min.js
+
+$(STYLE_CSS_SRC): $(CSS_MODULES)
+	@echo "Concatenating CSS modules to $@"
+	cat $(CSS_MODULES) > $@
+
+$(APP_JS_SRC): $(JS_MODULES)
+	@echo "Concatenating JS modules to $@"
+	cat $(JS_MODULES) > $@
 
 .PHONY: minify
-minify: $(INDEX_HTML_MIN) $(STYLE_CSS_MIN)
+minify: $(INDEX_HTML_MIN) $(STYLE_CSS_MIN) $(APP_JS_MIN)
 
 $(INDEX_HTML_MIN): $(INDEX_HTML_SRC)
 	@echo "Minifying $< to $@"
@@ -72,6 +89,11 @@ $(INDEX_HTML_MIN): $(INDEX_HTML_SRC)
 	@printf '\n' >> $@ # pre-commit's end-of-file-fixer requires a trailing newline
 
 $(STYLE_CSS_MIN): $(STYLE_CSS_SRC)
+	@echo "Minifying $< to $@"
+	minify $< -o $@
+	@printf '\n' >> $@ # pre-commit's end-of-file-fixer requires a trailing newline
+
+$(APP_JS_MIN): $(APP_JS_SRC)
 	@echo "Minifying $< to $@"
 	minify $< -o $@
 	@printf '\n' >> $@ # pre-commit's end-of-file-fixer requires a trailing newline

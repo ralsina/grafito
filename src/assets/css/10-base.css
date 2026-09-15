@@ -1,0 +1,80 @@
+/* =====================================================================
+   Base
+   ===================================================================== */
+html {
+  font-size: 87.5%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+#app-shell {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto 1fr auto;
+  height: 100vh;
+  height: 100dvh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  color: var(--txt);
+}
+
+a {
+  color: var(--accent);
+}
+
+mark {
+  background: var(--mark-bg);
+  color: var(--txt);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.inline-alert {
+  border: 1px solid var(--err);
+  background: var(--panel);
+  color: var(--txt);
+  padding: 1em;
+  margin-bottom: 0;
+  border-radius: var(--radius);
+}
+
+.muted-note {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+.muted-note ul {
+  margin: 0.25rem 0;
+  padding-left: 1rem;
+  font-size: 0.9em;
+}
+
+/* Pico form controls re-skinned */
+input,
+select {
+  background-color: var(--panel-2);
+  color: var(--txt);
+  border-color: var(--line);
+  --pico-border-color: var(--line);
+  --pico-background-color: var(--panel-2);
+  --pico-color: var(--txt);
+  margin-bottom: 0;
+}
+input::placeholder {
+  color: var(--faint);
+}
+input:focus,
+select:focus {
+  --pico-box-shadow: 0 0 0 0.15rem
+    color-mix(in srgb, var(--accent) 25%, transparent);
+  border-color: var(--accent);
+}

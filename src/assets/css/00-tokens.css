@@ -1,0 +1,55 @@
+/* =====================================================================
+   Grafito — one look (Mission Control), one stylesheet.
+   The light/dark switch works with <html data-theme="dark|light">;
+   Mission's custom properties live on :root and html[data-theme].
+   ===================================================================== */
+
+/* ------------------------------------------------------------------
+   Tokens — Mission Control
+   ------------------------------------------------------------------ */
+:root {
+  --font-body: "Chivo", sans-serif;
+  --font-mono: "Chivo Mono", ui-monospace, monospace;
+  --radius: 8px;
+}
+
+:root {
+  --font-display: "Space Grotesk", var(--font-body);
+  --brand-weight: 600;
+}
+html[data-theme="dark"] {
+  --bg: #101418;
+  --panel: #161b22;
+  --panel-2: #1c232c;
+  --line: #29313c;
+  --txt: #dfe6ee;
+  --muted: #8b96a5;
+  --faint: #59636f;
+  --accent: #4cc2a9;
+  --accent-ink: #0c1215;
+  --err: #f0635a;
+  --warn: #e9a23b;
+  --ok: #58a6ff;
+  --info: #58a6ff;
+  --debug: #6e7681;
+  --mark-bg: rgba(76, 194, 169, 0.25);
+  --shadow: rgba(0, 0, 0, 0.45);
+}
+html[data-theme="light"] {
+  --bg: #f2f5f4;
+  --panel: #ffffff;
+  --panel-2: #e9eeee;
+  --line: #d3dcda;
+  --txt: #1d2530;
+  --muted: #5d6a70;
+  --faint: #8a969c;
+  --accent: #178f77;
+  --accent-ink: #ffffff;
+  --err: #c73e34;
+  --warn: #b07414;
+  --ok: #2b6cb0;
+  --info: #2b6cb0;
+  --debug: #8a969c;
+  --mark-bg: rgba(23, 143, 119, 0.22);
+  --shadow: rgba(30, 40, 40, 0.2);
+}

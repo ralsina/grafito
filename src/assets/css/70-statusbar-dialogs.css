@@ -1,0 +1,96 @@
+/* =====================================================================
+   Statusbar
+   ===================================================================== */
+#statusbar {
+  grid-column: 1;
+  grid-row: 4;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 1.2rem;
+  padding-bottom: calc(0.4rem + env(safe-area-inset-bottom, 0px));
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  font-size: 0.72rem;
+}
+#statusbar a {
+  color: var(--muted);
+  text-decoration: none;
+}
+#statusbar a:hover {
+  color: var(--txt);
+}
+.statusbar-sep {
+  color: var(--faint);
+}
+.statusbar-spacer {
+  flex: 1;
+}
+.theme-switch-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  cursor: pointer;
+  margin-bottom: 0;
+}
+.theme-switch-wrapper .material-icons {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.theme-switch-wrapper input[type="checkbox"] {
+  width: 2rem;
+  height: 1.1rem;
+  margin: 0;
+}
+#statusbar .theme-switch-wrapper {
+  align-self: center;
+}
+
+/* =====================================================================
+   Dialogs (errors stay centered) — themed
+   ===================================================================== */
+dialog {
+  --pico-background-color: var(--panel);
+  z-index: 90;
+}
+dialog article {
+  background: var(--panel);
+  color: var(--txt);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 24px 70px var(--shadow);
+}
+dialog article header {
+  color: var(--txt);
+  border-bottom: 1px solid var(--line);
+}
+dialog article footer {
+  border-top: 1px solid var(--line);
+}
+dialog .close {
+  color: var(--muted);
+}
+dialog article pre {
+  background: var(--panel-2);
+  color: var(--txt);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+dialog article table {
+  --pico-table-border-color: var(--line);
+  color: var(--txt);
+}
+dialog article dt,
+dialog article th {
+  color: var(--muted);
+}
+dialog article td,
+dialog article dd {
+  color: var(--txt);
+}

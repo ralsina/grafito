@@ -1,0 +1,45 @@
+/* =====================================================================
+   Stats strip
+   ===================================================================== */
+#stats-strip {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  gap: 1px;
+  background: var(--line);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+.stat {
+  flex: 1;
+  min-width: 110px;
+  background: var(--bg);
+  padding: 0.55rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.stat-label {
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+}
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  color: var(--txt);
+}
+.stat-value.stat-small {
+  font-size: 0.85rem;
+  padding-top: 0.2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stat-error {
+  color: var(--err);
+}
+.stat-warn {
+  color: var(--warn);
+}

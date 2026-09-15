@@ -1,0 +1,185 @@
+/* =====================================================================
+   Process monitor (htop on a page)
+   ===================================================================== */
+#processes-view {
+  padding: 0.5rem 0 1rem;
+}
+.proc-history {
+  margin-top: 0.6rem;
+}
+/* The chart svg sizes itself (width 100%, fixed height baked in the
+   markup, .dashboard-history-svg styling), exactly as on the
+   dashboard — no extra sizing rules needed here. */
+.proc-history .dashboard-history-svg {
+  border: none;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+/* The per-core meters live in a fifth summary card, so they must be
+   small enough to share the row with the CPU/Tasks/Memory/Load cards. */
+/* Per-core load cells: a 2-tall grid of solid colored squares inside
+   a summary card (column-major, so core 0/1 stack in the first
+   column). No numbers — the color banding is the signal and each
+   cell's tooltip carries the exact value. */
+.proc-meters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.proc-squares {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0.2rem;
+  justify-content: start;
+}
+.proc-square {
+  width: 0.62rem;
+  height: 0.62rem;
+  border-radius: 2px;
+}
+.proc-square-total {
+  grid-column: span 2;
+  grid-row: span 2;
+  /* Explicit width and height: the two spanned columns are
+     content-sized and the base .proc-square rule fixes the height, so
+     auto/collapse would win without both being explicit here. */
+  width: calc(0.62rem * 2 + 0.2rem);
+  height: calc(0.62rem * 2 + 0.2rem);
+  border-radius: 3px;
+}
+.proc-square-low {
+  background: var(--accent);
+  opacity: 0.55;
+}
+.proc-square-mid {
+  background: #d9a13c;
+}
+.proc-square-high {
+  background: var(--err, #d9534f);
+}
+
+.proc-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.4rem 0;
+  /* Left padding aligns the count with the table's first column. */
+  padding: 0 0.5rem 0 1rem;
+}
+.proc-count {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.proc-state-form {
+  display: none;
+}
+/* CPU% cell: a htop-style bar with the number overlaid */
+.proc-table td,
+.proc-table th {
+  white-space: nowrap;
+}
+.proc-table .proc-cmd {
+  /* One line per process, like htop: the full command line lives in
+     the cell's title tooltip and in the detail panel. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 34rem;
+}
+.proc-pid {
+  font-family: var(--font-mono);
+}
+.proc-num,
+.proc-mem {
+  font-family: var(--font-mono);
+  text-align: right;
+}
+.proc-bar {
+  position: relative;
+  min-width: 5.5rem;
+  height: 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+}
+.proc-bar-fill {
+  height: 100%;
+}
+.proc-bar-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--txt);
+}
+.proc-bar-low {
+  background: var(--ok, #4c9f70);
+  opacity: 0.75;
+}
+.proc-bar-mid {
+  background: #d9a13c;
+}
+.proc-bar-high {
+  background: var(--err, #d9534f);
+}
+.proc-state {
+  display: inline-block;
+  min-width: 1.1rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0 0.3rem;
+  color: var(--muted);
+}
+.proc-state-R {
+  color: #4c9f70;
+  border-color: #4c9f70;
+}
+.proc-state-D {
+  color: #d9a13c;
+  border-color: #d9a13c;
+}
+.proc-state-Z,
+.proc-state-T {
+  color: var(--err, #d9534f);
+  border-color: var(--err, #d9534f);
+}
+.proc-zombie td {
+  opacity: 0.55;
+}
+.proc-actions {
+  text-align: right;
+}
+.proc-detail-command {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 8rem;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+}
+/* The process panel has eight info fields (twice the unit panel's),
+   so it wraps into a two-column grid instead of one flex row. */
+.proc-detail-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+}
+.proc-detail-info > div {
+  min-width: 0;
+}
+.proc-detail-info span:last-child {
+  overflow-wrap: break-word;
+}

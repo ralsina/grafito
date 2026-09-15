@@ -1,0 +1,245 @@
+/* =====================================================================
+   Mission layout flourishes
+   ===================================================================== */
+.brand {
+  height: 2.1rem;
+  align-items: center;
+}
+#stream {
+  padding: 0;
+}
+#results table thead th {
+  background: var(--panel);
+}
+#results table tbody tr:hover {
+  background: color-mix(in srgb, var(--panel-2) 70%, transparent);
+}
+
+/* =====================================================================
+   Small screens: collapse chrome gracefully, two-line entries
+   ===================================================================== */
+@media (max-width: 1100px) {
+  .brand-sub,
+  .topbar-tool-label {
+    display: none;
+  }
+}
+@media (max-width: 800px) {
+  #stats-strip,
+  #minimap {
+    display: none;
+  }
+  #app-shell {
+    grid-template-columns: 1fr;
+  }
+  #side-panel {
+    right: 0;
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  /* Two visual lines per entry: metadata, then the full-width message */
+  #results table,
+  #results table tbody,
+  #results table tr {
+    display: block;
+  }
+  #results table thead {
+    display: none;
+  }
+  #results table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 0.6rem;
+    padding: 0.45rem 0.6rem;
+  }
+  #results table td {
+    display: block;
+    border: none;
+    padding: 0;
+    min-width: 0;
+  }
+  #results td.log-timestamp-cell {
+    order: 1;
+  }
+  #results td.log-priority-cell {
+    order: 2;
+  }
+  #results td.log-unit-cell {
+    order: 3;
+  }
+  #results td.log-hostname-cell {
+    order: 4;
+  }
+  #results td.log-message-cell {
+    order: 5;
+    width: 100%;
+    padding-top: 0.3rem;
+    max-width: none;
+  }
+  #results .hover-action-cell {
+    order: 6;
+    opacity: 1;
+  }
+  #results .hover-action-cell .round-button {
+    height: 1.7rem;
+    width: 1.7rem;
+  }
+}
+
+/* Reserve the chart's space before HTMX injects it (kills layout shift) */
+#results:empty::before {
+  content: "";
+  display: block;
+  height: 64px;
+  margin: 0.75rem 0 0.5rem;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel-2) 60%, transparent);
+}
+
+/* Command dialog */
+#command-dialog {
+  max-width: 720px;
+  width: 92vw;
+}
+#command-dialog pre {
+  margin: 1rem 0;
+}
+#command-dialog footer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* Active filter chips (unit / tag / hostname) - DataDog-style tokens
+   embedded in the search omnibox */
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+  flex: none;
+  max-width: 60%;
+}
+.active-filters:empty {
+  display: none;
+}
+.af-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.12rem 0.25rem 0.12rem 0.4rem;
+}
+.af-chip-label {
+  color: var(--txt);
+  white-space: nowrap;
+}
+.af-chip-x {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0 0.15rem;
+}
+.af-chip-x:hover {
+  color: var(--err);
+}
+
+#search-omnibox .af-chip-x {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.62rem;
+  line-height: 1;
+  padding: 0 0.1rem;
+}
+#search-omnibox .af-chip-x:hover {
+  color: var(--err);
+}
+
+/* --- Compose view --- */
+#compose-view {
+  padding: 0.5rem 1.25rem 1rem;
+}
+.compose-empty {
+  text-align: center;
+  padding: 2em;
+  color: var(--muted);
+}
+/* Stack cards: one column normally, two side by side on wide
+   viewports (each card keeps its natural height). */
+.compose-stacks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25em;
+}
+@media (min-width: 1200px) {
+  .compose-stacks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+.compose-stack {
+  margin-bottom: 0;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.4rem 1rem 0.8rem;
+}
+/* The tables run edge-to-edge inside the card; give their rows the
+   card's own background so stripes don't fight the card surface. */
+.compose-stack .dashboard-units {
+  background: transparent;
+}
+.compose-stack .dashboard-units th {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.compose-stack-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.compose-stack-header h3 {
+  margin: 0.4em 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.compose-stack-actions {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+/* Live output of a stack-level compose job (up, stop, update...). */
+.compose-output {
+  margin: 0.4em 0 0.8em;
+}
+.compose-output-lines,
+.compose-yaml,
+.compose-logs pre {
+  max-height: 18rem;
+  overflow: auto;
+  font-size: 0.72rem;
+  margin: 0.3em 0;
+  padding: 0.6em;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
+  white-space: pre;
+}
+.compose-yaml {
+  max-height: 32rem;
+}

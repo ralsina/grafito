@@ -1,0 +1,343 @@
+/* =====================================================================
+   Topbar
+   ===================================================================== */
+#topbar {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding-right: 0.9rem;
+  border-right: 1px solid var(--line);
+  white-space: nowrap;
+}
+.brand-mark {
+  width: 14px;
+  height: 14px;
+  align-self: center;
+  background: var(--accent);
+  /* The pencil from favicon.svg, tinted with the theme accent. */
+  -webkit-mask: url("favicon.svg") center / contain no-repeat;
+  mask: url("favicon.svg") center / contain no-repeat;
+}
+.grafito-title-link {
+  font-family: var(--font-display);
+  font-weight: var(--brand-weight);
+  font-size: 1.25rem;
+  color: var(--txt);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.brand-sub {
+  color: var(--faint);
+  font-size: 0.72rem;
+}
+
+/* Omnibox / search (log omnibox + dashboard service filter) */
+#search-omnibox,
+#dashboard-filter-box,
+#processes-filter-box {
+  flex: 1;
+  min-width: 220px;
+  max-width: 560px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.6rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.15rem 0.8rem;
+  cursor: text;
+}
+#search-omnibox:not(:focus-within) input,
+#dashboard-filter-box:not(:focus-within) input,
+#processes-filter-box:not(:focus-within) input {
+  min-width: 12ch;
+}
+#search-omnibox:focus-within,
+#dashboard-filter-box:focus-within,
+#processes-filter-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+.omnibox-glyph {
+  color: var(--accent);
+  font-weight: 600;
+}
+#search-omnibox input,
+#dashboard-filter-box input,
+#processes-filter-box input {
+  flex: 1;
+  background: none;
+  border: none;
+  box-shadow: none;
+  height: 2.1rem;
+  padding: 0 0.25rem;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+#search-omnibox input:focus,
+#dashboard-filter-box input:focus,
+#processes-filter-box input:focus {
+  box-shadow: none;
+  border: none;
+}
+#search-omnibox kbd,
+#dashboard-filter-box kbd,
+#processes-filter-box kbd {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 0.1rem 0.45rem;
+  background: var(--panel);
+}
+#dashboard-filter-box {
+  display: none;
+  flex: none;
+  width: 280px;
+  min-width: 0;
+  max-width: none;
+}
+body[data-view="dashboard"] #dashboard-filter-box {
+  display: flex;
+}
+
+/* Process filter box: same hide-by-default strategy as the service
+   filter, shown only while the process view is active. */
+#processes-filter-box {
+  display: none;
+  flex: none;
+  width: 260px;
+  min-width: 0;
+  max-width: none;
+}
+body[data-view="processes"] #processes-filter-box {
+  display: flex;
+}
+
+.topbar-select {
+  width: auto;
+  height: 2.1rem;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  padding: 0.2rem 1.6rem 0.2rem 0.7rem;
+}
+
+/* Topbar tool buttons */
+.topbar-tool {
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.35rem 0.7rem;
+  height: 2.1rem;
+  cursor: pointer;
+  box-shadow: none;
+  margin-bottom: 0;
+}
+.topbar-tool:hover {
+  color: var(--txt);
+  border-color: var(--faint);
+}
+.topbar-tool .material-icons {
+  font-size: 1rem;
+}
+.topbar-tool.icon-only {
+  padding: 0.35rem 0.45rem;
+}
+
+/* Live toggle */
+.live-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 2.1rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  cursor: pointer;
+  margin-bottom: 0;
+}
+.live-toggle:has(input:checked) {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.live-toggle input {
+  width: 2rem;
+  height: 1.1rem;
+  margin: 0;
+}
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.live-toggle:has(input:checked) .live-dot {
+  background: var(--accent);
+  box-shadow: 0 0 7px var(--accent);
+  animation: live-pulse 2s infinite;
+}
+@keyframes live-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Brand cartouche: grafito wordmark + 4-way view switch (logs,
+   dashboard, compose, processes) in one bordered segment, styled like
+   the statusbar mode switcher. The explicit width:auto beats pico's
+   [role=group] width:100% stretching. */
+#brand-switcher {
+  display: inline-flex;
+  align-items: stretch;
+  width: auto;
+  flex: none;
+  height: 2.4rem;
+  align-self: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--panel);
+}
+.brand-word {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.8rem 0 0.7rem;
+  border-right: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-weight: var(--brand-weight);
+  font-size: 1.15rem;
+  color: var(--txt);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.brand-word .brand-mark {
+  align-self: center;
+}
+#brand-switcher button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  flex: none;
+  height: auto;
+  padding: 0 0.65rem;
+  background: none;
+  border: none;
+  border-radius: 0;
+  border-left: 1px solid var(--line);
+  box-shadow: none;
+  margin-bottom: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+#brand-switcher button:hover {
+  color: var(--txt);
+}
+#brand-switcher button.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+#brand-switcher .material-icons {
+  font-size: 1.05rem;
+}
+
+/* Filter panel (dropdown popover) */
+#filter-panel,
+#filter-panel[open] {
+  position: relative;
+  height: 2.1rem; /* keep the topbar row height constant when open */
+  margin-bottom: 0;
+}
+#filter-panel[open] summary.topbar-tool {
+  margin-bottom: 0;
+}
+#filter-panel summary {
+  list-style: none;
+}
+#filter-panel summary::marker,
+#filter-panel summary::-webkit-details-marker {
+  display: none;
+}
+#filter-panel[open] summary.topbar-tool {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+#filter-panel-content {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  width: 320px;
+  max-width: 90vw;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 14px 40px var(--shadow);
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+.filter-panel-section h4 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+  margin: 0 0 0.5rem;
+}
+.filter-panel-section input[type="text"],
+.filter-panel-section select {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  font-size: 0.82rem;
+}
+.column-toggles label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--txt);
+  padding: 0.15rem 0;
+}
+.column-toggles input[type="checkbox"] {
+  width: 1.7rem;
+  height: 1rem;
+  margin: 0;
+}

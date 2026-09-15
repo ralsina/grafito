@@ -1,0 +1,140 @@
+/* =====================================================================
+   Minimap (interactive severity rail, present in every mode)
+   ===================================================================== */
+#minimap {
+  grid-column: 2;
+  grid-row: 1 / 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0 3.4rem;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  width: 34px;
+}
+/* Views without a minimap of their own (processes, compose) hide the
+   rail so stale ticks from the log stream don't linger there. */
+body.minimap-hidden #minimap {
+  display: none !important;
+}
+#minimap-top {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--muted);
+  cursor: pointer;
+}
+#minimap-top:hover {
+  color: var(--txt);
+  border-color: var(--faint);
+}
+#minimap-top .material-icons {
+  font-size: 1rem;
+  line-height: 1;
+}
+#minimap-track {
+  position: relative;
+  flex: 1;
+  width: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+#minimap-window {
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 1;
+}
+#minimap-track i {
+  display: block;
+  width: 100%;
+  border-radius: 2px;
+  flex: 1 1 0;
+  min-height: 1px;
+  height: auto;
+  background: var(--debug);
+  opacity: 0.5;
+  cursor: pointer;
+}
+#minimap-track i:hover {
+  opacity: 1;
+  transform: scaleX(2.2);
+}
+#minimap-track i[data-priority="0"],
+#minimap-track i[data-priority="1"],
+#minimap-track i[data-priority="2"],
+#minimap-track i[data-priority="3"] {
+  background: var(--err);
+  opacity: 0.95;
+}
+#minimap-track i[data-priority="4"] {
+  background: var(--warn);
+  opacity: 0.9;
+}
+#minimap-track i[data-priority="5"] {
+  background: var(--ok);
+  opacity: 0.6;
+}
+#minimap-track i[data-priority="6"] {
+  background: var(--info);
+  opacity: 0.5;
+}
+.minimap-label {
+  writing-mode: vertical-rl;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--faint);
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+#minimap-tooltip {
+  position: fixed;
+  display: block;
+  max-width: 280px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px var(--shadow);
+  padding: 0.5rem 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--txt);
+  pointer-events: none;
+  z-index: 120;
+}
+.minimap-tip-time {
+  color: var(--accent);
+  margin-bottom: 0.25rem;
+}
+.minimap-tip-msg {
+  color: var(--muted);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+@keyframes row-flash {
+  0% {
+    background: color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+#results table tbody tr.row-flash {
+  animation: row-flash 1.8s ease-out;
+}

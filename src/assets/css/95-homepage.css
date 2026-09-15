@@ -1,0 +1,176 @@
+/* =====================================================================
+   Homepage (launcher for self-hosted apps)
+   ===================================================================== */
+#homepage-view {
+  padding: 0.5rem 1.25rem 1rem;
+}
+/* Title and weather strip share the top row; the weather strip keeps
+   whatever width it needs and the title takes the rest. */
+.homepage-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.5rem;
+  margin-bottom: 1em;
+}
+.homepage-top h2 {
+  margin: 0;
+}
+/* The weather card: icon, big temperature, condition, then the small
+   detail columns. Weather data is always in flux, so the card has a
+   fixed minimum height worth of breathing room and never reflows the
+   page when a value is missing. */
+.homepage-weather {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.6rem 1rem;
+  min-height: 3.4rem;
+}
+.homepage-weather-icon {
+  font-size: 2.1rem;
+  color: var(--accent);
+}
+.homepage-weather-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.homepage-weather-temp {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.homepage-weather-cond {
+  color: var(--muted);
+}
+.homepage-weather-muted {
+  color: var(--faint);
+  font-style: italic;
+}
+.homepage-weather-details {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.homepage-weather-location {
+  margin-left: auto;
+  color: var(--faint);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+/* One card per group, filling the row; the grid collapses to a
+   single column on narrow screens without extra media queries. */
+.homepage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1em;
+}
+.homepage-group {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.75rem 0.75rem;
+  align-self: start;
+}
+.homepage-group-title {
+  font-family: var(--font-display);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0.2rem 0 0.5rem;
+}
+/* A service row is the whole-card link: icon, name (+description)
+   and, for monitored services, the reachability dot pushed to the
+   right edge. */
+.homepage-service {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.4rem 0.5rem;
+  margin: 0 -0.5rem;
+  border-radius: var(--radius);
+  color: var(--txt);
+  text-decoration: none;
+}
+.homepage-service:hover {
+  background: var(--panel-2);
+  text-decoration: none;
+  color: var(--txt);
+}
+.homepage-service-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--muted) 14%, transparent);
+  overflow: hidden;
+}
+.homepage-service-icon .material-icons {
+  font-size: 1.3rem;
+  color: var(--accent);
+}
+.homepage-service-icon img {
+  width: 1.4rem;
+  height: 1.4rem;
+  object-fit: contain;
+}
+.homepage-emoji {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.homepage-service-text {
+  min-width: 0;
+}
+.homepage-service-name {
+  display: block;
+  font-weight: 600;
+}
+.homepage-service-desc {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+/* Reachability dot: accent-ish green/teal for up, red for down. */
+.homepage-dot {
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  margin-left: auto;
+}
+.homepage-dot-up {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.homepage-dot-down {
+  background: var(--err);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--err) 25%, transparent);
+}
+/* Setup hint and config error states. */
+.homepage-setup {
+  max-width: 44rem;
+  color: var(--txt);
+}
+.homepage-setup pre {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.8em 1em;
+  overflow: auto;
+}
+.homepage-setup-error pre {
+  color: var(--err);
+  white-space: pre-wrap;
+}
