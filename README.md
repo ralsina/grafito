@@ -88,10 +88,21 @@ to analyze patterns, suggest solutions, and explain complex errors.
 Prior follow-up questions are replayed too, so the answers stay in
 context.
 
-**Self-hosted / proxied setups:** if you run a local proxy (the demo
-uses [jimmy-proxy](https://github.com/Fadeleke57/jimmy-proxy) to expose
-ChatJimmy's free Llama 3.1 8B), point `GRAFITO_AI_ENDPOINT` at it and
-label it with `GRAFITO_AI_PROVIDER_NAME`.
+**Free ChatJimmy endpoint (hidden behind a flag):** Grafito can also
+talk directly to [ChatJimmy](https://chatjimmy.ai)'s free browser
+endpoint (Llama 3.1 8B, no API key needed). Because that is an
+unofficial use of a web endpoint, it is never auto-detected and only
+runs when you ask for it explicitly:
+
+```bash
+export GRAFITO_AI_PROVIDER=jimmy   # or "chatjimmy"
+```
+
+The endpoint can change or disappear at any time, so if it stops
+working, the fallback is to run
+[jimmy-proxy](https://github.com/Fadeleke57/jimmy-proxy) locally and
+point `GRAFITO_AI_ENDPOINT` at it, labeling it with
+`GRAFITO_AI_PROVIDER_NAME`.
 
 ### Server Dashboard
 

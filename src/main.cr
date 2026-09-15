@@ -309,7 +309,8 @@ end
 
 # Initializes the AI provider from the configured API keys, if any.
 # Supports: Anthropic (ANTHROPIC_API_KEY), Z.AI (Z_AI_API_KEY),
-# OpenAI (OPENAI_API_KEY), Groq (GROQ_API_KEY), Ollama (GRAFITO_AI_ENDPOINT)
+# OpenAI (OPENAI_API_KEY), Groq (GROQ_API_KEY), Ollama (GRAFITO_AI_ENDPOINT),
+# and ChatJimmy (GRAFITO_AI_PROVIDER=jimmy, never auto-detected).
 def setup_ai_provider
   ai_provider = Grafito::AI::Config.provider
   if ai_provider

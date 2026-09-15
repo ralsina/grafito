@@ -65,6 +65,7 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
   - `response.cr` - AI response normalization
   - `providers/anthropic.cr` - Anthropic/Claude API integration
   - `providers/openai_compatible.cr` - OpenAI-compatible API wrapper (Z.AI, OpenAI, Groq, Ollama, etc.)
+  - `providers/jimmy.cr` - Built-in ChatJimmy free endpoint (unofficial, only via `GRAFITO_AI_PROVIDER=jimmy`)
 - `src/fake_journal_data.cr` - Fake data generation for demo mode (compile with `--flag=fake_journal`)
 
 ### Dependencies Philosophy
@@ -166,13 +167,25 @@ AI log analysis is optional and provider-agnostic:
 - `GRAFITO_AI_API_KEY` - Generic API key fallback
 - `GRAFITO_AI_ENDPOINT` - Custom endpoint URL (for Ollama, etc.)
 - `GRAFITO_AI_MODEL` - Override default model
-- `GRAFITO_AI_PROVIDER` - Force specific provider (anthropic, openai, z_ai, groq, ollama)
+- `GRAFITO_AI_PROVIDER` - Force specific provider (anthropic, openai, z_ai, groq, ollama, jimmy)
+
+### ChatJimmy Provider (flag-gated)
+- `providers/jimmy.cr` talks directly to chatjimmy.ai's free browser
+  endpoint (Llama 3.1 8B, no API key), in-process port of
+  [jimmy-proxy](https://github.com/Fadeleke57/jimmy-proxy)
+- Hidden behind `GRAFITO_AI_PROVIDER=jimmy` (or `chatjimmy`): never
+  auto-detected, never listed in `/ai-providers` unless selected
+- System prompt goes into `chatOptions` and is truncated to 28000
+  chars; replies are plain text with a `<|stats|>` block to strip
+- Unofficial endpoint: can change or disappear anytime
 
 ### AI Provider Architecture
 - Abstract `Provider` base class defines the interface
 - `Providers::Anthropic` uses the jgaskins/anthropic shard
 - `Providers::OpenAICompatible` wraps any OpenAI-compatible API
-- Provider auto-detection based on available API keys
+- `Providers::Jimmy` is the flag-gated free ChatJimmy endpoint
+- Provider auto-detection based on available API keys (ChatJimmy is
+  the exception: explicit selection only)
 - Normalized request/response interface for provider independence
 - Model listing and selection support per provider
 

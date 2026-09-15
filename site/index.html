@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
@@ -102,9 +102,21 @@
         }
       }
       @keyframes flicker {
-        0%, 91.9%, 94%, 96.9%, 100% { opacity: 1; }
-        92%, 93.9% { opacity: 0.85; }
-        97%, 98.9% { opacity: 0.93; }
+        0%,
+        91.9%,
+        94%,
+        96.9%,
+        100% {
+          opacity: 1;
+        }
+        92%,
+        93.9% {
+          opacity: 0.85;
+        }
+        97%,
+        98.9% {
+          opacity: 0.93;
+        }
       }
 
       ::selection {
@@ -119,7 +131,9 @@
       a:hover {
         text-decoration: underline;
       }
-      h1, h2, h3 {
+      h1,
+      h2,
+      h3 {
         font-family: "VT323", var(--font-body);
         font-weight: 400;
         letter-spacing: 0.04em;
@@ -140,7 +154,8 @@
         align-items: center;
         gap: 1rem;
         padding: 0.5rem 1.25rem;
-        border-bottom: 1px solid color-mix(in srgb, var(--amber) 45%, var(--line));
+        border-bottom: 1px solid
+          color-mix(in srgb, var(--amber) 45%, var(--line));
         background: var(--panel);
         font-size: 0.8rem;
         text-transform: uppercase;
@@ -172,11 +187,19 @@
         box-shadow: 0 0 8px var(--info);
       }
       @keyframes blink {
-        0%, 55% { opacity: 1; }
-        56%, 100% { opacity: 0.25; }
+        0%,
+        55% {
+          opacity: 1;
+        }
+        56%,
+        100% {
+          opacity: 0.25;
+        }
       }
       @media (prefers-reduced-motion: reduce) {
-        .light.green { animation: none; }
+        .light.green {
+          animation: none;
+        }
       }
 
       /* --- Hero: boot screen ------------------------------------------- */
@@ -230,7 +253,9 @@
         animation: blink 1.1s infinite steps(1);
       }
       @media (prefers-reduced-motion: reduce) {
-        .grafito-title .cursor { animation: none; }
+        .grafito-title .cursor {
+          animation: none;
+        }
       }
       .subtitle {
         font-size: clamp(1rem, 2.6vw, 1.3rem);
@@ -247,7 +272,8 @@
         border: 1px solid var(--line);
         border-radius: 3px;
         padding: 1.1rem 1.25rem;
-        box-shadow: inset 0 0 24px color-mix(in srgb, var(--glow) 60%, transparent);
+        box-shadow: inset 0 0 24px
+          color-mix(in srgb, var(--glow) 60%, transparent);
       }
       .hero-text-content p {
         margin: 0;
@@ -273,10 +299,18 @@
         border: 1px solid var(--line);
         border-radius: 3px;
         padding: 0.7rem 1.3rem;
-        transition: box-shadow 0.15s ease, border-color 0.15s ease;
+        transition:
+          box-shadow 0.15s ease,
+          border-color 0.15s ease;
       }
-      .console-button::before { content: "[ "; color: var(--faint); }
-      .console-button::after { content: " ]"; color: var(--faint); }
+      .console-button::before {
+        content: "[ ";
+        color: var(--faint);
+      }
+      .console-button::after {
+        content: " ]";
+        color: var(--faint);
+      }
       .console-button:hover {
         text-decoration: none;
         border-color: var(--amber);
@@ -329,7 +363,10 @@
         font-size: 1.15rem;
         margin: 0 0 0.75rem;
       }
-      .testimonial-slide p::before { content: "> "; color: var(--amber); }
+      .testimonial-slide p::before {
+        content: "> ";
+        color: var(--amber);
+      }
       .testimonial-slide footer {
         font-size: 0.85rem;
         color: var(--muted);
@@ -358,7 +395,8 @@
         border: 1px solid var(--line);
         border-radius: 3px;
         padding: 1.4rem 1.5rem;
-        box-shadow: inset 0 0 24px color-mix(in srgb, var(--glow) 55%, transparent);
+        box-shadow: inset 0 0 24px
+          color-mix(in srgb, var(--glow) 55%, transparent);
       }
       /* Corner brackets, cockpit instrument style */
       .panel::before,
@@ -437,9 +475,15 @@
         border-radius: 50%;
         display: inline-block;
       }
-      .dot.r { background: var(--err); }
-      .dot.a { background: var(--amber); }
-      .dot.g { background: var(--txt); }
+      .dot.r {
+        background: var(--err);
+      }
+      .dot.a {
+        background: var(--amber);
+      }
+      .dot.g {
+        background: var(--txt);
+      }
       .terminal-body {
         position: relative;
         display: flex;
@@ -523,8 +567,12 @@
       }
 
       @media (max-width: 640px) {
-        .cockpit-bar .bar-label { display: none; }
-        .hero { padding-top: 2.5rem; }
+        .cockpit-bar .bar-label {
+          display: none;
+        }
+        .hero {
+          padding-top: 2.5rem;
+        }
       }
     </style>
   </head>
@@ -536,7 +584,11 @@
         <span class="light green"></span>
         <span class="light amber"></span>
         <span class="light blue"></span>
-        <label class="theme-switch-wrapper-nav" for="theme-switch" title="Toggle light/dark mode">
+        <label
+          class="theme-switch-wrapper-nav"
+          for="theme-switch"
+          title="Toggle light/dark mode"
+        >
           <input type="checkbox" id="theme-switch" name="theme" role="switch" />
           <span> daylight</span>
         </label>
@@ -547,38 +599,53 @@
       <canvas id="rain-canvas"></canvas>
       <div class="wrap">
         <p class="boot-lines">
-          boot &gt; journald.sys <span class="ok">[online]</span> &nbsp;
-          index &gt; 0 entries lost <span class="ok">[ok]</span> &nbsp;
-          ai.link <span class="ok">[standby]</span>
+          boot &gt; journald.sys <span class="ok">[online]</span> &nbsp; index
+          &gt; 0 entries lost <span class="ok">[ok]</span> &nbsp; ai.link
+          <span class="ok">[standby]</span>
         </p>
         <h1 class="grafito-title">
-          <a href="https://github.com/ralsina/grafito" target="_blank">Grafito<span class="cursor"></span></a>
+          <a href="https://github.com/ralsina/grafito" target="_blank"
+            >Grafito<span class="cursor"></span
+          ></a>
         </h1>
-        <p class="subtitle">Your friendly, self-hosted systemd journal log viewer</p>
+        <p class="subtitle">
+          Your friendly, self-hosted systemd journal log viewer
+        </p>
 
         <div class="hero-text-content">
           <p>
             <span class="prompt">$ grafito --navigate</span><br />
-            Effortlessly navigate, filter, and understand your system logs
-            with a clean, web-based interface. No more complex terminal
-            commands for everyday log viewing!
+            Effortlessly navigate, filter, and understand your system logs with
+            a clean, web-based interface. No more complex terminal commands for
+            everyday log viewing!
           </p>
         </div>
 
         <div class="hero-buttons">
-          <a class="console-button primary" href="https://github.com/ralsina/grafito" target="_blank">Get Grafito on GitHub</a>
-          <a class="console-button" href="https://grafito-demo.ralsina.me" target="_blank">View Demo Site</a>
+          <a
+            class="console-button primary"
+            href="https://github.com/ralsina/grafito"
+            target="_blank"
+            >Get Grafito on GitHub</a
+          >
+          <a
+            class="console-button"
+            href="https://grafito-demo.ralsina.me"
+            target="_blank"
+            >View Demo Site</a
+          >
         </div>
 
         <div class="transmissions">
           <p class="transmissions-label">
-            <span class="light green"></span>incoming transmissions — field reports
+            <span class="light green"></span>incoming transmissions — field
+            reports
           </p>
           <div class="testimonial-carousel">
             <blockquote class="testimonial-slide">
               <p>
-                "I gave it a whirl to see what it could do. The result
-                impressed me."
+                "I gave it a whirl to see what it could do. The result impressed
+                me."
               </p>
               <footer>
                 —
@@ -628,17 +695,28 @@
           script to download the correct binary, place it in
           <code>/usr/local/bin</code>, and set up a systemd service (or follow
           any of the possible
-          <a href="https://github.com/ralsina/grafito">installation instructions</a>).
+          <a href="https://github.com/ralsina/grafito"
+            >installation instructions</a
+          >).
         </p>
         <div class="terminal-window">
           <div class="terminal-titlebar">
-            <span class="dot r"></span><span class="dot a"></span><span class="dot g"></span>
+            <span class="dot r"></span><span class="dot a"></span
+            ><span class="dot g"></span>
             <span>install.sh — bash</span>
           </div>
           <div class="terminal-body">
             <span class="prompt-sign">$</span>
-            <code id="install-command-text">curl -sSL https://grafito.ralsina.me/install.sh | sudo bash</code>
-            <button class="copy-button" id="copy-install-command" title="Copy to clipboard">copy</button>
+            <code id="install-command-text"
+              >curl -sSL https://grafito.ralsina.me/install.sh | sudo bash</code
+            >
+            <button
+              class="copy-button"
+              id="copy-install-command"
+              title="Copy to clipboard"
+            >
+              copy
+            </button>
           </div>
         </div>
       </article>
@@ -650,8 +728,8 @@
           <p>
             Quickly find what you need. Search by text, systemd unit, syslog
             tag, time range (e.g., "last 15 min", "last week"), and log
-            priority. Filters update dynamically as you type! Detail and
-            context views!
+            priority. Filters update dynamically as you type! Detail and context
+            views!
           </p>
         </article>
 
@@ -673,7 +751,9 @@
         </article>
 
         <article class="panel">
-          <h2><span class="module-id">05</span>Shareable & Bookmarkable Views</h2>
+          <h2>
+            <span class="module-id">05</span>Shareable & Bookmarkable Views
+          </h2>
           <p>
             Easily copy a URL that includes all your current filter settings.
             Share it with colleagues or bookmark it for quick access to common
@@ -713,17 +793,19 @@
           <h2><span class="module-id">09</span>AI-Powered Log Analysis</h2>
           <p>
             Stuck on a confusing error? Get intelligent explanations from LLMs
-            with a single click. The AI analyzes log context to explain what went
-            wrong, potential causes, and suggested solutions. Uses affordable
-            <a href="https://z.ai" target="_blank">z.ai</a> API - completely optional!
+            with a single click. The AI analyzes log context to explain what
+            went wrong, potential causes, and suggested solutions. Uses
+            affordable
+            <a href="https://z.ai" target="_blank">z.ai</a> API - completely
+            optional!
           </p>
         </article>
 
         <article class="panel">
           <h2><span class="module-id">10</span>Clean & Intuitive UI</h2>
           <p>
-            A modern, clutter-free interface. Supports both light and dark
-            modes to match your preference and reduce eye strain.
+            A modern, clutter-free interface. Supports both light and dark modes
+            to match your preference and reduce eye strain.
           </p>
         </article>
       </div>
@@ -734,7 +816,11 @@
           Grafito is open-source and easy to set up. Explore the full source
           code and other installation methods on GitHub:
         </p>
-        <a class="console-button primary" href="https://github.com/ralsina/grafito" target="_blank">
+        <a
+          class="console-button primary"
+          href="https://github.com/ralsina/grafito"
+          target="_blank"
+        >
           View on GitHub & Get Started
         </a>
       </section>
@@ -743,7 +829,9 @@
     <footer class="site-footer">
       <a href="https://ralsina.me" target="_blank">Roberto Alsina</a>
       <span class="sep">|||</span>
-      <a href="https://github.com/ralsina/grafito" target="_blank">Grafito Project</a>
+      <a href="https://github.com/ralsina/grafito" target="_blank"
+        >Grafito Project</a
+      >
     </footer>
 
     <script>
@@ -766,7 +854,7 @@
           this.canvas.height = this.canvas.offsetHeight;
           const columnCount = Math.ceil(this.canvas.width / this.fontSize);
           this.columns = Array.from({ length: columnCount }, () =>
-            Math.floor(Math.random() * (this.canvas.height / this.fontSize))
+            Math.floor(Math.random() * (this.canvas.height / this.fontSize)),
           );
         }
         animate() {
@@ -775,11 +863,13 @@
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.font = fontSize + "px 'Share Tech Mono', monospace";
           columns.forEach((y, i) => {
-            const glyph = this.glyphs[Math.floor(Math.random() * this.glyphs.length)];
+            const glyph =
+              this.glyphs[Math.floor(Math.random() * this.glyphs.length)];
             const x = i * fontSize;
             ctx.fillStyle = Math.random() < 0.03 ? "#ffb000" : "#4dd06e";
             ctx.fillText(glyph, x, y * fontSize);
-            columns[i] = y * fontSize > canvas.height && Math.random() > 0.975 ? 0 : y + 1;
+            columns[i] =
+              y * fontSize > canvas.height && Math.random() > 0.975 ? 0 : y + 1;
           });
           requestAnimationFrame(() => this.animate());
         }
@@ -841,20 +931,25 @@
 
         // --- COPY TO CLIPBOARD LOGIC ---
         const copyButton = document.getElementById("copy-install-command");
-        const commandTextElement = document.getElementById("install-command-text");
+        const commandTextElement = document.getElementById(
+          "install-command-text",
+        );
 
         if (copyButton && commandTextElement) {
           copyButton.addEventListener("click", () => {
-            navigator.clipboard.writeText(commandTextElement.textContent).then(() => {
-              const originalContent = copyButton.textContent;
-              copyButton.textContent = "copied!";
-              setTimeout(() => {
-                copyButton.textContent = originalContent;
-              }, 2000);
-            }).catch(err => {
-              console.error("Could not copy text: ", err);
-              copyButton.textContent = "failed";
-            });
+            navigator.clipboard
+              .writeText(commandTextElement.textContent)
+              .then(() => {
+                const originalContent = copyButton.textContent;
+                copyButton.textContent = "copied!";
+                setTimeout(() => {
+                  copyButton.textContent = originalContent;
+                }, 2000);
+              })
+              .catch((err) => {
+                console.error("Could not copy text: ", err);
+                copyButton.textContent = "failed";
+              });
           });
         }
       });

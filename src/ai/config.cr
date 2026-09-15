@@ -6,6 +6,7 @@
 require "./provider"
 require "./providers/anthropic"
 require "./providers/openai_compatible"
+require "./providers/jimmy"
 
 module Grafito::AI
   # Configuration management for AI providers.
@@ -14,7 +15,7 @@ module Grafito::AI
   # and auto-detection based on available API keys.
   #
   # Environment Variables:
-  # - GRAFITO_AI_PROVIDER: Force specific provider (anthropic, openai, z_ai, groq, ollama)
+  # - GRAFITO_AI_PROVIDER: Force specific provider (anthropic, openai, z_ai, groq, ollama, jimmy)
   # - ANTHROPIC_API_KEY: Anthropic/Claude API key
   # - Z_AI_API_KEY: Z.AI API key (backward compatible)
   # - OPENAI_API_KEY: OpenAI API key
@@ -23,6 +24,10 @@ module Grafito::AI
   # - GRAFITO_AI_API_KEY: Generic API key (fallback)
   # - GRAFITO_AI_MODEL: Override default model
   # - GRAFITO_AI_ENDPOINT: Custom endpoint URL (for Ollama, etc.)
+  #
+  # The ChatJimmy provider ("jimmy") is special: it needs no API key
+  # (unofficial free endpoint) and is therefore never auto-detected.
+  # It only runs when GRAFITO_AI_PROVIDER explicitly names it.
   module Config
     extend self
 
@@ -32,12 +37,14 @@ module Grafito::AI
     enum ProviderType
       Anthropic
       OpenAICompatible
+      Jimmy
       None
 
       def to_s : String
         case self
         when .anthropic?          then "anthropic"
         when .open_ai_compatible? then "openai_compatible"
+        when .jimmy?              then "jimmy"
         else                           "none"
         end
       end
@@ -50,6 +57,8 @@ module Grafito::AI
         Providers::Anthropic.new if Providers::Anthropic.available?
       when .open_ai_compatible?
         Providers::OpenAICompatible.new if Providers::OpenAICompatible.available?
+      when .jimmy?
+        Providers::Jimmy.new if Providers::Jimmy.available?
       end
     end
 
@@ -78,7 +87,10 @@ module Grafito::AI
       return unless explicit = ENV["GRAFITO_AI_PROVIDER"]?
 
       normalized = explicit.downcase.strip
-      if ANTHROPIC_PROVIDERS.includes?(normalized)
+      if Providers::Jimmy.selects?(normalized)
+        Log.debug { "Explicit provider selection: ChatJimmy" }
+        ProviderType::Jimmy
+      elsif ANTHROPIC_PROVIDERS.includes?(normalized)
         Log.debug { "Explicit provider selection: Anthropic" }
         ProviderType::Anthropic
       elsif OPENAI_COMPATIBLE_PROVIDERS.includes?(normalized)
@@ -160,6 +172,12 @@ module Grafito::AI
         providers << ProviderInfo.new(id: "ollama", name: "Ollama (local)", available: true)
       end
 
+      # ChatJimmy only shows up when explicitly selected via
+      # GRAFITO_AI_PROVIDER; it is hidden otherwise.
+      if Providers::Jimmy.available?
+        providers << ProviderInfo.new(id: "jimmy", name: "ChatJimmy", available: true)
+      end
+
       providers
     end
 
@@ -167,7 +185,9 @@ module Grafito::AI
     def provider_by_id(id : String, model : String? = nil) : Provider?
       normalized_id = id.downcase.strip
 
-      if ANTHROPIC_PROVIDERS.includes?(normalized_id)
+      if Providers::Jimmy.selects?(normalized_id)
+        Providers::Jimmy.new(model) if Providers::Jimmy.available?
+      elsif ANTHROPIC_PROVIDERS.includes?(normalized_id)
         Providers::Anthropic.new(model) if Providers::Anthropic.available?
       elsif OPENAI_COMPATIBLE_PROVIDERS.includes?(normalized_id)
         Providers::OpenAICompatible.new(normalized_id, model) if Providers::OpenAICompatible.available?
