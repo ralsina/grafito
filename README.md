@@ -38,6 +38,9 @@ Key features include:
   follow-up questions in context (optional, requires a provider).
 * **Configurable timezone support** - display timestamps in your local
   timezone or any timezone you prefer.
+* **Homepage view** - a launcher for your self-hosted apps with
+  optional weather widget and reachability dots, configured with a
+  simple YAML file.
 * A dynamic user interface powered by HTMX for a smooth experience.
 * Embedded assets (HTML, favicon) for easy deployment as a single
   binary.
@@ -185,10 +188,60 @@ any column (click the headers) and filters by user, pid or command.
 Set `GRAFITO_PROCESSES=false` (or `--processes=false`) to disable the
 process view and its endpoints completely.
 
+### Homepage View
+
+A small launcher for your self-hosted apps, in the spirit of
+[gethomepage](https://gethomepage.dev) but deliberately simpler: click
+the **Home** button in the top bar (or share a link with
+`view=homepage`) to see a card per service group and, optionally, a
+weather widget.
+
+The page is configured with a YAML file, by default
+`/etc/grafito/homepage.yml` (change it with `--homepage-config` or
+`GRAFITO_HOMEPAGE_CONFIG`). Until the file exists, the view shows
+setup instructions with an example, so enabling it costs nothing:
+
+```yaml
+title: Homelab
+
+# Optional weather widget, powered by Open-Meteo (no API key).
+weather:
+  latitude: -34.9
+  longitude: -56.16
+  location: Montevideo
+  units: metric # or imperial
+
+groups:
+  - name: Media
+    services:
+      - name: Jellyfin
+        url: https://jellyfin.example.com
+        description: Movies and series
+        icon: play_circle # Material icon, emoji or image URL
+        check: true # show an up/down dot for this service
+  - name: Utilities
+    services:
+      - name: Home Assistant
+        url: https://ha.example.com
+```
+
+* **Icons**: a Material Icons name (`play_circle`), an emoji, or an
+  image URL; unset icons get a generic glyph.
+* **Reachability dots**: services with `check: true` get a colored
+  dot — anything answering below HTTP 500 (redirects and login pages
+  included) counts as up. Checks run concurrently with a 2.5s timeout
+  and are cached for a minute.
+* **Weather**: current conditions plus today's high/low from
+  [Open-Meteo](https://open-meteo.com), refreshed every 30 minutes and
+  shown in metric or imperial units.
+
+Set `GRAFITO_HOMEPAGE=false` (or `--homepage=false`) to disable the
+homepage view and its endpoint completely.
+
 ### Adding a View
 
-The three auxiliary views (dashboard, compose, processes) are pluggable.
-Adding a fourth touches exactly five small places:
+The auxiliary views (dashboard, compose, processes, homepage) are
+pluggable. Adding another touches exactly five small places:
 
 1. **Backend module**: create `src/<name>_dashboard.cr` as a module with
    a `render_html` fragment and a `register_routes` method that registers

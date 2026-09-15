@@ -76,6 +76,8 @@ DOC = <<-DOCOPT
     --dashboard=BOOL             Enable the server dashboard and metrics sampler (true/false) [default: true].
     --compose=BOOL               Enable the Docker Compose view (true/false) [default: true].
     --processes=BOOL             Enable the process monitor view (true/false) [default: true].
+    --homepage=BOOL              Enable the homepage view (true/false) [default: true].
+    --homepage-config=PATH       Homepage view config file (YAML) [default: /etc/grafito/homepage.yml].
     --data-dir=PATH              Directory for dashboard metrics history [default: /var/lib/grafito].
     --sample-interval-sec=N      Dashboard metrics sampling interval in seconds [default: 30].
     --retention-days=N           Days of dashboard metrics history to keep [default: 7].
@@ -94,6 +96,8 @@ DOC = <<-DOCOPT
     GRAFITO_DASHBOARD            Enable the server dashboard (true/false) [default: true].
     GRAFITO_COMPOSE              Enable the Docker Compose view (true/false) [default: true].
     GRAFITO_PROCESSES            Enable the process monitor view (true/false) [default: true].
+    GRAFITO_HOMEPAGE             Enable the homepage view (true/false) [default: true].
+    GRAFITO_HOMEPAGE_CONFIG      Homepage view config file (YAML) [default: /etc/grafito/homepage.yml].
     GRAFITO_DATA_DIR             Directory for dashboard metrics history [default: /var/lib/grafito].
     GRAFITO_SAMPLE_INTERVAL_SEC  Dashboard metrics sampling interval in seconds [default: 30].
     GRAFITO_RETENTION_DAYS       Days of dashboard metrics history to keep [default: 7].
@@ -197,6 +201,13 @@ def main
   # same --enable-actions + authentication gate as the dashboard's.
   Grafito.processes_enabled = args["--processes"].to_s != "false"
   Grafito::Log.info { "Process view: #{Grafito.processes_enabled? ? "enabled" : "disabled"}" }
+
+  # Parse homepage view configuration. The view itself is harmless
+  # without a config file (it renders setup instructions instead), so
+  # like the other views it is enabled by default.
+  Grafito.homepage_enabled = args["--homepage"].to_s != "false"
+  Grafito.homepage_config_path = args["--homepage-config"].to_s
+  Grafito::Log.info { "Homepage view: #{Grafito.homepage_enabled? ? "enabled" : "disabled"} (config: #{Grafito.homepage_config_path})" }
 
   # Register all Kemal routes (must be done after base_path is set)
   Grafito.register_routes
