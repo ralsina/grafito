@@ -510,32 +510,51 @@ class Journalctl
     {% else %}
       Log.debug { "#{log_context_message}: Executing command: #{command.inspect}" }
 
-      stdout = IO::Memory.new
-      process_result = Process.run(command[0], args: command[1..], output: stdout)
-
-      if process_result.normal_exit?
-        entries = stdout.to_s.split("\n").compact_map do |line|
-          next if line.strip.empty?
-          begin
-            LogEntry.from_json(line)
-          rescue ex # Catches JSON::ParseException, ArgumentError, etc.
-            Log.warn(exception: ex) { "#{log_context_message}: Failed to parse log line: #{line.inspect[..100]}" }
-            nil
-          end
+      # Stream-parse the NDJSON output line by line instead of buffering
+      # the whole output in memory (then duplicating it into a String and
+      # again into a split array). Peak memory is just the parsed entries.
+      entries = [] of LogEntry
+      process = Process.new(command[0], args: command[1..], output: Process::Redirect::Pipe)
+      process.output.each_line do |line|
+        next if line.strip.empty?
+        begin
+          entry = LogEntry.from_json(line)
+        rescue ex # Catches JSON::ParseException, ArgumentError, etc.
+          Log.warn(exception: ex) { "#{log_context_message}: Failed to parse log line: #{line.inspect[..100]}" }
+          next
         end
 
         # Apply server-side unit filtering if allowed_units is set
-        entries = filter_allowed_units(entries)
-
-        entries
-      else
-        Log.warn { "#{log_context_message}: journalctl command failed with exit code: #{process_result.system_exit_status}. Stdout: #{stdout.to_s[0..100]}" }
-        [] of LogEntry
+        entries << entry if allowed_unit?(entry)
       end
+      process.wait
+
+      if (code = process.wait) != 0
+        Log.warn { "#{log_context_message}: journalctl exited with code #{code}. Parsed #{entries.size} entries before exit." }
+      end
+
+      entries
     {% end %}
   rescue ex
     Log.error(exception: ex) { "#{log_context_message}: Error executing journalctl. Command: #{command.inspect}" }
     [] of LogEntry
+  end
+
+  # Per-entry variant of filter_allowed_units for the streaming parser.
+  private def self.allowed_unit?(entry : LogEntry) : Bool
+    allowed_units = Grafito.allowed_units
+    return true unless allowed_units
+
+    if raw_name = entry.internal_unit_name
+      return true if allowed_units.includes?(raw_name)
+    end
+    cleaned_unit = entry.unit
+    return true if allowed_units.includes?(cleaned_unit)
+    allowed_units.any? do |allowed|
+      raw_name.try(&.downcase.includes?(allowed.downcase)) ||
+        cleaned_unit.downcase.includes?(allowed.downcase) ||
+        allowed.downcase.includes?(cleaned_unit.downcase)
+    end
   end
 
   # Filters log entries by the allowed units restriction, if one is configured.
