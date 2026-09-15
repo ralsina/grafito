@@ -106,6 +106,46 @@ module ComposeJobs
     end
   end
 
+  # Starts a *custom* job whose body is Crystal code instead of a
+  # fixed command sequence: the block runs in a background fiber with
+  # the job in hand, appends lines with `job.append`, runs commands
+  # with `run_command`, and calls `job.finish` (if it forgets, the job
+  # is finished with exit code 0 when the block returns). Used by flows
+  # that mix computation with compose commands, like the app store's
+  # sync/update/uninstall jobs. Demo builds replay fake output like
+  # any other job and never run the block.
+  def self.start_custom(title : String, &runner : Job -> Nil) : String
+    id = Random::Secure.hex(8)
+    job = Job.new(id, title)
+    callback = runner
+    JOBS_MUTEX.synchronize do
+      prune_locked
+      JOBS[id] = job
+    end
+    {% if flag?(:fake_journal) %}
+      run_fake(job)
+    {% else %}
+      # `callback` (not `runner`) because the block capture is not
+      # visible inside code that comes from the macro branch below.
+      spawn do
+        callback.call(job)
+        job.finish(0) if job.snapshot.running
+      rescue ex
+        job.append("Failed to run job: #{ex.message}")
+        job.finish(1)
+        Log.error(exception: ex) { "Compose job #{job.id} failed" }
+      end
+    {% end %}
+    id
+  end
+
+  # Runs one command with its output streaming into the job, and
+  # returns the process exit code. Public so custom job runners can
+  # interleave commands with other work.
+  def self.run_command(job : Job, command : Array(String)) : Int32
+    run_one(job, command)
+  end
+
   # Drops finished jobs past the TTL and, if things ever run away,
   # the oldest ones above the cap — preferring finished jobs and only
   # touching running ones as an absolute last resort (a client polling

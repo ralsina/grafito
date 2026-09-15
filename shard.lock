@@ -20,6 +20,10 @@ shards:
     git: https://github.com/ralsina/baked_file_system.git
     version: 0.10.0+git.commit.beb373124c7a235cfb9cd94e36849d8168eaa04b
 
+  crystar:
+    git: https://github.com/naqvis/crystar.git
+    version: 0.4.0
+
   db:
     git: https://github.com/crystal-lang/crystal-db.git
     version: 0.14.0

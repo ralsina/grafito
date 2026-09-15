@@ -75,10 +75,12 @@ DOC = <<-DOCOPT
     --user                       Enable user systemd mode (use journalctl --user and systemctl --user) [default: false].
     --dashboard=BOOL             Enable the server dashboard and metrics sampler (true/false) [default: true].
     --compose=BOOL               Enable the Docker Compose view (true/false) [default: true].
+    --apps=BOOL                  Enable the app store in the Compose view (true/false) [default: true].
+    --appstores=LIST             App stores as comma-separated name=tarball-url pairs [default: official=https://codeload.github.com/runtipi/runtipi-appstore/tar.gz/refs/heads/master].
     --processes=BOOL             Enable the process monitor view (true/false) [default: true].
     --homepage=BOOL              Enable the homepage view (true/false) [default: true].
     --homepage-config=PATH       Homepage view config file (YAML) [default: /etc/grafito/homepage.yml].
-    --data-dir=PATH              Directory for dashboard metrics history [default: /var/lib/grafito].
+    --data-dir=PATH              Directory for metrics history, app store caches and installed apps [default: /var/lib/grafito].
     --sample-interval-sec=N      Dashboard metrics sampling interval in seconds [default: 30].
     --retention-days=N           Days of dashboard metrics history to keep [default: 7].
     --enable-actions             Allow start/stop/restart/enable/disable of units from the dashboard (requires authentication) [default: false].
@@ -95,10 +97,12 @@ DOC = <<-DOCOPT
     GRAFITO_USER_MODE            Enable user systemd mode (true/false) [default: false].
     GRAFITO_DASHBOARD            Enable the server dashboard (true/false) [default: true].
     GRAFITO_COMPOSE              Enable the Docker Compose view (true/false) [default: true].
+    GRAFITO_APPS                 Enable the app store in the Compose view (true/false) [default: true].
+    GRAFITO_APPSTORES            App stores as comma-separated name=tarball-url pairs [default: official=https://codeload.github.com/runtipi/runtipi-appstore/tar.gz/refs/heads/master].
     GRAFITO_PROCESSES            Enable the process monitor view (true/false) [default: true].
     GRAFITO_HOMEPAGE             Enable the homepage view (true/false) [default: true].
     GRAFITO_HOMEPAGE_CONFIG      Homepage view config file (YAML) [default: /etc/grafito/homepage.yml].
-    GRAFITO_DATA_DIR             Directory for dashboard metrics history [default: /var/lib/grafito].
+    GRAFITO_DATA_DIR             Directory for metrics history, app store caches and installed apps [default: /var/lib/grafito].
     GRAFITO_SAMPLE_INTERVAL_SEC  Dashboard metrics sampling interval in seconds [default: 30].
     GRAFITO_RETENTION_DAYS       Days of dashboard metrics history to keep [default: 7].
     GRAFITO_ENABLE_ACTIONS       Allow unit start/stop/restart from the dashboard (true/false) [default: false].
@@ -197,6 +201,9 @@ def main
   Grafito.compose_enabled = args["--compose"].to_s != "false"
   Grafito::Log.info { "Compose view: #{Grafito.compose_enabled? ? "enabled" : "disabled"}" }
 
+  # Parse app store configuration.
+  parse_app_store_config(args)
+
   # Parse process view configuration. Its kill actions go through the
   # same --enable-actions + authentication gate as the dashboard's.
   Grafito.processes_enabled = args["--processes"].to_s != "false"
@@ -267,6 +274,16 @@ def main
       server.bind_tcp(bind_address, port)
     end
   end
+end
+
+# Parses app store configuration. The app store rides on the compose
+# view (and its actions need the same gate as the other compose
+# actions); its caches and installed apps live under --data-dir.
+def parse_app_store_config(args)
+  Grafito.apps_enabled = args["--apps"].to_s != "false"
+  Grafito.appstores_spec = args["--appstores"].to_s
+  Grafito.data_dir = Grafito::MetricsStore.resolve_data_dir(args["--data-dir"].to_s)
+  Grafito::Log.info { "App store: #{Grafito.apps_enabled? ? "enabled" : "disabled"} (data dir: #{Grafito.data_dir})" }
 end
 
 # Returns the port to listen on, parsing the docopt argument which may

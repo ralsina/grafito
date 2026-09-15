@@ -52,6 +52,11 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
 - `src/timeline.cr` - Timeline visualization
 - `src/dashboard.cr`, `src/compose_dashboard.cr`, `src/compose_jobs.cr`,
   `src/compose_status.cr` - Server dashboard and Docker Compose views
+- `src/app_store.cr`, `src/compose_appstore.cr` - Runtipi-compatible app
+  store for the compose view (catalog, install/update/uninstall of apps
+  as compose stacks; fetching, parsing and rendering in app_store.cr,
+  HTTP endpoints and HTMX fragments in compose_appstore.cr)
+- `src/fake_appstore_data.cr` - Fixture app store for demo mode
 - `src/process_dashboard.cr`, `src/process_status.cr` - Process monitor view
 - `src/homepage.cr`, `src/homepage_config.cr`, `src/weather.cr` - Homepage
   launcher view with weather widget
@@ -76,6 +81,8 @@ The project intentionally minimizes dependencies:
 - `html_builder` - Clean HTML generation without string concatenation
 - `kemal-basic-auth` - Optional authentication
 - `anthropic` - Anthropic/Claude API client for AI features
+- `crystar` - Tar archive reader for unpacking app store tarballs (the
+  stdlib only ships gzip/zip, not tar)
 - `faker` - Fake data generation for development/demo mode
 
 ### External Libraries

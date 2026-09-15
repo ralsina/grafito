@@ -16,8 +16,13 @@
 require "html_builder"
 require "log"
 
+require "./app_store"
 require "./compose_status"
 require "./compose_jobs"
+
+{% if flag?(:fake_journal) %}
+  require "./fake_appstore_data"
+{% end %}
 
 module ComposeDashboard
   extend self
@@ -30,7 +35,10 @@ module ComposeDashboard
     stacks : Array(ComposeStatus::Stack),
     enable_actions : Bool = false,
   ) : String
+    installed_by_project = installed_apps_by_project
     HTML.build do
+      html compose_toolbar(enable_actions)
+
       div(class: "dashboard-grid") do
         html card("Stacks", stacks.size.to_s)
         html card("Services", total_services(stacks).to_s)
@@ -47,11 +55,47 @@ module ComposeDashboard
         # wide viewports.
         div(class: "compose-stacks") do
           stacks.each do |compose_stack|
-            html stack_section(compose_stack, enable_actions)
+            html stack_section(compose_stack, enable_actions, installed_by_project[compose_stack.name]?)
           end
         end
       end
     end
+  end
+
+  # The view-level toolbar: currently just the app store entry point,
+  # shown when actions are allowed (the store is useless without them).
+  private def compose_toolbar(enable_actions : Bool) : String
+    return "" unless enable_actions && Grafito.apps_enabled?
+    HTML.build do
+      div(class: "compose-toolbar") do
+        button(
+          class: "compose-addapp",
+          title: "Install an app from the app store",
+          "hx-get": "#{base}/compose-appstore",
+          "hx-target": "#panel-detail-content",
+          "hx-swap": "innerHTML",
+          "hx-indicator": "#loading-spinner",
+          "hx-on:htmx:before-request": "panelSpinner('panel-detail-content')",
+          "hx-on:htmx:after-request": "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
+        ) do
+          span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+            text "add_circle"
+          end
+          text " Add app"
+        end
+      end
+    end
+  end
+
+  # Installed store apps indexed by compose project name. Demo builds
+  # have no on-disk installs; their fixture badge comes from the fake
+  # data module instead.
+  private def installed_apps_by_project : Hash(String, AppStore::InstalledApp)
+    {% if flag?(:fake_journal) %}
+      FakeAppStore.installed.index_by(&.project_name)
+    {% else %}
+      AppStore.installed(Grafito.data_dir).index_by(&.project_name)
+    {% end %}
   end
 
   private def total_services(stacks : Array(ComposeStatus::Stack)) : Int32
@@ -66,15 +110,25 @@ module ComposeDashboard
     stacks.sum(&.unhealthy_count)
   end
 
-  # One stack: header with status and actions, optional job output
-  # area, then the service table.
-  private def stack_section(compose_stack : ComposeStatus::Stack, enable_actions : Bool) : String
+  # One stack: header with status (and the store-app badge, when the
+  # stack was installed from an app store), actions, optional job
+  # output area, then the service table.
+  # ameba:disable Metrics/CyclomaticComplexity
+  private def stack_section(
+    compose_stack : ComposeStatus::Stack,
+    enable_actions : Bool,
+    installed : AppStore::InstalledApp? = nil,
+  ) : String
+    update_version = update_available_version(installed)
+    badge = installed ? app_badge(installed, update_version) : ""
+    store_buttons = (enable_actions && installed) ? store_action_buttons(compose_stack, installed, update_version) : ""
     HTML.build do
       div(class: "compose-stack") do
         div(class: "compose-stack-header") do
           tag("h3") do
             text compose_stack.name
             html status_pill(compose_stack.status.empty? ? "unknown" : compose_stack.status)
+            html badge
           end
           div(class: "compose-stack-actions") do
             if enable_actions && compose_stack.actionable?
@@ -83,6 +137,7 @@ module ComposeDashboard
               html stack_action_button(compose_stack, "restart", "restart_alt", "Restart stack")
               html stack_action_button(compose_stack, "update", "update", "Pull images and up -d")
             end
+            html store_buttons
             if compose_stack.actionable?
               button(
                 class: "round-button",
@@ -239,6 +294,80 @@ module ComposeDashboard
       ) do
         span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
           text icon
+        end
+      end
+    end
+  end
+
+  # The newest version the synced store offers for an installed app,
+  # or nil when the app is up to date (or the store cache has no
+  # answer). Demo builds have no store cache; the fake data module
+  # reports the fixture install as updatable so the UI is exercised.
+  private def update_available_version(installed : AppStore::InstalledApp?) : String?
+    return unless installed
+    {% if flag?(:fake_journal) %}
+      FakeAppStore.update_available(installed)
+    {% else %}
+      store_app = AppStore.store_app_for(Grafito.data_dir, installed)
+      return nil unless store_app
+      store_app.tipi_version > installed.tipi_version ? store_app.version : nil
+    {% end %}
+  end
+
+  # The "installed from the app store" badge shown next to a stack's
+  # status pill.
+  private def app_badge(installed : AppStore::InstalledApp, update_version : String?) : String
+    HTML.build do
+      span(class: "tag tag-info appstore-badge", title: "Installed from the #{installed.store} app store") do
+        text "#{installed.name} #{installed.version}"
+      end
+      if update_version
+        span(class: "tag tag-warn appstore-badge", title: "The app store offers a newer package") do
+          text "update: #{update_version}"
+        end
+      end
+    end
+  end
+
+  # Update/uninstall buttons for an installed app's stack header,
+  # answered by the app store endpoints with the same job-output
+  # fragments as the stack actions.
+  private def store_action_buttons(
+    compose_stack : ComposeStatus::Stack,
+    installed : AppStore::InstalledApp,
+    update_version : String?,
+  ) : String
+    HTML.build do
+      if update_version
+        button(
+          class: "round-button",
+          title: "Update app from the store",
+          "aria-label": "Update app from the store",
+          "hx-post": "#{base}/compose-appstore-update",
+          "hx-vals": %({"stack": "#{compose_stack.name}"}),
+          "hx-target": "#compose-output-area-#{compose_stack.name}",
+          "hx-swap": "innerHTML",
+          "hx-confirm": "Update #{installed.name} from the app store?",
+          "hx-indicator": "#loading-spinner",
+        ) do
+          span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+            text "cloud_download"
+          end
+        end
+      end
+      button(
+        class: "round-button",
+        title: "Uninstall app (containers removed, data kept)",
+        "aria-label": "Uninstall app (containers removed, data kept)",
+        "hx-post": "#{base}/compose-appstore-uninstall",
+        "hx-vals": %({"stack": "#{compose_stack.name}"}),
+        "hx-target": "#compose-output-area-#{compose_stack.name}",
+        "hx-swap": "innerHTML",
+        "hx-confirm": "Uninstall #{installed.name}? Containers are removed; app data is kept.",
+        "hx-indicator": "#loading-spinner",
+      ) do
+        span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+          text "delete"
         end
       end
     end
