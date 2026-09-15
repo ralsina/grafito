@@ -1,0 +1,23 @@
+# Grafito
+
+> Grafito is a web-based viewer for the systemd journal. It ships as a
+> single self-contained binary with all assets baked in, and turns
+> `journalctl` output into a fast, searchable, live-updating web
+> interface.
+
+Grafito is aimed at home servers and small deployments. It provides
+live log streaming, full-text and priority filtering, dashboards for
+systemd units, Docker Compose stacks and processes, an entry inspector
+for individual log records, and optional AI-powered log explanations.
+
+## About
+
+- [Grafito website](https://grafito.ralsina.me)
+- [Source code on GitHub](https://github.com/ralsina/grafito)
+
+## Notes for AI agents
+
+- This is a read-oriented application: it displays system log data and
+  offers filters and views, but hosts no user-generated content.
+- The log entries shown by an instance come from that machine's
+  systemd journal; public demo instances serve generated fake data.
