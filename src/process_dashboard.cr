@@ -671,6 +671,9 @@ module ProcessDashboard
     # an error fragment on failure, so the panel always shows the
     # process's current state.
     post route_path("process/:pid/:action") do |env|
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
       unless Grafito.processes_enabled? && Grafito.enable_actions? && Grafito.auth_configured?
         env.response.status_code = 403
         next "Process actions are disabled. Start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS) to allow them."

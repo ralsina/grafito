@@ -50,6 +50,37 @@ describe "Kemal routes" do
     Grafito.ai_provider = nil
   end
 
+  describe "cross-site POST rejection" do
+    it "rejects state-changing POSTs with a cross-site Sec-Fetch-Site" do
+      headers = HTTP::Headers{"Sec-Fetch-Site" => "cross-site"}
+      response = dispatch_request("POST", "/unit/nginx.service/stop", headers: headers)
+
+      response[:status].should eq 403
+      response[:body].should contain("Cross-site request rejected.")
+    end
+
+    it "rejects state-changing POSTs with a mismatched Origin" do
+      headers = HTTP::Headers{
+        "Origin" => "https://evil.example",
+        "Host"   => "grafito.local",
+      }
+      response = dispatch_request("POST", "/unit/nginx.service/stop", headers: headers)
+
+      response[:status].should eq 403
+      response[:body].should contain("Cross-site request rejected.")
+    end
+
+    it "allows same-origin and header-less POSTs through the gate" do
+      headers = HTTP::Headers{"Sec-Fetch-Site" => "same-origin"}
+      response = dispatch_request("POST", "/unit/nginx.service/stop", headers: headers)
+
+      # The CSRF gate passes; the request then hits the actions gate
+      # (403, actions disabled in specs) instead of the CSRF message.
+      response[:status].should eq 403
+      response[:body].should_not contain("Cross-site request rejected.")
+    end
+  end
+
   {% unless flag?(:fake_journal) %}
     it "GET /logs returns an empty state for a unit that has no entries" do
       response = dispatch_request("GET", "/logs?unit=grafito-no-such-unit-xyz&format=text")

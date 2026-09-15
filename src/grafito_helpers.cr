@@ -102,6 +102,51 @@ module Grafito
   end
 
   # Helper to get an optional query parameter, treating empty strings as nil.
+  # Blocks state-changing cross-site POSTs (CSRF): browsers attach
+  # cached basic-auth credentials to any request to this origin, so a
+  # malicious page could ride an authenticated session to run
+  # privileged actions.
+  #
+  # Modern browsers send Sec-Fetch-Site on every request: same-origin
+  # and none are allowed, cross-site is rejected. Older browsers are
+  # checked via Origin/Referer against the Host header when present.
+  # Non-browser clients (curl, monitoring) send none of these headers
+  # and are allowed — basic auth still applies to them.
+  #
+  # Returns true when the request must be rejected; the caller halts.
+  # ameba:disable Metrics/CyclomaticComplexity
+  def reject_cross_site_post?(env : HTTP::Server::Context) : Bool
+    return false unless env.request.method == "POST"
+
+    host = env.request.headers["Host"]?
+    headers = env.request.headers
+
+    if sec_fetch = headers["Sec-Fetch-Site"]?
+      unless {"same-origin", "none"}.includes?(sec_fetch.downcase)
+        Log.warn { "Rejected cross-site POST to #{env.request.path} (Sec-Fetch-Site: #{sec_fetch}, possible CSRF)" }
+        return true
+      end
+      return false
+    end
+
+    if origin = headers["Origin"]?
+      if host && URI.parse(origin).authority != host
+        Log.warn { "Rejected cross-site POST to #{env.request.path} (Origin mismatch, possible CSRF)" }
+        return true
+      end
+      return false
+    end
+
+    if referer = headers["Referer"]?
+      if host && (ref_authority = URI.parse(referer).authority) && ref_authority != host
+        Log.warn { "Rejected cross-site POST to #{env.request.path} (Referer mismatch, possible CSRF)" }
+        return true
+      end
+    end
+
+    false
+  end
+
   # Public: view modules delegate their own route helpers to these.
   def optional_query_param(env : HTTP::Server::Context, key : String) : String?
     param = env.params.query[key]?

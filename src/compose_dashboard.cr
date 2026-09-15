@@ -611,6 +611,9 @@ module ComposeDashboard
     # as background jobs so their output streams into the stack's
     # output area; the POST answers with the job's polling fragment.
     post route_path("compose-stack/:stack/:action") do |env|
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
       unless compose_actions_allowed?
         env.response.status_code = 403
         next "Compose actions are disabled. Start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS) to allow them."
@@ -665,6 +668,9 @@ module ComposeDashboard
     # synchronously like the unit actions. Answers with the refreshed
     # view, or the refreshed panel for from=panel requests.
     post route_path("compose-service/:stack/:service/:action") do |env|
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
       unless compose_actions_allowed?
         env.response.status_code = 403
         next "Compose actions are disabled. Start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS) to allow them."

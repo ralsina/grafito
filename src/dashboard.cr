@@ -784,6 +784,9 @@ module Dashboard
     # requests, the refreshed service panel) so the htmx button updates
     # the view.
     post route_path("unit/:name/:action") do |env|
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
       unless Grafito.dashboard_enabled? && Grafito.enable_actions? && Grafito.auth_configured?
         env.response.status_code = 403
         next "Unit actions are disabled. Start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS) to allow them."
