@@ -14,7 +14,9 @@
 }
 
 :root {
-  --font-display: "Space Grotesk", var(--font-body);
+  /* Two webfonts only (Chivo + Chivo Mono): display text falls back to
+     the body font so the Google Fonts request stays lean. */
+  --font-display: var(--font-body);
   --brand-weight: 600;
 }
 html[data-theme="dark"] {

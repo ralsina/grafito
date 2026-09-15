@@ -86,6 +86,13 @@
     height: 1.7rem;
     width: 1.7rem;
   }
+  /* Touch-friendly height for the clickable hostname/unit/tag links. */
+  #results .log-hostname-cell a,
+  #results .log-unit-cell a,
+  #results .log-tag-cell a {
+    display: inline-block;
+    padding: 6px 0;
+  }
 }
 
 /* Reserve the chart's space before HTMX injects it (kills layout shift) */
