@@ -15,18 +15,28 @@ module Grafito::Gotify
   class Client
     Log = ::Log.for(self)
 
+    # A wedged Gotify server must never stall the metrics sampler, so
+    # every phase of the request is bounded to a few seconds.
+    CONNECT_TIMEOUT = 3.seconds
+    READ_TIMEOUT    = 5.seconds
+    WRITE_TIMEOUT   = 5.seconds
+
     # Sends a notification; returns true when the server accepted it.
     # Never raises: alerting must not take the sampler down.
     def send_notification(title : String, message : String) : Bool
-      url = "#{Config.url}/message?token=#{URI.encode_www_form(Config.token)}"
+      uri = URI.parse("#{Config.url}/message?token=#{URI.encode_www_form(Config.token)}")
       body = {
         title:    title,
         message:  message,
         priority: Config.priority,
       }.to_json
 
-      response = HTTP::Client.post(
-        url,
+      client = HTTP::Client.new(uri)
+      client.connect_timeout = CONNECT_TIMEOUT
+      client.read_timeout = READ_TIMEOUT
+      client.write_timeout = WRITE_TIMEOUT
+      response = client.post(
+        uri.request_target,
         headers: HTTP::Headers{"Content-Type" => "application/json"},
         body: body,
       )
