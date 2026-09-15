@@ -107,7 +107,10 @@ module ComposeJobs
   end
 
   # Drops finished jobs past the TTL and, if things ever run away,
-  # the oldest ones above the cap.
+  # the oldest ones above the cap — preferring finished jobs and only
+  # touching running ones as an absolute last resort (a client polling
+  # an evicted running job would see a 404 while docker is still
+  # working).
   private def self.prune_locked : Nil
     cutoff = Time.utc - JOB_TTL
     JOBS.reject! do |_, job|
@@ -115,7 +118,9 @@ module ComposeJobs
       !snapshot.running && job.created_at < cutoff
     end
     while JOBS.size >= MAX_JOBS
-      oldest = JOBS.min_by { |_, job| job.created_at }
+      finished = JOBS.reject { |_, job| job.snapshot.running }
+      candidates = finished.empty? ? JOBS : finished
+      oldest = candidates.min_by { |_, job| job.created_at }
       JOBS.delete(oldest[0])
     end
   end
