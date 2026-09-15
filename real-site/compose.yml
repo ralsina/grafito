@@ -1,29 +1,16 @@
-# Real Grafito stack for rocky: the actual system journal plus AI
-# explanations via jimmy-proxy, mirroring the layout of the demo stack
-# in demo-site/compose.yml.
+# Real Grafito stack for rocky: the actual system journal, with AI
+# explanations from the built-in ChatJimmy provider (free, unofficial
+# endpoint, enabled explicitly via GRAFITO_AI_PROVIDER - no proxy
+# sidecar needed anymore).
 #
 # The grafito image is ghcr.io/ralsina/grafito-arm64 (built from the
 # repo's Dockerfile: ubuntu + systemd's journalctl + the static
 # binary). It needs the host journal and machine-id to see the real
 # logs, and the host timezone so timestamps match.
+#
+# One-time cleanup after switching from the old jimmy-proxy layout:
+#   rm -f proxy.py && docker compose up -d --remove-orphans
 services:
-  # jimmy-proxy: single-file OpenAI-compatible proxy to ChatJimmy's
-  # free Llama 3.1 8B. No API key needed.
-  #
-  # It shares the grafito container's network namespace, so grafito
-  # reaches it on 127.0.0.1:4100 - no container DNS involved, and the
-  # proxy's 127.0.0.1 binding is exactly right.
-  jimmy:
-    image: python:3.12-alpine
-    container_name: grafito-jimmy
-    restart: unless-stopped
-    depends_on:
-      - grafito
-    network_mode: "service:grafito"
-    volumes:
-      - ./proxy.py:/app/proxy.py:ro
-    command: ["python", "/app/proxy.py", "--port", "4100"]
-
   # Grafito over the real system journal.
   grafito:
     image: ghcr.io/ralsina/grafito-arm64:latest
@@ -38,12 +25,8 @@ services:
       - /etc/machine-id:/etc/machine-id:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
-      GRAFITO_AI_PROVIDER: openai_compatible
-      GRAFITO_AI_ENDPOINT: http://127.0.0.1:4100/v1/chat/completions
-      GRAFITO_AI_MODEL: llama3.1-8B
+      GRAFITO_AI_PROVIDER: jimmy
       GRAFITO_AI_PROVIDER_NAME: "ChatJimmy (Llama 3.1 8B)"
-      GRAFITO_AI_API_KEY: local
-      GRAFITO_AI_TIMEOUT_SEC: "120"
       # Uncomment to require authentication:
       # GRAFITO_AUTH_USER: changeme
       # GRAFITO_AUTH_PASS: changeme

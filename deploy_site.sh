@@ -15,17 +15,16 @@ docker build . -f Dockerfile.demo --platform linux/arm64 \
     -t ghcr.io/ralsina/grafito-demo-arm64:"${VERSION}" --push
 
 # The demo runs as a docker compose stack in /data/stacks/grafito-demo on
-# rocky: the demo image plus jimmy-proxy (a local OpenAI-compatible proxy
-# to ChatJimmy's free Llama 3.1 8B) that powers the demo's AI
-# explanations without any API key. See demo-site/compose.yml.
+# rocky: the demo image alone; AI explanations come from the built-in
+# ChatJimmy provider, so there is no proxy sidecar anymore.
+# See demo-site/compose.yml.
 ssh root@rocky "mkdir -p /data/stacks/grafito-demo"
 scp demo-site/compose.yml root@rocky:/data/stacks/grafito-demo/compose.yml
-ssh root@rocky "curl -fsSL https://raw.githubusercontent.com/Fadeleke57/jimmy-proxy/main/proxy.py -o /data/stacks/grafito-demo/proxy.py"
-# --force-recreate covers both services: jimmy shares the grafito
-# container's network namespace, so they must always be recreated
-# together. Upstream proxy.py binds 127.0.0.1, which is correct for
-# that setup - no patching needed.
-ssh root@rocky "cd /data/stacks/grafito-demo && docker compose pull grafito && docker compose up -d --force-recreate"
+# Remove the proxy.py left behind by the old jimmy-proxy sidecar.
+ssh root@rocky "rm -f /data/stacks/grafito-demo/proxy.py"
+# --remove-orphans drops the retired jimmy container; --force-recreate
+# picks up the new compose file in one step.
+ssh root@rocky "cd /data/stacks/grafito-demo && docker compose pull && docker compose up -d --force-recreate --remove-orphans"
 
 make website
 rsync -rav site/* root@rocky:/data/stacks/web/websites/grafito.ralsina.me/

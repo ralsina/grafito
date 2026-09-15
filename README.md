@@ -96,19 +96,20 @@ context.
 
 **Free ChatJimmy endpoint (hidden behind a flag):** Grafito can also
 talk directly to [ChatJimmy](https://chatjimmy.ai)'s free browser
-endpoint (Llama 3.1 8B, no API key needed). Because that is an
-unofficial use of a web endpoint, it is never auto-detected and only
-runs when you ask for it explicitly:
+endpoint (Llama 3.1 8B, no API key needed) through its built-in
+provider — an in-process port of
+[jimmy-proxy](https://github.com/Fadeleke57/jimmy-proxy), so no
+sidecar is needed. Because that is an unofficial use of a web
+endpoint, it is never auto-detected and only runs when you ask for it
+explicitly:
 
 ```bash
 export GRAFITO_AI_PROVIDER=jimmy   # or "chatjimmy"
 ```
 
-The endpoint can change or disappear at any time, so if it stops
-working, the fallback is to run
-[jimmy-proxy](https://github.com/Fadeleke57/jimmy-proxy) locally and
-point `GRAFITO_AI_ENDPOINT` at it, labeling it with
-`GRAFITO_AI_PROVIDER_NAME`.
+The upstream endpoint can change or disappear at any time; since the
+provider is built in, a fix means updating Grafito (or pointing
+`GRAFITO_AI_ENDPOINT` at any OpenAI-compatible service instead).
 
 ### Server Dashboard
 
@@ -722,11 +723,10 @@ Once set up, logs from all client hosts will appear in Grafito on the central se
 5. **Demo site:**
    The public demo at [grafito-demo.ralsina.me](https://grafito-demo.ralsina.me)
    runs fake journal data with AI enabled. It is deployed as a docker
-   compose stack (see `demo-site/compose.yml`) that runs the demo image
-   alongside [jimmy-proxy](https://github.com/Fadeleke57/jimmy-proxy), a
-   tiny proxy exposing ChatJimmy's free Llama 3.1 8B as an
-   OpenAI-compatible API. `./deploy_site.sh` builds, pushes and deploys
-   the whole stack.
+   compose stack (see `demo-site/compose.yml`) running the demo image;
+   AI explanations come from Grafito's built-in ChatJimmy provider, so
+   the stack needs no sidecar. `./deploy_site.sh` builds, pushes and
+   deploys it.
 
    Demo builds (compiled with `-Ddemo_mode`) are fully interactive:
    every action button is shown and works against the fake world —
@@ -739,12 +739,12 @@ Once set up, logs from all client hosts will appear in Grafito on the central se
 
 6. **Real instance:**
    The real Grafito instance (actual system journal, also with AI via
-   jimmy) runs as the docker compose stack in `/data/stacks/grafito` on
-   the server, using the published `ghcr.io/ralsina/grafito-arm64`
-   image. `real-site/compose.yml` is the source of truth for that
-   stack: it bind-mounts `/var/log/journal`, `/etc/machine-id` and
-   `/etc/localtime` read-only so the container sees the host journal
-   in the host timezone.
+   the built-in ChatJimmy provider) runs as the docker compose stack in
+   `/data/stacks/grafito` on the server, using the published
+   `ghcr.io/ralsina/grafito-arm64` image. `real-site/compose.yml` is
+   the source of truth for that stack: it bind-mounts
+   `/var/log/journal`, `/etc/machine-id` and `/etc/localtime` read-only
+   so the container sees the host journal in the host timezone.
 
 ## Contributing
 

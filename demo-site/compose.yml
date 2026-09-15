@@ -1,23 +1,10 @@
+# Grafito demo instance, built with fake journal data. The image is
+# built and pushed by deploy_site.sh.
+#
+# AI explanations use the built-in ChatJimmy provider (a free,
+# unofficial endpoint, enabled explicitly via GRAFITO_AI_PROVIDER), so
+# no proxy sidecar is needed anymore.
 services:
-  # jimmy-proxy: single-file OpenAI-compatible proxy to ChatJimmy's
-  # free Llama 3.1 8B. No API key needed.
-  #
-  # It shares the grafito container's network namespace, so grafito
-  # reaches it on 127.0.0.1:4100 - no container DNS involved, and the
-  # proxy's 127.0.0.1 binding is exactly right.
-  jimmy:
-    image: python:3.12-alpine
-    container_name: grafito-demo-jimmy
-    restart: unless-stopped
-    depends_on:
-      - grafito
-    network_mode: "service:grafito"
-    volumes:
-      - ./proxy.py:/app/proxy.py:ro
-    command: ["python", "/app/proxy.py", "--port", "4100"]
-
-  # Grafito demo instance, built with fake journal data. The image is
-  # built and pushed by deploy_site.sh.
   grafito:
     image: ghcr.io/ralsina/grafito-demo-arm64:latest
     container_name: grafito-demo
@@ -26,9 +13,5 @@ services:
       - "1112:1112"
     command: ["-p", "1112"]
     environment:
-      GRAFITO_AI_PROVIDER: openai_compatible
-      GRAFITO_AI_ENDPOINT: http://127.0.0.1:4100/v1/chat/completions
-      GRAFITO_AI_MODEL: llama3.1-8B
+      GRAFITO_AI_PROVIDER: jimmy
       GRAFITO_AI_PROVIDER_NAME: "ChatJimmy (Llama 3.1 8B)"
-      GRAFITO_AI_API_KEY: local
-      GRAFITO_AI_TIMEOUT_SEC: "120"
