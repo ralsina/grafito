@@ -781,18 +781,4 @@ module ComposeDashboard
   private def self.compose_command_prefix(compose_stack : ComposeStatus::Stack) : Array(String)
     ["docker", "compose"] + compose_stack.config_files.flat_map { |config_file| ["-f", config_file] }
   end
-
-  # Returns the process view fragment preserving the request's sort and
-  # filter parameters, used by the kill endpoints so the table does not
-  # jump back to the default ordering.
-  private def self.render_process_fragment(env : HTTP::Server::Context) : String
-    ProcessDashboard.render_html(
-      ProcessStatus.snapshot,
-      Grafito.enable_actions?,
-      optional_query_param(env, "sort_by"),
-      optional_query_param(env, "sort_order"),
-      optional_query_param(env, "filter"),
-      optional_query_param(env, "limit"),
-    )
-  end
 end
