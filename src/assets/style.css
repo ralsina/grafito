@@ -1797,9 +1797,13 @@ dialog article dd {
 .proc-history {
   margin-top: 0.6rem;
 }
-.proc-history svg {
-  width: 100%;
-  height: auto;
+/* The chart svg sizes itself (width 100%, fixed height baked in the
+   markup, .dashboard-history-svg styling), exactly as on the
+   dashboard — no extra sizing rules needed here. */
+.proc-history .dashboard-history-svg {
+  border: none;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 /* The per-core meters live in a fifth summary card, so they must be
    small enough to share the row with the CPU/Tasks/Memory/Load cards. */
