@@ -1,6 +1,6 @@
 # # Fake app store data
 #
-# The demo build (-Dfake_journal) has no network, no docker and no
+# The demo build (-Ddemo_mode) has no network, no docker and no
 # writable data dir, but its compose view still shows the app store
 # surface: a small fixture catalog, one fixture install (so the stack
 # badge and its update/uninstall buttons are visible), and job output
@@ -138,9 +138,18 @@ module FakeAppStore
     find_app(app_id).try(&.description) || ""
   end
 
-  # One fixture install, parked on the fake "webapp" stack so the
-  # badge, update and uninstall buttons appear in the demo.
-  def self.installed : Array(AppStore::InstalledApp)
+  # ## Mutable demo state
+  #
+  # The installed-apps list is mutable so simulated installs, updates
+  # and uninstalls have visible effects. Seeded with one fixture
+  # install parked on the webapp stack (one tipi revision behind the
+  # catalog, so the update badge shows until a simulated update).
+  # Guarded: view polls and action endpoints run in fibers.
+
+  @@installed_mutex = Mutex.new(protection: :checked)
+  @@installed : Array(AppStore::InstalledApp)? = nil
+
+  private def self.installed_seed : Array(AppStore::InstalledApp)
     [AppStore::InstalledApp.new(
       store: "demo",
       store_url: "https://demo.invalid/demo-appstore.tar.gz",
@@ -154,9 +163,94 @@ module FakeAppStore
     )]
   end
 
-  # The demo always advertises a newer version so the update path of
-  # the UI is visible.
+  # Every known install. Demo builds carry the fixture install so the
+  # badge and its buttons are visible without docker.
+  def self.installed : Array(AppStore::InstalledApp)
+    @@installed_mutex.synchronize do
+      (@@installed ||= installed_seed).dup
+    end
+  end
+
+  # One install by compose project name, or nil.
+  def self.find_installed(project_name : String) : AppStore::InstalledApp?
+    @@installed_mutex.synchronize do
+      (@@installed ||= installed_seed).find(&.project_name.==(project_name))
+    end
+  end
+
+  # Simulates installing one catalog app: the compose project is the
+  # app id, like the real renderer's. Reinstalling replaces any
+  # previous install of the same app.
+  def self.install(app_info : AppStore::AppInfo) : AppStore::InstalledApp
+    record = AppStore::InstalledApp.new(
+      store: "demo",
+      store_url: "https://demo.invalid/demo-appstore.tar.gz",
+      id: app_info.id,
+      name: app_info.name,
+      version: app_info.version,
+      tipi_version: app_info.tipi_version,
+      port: app_info.port || 0,
+      project_name: app_info.id,
+      installed_at: Time.utc.to_rfc3339,
+    )
+    @@installed_mutex.synchronize do
+      list = @@installed ||= installed_seed
+      list.reject!(&.project_name.==(record.project_name))
+      list << record
+    end
+    record
+  end
+
+  # Simulates uninstalling an app. Returns true when one was removed.
+  def self.uninstall(project_name : String) : Bool
+    @@installed_mutex.synchronize do
+      list = @@installed ||= installed_seed
+      !list.reject!(&.project_name.==(project_name)).nil?
+    end
+  end
+
+  # Simulates an app update: the install jumps to the catalog's
+  # version, so the update badge disappears. Returns true when the
+  # project was known.
+  def self.mark_updated(project_name : String) : Bool
+    @@installed_mutex.synchronize do
+      list = @@installed ||= installed_seed
+      record = list.find(&.project_name.==(project_name))
+      return false unless record
+      app_info = find_app(record.id)
+      return false unless app_info
+
+      list.delete(record)
+      list << AppStore::InstalledApp.new(
+        store: record.store,
+        store_url: record.store_url,
+        id: record.id,
+        name: record.name,
+        version: app_info.version,
+        tipi_version: app_info.tipi_version,
+        port: record.port,
+        project_name: record.project_name,
+        installed_at: record.installed_at,
+      )
+      true
+    end
+  end
+
+  # The newest version the store offers for an installed app, or nil
+  # when it is up to date. Data-driven: whatever the fixture catalog
+  # carries is what the store "offers".
   def self.update_available(installed : AppStore::InstalledApp) : String?
-    installed.id == "whoami" ? "1.11.0" : nil
+    app_info = find_app(installed.id)
+    if app_info && app_info.tipi_version > installed.tipi_version
+      app_info.version
+    end
+  end
+
+  # Restores the pristine demo installs (spec hygiene, container
+  # restarts do the same for the demo site).
+  def self.reset_demo_state : Nil
+    @@installed_mutex.synchronize do
+      @@installed = nil
+    end
   end
 end

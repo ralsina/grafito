@@ -167,6 +167,21 @@ module Grafito
     param.nil? || param.strip.empty? ? nil : param
   end
 
+  # A friendly "this is demo mode" block for actions that cannot be
+  # simulated on a demo build (e.g. refusing to kill init). Styled like
+  # the action error fragments; answered with a success status so htmx
+  # swaps it in.
+  def demo_notice_fragment(action : String, target : String, message : String) : String
+    HTML.build do
+      div(class: "service-panel service-panel-error") do
+        tag("h4") { text "#{action[0].upcase}#{action[1..]} #{target}: demo mode" }
+        tag("pre", class: "service-panel-error-message") do
+          text message
+        end
+      end
+    end
+  end
+
   # Generates attributes for sortable table headers.
   # Returns a NamedTuple with text, hx_vals (JSON string), and key_name.
   private def _generate_header_attributes(

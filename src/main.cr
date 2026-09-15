@@ -195,6 +195,15 @@ def main
     Grafito::Log.warn { "Actions are enabled while bound to #{args["--bind"]}: credentials and commands travel unencrypted. Put grafito behind a TLS reverse proxy for remote access (see README: Securing a Remote Deployment)." }
   end
 
+  # Demo builds always offer actions: every action endpoint simulates
+  # its effect against the fake data, so no credentials are needed.
+  # Set after the unencrypted-transport warning above, which is about
+  # real deployments and would only be noise here.
+  {% if flag?(:demo_mode) %}
+    Grafito.enable_actions = true
+    Grafito::Log.info { "Demo mode: actions enabled, their effects are simulated" }
+  {% end %}
+
   # Parse homepage view configuration. The view itself is harmless
   # without a config file (it renders setup instructions instead), so
   # like the other views it is enabled by default.

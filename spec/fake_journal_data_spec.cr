@@ -220,16 +220,43 @@ describe FakeJournalData do
     end
 
     context "with --cursor argument" do
-      it "generates unique cursors that do not reuse the provided cursor" do
-        custom_cursor = "my_special_cursor_123"
+      it "makes the first entry stand in for an unknown cursor, with unique cursors overall" do
+        custom_cursor = "my_special_cursor_#{Random::Secure.hex(4)}"
         args = ["--cursor", custom_cursor, "-n", "5"]
         entries = FakeJournalData.fake_run_journalctl_and_parse(args, dummy_context_message)
         entries.should_not be_empty
 
+        # The first entry represents the requested one; the rest are
+        # fresh neighbors. All cursors stay unique.
+        entries.first.data["__CURSOR"].should eq(custom_cursor)
         cursors = entries.map { |entry| entry.data["__CURSOR"] }
         cursors.uniq.size.should eq(cursors.size)
-        cursors.each do |cursor|
-          cursor.should_not eq(custom_cursor)
+      end
+
+      it "returns the exact previously generated entry for a known cursor" do
+        entries = FakeJournalData.fake_run_journalctl_and_parse(["-n", "10"], dummy_context_message)
+        target_entry = entries[3]
+
+        lookup = FakeJournalData.fake_run_journalctl_and_parse(
+          ["--cursor", target_entry.data["__CURSOR"], "-n", "1"],
+          dummy_context_message,
+        )
+
+        lookup.size.should eq(1)
+        lookup.first.data["__CURSOR"].should eq(target_entry.data["__CURSOR"])
+        lookup.first.message.should eq(target_entry.message)
+        lookup.first.timestamp.should eq(target_entry.timestamp)
+      end
+    end
+
+    context "with --after-cursor argument" do
+      it "generates fresh entries like a plain query" do
+        args = ["--after-cursor", "some_cursor", "-n", "10"]
+        entries = FakeJournalData.fake_run_journalctl_and_parse(args, dummy_context_message)
+        entries.should_not be_empty
+        entries.size.should be <= 10
+        entries.each do |entry|
+          entry.data["__CURSOR"].should_not eq("some_cursor")
         end
       end
     end

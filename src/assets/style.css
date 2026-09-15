@@ -1240,6 +1240,24 @@ body.minimap-hidden #minimap {
 .statusbar-spacer {
   flex: 1;
 }
+/* Demo-mode disclaimer: ships hidden in the HTML and is unhidden by
+   the server-info boot fetch only on fake-data (demo site) builds. */
+.demo-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-style: italic;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.demo-banner[hidden] {
+  display: none;
+}
+.demo-banner .material-icons {
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--warn);
+}
 .theme-switch-wrapper {
   display: inline-flex;
   align-items: center;

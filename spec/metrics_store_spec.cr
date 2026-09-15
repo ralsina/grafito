@@ -100,7 +100,7 @@ describe Grafito::MetricsStore do
   end
 end
 
-{% if flag?(:fake_journal) %}
+{% if flag?(:demo_mode) %}
   it "pre-seeds a day of plausible fake history for the demo" do
     data_dir = File.join(Dir.tempdir, "grafito-seed-spec-#{Random::Secure.hex(4)}")
     Dir.mkdir_p(data_dir)

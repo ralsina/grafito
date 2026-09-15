@@ -50,6 +50,17 @@ describe "Kemal routes" do
     Grafito.ai_provider = nil
   end
 
+  it "GET /server-info reports the demo flag matching the build" do
+    response = dispatch_request("GET", "/server-info")
+
+    response[:status].should eq(200)
+    {% if flag?(:demo_mode) %}
+      response[:body].should contain(%("demo":true))
+    {% else %}
+      response[:body].should contain(%("demo":false))
+    {% end %}
+  end
+
   describe "cross-site POST rejection" do
     it "rejects state-changing POSTs with a cross-site Sec-Fetch-Site" do
       headers = HTTP::Headers{"Sec-Fetch-Site" => "cross-site"}
@@ -74,14 +85,19 @@ describe "Kemal routes" do
       headers = HTTP::Headers{"Sec-Fetch-Site" => "same-origin"}
       response = dispatch_request("POST", "/unit/nginx.service/stop", headers: headers)
 
-      # The CSRF gate passes; the request then hits the actions gate
-      # (403, actions disabled in specs) instead of the CSRF message.
-      response[:status].should eq 403
+      # The CSRF gate passes; the request then reaches the action
+      # handling: a simulated action on demo builds, the actions gate
+      # (403, actions disabled in specs) on real deployments.
       response[:body].should_not contain("Cross-site request rejected.")
+      {% if flag?(:demo_mode) %}
+        response[:status].should eq 200
+      {% else %}
+        response[:status].should eq 403
+      {% end %}
     end
   end
 
-  {% unless flag?(:fake_journal) %}
+  {% unless flag?(:demo_mode) %}
     it "GET /logs returns an empty state for a unit that has no entries" do
       response = dispatch_request("GET", "/logs?unit=grafito-no-such-unit-xyz&format=text")
 
@@ -184,7 +200,7 @@ describe "Kemal routes" do
   end
 
   it "GET /unit-details renders the service panel fragment" do
-    # Uses the real unit list (plain mode) or the fake one (-Dfake_journal);
+    # Uses the real unit list (plain mode) or the fake one (-Ddemo_mode);
     # both include at least one unit, but the name is unknown here, so
     # just assert a valid unit renders its "View logs" call.
     units = SystemStatus.snapshot.units
@@ -206,16 +222,20 @@ describe "Kemal routes" do
     end
   end
 
-  it "POST unit actions returns 403 when actions are disabled" do
-    Grafito.enable_actions = false
-    begin
-      response = dispatch_request("POST", "/unit/sshd/restart")
-      response[:status].should eq(403)
-      response[:body].should contain("Unit actions are disabled")
-    ensure
+  # Demo builds always simulate actions (see demo_actions_spec.cr);
+  # real deployments gate them behind --enable-actions + auth.
+  {% if !flag?(:demo_mode) %}
+    it "POST unit actions returns 403 when actions are disabled" do
       Grafito.enable_actions = false
+      begin
+        response = dispatch_request("POST", "/unit/sshd/restart")
+        response[:status].should eq(403)
+        response[:body].should contain("Unit actions are disabled")
+      ensure
+        Grafito.enable_actions = false
+      end
     end
-  end
+  {% end %}
 
   it "POST unit actions returns 404 for a nonexistent unit" do
     Grafito.enable_actions = true

@@ -717,6 +717,15 @@ Once set up, logs from all client hosts will appear in Grafito on the central se
    OpenAI-compatible API. `./deploy_site.sh` builds, pushes and deploys
    the whole stack.
 
+   Demo builds (compiled with `-Ddemo_mode`) are fully interactive:
+   every action button is shown and works against the fake world —
+   stopping a unit shows it as dead, installing an app store app
+   creates its stack, killing a process removes it from the table —
+   and simulated state lives until the demo container restarts. Job
+   output is labeled "Demo mode: this output is simulated", and
+   actions that cannot be simulated answer with a demo notice. No
+   docker, systemctl or journalctl command ever runs on the demo host.
+
 6. **Real instance:**
    The real Grafito instance (actual system journal, also with AI via
    jimmy) runs as the docker compose stack in `/data/stacks/grafito` on

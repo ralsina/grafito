@@ -3,8 +3,8 @@ require "./spec_helper"
 # Route-level specs for the app store endpoints. These dispatch
 # requests through Kemal's route handler directly (like
 # compose_routes_spec.cr) and use the fake store data, so they only
-# make sense with -Dfake_journal.
-{% if flag?(:fake_journal) %}
+# make sense with -Ddemo_mode.
+{% if flag?(:demo_mode) %}
   FORM_HEADERS = HTTP::Headers{"Content-Type" => "application/x-www-form-urlencoded"}
 
   describe "Kemal app store routes" do
@@ -41,16 +41,16 @@ require "./spec_helper"
       Grafito.compose_enabled = true
     end
 
-    it "POST endpoints are gated by enable-actions + auth" do
+    it "POST endpoints simulate without enable-actions or auth" do
       Grafito.enable_actions = false
       Grafito.auth_configured = false
 
-      install_response = dispatch_request("POST", "/compose-appstore-install", "store=demo&app=jellyfin", FORM_HEADERS)
-      install_response[:status].should eq(403)
-      install_response[:body].should contain("disabled")
-
-      dispatch_request("POST", "/compose-appstore-sync", "store=demo", FORM_HEADERS)[:status].should eq(403)
-      dispatch_request("POST", "/compose-appstore-uninstall", "stack=webapp", FORM_HEADERS)[:status].should eq(403)
+      response = dispatch_request("POST", "/compose-appstore-sync", "store=demo", FORM_HEADERS)
+      response[:status].should eq(200)
+      response[:body].should contain("appstore-sync")
+    ensure
+      FakeAppStore.reset_demo_state
+      FakeComposeData.reset_demo_state
     end
 
     it "the install form validates ids and unknown apps" do
@@ -65,7 +65,7 @@ require "./spec_helper"
       response[:body].should contain("Install Jellyfin")
     end
 
-    it "installing starts a job and answers with its polling fragment" do
+    it "installing starts a job, adds the app and its stack, and answers with the polling fragment" do
       Grafito.enable_actions = true
       Grafito.auth_configured = true
 
@@ -74,25 +74,64 @@ require "./spec_helper"
       response[:body].should contain("appstore-install-jellyfin")
       response[:body].should contain("data-job-running=")
 
+      # The fake world now has the app installed and its stack running.
+      FakeAppStore.find_installed("jellyfin").should_not be_nil
+      ComposeStatus.stacks.find(&.name.==("jellyfin")).should_not be_nil
+
+      # A second install of the same app is rejected.
+      dispatch_request("POST", "/compose-appstore-install", "store=demo&app=jellyfin", FORM_HEADERS)[:status].should eq(409)
+
       dispatch_request("POST", "/compose-appstore-install", "store=demo&app=-evil", FORM_HEADERS)[:status].should eq(400)
+    ensure
+      FakeAppStore.reset_demo_state
+      FakeComposeData.reset_demo_state
     end
 
-    it "uninstall and update need an installed app" do
+    it "uninstall and update operate on the installed list" do
       Grafito.enable_actions = true
       Grafito.auth_configured = true
 
       dispatch_request("POST", "/compose-appstore-uninstall", "stack=no-such-stack", FORM_HEADERS)[:status].should eq(404)
       dispatch_request("POST", "/compose-appstore-update", "stack=no-such-stack", FORM_HEADERS)[:status].should eq(404)
 
-      response = dispatch_request("POST", "/compose-appstore-uninstall", "stack=webapp", FORM_HEADERS)
-      response[:status].should eq(200)
-      response[:body].should contain("appstore-uninstall-webapp")
+      # Install filebrowser, update the fixture app (its update badge
+      # clears), then uninstall filebrowser again.
+      dispatch_request("POST", "/compose-appstore-install", "store=demo&app=filebrowser", FORM_HEADERS)[:status].should eq(200)
+      FakeAppStore.find_installed("filebrowser").should_not be_nil
 
       response = dispatch_request("POST", "/compose-appstore-update", "stack=webapp", FORM_HEADERS)
       response[:status].should eq(200)
       response[:body].should contain("appstore-update-webapp")
+      updated = FakeAppStore.find_installed("webapp")
+      updated.should_not be_nil
+      if record = updated
+        FakeAppStore.update_available(record).should be_nil
+      end
 
-      Grafito.enable_actions = false
+      response = dispatch_request("POST", "/compose-appstore-uninstall", "stack=filebrowser", FORM_HEADERS)
+      response[:status].should eq(200)
+      response[:body].should contain("appstore-uninstall-filebrowser")
+      FakeAppStore.find_installed("filebrowser").should be_nil
+    ensure
+      FakeAppStore.reset_demo_state
+      FakeComposeData.reset_demo_state
+    end
+
+    it "uninstalling the fixture app keeps the fixture stack scenery" do
+      Grafito.enable_actions = true
+      Grafito.auth_configured = true
+
+      response = dispatch_request("POST", "/compose-appstore-uninstall", "stack=webapp", FORM_HEADERS)
+      response[:status].should eq(200)
+      response[:body].should contain("appstore-uninstall-webapp")
+
+      # The badge and buttons are gone, but the seeded webapp stack
+      # with its services is still part of the demo scenery.
+      FakeAppStore.find_installed("webapp").should be_nil
+      ComposeStatus.stacks.find(&.name.==("webapp")).should_not be_nil
+    ensure
+      FakeAppStore.reset_demo_state
+      FakeComposeData.reset_demo_state
     end
 
     it "sync starts a job and the logo endpoint 404s without logos" do
