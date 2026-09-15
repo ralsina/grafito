@@ -47,14 +47,6 @@ Key features include:
 * Built with the Crystal programming language and the Kemal web
   framework.
 
-* Real-time log viewing (with an optional auto-refresh).
-* Filtering by unit, tag, time range, and a general search query.
-* **Configurable timezone support** - Display timestamps in your local timezone or any timezone you prefer.
-* **AI-powered log explanations** - Get intelligent analysis of log errors using LLMs (requires API key).
-* A dynamic user interface powered by HTMX for a smooth experience.
-* Embedded assets (HTML, favicon) for easy deployment as a single binary.
-* Built with the Crystal programming language and the Kemal web framework.
-
 ### AI Log Analysis
 
 Grafito includes an optional AI feature that explains log entries in
@@ -261,6 +253,48 @@ pluggable. Adding another touches exactly five small places:
 
 Mutual exclusion between views, the switcher highlight, URL
 persistence and restore are all handled generically.
+
+### Securing a Remote Deployment
+
+`--enable-actions` unlocks privileged operations (systemd unit
+start/stop/restart, process signals), and basic auth sends credentials
+on every request. Over plain HTTP, anyone on the network can read
+both.
+
+For anything beyond `localhost`, put grafito behind a TLS-terminating
+reverse proxy and keep it bound to `127.0.0.1` (the default). Any
+proxy works with the default setup; two common examples:
+
+**Caddy** (automatic certificates):
+
+```
+grafito.example.com {
+    reverse_proxy 127.0.0.1:3000
+}
+```
+
+**Nginx** (certificates via certbot):
+
+```
+server {
+    listen 443 ssl;
+    server_name grafito.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+Then set `GRAFITO_AUTH_USER` / `GRAFITO_AUTH_PASS` and add
+`--enable-actions`: the proxy encrypts both the basic-auth credentials
+and the privileged commands they authorize. Grafito logs a warning at
+startup if actions are enabled on a non-loopback bind address.
+
+If you don't need actions remotely, bind to `127.0.0.1` and skip
+`--enable-actions` entirely — everything else (logs, dashboard,
+compose, processes) works read-only.
 
 ### Timezone Configuration
 

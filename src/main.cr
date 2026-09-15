@@ -202,6 +202,14 @@ def main
   Grafito.processes_enabled = args["--processes"].to_s != "false"
   Grafito::Log.info { "Process view: #{Grafito.processes_enabled? ? "enabled" : "disabled"}" }
 
+  # Privileged actions over plain HTTP on a reachable interface are a
+  # bad idea: credentials and commands travel unencrypted. Loopback is
+  # fine (TLS is then the reverse proxy's or the user's local concern).
+  if Grafito.enable_actions? &&
+     !["127.0.0.1", "localhost", "::1"].includes?(args["--bind"].to_s)
+    Grafito::Log.warn { "Actions are enabled while bound to #{args["--bind"]}: credentials and commands travel unencrypted. Put grafito behind a TLS reverse proxy for remote access (see README: Securing a Remote Deployment)." }
+  end
+
   # Parse homepage view configuration. The view itself is harmless
   # without a config file (it renders setup instructions instead), so
   # like the other views it is enabled by default.
