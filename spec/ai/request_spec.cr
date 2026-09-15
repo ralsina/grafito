@@ -162,5 +162,41 @@ describe Grafito::AI::Request do
         request.user_prompt.should contain("explain this log entry")
       end
     end
+
+    describe "alternating history" do
+      history = [
+        {"role" => "user", "content" => "why did it fail?"},
+        {"role" => "assistant", "content" => "config was missing"},
+      ] of Hash(String, String)
+
+      request = Grafito::AI::Request.new(
+        system_prompt: "system",
+        user_prompt: "analyze this log",
+        history: history,
+      )
+
+      it "merges a leading user message into the base prompt" do
+        request.user_prompt_with_leading_history.should contain("analyze this log")
+        request.user_prompt_with_leading_history.should contain("why did it fail?")
+      end
+
+      it "drops the merged message from the alternating history" do
+        request.alternating_history.size.should eq 1
+        request.alternating_history[0]["role"].should eq "assistant"
+      end
+
+      it "leaves history alone when it starts with an assistant turn" do
+        request = Grafito::AI::Request.new(
+          system_prompt: "system",
+          user_prompt: "analyze this log",
+          history: [
+            {"role" => "assistant", "content" => "answer"},
+          ] of Hash(String, String),
+        )
+
+        request.user_prompt_with_leading_history.should eq "analyze this log"
+        request.alternating_history.size.should eq 1
+      end
+    end
   end
 end

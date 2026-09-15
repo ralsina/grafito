@@ -258,13 +258,16 @@ module Grafito::AI::Providers
     # Build the request body in OpenAI format
     private def build_request_body(request : Request) : String
       # Iterative refinement: the base analysis request comes first, then
-      # the conversation turns, ending with the user's latest message.
-      history_messages = request.history.map do |message|
+      # the conversation turns, ending with the user's latest message. A
+      # leading user-role turn is merged into the base prompt to keep
+      # the roles alternating.
+      history_messages = request.alternating_history.map do |message|
         {role: message["role"], content: message["content"]}
-      end.to_a
+      end
+
       messages = [
         {role: "system", content: request.system_prompt},
-        {role: "user", content: request.user_prompt},
+        {role: "user", content: request.user_prompt_with_leading_history},
       ] + history_messages
 
       # Newer models (gpt-5, o1) use max_completion_tokens instead of max_tokens

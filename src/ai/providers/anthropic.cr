@@ -81,8 +81,9 @@ module Grafito::AI::Providers
 
       # Replay iterative refinement turns (if any) after the base
       # analysis request, so the model can continue the conversation.
-      # The client's history ends with the user's latest message.
-      history_messages = request.history.map do |message|
+      # A leading user-role history message is merged into the base
+      # prompt instead, keeping the user/assistant roles alternating.
+      history_messages = request.alternating_history.map do |message|
         role = message["role"] == "assistant" ? ::Anthropic::Message::Role::Assistant : ::Anthropic::Message::Role::User
         ::Anthropic::Message.new(message["content"], role)
       end.to_a
@@ -92,7 +93,7 @@ module Grafito::AI::Providers
         model: @model,
         system: request.system_prompt,
         messages: [
-          ::Anthropic::Message.new(request.user_prompt),
+          ::Anthropic::Message.new(request.user_prompt_with_leading_history),
         ] + history_messages,
         max_tokens: request.max_tokens,
         temperature: request.temperature

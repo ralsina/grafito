@@ -42,6 +42,30 @@ module Grafito::AI
     # into the prompt as a transcript.
     getter history : Array(Hash(String, String))
 
+    # The base analysis request is replayed before the history, so a
+    # leading user-role history message would produce two consecutive
+    # user turns (which the Anthropic API rejects and every provider
+    # handles oddly). Merge it into the base user prompt instead — the
+    # user's words are preserved and the roles alternate.
+    def user_prompt_with_leading_history : String
+      first = history.first?
+      if first && first["role"] == "user"
+        "#{user_prompt}\n\n---\n\nFollow-up from the user: #{first["content"]}"
+      else
+        user_prompt
+      end
+    end
+
+    # History with the merged leading user message removed; the
+    # remaining turns alternate assistant/user as the client sent them.
+    def alternating_history : Array(Hash(String, String))
+      if (first = history.first?) && first["role"] == "user"
+        history[1..]
+      else
+        history
+      end
+    end
+
     def initialize(
       @system_prompt : String,
       @user_prompt : String,
@@ -129,43 +153,57 @@ module Grafito::AI
         If missing, restore from backup or recreate the default config.
         FORMAT
 
-      priority_context = case normalize_priority(priority)
-                         when "0", "1", "2" # emerg, alert, crit
+      priority_context = case priority_bucket(priority)
+                         when :critical
                            "This is a CRITICAL system event requiring immediate attention. " \
                            "Focus on impact assessment, immediate remediation steps, and escalation recommendations."
-                         when "3" # err
+                         when :error
                            "Provide clear explanations of errors with practical solutions and prevention strategies."
-                         when "4" # warning
+                         when :warning
                            "Analyze warnings to identify potential issues before they become errors. Focus on proactive measures."
-                         when "5" # notice
+                         when :notice
                            "Explain notable system events and their significance. These are normal but noteworthy occurrences."
-                         when "6" # info
+                         when :info
                            "Provide context about informational messages and what system activity they represent."
-                         when "7" # debug
+                         when :debug
                            "Explain debug-level details for troubleshooting purposes. Focus on technical specifics."
                          else
                            "Provide clear, concise explanations with practical insights."
                          end
-
       "#{base} #{priority_context}#{formatting}"
+    end
+
+    # Collapse a normalized priority into the coarse buckets the prompt
+    # texts branch on, so the system and user prompt builders can never
+    # drift apart.
+    private def self.priority_bucket(priority : String) : Symbol
+      case normalize_priority(priority)
+      when "0", "1", "2" then :critical
+      when "3"           then :error
+      when "4"           then :warning
+      when "5"           then :notice
+      when "6"           then :info
+      when "7"           then :debug
+      else                    :unknown
+      end
     end
 
     # Build user prompt based on log priority
     private def self.build_user_prompt(priority : String, custom_prompt : String?) : String
       return custom_prompt if custom_prompt
 
-      case normalize_priority(priority)
-      when "0", "1", "2" # emerg, alert, crit
+      case priority_bucket(priority)
+      when :critical
         "Please analyze this CRITICAL log entry. What happened? What's the immediate impact? What actions should be taken RIGHT NOW?"
-      when "3" # err
+      when :error
         "Please explain the error in the highlighted log entry. Focus on what the error means, potential causes, and suggested solutions."
-      when "4" # warning
+      when :warning
         "Please explain this warning. What might cause it? Should I be concerned? What preventive actions could help?"
-      when "5" # notice
+      when :notice
         "Please explain this notice. What does it indicate about the system? Is any action needed?"
-      when "6" # info
+      when :info
         "Please explain this informational message. What system activity does it represent?"
-      when "7" # debug
+      when :debug
         "Please explain this debug message. What technical details does it reveal for troubleshooting?"
       else
         "Please explain this log entry. What does it mean and is any action needed?"
