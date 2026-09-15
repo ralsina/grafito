@@ -80,7 +80,7 @@ DOC = <<-DOCOPT
     --processes=BOOL             Enable the process monitor view (true/false) [default: true].
     --homepage=BOOL              Enable the homepage view (true/false) [default: true].
     --homepage-config=PATH       Homepage view config file (YAML) [default: /etc/grafito/homepage.yml].
-    --data-dir=PATH              Directory for dashboard metrics history [default: /var/lib/grafito].
+    --data-dir=PATH              Directory for metrics history, app store caches and installed apps [default: /var/lib/grafito].
     --sample-interval-sec=N      Dashboard metrics sampling interval in seconds [default: 30].
     --retention-days=N           Days of dashboard metrics history to keep [default: 7].
     --enable-actions             Allow start/stop/restart/enable/disable of units from the dashboard (requires authentication) [default: false].
@@ -102,7 +102,7 @@ DOC = <<-DOCOPT
     GRAFITO_PROCESSES            Enable the process monitor view (true/false) [default: true].
     GRAFITO_HOMEPAGE             Enable the homepage view (true/false) [default: true].
     GRAFITO_HOMEPAGE_CONFIG      Homepage view config file (YAML) [default: /etc/grafito/homepage.yml].
-    GRAFITO_DATA_DIR             Directory for dashboard metrics history [default: /var/lib/grafito].
+    GRAFITO_DATA_DIR             Directory for metrics history, app store caches and installed apps [default: /var/lib/grafito].
     GRAFITO_SAMPLE_INTERVAL_SEC  Dashboard metrics sampling interval in seconds [default: 30].
     GRAFITO_RETENTION_DAYS       Days of dashboard metrics history to keep [default: 7].
     GRAFITO_ENABLE_ACTIONS       Allow unit start/stop/restart from the dashboard (true/false) [default: false].
