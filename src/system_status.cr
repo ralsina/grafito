@@ -356,7 +356,7 @@ module SystemStatus
   private def self.read_disk_used_pct : Float64
     stdout = IO::Memory.new
     result = Process.run("df", args: ["-k", "-P", "/"], output: stdout)
-    unless result.normal_exit?
+    unless result.success?
       Log.warn { "df command failed with exit code #{result.system_exit_status}" }
       return 0.0
     end
@@ -383,7 +383,7 @@ module SystemStatus
               ["list-units", "--type=service", "--all", "--no-legend", "--plain"]
     stdout = IO::Memory.new
     result = Process.run(command[0], args: command[1..], output: stdout)
-    unless result.normal_exit?
+    unless result.success?
       Log.warn { "systemctl list-units failed with exit code #{result.system_exit_status}" }
       return [] of UnitState
     end

@@ -16,7 +16,6 @@ PKGNAME=$(basename "$PWD")
 VERSION=$(git cliff --bumped-version --unreleased |cut -dv -f2)
 
 sed "s/^version:.*$/version: $VERSION/g" -i shard.yml
-sed "s/^VERSION=.*$/VERSION=\"$VERSION\" # Hardcoded version/g" -i site/install.sh
 ./build_static.sh
 
 # Smoke test (#61): the freshly built amd64 binary must return real
@@ -47,6 +46,9 @@ git cliff --bump -o
 git commit -a -m "bump: Release v$VERSION"
 git tag "v$VERSION"
 git push --tags
+# Push main too: the bump commit is what the tag points at; a tag on
+# a commit absent from origin is a footgun.
+git push origin main
 gh release create "v$VERSION" "bin/$PKGNAME-static-linux-amd64" "bin/$PKGNAME-static-linux-arm64" --title "Release v$VERSION" --notes "$(git cliff -l -s all)"
 bash -x upload_docker.sh
 bash -x do_aur.sh

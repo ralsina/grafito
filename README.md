@@ -360,7 +360,11 @@ startup if actions are enabled on a non-loopback bind address.
 As a second layer of defense, all state-changing POST endpoints reject
 cross-site requests: browsers' `Sec-Fetch-Site` header is honored, and
 `Origin`/`Referer` are checked against the host when present, so a
-malicious page cannot ride your session to trigger actions.
+malicious page cannot ride your session to trigger actions. Known
+trade-off: a request carrying none of those headers (very old
+browsers, or a `no-referrer` policy) is allowed through because
+non-browser clients like curl send none either — another reason to
+keep authentication on for anything beyond loopback.
 
 If you don't need actions remotely, bind to `127.0.0.1` and skip
 `--enable-actions` entirely — everything else (logs, dashboard,

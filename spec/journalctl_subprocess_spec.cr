@@ -38,7 +38,7 @@ require "log/spec"
     it "finds a context entry by cursor through the subprocess" do
       context_entries = Journalctl.context("spec-cursor-0001", 1)
       context_entries.should_not be_nil
-      context = context_entries.not_nil!
+      context = context_entries || [] of Journalctl::LogEntry
       context.any? { |entry| entry.message_raw == "spec log entry one" }.should be_true
     end
   end

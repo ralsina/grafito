@@ -112,6 +112,11 @@ module ComposeAppStore
         # so its cards look like real store cards.
         env.response.headers["Cache-Control"] = "public, max-age=300"
         env.response.content_type = "image/svg+xml"
+        # An SVG fetched directly renders as a same-origin document:
+        # force download semantics and a script-free sandbox so a
+        # store logo can never run script in Grafito's origin.
+        env.response.headers["Content-Disposition"] = "attachment; filename=logo.svg"
+        env.response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; sandbox"
         next FakeAppStore.logo_svg(app_id)
       {% end %}
       logo_path = AppStore.app_logo_path(Grafito.data_dir, store_slug, app_id)
@@ -120,6 +125,8 @@ module ComposeAppStore
         next "No logo."
       end
       env.response.headers["Cache-Control"] = "public, max-age=300"
+      env.response.headers["Content-Disposition"] = "attachment; filename=logo"
+      env.response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; sandbox"
       env.response.content_type = logo_content_type(logo_path)
       File.read(logo_path)
     end
@@ -622,6 +629,14 @@ module ComposeAppStore
     end
   end
 
+  # Store-provided links end up in the operator's authenticated
+  # session: only http(s) URLs are rendered, anything else
+  # (javascript:, data:, ...) degrades to plain text.
+  private def self.safe_external_url(url : String?) : String
+    url ||= ""
+    url.matches?(/^https?:\/\//i) ? url : ""
+  end
+
   private def self.app_card(store : AppStore::Store, app : AppStore::AppInfo) : String
     HTML.build do
       div(class: "appstore-card") do
@@ -715,16 +730,18 @@ module ComposeAppStore
               span { text app.author }
             end
           end
-          unless app.source.empty?
+          source_url = safe_external_url(app.source)
+          unless source_url.empty?
             div do
               span(class: "stat-label") { text "Source" }
-              a(href: app.source, rel: "noopener noreferrer") { text "repository" }
+              a(href: source_url, rel: "noopener noreferrer") { text "repository" }
             end
           end
-          unless app.website.empty?
+          website_url = safe_external_url(app.website)
+          unless website_url.empty?
             div do
               span(class: "stat-label") { text "Website" }
-              a(href: app.website, rel: "noopener noreferrer") { text app.website }
+              a(href: website_url, rel: "noopener noreferrer") { text app.website }
             end
           end
         end

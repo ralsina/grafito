@@ -30,7 +30,8 @@ class Journalctl
     end
 
     def self.to_json(value : Time, builder : JSON::Builder)
-      builder.string((value.to_unix_ms).to_s)
+      # Microseconds, matching what from_string and journalctl emit.
+      builder.string((value.to_unix * 1_000_000).to_s)
     end
   end
 
@@ -179,8 +180,10 @@ class Journalctl
       else
         # Try to parse as timezone name (IANA) or GMT offset
         begin
-          # Try IANA timezone name first
-          Time.local(time.year, time.month, time.day, time.hour, time.minute, time.second, nanosecond: time.nanosecond, location: Time::Location.load(timezone_config))
+          # IANA timezone name: convert the instant, don't rebuild it
+          # from the UTC digits (that would show the UTC wall clock
+          # labelled with the target zone).
+          time.in(Time::Location.load(timezone_config))
         rescue ex
           # Try GMT offset format (e.g., GMT+5, GMT-3:30)
           if timezone_config.match(/^GMT([+-]\d+)(?::(\d+))?$/i)
@@ -479,7 +482,7 @@ class Journalctl
         output: stdout,
       )
 
-      if result.normal_exit?
+      if result.success?
         known_units = Set(String).new
         stdout.to_s.split("\n").each do |line|
           next if line.strip.empty? # Skip empty or whitespace-only lines
@@ -611,42 +614,6 @@ class Journalctl
         cleaned_unit.downcase.includes?(allowed.downcase) ||
         allowed.downcase.includes?(cleaned_unit.downcase)
     end
-  end
-
-  # Filters log entries by the allowed units restriction, if one is configured.
-  # Matches the raw unit name, the cleaned name (without .service suffix), and
-  # falls back to case-insensitive substring matching in either direction.
-  private def self.filter_allowed_units(entries : Array(LogEntry)) : Array(LogEntry)
-    allowed_units = Grafito.allowed_units
-    return entries unless allowed_units
-
-    allowed_set = allowed_units.to_set
-    original_size = entries.size
-    filtered = entries.select do |entry|
-      entry_unit = entry.internal_unit_name || entry.unit
-      cleaned_unit = entry.unit
-
-      unit_match = false
-      if raw_name = entry.internal_unit_name
-        unit_match ||= allowed_set.includes?(raw_name)
-      end
-      unless unit_match
-        unit_match ||= allowed_set.includes?(cleaned_unit)
-      end
-      unless unit_match
-        unit_match = allowed_set.any? do |allowed|
-          raw_name.try(&.downcase.includes?(allowed.downcase)) ||
-            cleaned_unit.downcase.includes?(allowed.downcase) ||
-            allowed.downcase.includes?(cleaned_unit.downcase)
-        end
-      end
-
-      Log.debug { "Filtered out entry from unit '#{entry_unit}' (allowed: #{allowed_set.to_a})" } unless unit_match
-      unit_match
-    end
-    filtered_out = original_size - filtered.size
-    Log.info { "Filtered out #{filtered_out} log entries due to unit restrictions" } if filtered_out > 0
-    filtered
   end
 
   # Retrieves log entries surrounding a specific entry identified by a cursor.

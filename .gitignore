@@ -10,3 +10,6 @@ grafito-data/
 
 # Local agent scratch dir
 .zcode/
+
+# Per-machine Claude Code settings
+.claude/settings.local.json

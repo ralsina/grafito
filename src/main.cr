@@ -33,6 +33,13 @@
 
 require "./grafito"
 require "./assets"
+
+# Kemal defaults to development mode, where its exception handler
+# renders the exception message and backtrace to the client — an
+# information leak on any real deployment (and useful detail belongs
+# in the server log, which this preserves). Production keeps error
+# pages generic. Set KEMAL_ENV explicitly to override.
+Kemal.config.env = ENV["KEMAL_ENV"]? || "production"
 require "./ai/config"
 require "./gotify/client"
 require "./gotify/rules"
@@ -326,8 +333,12 @@ end
 
 # Applies the idle shutdown timeout from the parsed arguments, if any.
 def parse_idle_timeout(args)
-  if args["--idle-timeout-sec"]?
-    timeout = args["--idle-timeout-sec"].to_s.to_i32
+  if raw = args["--idle-timeout-sec"]?
+    timeout = raw.to_s.to_i32?
+    if timeout.nil? || timeout < 0
+      Grafito::Log.fatal { "Invalid idle timeout '#{raw}': must be a non-negative number of seconds." }
+      exit 1
+    end
     if timeout > 0
       Grafito.idle_timeout_sec = timeout
       Grafito::Log.info { "Will shut down after #{timeout}s without any requests" }

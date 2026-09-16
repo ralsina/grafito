@@ -124,4 +124,22 @@ describe "Timezone Support" do
   after_all do
     Grafito.timezone = "local"
   end
+
+  describe "IANA timezone names convert the instant" do
+    it "shows the wall clock in the target zone, not the UTC digits" do
+      utc_time = Time.utc(2026, 9, 16, 22, 13, 20)
+      entry = Journalctl::LogEntry.new(
+        timestamp: utc_time,
+        message_raw: "Test message",
+        raw_priority_val: "6",
+        internal_unit_name: "test.service"
+      )
+
+      Grafito.timezone = "America/New_York"
+      # 22:13:20 UTC is 18:13:20 in New York (EDT, UTC-4) in September.
+      # The old bug rebuilt the time from the UTC digits and showed 22:13:20.
+      result = entry.formatted_timestamp_with_timezone
+      result.should eq("09-16 18:13:20")
+    end
+  end
 end

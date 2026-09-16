@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.2] - 2026-09-16
+
+### 🐛 Bug Fixes
+
+- *(release)* Regenerate the stale JS bundle and gate asset freshness
+- *(actions)* Restore the success? fix lost in a working-tree revert
+
+### 🧪 Testing
+
+- Observe the real subprocess path; test the release script
+
 ## [1.3.1] - 2026-09-16
 
 ### 🐛 Bug Fixes
@@ -10,6 +21,10 @@ All notable changes to this project will be documented in this file.
 - Address security and correctness findings from the v1.3.0 review
 - *(security)* Loopback by default in shipped unit and installer
 - *(logs)* Use Process::Status#success? for the journalctl exit check
+
+### 💼 Other
+
+- Release v1.3.1
 
 ### 🧪 Testing
 

@@ -8,7 +8,7 @@
 # The format is deliberately boring: one JSON object per line, one file
 # per UTC day (`metrics-YYYY-MM-DD.jsonl`). It is trivially inspectable
 # with standard tools, needs no database dependency, and a full week of
-# 30-second samples is a few megabytes. Old files are pruned at startup
+# 30-second samples is a few megabytes. Old files are pruned hourly
 # according to the retention setting.
 
 require "json"
@@ -117,10 +117,16 @@ module Grafito
         seed_fake_history(store, 24.hours, 5.minutes)
       {% end %}
       spawn(name: "metrics-sampler(#{interval_sec}s)") do
+        # Prune roughly once an hour (every 120 iterations at the
+        # default interval): pruning only at startup meant a
+        # long-lived process never enforced the retention window.
+        iterations = 0
         loop do
           begin
             snapshot = SystemStatus.snapshot
             store.record(point_from_snapshot(snapshot))
+            store.prune(retention_days) if (iterations % 120) == 0
+            iterations += 1
             on_sample.try(&.call(snapshot))
           rescue ex
             Log.error(exception: ex) { "Metrics sampling iteration failed" }

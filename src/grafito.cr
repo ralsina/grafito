@@ -848,9 +848,11 @@ module Grafito
           usage:    response.usage,
         }.to_json
       rescue ex : JSON::ParseException | TypeCastError
+        # Request-body parse errors have their own rescue above, so a
+        # parse failure here comes from the provider's response.
         env.response.content_type = "application/json"
-        env.response.status_code = 400
-        {error: "Invalid JSON in request body: #{ex.message}"}.to_json
+        env.response.status_code = 502
+        {error: "AI provider returned an invalid response: #{ex.message}"}.to_json
       rescue ex : Exception
         env.response.content_type = "application/json"
         env.response.status_code = 500

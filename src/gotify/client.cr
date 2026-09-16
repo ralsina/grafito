@@ -24,7 +24,7 @@ module Grafito::Gotify
     # Sends a notification; returns true when the server accepted it.
     # Never raises: alerting must not take the sampler down.
     def send_notification(title : String, message : String) : Bool
-      uri = URI.parse("#{Config.url}/message?token=#{URI.encode_www_form(Config.token)}")
+      uri = URI.parse("#{Config.url}/message")
       body = {
         title:    title,
         message:  message,
@@ -37,7 +37,12 @@ module Grafito::Gotify
       client.write_timeout = WRITE_TIMEOUT
       response = client.post(
         uri.request_target,
-        headers: HTTP::Headers{"Content-Type" => "application/json"},
+        # The token goes in a header, not the query string: URLs end up
+        # in proxy and access logs.
+        headers: HTTP::Headers{
+          "Content-Type" => "application/json",
+          "X-Gotify-Key" => Config.token,
+        },
         body: body,
       )
       unless response.success?

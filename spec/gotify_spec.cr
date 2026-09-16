@@ -41,7 +41,9 @@ describe Grafito::Gotify do
       ENV["GRAFITO_GOTIFY_URL"] = "https://push.example.com"
       ENV["GRAFITO_GOTIFY_TOKEN"] = "secret"
 
-      WebMock.stub(:post, "https://push.example.com/message?token=secret")
+      # The token rides in the X-Gotify-Key header, not the URL.
+      WebMock.stub(:post, "https://push.example.com/message")
+        .with(headers: {"X-Gotify-Key" => "secret"})
         .to_return(status: 200, body: "{\"id\":1}")
 
       client = Grafito::Gotify::Client.new

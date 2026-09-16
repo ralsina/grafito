@@ -2025,6 +2025,17 @@ function startLiveStream() {
   stopLiveStream();
   window.__liveSSEActive = true;
   liveSSE = new EventSource(liveStreamURL());
+  liveSSE.onerror = function () {
+    // A transport-level failure (proxy 502, server restart, auth
+    // change) can close the connection for good; without this handler
+    // the Live indicator stays lit, polling stays suppressed, and no
+    // data ever arrives. Stop for good and let the 10s poller take
+    // over — toggling Live off/on retries the stream on demand.
+    if (liveSSE && liveSSE.readyState === EventSource.CLOSED) {
+      stopLiveStream();
+    }
+    // readyState === CONNECTING: EventSource is already retrying.
+  };
   liveSSE.addEventListener("log", function (event) {
     const tbody = document.querySelector("#results table tbody");
     if (!tbody) return;

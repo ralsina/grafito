@@ -309,8 +309,15 @@ module Grafito
           # same as the dashboard) when the metrics sampler is running;
           # fall back to the plain severity timeline otherwise.
           oldest_log = logs.min_of(&.timestamp)
-          metric_points = Grafito.metrics_store.try(&.history(oldest_log - 1.minute)) ||
-                          [] of Grafito::MetricsStore::MetricPoint
+          # An entry whose timestamp could not be parsed becomes epoch
+          # (1970): scanning history files from 1970 to now is ~20k
+          # pointless stat calls per request, so skip the lookup.
+          metric_points = if oldest_log > Time.utc(2000, 1, 1)
+                            Grafito.metrics_store.try(&.history(oldest_log - 1.minute)) ||
+                              [] of Grafito::MetricsStore::MetricPoint
+                          else
+                            [] of Grafito::MetricsStore::MetricPoint
+                          end
           div(style: "margin-bottom: 1em;") do
             if metric_points.empty?
               html Timeline.generate_svg_timeline(timeline_data)
@@ -490,7 +497,7 @@ module Grafito
         if show_priority
           td(class: "log-priority-cell") do
             span(class: "tag") do
-              text HTML.escape(entry.formatted_priority)
+              text entry.formatted_priority
             end
           end
         end

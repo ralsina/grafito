@@ -40,7 +40,9 @@ describe ComposeDashboard do
     fragment = ComposeDashboard.render_html([STACK], false)
     fragment.should contain("webapp")
     fragment.should contain("nginx:1.27-alpine")
-    fragment.should contain("0.0.0.0:8080-&amp;gt;80/tcp")
+    # Single-escaped: text() escapes, so the arrow shows as "->" on
+    # screen (the old double-escaped &amp;gt; rendered literally).
+    fragment.should contain("0.0.0.0:8080-&gt;80/tcp")
     fragment.should contain("tag-ok") # healthy pill
     fragment.should contain("compose-output-area-webapp")
   end

@@ -293,7 +293,7 @@ module ComposeStatus
     stdout = IO::Memory.new
     stderr = IO::Memory.new
     result = Process.run("docker", args: args, output: stdout, error: stderr)
-    unless result.normal_exit?
+    unless result.success?
       Log.warn { "docker #{args.join(" ")} failed with exit code #{result.system_exit_status}: #{stderr.to_s[0..200]}" }
       return ""
     end
