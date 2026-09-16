@@ -43,6 +43,7 @@ module Dashboard
     since_text : String? = nil,
     unit_flags : Hash(String, SystemStatus::UnitFileFlags) = {} of String => SystemStatus::UnitFileFlags,
     severity_buckets : Array(Timeline::TimelinePoint) = [] of Timeline::TimelinePoint,
+    unit_usage : Hash(String, SystemStatus::UnitResourceUsage) = {} of String => SystemStatus::UnitResourceUsage,
   ) : String
     # Units arrive sorted by name from SystemStatus; apply the requested
     # column sort on top (defaulting to name, ascending).
@@ -82,6 +83,8 @@ module Dashboard
               html sortable_header("State", "state", sort_key, ascending)
               html sortable_header("Sub", "sub", sort_key, ascending)
               html sortable_header("Description", "description", sort_key, ascending)
+              th { text "CPU" }
+              th { text "MEM" }
               html sortable_header("Unit", "unit", sort_key, ascending)
               if enable_actions
                 th { text "Actions" }
@@ -91,13 +94,13 @@ module Dashboard
           tbody do
             if units.empty?
               tr do
-                td(colspan: enable_actions ? "5" : "4", style: "text-align: center; padding: 1em;") do
+                td(colspan: enable_actions ? "7" : "6", style: "text-align: center; padding: 1em;") do
                   text normalize_filter(unit_filter).empty? ? "No systemd units found." : "No units match the filter."
                 end
               end
             else
               units.each do |unit_state|
-                html unit_row(unit_state, enable_actions, unit_flags)
+                html unit_row(unit_state, enable_actions, unit_flags, unit_usage[unit_state.unit]?)
               end
             end
           end
@@ -357,6 +360,7 @@ module Dashboard
     unit_state : SystemStatus::UnitState,
     enable_actions : Bool,
     unit_flags : Hash(String, SystemStatus::UnitFileFlags),
+    usage : SystemStatus::UnitResourceUsage?,
   ) : String
     HTML.build do
       # The row class carries the state color as --tag-color, which the
@@ -387,6 +391,12 @@ module Dashboard
         description_attrs["title"] = unit_state.description unless unit_state.description.empty?
         td(description_attrs) do
           text unit_state.description
+        end
+        tag("td", {"class" => "du-res", "style" => "text-align: right; font-variant-numeric: tabular-nums;"}) do
+          text usage.try(&.cpu_pct).try { |pct| "#{pct.round(1)}%" } || "—"
+        end
+        tag("td", {"class" => "du-res", "style" => "text-align: right; font-variant-numeric: tabular-nums;"}) do
+          text usage.try(&.mem_mb).try { |mb| mb >= 1024 ? "#{(mb / 1024).round(1)} GB" : "#{mb.round.to_i} MB" } || "—"
         end
         td(title: unit_state.unit) do
           # The unit name keeps its direct behavior (jump into the unit's
@@ -950,6 +960,7 @@ module Dashboard
       since_text,
       unit_flags,
       buckets,
+      SystemStatus.unit_resource_usage(snapshot.units.map(&.unit)),
     )
   end
 

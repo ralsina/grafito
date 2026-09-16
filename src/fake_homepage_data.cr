@@ -65,9 +65,11 @@ module FakeHomepageData
 
   # One unreachable service (the music one) so the down state is
   # visible; everything else reports up.
-  def self.statuses : Hash(String, Bool)
+  def self.statuses : Hash(String, HomepageDashboard::ReachResult)
     config.groups.flat_map(&.services).select(&.check?).to_h do |service|
-      {service.url, service.name != "Navidrome"}
+      up = service.name != "Navidrome"
+      latency = up ? (service.name.bytes.sum(0) % 180 + 15).to_i64 : nil
+      {service.url, HomepageDashboard::ReachResult.new(up: up, latency_ms: latency)}
     end
   end
 end

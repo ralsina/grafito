@@ -285,3 +285,11 @@
   text-transform: uppercase;
   vertical-align: middle;
 }
+
+/* Token usage line under AI answers (#104). */
+.ai-usage {
+  font-size: 0.68rem;
+  color: var(--muted, #8a8f98);
+  margin-top: 0.4rem;
+  font-variant-numeric: tabular-nums;
+}

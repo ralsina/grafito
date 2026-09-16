@@ -174,3 +174,33 @@
   color: var(--err);
   white-space: pre-wrap;
 }
+
+/* Probe latency next to the reachability dot (#101). */
+.homepage-latency {
+  font-size: 0.62rem;
+  color: var(--muted, #6b7280);
+  margin-left: 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* System health card at the top of the homepage. */
+.homepage-system {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--line, #ddd);
+  border-radius: 0.5rem;
+  background: var(--panel, transparent);
+}
+.homepage-system .stat-label {
+  margin-right: 0.25rem;
+}
+.homepage-system-ok {
+  color: var(--ok, #2e7d32);
+}
+.homepage-system-failed {
+  color: var(--err, #c62828);
+  font-weight: 600;
+}

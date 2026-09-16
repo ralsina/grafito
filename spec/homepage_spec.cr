@@ -1,7 +1,7 @@
 require "./spec_helper"
 
 # A minimal valid config object; specs tweak it via YAML below.
-def render_config(yaml : String, weather : Weather::Snapshot? = nil, statuses = {} of String => Bool) : String
+def render_config(yaml : String, weather : Weather::Snapshot? = nil, statuses = {} of String => HomepageDashboard::ReachResult) : String
   config = HomepageConfig::Config.from_yaml(yaml)
   HomepageDashboard.render_html(config, weather, statuses)
 end
@@ -59,8 +59,8 @@ describe HomepageDashboard do
 
     it "renders up and down dots for checked services" do
       statuses = {
-        "https://jellyfin.example.com" => true,
-        "https://files.example.com"    => false,
+        "https://jellyfin.example.com" => HomepageDashboard::ReachResult.new(up: true, latency_ms: 24),
+        "https://files.example.com"    => HomepageDashboard::ReachResult.new(up: false, latency_ms: nil),
       }
       html = render_config(SAMPLE_YAML, statuses: statuses)
 
@@ -69,7 +69,7 @@ describe HomepageDashboard do
     end
 
     it "omits dots for services without a known status" do
-      html = render_config(SAMPLE_YAML, statuses: {} of String => Bool)
+      html = render_config(SAMPLE_YAML, statuses: {} of String => HomepageDashboard::ReachResult)
 
       html.should_not contain("homepage-dot-up")
       html.should_not contain("homepage-dot-down")
@@ -147,8 +147,10 @@ describe HomepageDashboard do
 
       statuses = HomepageDashboard.service_statuses(services)
 
-      statuses["http://grafito-up.test/"].should be_true
-      statuses["http://grafito-down.test/"].should be_false
+      statuses["http://grafito-up.test/"].up.should be_true
+      statuses["http://grafito-down.test/"].up.should be_false
+      # The server answered (500), so a latency was measured.
+      statuses["http://grafito-down.test/"].latency_ms.should_not be_nil
     end
 
     it "skips services that do not opt in" do
