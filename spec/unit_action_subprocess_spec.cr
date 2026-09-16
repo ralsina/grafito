@@ -32,5 +32,13 @@ require "./spec_helper"
       response = dispatch_request("POST", "/unit/spec.service/stop")
       response[:status].should eq(200)
     end
+
+    it "refuses actions without enable-actions + auth" do
+      Grafito.enable_actions = false
+      Grafito.auth_configured = false
+      response = dispatch_request("POST", "/unit/spec.service/stop")
+      response[:status].should eq(403)
+      response[:body].should contain("Unit actions are disabled")
+    end
   end
 {% end %}
