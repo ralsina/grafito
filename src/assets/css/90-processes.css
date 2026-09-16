@@ -210,3 +210,9 @@
 .proc-compose-tag {
   margin-left: 0.5rem;
 }
+
+/* Per-unit CPU/MEM columns on the dashboard unit table (#87). */
+.du-res {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}

@@ -39,9 +39,15 @@ module HomepageDashboard
   # over a second), which would make a tight timeout read as "down".
   CHECK_TIMEOUT = 2.5.seconds
 
-  # @@status_cache slot: fetch time and the last probe results.
+  # @@status_cache slot: fetch time and the last probe results. The
+  # value carries the probe latency so dots can show how fast an app
+  # answered, not just whether it did.
   @@status_mutex = Mutex.new
-  @@status_cache : {Time, Hash(String, Bool)}? = nil
+  @@status_cache : {Time, Hash(String, ReachResult)}? = nil
+
+  # One reachability probe outcome: up/down and how long the app took
+  # to answer (nil when it never answered).
+  record ReachResult, up : Bool, latency_ms : Int64?
 
   # Renders the homepage fragment. Pure: `weather_snapshot` and
   # `statuses` are provided by the caller so specs can render without
@@ -49,7 +55,9 @@ module HomepageDashboard
   def render_html(
     config : HomepageConfig::Config,
     weather_snapshot : Weather::Snapshot? = nil,
-    statuses : Hash(String, Bool) = {} of String => Bool,
+    statuses : Hash(String, ReachResult) = {} of String => ReachResult,
+    failed_units : Array(String) = [] of String,
+    errors_last_hour : Int32 = 0,
   ) : String
     HTML.build do
       div(class: "homepage-top") do
@@ -61,11 +69,42 @@ module HomepageDashboard
         end
       end
 
+      html system_card(failed_units, errors_last_hour)
+
       unless config.groups.empty?
         div(class: "homepage-grid") do
           config.groups.each do |group|
             html group_fragment(group, statuses)
           end
+        end
+      end
+    end
+  end
+
+  # The machine's own health card: failed systemd units and the last
+  # hour's journal errors, linking into the dashboard for details.
+  # Clicking a failed unit opens the dashboard pre-filtered to it.
+  private def self.system_card(failed_units : Array(String), errors_last_hour : Int32) : String
+    HTML.build do
+      div(class: "homepage-system") do
+        span(class: "stat-label") { text "System health" }
+        if failed_units.empty?
+          span(class: "homepage-system-ok") do
+            span(class: "material-icons", style: "font-size: 1rem; vertical-align: middle;") do
+              text "check_circle"
+            end
+            text " All units healthy"
+          end
+        else
+          span(class: "homepage-system-failed") do
+            span(class: "material-icons", style: "font-size: 1rem; vertical-align: middle;") do
+              text "error"
+            end
+            text " Failed: #{failed_units.join(", ")}"
+          end
+        end
+        span(class: "tag tag-muted") do
+          text "#{errors_last_hour} errors in the last hour"
         end
       end
     end
@@ -144,7 +183,7 @@ module HomepageDashboard
   # One group card: a title and its services as launch rows.
   private def group_fragment(
     group : HomepageConfig::Group,
-    statuses : Hash(String, Bool),
+    statuses : Hash(String, ReachResult),
   ) : String
     HTML.build do
       div(class: "homepage-group") do
@@ -160,7 +199,7 @@ module HomepageDashboard
 
   # One launch row: icon, name and optional description, optionally a
   # reachability dot, the whole row being the link to the app.
-  private def service_fragment(service : HomepageConfig::Service, status : Bool?) : String
+  private def service_fragment(service : HomepageConfig::Service, result : ReachResult?) : String
     HTML.build do
       tag("a", {
         "class"  => "homepage-service",
@@ -182,9 +221,13 @@ module HomepageDashboard
             end
           end
         end
-        if service.check? && status.is_a?(Bool)
-          span(class: "homepage-dot homepage-dot-#{status ? "up" : "down"}",
-            title: status ? "Reachable" : "Not reachable") { }
+        if service.check? && result
+          dot_title = result.up ? "Reachable in #{result.latency_ms} ms" : "Not reachable"
+          span(class: "homepage-dot homepage-dot-#{result.up ? "up" : "down"}",
+            title: dot_title) { }
+          if result.up && (ms = result.latency_ms)
+            span(class: "homepage-latency", title: dot_title) { text "#{ms} ms" }
+          end
         end
       end
     end
@@ -254,9 +297,9 @@ module HomepageDashboard
 
   # Cached results when they are fresh enough and cover exactly the
   # currently-checked URLs; a fresh probe run otherwise.
-  def service_statuses(services : Array(HomepageConfig::Service)) : Hash(String, Bool)
+  def service_statuses(services : Array(HomepageConfig::Service)) : Hash(String, ReachResult)
     urls = services.select(&.check?).map(&.url).uniq!
-    return {} of String => Bool if urls.empty?
+    return {} of String => ReachResult if urls.empty?
 
     @@status_mutex.synchronize do
       if slot = @@status_cache
@@ -275,24 +318,24 @@ module HomepageDashboard
     statuses
   end
 
-  private def probe_all(urls : Array(String)) : Hash(String, Bool)
-    results = Hash(String, Bool).new
-    channel = Channel({String, Bool}).new(urls.size)
+  private def probe_all(urls : Array(String)) : Hash(String, ReachResult)
+    results = Hash(String, ReachResult).new
+    channel = Channel({String, ReachResult}).new(urls.size)
     urls.each do |url|
       spawn(name: "homepage-check") do
         channel.send({url, reachable?(url)})
       end
     end
     urls.size.times do
-      url, up = channel.receive
-      results[url] = up
+      url, result = channel.receive
+      results[url] = result
     end
     results
   end
 
-  private def reachable?(url : String) : Bool
+  private def reachable?(url : String) : ReachResult
     uri = URI.parse(url)
-    return false unless uri.host && {"http", "https"}.includes?(uri.scheme)
+    return ReachResult.new(up: false, latency_ms: nil) unless uri.host && {"http", "https"}.includes?(uri.scheme)
     client = HTTP::Client.new(uri)
     client.connect_timeout = CHECK_TIMEOUT
     client.read_timeout = CHECK_TIMEOUT
@@ -300,10 +343,12 @@ module HomepageDashboard
     # transparent deflate decoding chokes on some servers' zlib
     # streams, which would read as "down".
     headers = HTTP::Headers{"Accept-Encoding" => "identity"}
+    started = Time.monotonic
     response = client.get(uri.request_target, headers: headers)
-    response.status_code < 500
+    latency = (Time.monotonic - started).total_milliseconds.to_i
+    ReachResult.new(up: response.status_code < 500, latency_ms: latency)
   rescue
-    false
+    ReachResult.new(up: false, latency_ms: nil)
   ensure
     client.try(&.close)
   end
@@ -401,6 +446,15 @@ module HomepageDashboard
     end
   end
 
+  # The system health data for the homepage card: failed systemd
+  # units and the last hour's error-severity journal entries.
+  private def self.system_health_data : {Array(String), Int32}
+    failed = SystemStatus.unit_states.select(&.failed?).map(&.unit)
+    errors = (Journalctl.query(since: "-1h", priority: "3", lines: 500) || [] of Journalctl::LogEntry)
+      .size
+    {failed, errors}
+  end
+
   # Loads, renders, and degrades: a missing or empty config renders
   # setup instructions, a broken one renders the parser's complaint.
   private def self.render_config_fragment : String
@@ -416,7 +470,8 @@ module HomepageDashboard
       weather_snapshot = config.weather.try do |weather_config|
         Weather.snapshot(weather_config.latitude, weather_config.longitude)
       end
-      return render_html(config, weather_snapshot, statuses)
+      failed_units, errors_last_hour = system_health_data
+      return render_html(config, weather_snapshot, statuses, failed_units, errors_last_hour)
     {% end %}
 
     unless File.exists?(path)
@@ -430,7 +485,8 @@ module HomepageDashboard
       Weather.snapshot(weather_config.latitude, weather_config.longitude)
     end
     statuses = service_statuses(config.groups.flat_map(&.services))
-    render_html(config, weather_snapshot, statuses)
+    failed_units, errors_last_hour = system_health_data
+    render_html(config, weather_snapshot, statuses, failed_units, errors_last_hour)
   rescue ex
     # Body locals are nilable in rescue, so the path is read again.
     message = ex.message || ex.class.name

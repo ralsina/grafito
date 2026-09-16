@@ -1718,6 +1718,14 @@ function sendAIFollowUp() {
         }`;
         answer.appendChild(note);
       }
+      // Token usage, when the provider reports it: makes the cost of
+      // each question visible before the next one.
+      if (data.usage && typeof data.usage.total_tokens === "number") {
+        const usage = document.createElement("div");
+        usage.className = "ai-usage";
+        usage.textContent = `${data.usage.input_tokens} in / ${data.usage.output_tokens} out tokens`;
+        answer.appendChild(usage);
+      }
       appendAIMessage("assistant", answer);
       currentAIHistory.push({ role: "assistant", content: data.content || "" });
     })
