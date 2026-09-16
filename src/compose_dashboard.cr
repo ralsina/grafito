@@ -19,6 +19,7 @@ require "log"
 require "./app_store"
 require "./compose_status"
 require "./compose_jobs"
+require "./process_status"
 
 {% if flag?(:demo_mode) %}
   require "./fake_appstore_data"
@@ -416,6 +417,7 @@ module ComposeDashboard
   def service_details_fragment(
     compose_service : ComposeStatus::Service,
     enable_actions : Bool = false,
+    member_processes : Array(ProcessStatus::ProcessInfo) = [] of ProcessStatus::ProcessInfo,
   ) : String
     HTML.build do
       div(class: "service-panel") do
@@ -452,6 +454,20 @@ module ComposeDashboard
               html service_action_button(compose_service, action_item[:action], action_item[:icon], true)
             end
             span(class: "service-panel-hint") { text "docker compose actions" }
+          end
+        end
+
+        unless member_processes.empty?
+          div(class: "service-panel-members") do
+            span(class: "stat-label") { text "Processes" }
+            member_processes.each do |process_info|
+              div(class: "service-member-row") do
+                span(class: "service-member-pid") { text "PID #{process_info.pid}" }
+                span(class: "service-member-cmd", title: process_info.command) { text process_info.command }
+                span(class: "tag tag-muted") { text "CPU #{process_info.cpu_pct.round(1)}%" }
+              end
+            end
+            span(class: "service-panel-hint") { text "live from the process monitor" }
           end
         end
 
@@ -672,7 +688,11 @@ module ComposeDashboard
         next "Service '#{HTML.escape(service_name.to_s)}' of stack '#{HTML.escape(stack_name.to_s)}' not found."
       end
       env.response.content_type = "text/html"
-      ComposeDashboard.service_details_fragment(compose_service, Grafito.enable_actions?)
+      ComposeDashboard.service_details_fragment(
+        compose_service,
+        Grafito.enable_actions?,
+        ProcessStatus.processes_for_compose_service(stack_name.to_s, service_name.to_s),
+      )
     end
 
     # Read-only compose.yaml view for one stack, shown in the Detail
@@ -846,7 +866,8 @@ module ComposeDashboard
           Log.info { "Demo mode: docker compose #{action} #{service_name} (stack #{stack_name}) simulated" }
           env.response.content_type = "text/html"
           if optional_query_param(env, "from") == "panel"
-            next ComposeDashboard.service_details_fragment(refreshed, Grafito.enable_actions?)
+            members = ProcessStatus.processes_for_compose_service(refreshed.stack, refreshed.service)
+            next ComposeDashboard.service_details_fragment(refreshed, Grafito.enable_actions?, members)
           end
           next ComposeDashboard.render_html(ComposeStatus.stacks, Grafito.enable_actions?)
         end
@@ -876,7 +897,8 @@ module ComposeDashboard
         if optional_query_param(env, "from") == "panel"
           refreshed = ComposeStatus.find_service(stack_name, service_name)
           if refreshed
-            next ComposeDashboard.service_details_fragment(refreshed, Grafito.enable_actions?)
+            members = ProcessStatus.processes_for_compose_service(refreshed.stack, refreshed.service)
+            next ComposeDashboard.service_details_fragment(refreshed, Grafito.enable_actions?, members)
           end
         end
         ComposeDashboard.render_html(ComposeStatus.stacks, Grafito.enable_actions?)

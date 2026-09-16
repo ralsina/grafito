@@ -107,6 +107,21 @@ function setProcessLogsFilter(unitName, commandName) {
   return false;
 }
 
+// From the process detail panel: jump to the compose view and open
+// the owning service's detail panel. The attribution comes from the
+// process snapshot's cgroup join (#91/#92).
+function openComposeService(stack, service) {
+  setViewMode("compose");
+  htmx.ajax(
+    "GET",
+    buildUrl("compose-details") + "?stack=" + encodeURIComponent(stack) + "&service=" + encodeURIComponent(service),
+    { target: "#panel-detail-content", swap: "innerHTML" },
+  );
+  showLogPanel("detail");
+  return false;
+}
+window.openComposeService = openComposeService;
+
 // --- DASHBOARD SORTING + FILTERS ---
 // The unit table sorting, the service filter and the time window
 // are all applied server-side; the current values are kept in
