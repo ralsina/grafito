@@ -2,11 +2,131 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-09-16
+
+### 🚀 Features
+
+- *(dashboard)* Server dashboard with metrics history, unit actions and gotify alerts
+- *(dashboard)* Sortable unit table columns
+- *(ui)* Dashboard button first in topbar, unit column rightmost
+- *(ui)* Hide log chrome while the dashboard is shown
+- *(dashboard)* Service filter and configurable time window
+- *(ui)* Time selector on the timeline, filter in the services title
+- *(ui)* Dashboard service filter moves to the topbar omnibox
+- *(dashboard)* Service filter matches all displayed columns
+- *(ui)* Services count joins the stats strip
+- *(dashboard)* State/sub pills and left state stripes like the log view
+- *(dashboard)* Service detail panel in the sidebar
+- *(dashboard)* Services minimap in the minimap rail
+- *(dashboard)* Full unit actions with contextual panel buttons
+- *(ui)* Icon-only panel actions matching the table's action cells
+- *(actions)* Require authentication before unit actions can be enabled
+- *(dashboard)* Contextual unit actions in the table
+- *(dashboard)* Hide actions systemd says cannot start (CanStart)
+- *(dashboard)* AI "Explain this unit" in the service panel
+- *(dashboard)* Feed systemctl status output to the unit AI explanation
+- *(dashboard)* Overlay error frequency on the history chart
+- *(logs)* Overlay memory and load on the frequency timeline
+- *(dashboard)* Combined severity + resource usage chart
+- *(demo)* Living metrics for the fake dashboard
+- *(logs)* Use the combined severity + resource chart in the log view
+- *(compose)* Add a Docker Compose view as a third mode
+- Add htop-style process monitor view (merge branch 'process-monitor')
+- *(processes)* Htop-style process monitor view
+- *(processes)* Detail panel with signals, logs and AI integration
+- *(ui)* Loading overlay while a view's fragment is on its way
+- *(processes)* Combo chart and square per-core load cells
+- *(processes)* Show the machine total as a 2x2 leading cell
+- *(ui)* Minimap viewport window
+- *(compose)* Two-column stack layout on wide viewports
+- *(homepage)* Self-hosted app launcher view with weather widget
+- *(security)* Warn on non-loopback actions bind; docs housekeeping
+- *(assets)* Self-host marked and the Material Icons font
+- *(security)* Reject cross-site state-changing POSTs (CSRF)
+- *(logs)* SSE live tail for the log stream
+- *(ai)* Built-in ChatJimmy provider (flag-gated)
+- *(compose)* Runtipi-compatible app store
+- Merge Runtipi-compatible app store (branch feat/app-store)
+- *(web)* Serve an llms.txt from the baked assets
+- *(demo)* Simulate every action so the demo is fully interactive
+
+### 🐛 Bug Fixes
+
+- *(ui)* Dashboard toggle shows the view it switches to
+- *(ui)* Reload restores the dashboard view
+- *(ui)* Hide Context/AI tabs while the sidebar shows a service
+- *(ui)* Close the sidebar when jumping to logs from the service panel
+- *(ui)* Monochrome icon style for dashboard action buttons
+- *(dashboard)* Clip long unit names and descriptions with ellipsis
+- *(dashboard)* Emit hyphenated htmx attributes on the explain button
+- *(ui)* Use the pencil logo as the brand mark
+- *(dashboard)* Render the error overlay as bars, not an area
+- *(ui)* Brighten the log timeline bars
+- *(dashboard)* Readable time axis labels on the combined chart
+- *(ui)* Keep the URL in sync when leaving the dashboard
+- *(ci)* Dashboard specs and unit status without systemctl
+- *(processes)* Resolve user names from the correct passwd field
+- *(processes)* Keep command cells to one truncated line
+- *(processes)* Style the process filter box like the other omniboxes
+- *(ui)* Keep the view switcher at content width
+- *(ui)* Restore the dashboard and process filter boxes
+- *(processes)* Don't count the aggregate cpu line as a core
+- *(processes)* Make the total square an actual 2x2
+- *(processes)* Give the count line room on the left
+- *(ui)* Hide the minimap rail on views without one
+- *(processes)* Stop stretching the combo chart
+- *(ui)* Wrap empty-state cells in table rows
+- *(docker)* Clean apt cache after install, in the same layer
+- *(gotify)* Bound the notification request with timeouts
+- *(security)* Sanitize AI markdown before rendering
+- *(processes)* Don't hold the chart cache lock across journalctl I/O
+- *(compose)* Never evict a running job while finished ones exist
+- *(a11y)* Resolve Lighthouse accessibility findings; trim to two webfonts
+- *(demo)* Fake live tail, coherent cursor lookups, demo disclaimer
+
+### 🚜 Refactor
+
+- *(actions)* Drop the --units action whitelist, trust systemd
+- *(timeline)* Shared combined chart, log-view metrics overlay
+- *(processes)* Compact per-core CPU meters
+- *(ui)* Compact 4-way view switch in the topbar
+- *(ui)* Icon-only view switcher
+- *(ui)* Fold the brand into the view switcher cartouche
+- Each view owns its routes and frontend wiring
+- *(ui)* Keep only the Mission Control look
+- *(ui)* Split the frontend monolith into modules
+- *(ai)* Single priority bucket, alternating roles, spec coverage
+
+### 📚 Documentation
+
+- Refresh CLAUDE.md and regenerate the generated site
+- *(cli)* --data-dir is also the app store root now
+- Reflect current capabilities across all docs
+
+### ⚡ Performance
+
+- *(processes)* Read /etc/passwd once per snapshot, not per process
+- *(processes)* Cap rows, poll slower, morph instead of rebuild
+- *(logs)* Stream-parse journalctl output line by line
+
+### 🎨 Styling
+
+- *(dashboard)* Dashed stroke for the disk usage line
+- *(dashboard)* Left margin for the chart legend
+
+### 🧪 Testing
+
+- Run the fake-journal suite in automation
+
 ## [1.1.1] - 2026-09-12
 
 ### 🚀 Features
 
 - *(ui)* Tags column with sortable header and click-to-filter
+
+### 💼 Other
+
+- Release v1.1.1
 
 ## [1.1.0] - 2026-09-12
 
