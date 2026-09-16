@@ -386,14 +386,14 @@ module Dashboard
         description_attrs = {} of String => String
         description_attrs["title"] = unit_state.description unless unit_state.description.empty?
         td(description_attrs) do
-          text HTML.escape(unit_state.description)
+          text unit_state.description
         end
         td(title: unit_state.unit) do
           # The unit name keeps its direct behavior (jump into the unit's
           # logs); stop propagation so it doesn't also open the panel.
           js_arg_unit_name = unit_state.unit.to_json
           a(href: "#", onclick: "event.stopPropagation();return setUnitFilterAndTrigger(#{js_arg_unit_name});") do
-            text HTML.escape(unit_state.unit)
+            text unit_state.unit
           end
         end
         if enable_actions
@@ -535,7 +535,7 @@ module Dashboard
             end
     HTML.build do
       span(class: "tag tag-#{color}") do
-        text HTML.escape(value)
+        text value
       end
     end
   end
@@ -867,7 +867,7 @@ module Dashboard
           output: stdout,
           error: stderr,
         )
-        unless result.normal_exit?
+        unless result.success?
           # Authorization and other failures come from systemd itself;
           # surface them instead of a generic message. Panel requests get
           # an error fragment swapped into the sidebar (htmx ignores error

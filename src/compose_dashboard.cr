@@ -212,13 +212,13 @@ module ComposeDashboard
           html health_pill(compose_service.health)
         end
         td(title: compose_service.container) do
-          text HTML.escape(compose_service.service)
+          text compose_service.service
         end
         td(title: compose_service.image) do
-          text HTML.escape(compose_service.image)
+          text compose_service.image
         end
         td do
-          text HTML.escape(compose_service.ports)
+          text compose_service.ports
         end
         if enable_actions
           td(class: "dashboard-action-cell") do
@@ -552,7 +552,7 @@ module ComposeDashboard
             end
     HTML.build do
       span(class: "tag tag-#{color}") do
-        text HTML.escape(value)
+        text value
       end
     end
   end
@@ -567,7 +567,7 @@ module ComposeDashboard
             end
     HTML.build do
       span(class: "tag tag-#{color}") do
-        text HTML.escape(value)
+        text value
       end
     end
   end
@@ -586,7 +586,7 @@ module ComposeDashboard
             end
     HTML.build do
       span(class: "tag tag-#{color}") do
-        text HTML.escape(value)
+        text value
       end
     end
   end
@@ -857,7 +857,7 @@ module ComposeDashboard
         stdout = IO::Memory.new
         stderr = IO::Memory.new
         result = Process.run(args[0], args: args[1..], output: stdout, error: stderr)
-        unless result.normal_exit?
+        unless result.success?
           from_panel = optional_query_param(env, "from") == "panel"
           message = stderr.to_s.strip
           message = "docker compose #{action} #{compose_service.service} failed." if message.empty?
