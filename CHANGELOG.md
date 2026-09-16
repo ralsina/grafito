@@ -2,12 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2026-09-16
+
+### 🚀 Features
+
+- *(processes)* Attribute processes to compose stacks and services
+- *(compose,processes)* Cross-jumps and member processes (#92, #93)
+- *(dashboard)* Per-unit cgroup CPU/mem and recovery alerts (#87, #89)
+- Homepage health card and latency dots, AI token usage, resource column styles
+
+### 📚 Documentation
+
+- Document the pull-request-first workflow
+
+### 🧪 Testing
+
+- Commit the fake systemctl fixture
+- Cover the remaining subprocess seams (#61)
+
 ## [1.3.2] - 2026-09-16
 
 ### 🐛 Bug Fixes
 
 - *(release)* Regenerate the stale JS bundle and gate asset freshness
 - *(actions)* Restore the success? fix lost in a working-tree revert
+
+### 💼 Other
+
+- Release v1.3.2
 
 ### 🧪 Testing
 
