@@ -583,7 +583,6 @@ class Journalctl
         # Apply server-side unit filtering if allowed_units is set
         entries << entry if allowed_unit?(entry)
       end
-      process.wait
 
       if (code = process.wait) != 0
         Log.warn { "#{log_context_message}: journalctl exited with code #{code}. Parsed #{entries.size} entries before exit." }
