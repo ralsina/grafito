@@ -211,6 +211,10 @@ function closeAllViews(options) {
 
 function setViewMode(mode) {
   if (mode !== "logs" && !VIEWS[mode]) return;
+  // The side panel shows content that belongs to the view which
+  // opened it (a log entry, the app store, a process); switching
+  // views would leave that stale content floating over the new one.
+  if (window.closeLogPanel) closeLogPanel();
   Object.keys(VIEWS).forEach(function (name) {
     if (name !== mode) {
       setViewVisible(name, false, { skipUrlUpdate: true });
