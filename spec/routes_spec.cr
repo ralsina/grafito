@@ -59,6 +59,9 @@ describe "Kemal routes" do
     {% else %}
       response[:body].should contain(%("demo":false))
     {% end %}
+    # The enabled-views map drives the frontend's default landing
+    # view (bare URL -> homepage when enabled).
+    response[:body].should contain(%("homepage":true))
   end
 
   describe "cross-site POST rejection" do

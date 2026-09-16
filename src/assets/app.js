@@ -568,23 +568,25 @@ document.addEventListener("DOMContentLoaded", function () {
   loadAIProviders();
   // --- END AI PROVIDER SECTION ---
 
-  // --- DEMO MODE DISCLAIMER ---
+  // --- SERVER INFO (demo banner + default landing view) ---
   // Fake-data (demo site) builds say so in the status bar; real
-  // deployments stay quiet. The flag rides on a tiny boot-time fetch
-  // so the served HTML is identical for both builds. Failure is
-  // purely cosmetic: the banner simply stays hidden.
-  fetch(buildUrl("server-info"))
+  // deployments stay quiet. The same tiny payload reports which
+  // views the deployment enables, so a bare URL can land on the
+  // homepage when it is available. Failure is not fatal: the
+  // banner stays hidden and the log stream remains the landing.
+  const serverInfoPromise = fetch(buildUrl("server-info"))
     .then((response) => response.json())
-    .then((info) => {
-      if (info && info.demo) {
-        const banner = document.getElementById("demo-banner");
-        if (banner) banner.hidden = false;
-      }
-    })
     .catch(() => {
-      /* no server-info: not fatal, keep the banner hidden */
+      /* no server-info: not fatal */
+      return null;
     });
-  // --- END DEMO MODE DISCLAIMER ---
+  serverInfoPromise.then((info) => {
+    if (info && info.demo) {
+      const banner = document.getElementById("demo-banner");
+      if (banner) banner.hidden = false;
+    }
+  });
+  // --- END SERVER INFO ---
 
   // --- COLUMN VISIBILITY PERSISTENCE ---
   const COLUMN_VISIBILITY_CHECKBOX_IDS = [
@@ -633,7 +635,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // --- Restore View from URL Parameters ---
   // A reload (or shared link) with view=<name> reopens that view;
-  // each view's restore() re-applies its saved state first.
+  // each view's restore() re-applies its saved state first. The bare
+  // URL (no view=) lands on the homepage when the deployment enables
+  // it, falling back to the log stream otherwise.
   const requestedView = params.get("view");
   if (requestedView && VIEWS[requestedView]) {
     // Views with state re-apply it first; stateless views (like
@@ -641,6 +645,12 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!VIEWS[requestedView].restore || VIEWS[requestedView].restore(params)) {
       setViewVisible(requestedView, true);
     }
+  } else {
+    serverInfoPromise.then((info) => {
+      const views = info && info.views;
+      if (views && views.homepage === false) return; // stay on logs
+      setViewMode("homepage");
+    });
   }
 
   updateViewSwitcher();
@@ -1035,16 +1045,19 @@ function renderActiveFilterChips() {
 function updateBrowserURL() {
   const params = buildFilterURLSearchParams();
   // Persist the active view and its state so reloads and
-  // shared links land back where the user was.
-  Object.keys(VIEWS).forEach(function (name) {
-    if (name === "logs") return;
-    const config = VIEWS[name];
-    const element = document.getElementById(config.element);
-    if (element && !element.hidden) {
-      params.set("view", name);
-      if (config.urlState) config.urlState(params, element);
-    }
-  });
+  // shared links land back where the user was. The homepage is
+  // the root view: it owns the bare URL, so it is the one view
+  // never written into it (and the landing for a URL without
+  // a view= parameter).
+  const mode = currentViewMode();
+  if (mode !== "homepage") {
+    params.set("view", mode);
+    const config = VIEWS[mode];
+    const element = config.element
+      ? document.getElementById(config.element)
+      : null;
+    if (config.urlState && element) config.urlState(params, element);
+  }
   renderActiveFilterChips();
 
   let queryString = params.toString();

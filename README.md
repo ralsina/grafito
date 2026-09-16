@@ -248,6 +248,11 @@ the **Home** button in the top bar (or share a link with
 `view=homepage`) to see a card per service group and, optionally, a
 weather widget.
 
+When the homepage view is enabled (the default), it is also what a
+bare URL — no `view=` parameter — lands on; the log stream lives at
+`?view=logs`. With the homepage disabled, the log stream keeps the
+bare URL as before.
+
 The page is configured with a YAML file, by default
 `/etc/grafito/homepage.yml` (change it with `--homepage-config` or
 `GRAFITO_HOMEPAGE_CONFIG`). Until the file exists, the view shows

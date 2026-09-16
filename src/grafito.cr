@@ -565,10 +565,18 @@ module Grafito
     # Tiny build-level capability blob the frontend fetches once at
     # boot. `demo` marks fake-data builds (the public demo site), so
     # the UI can show its "this is demo mode" disclaimer and the like.
+    # `views` reports which views the deployment enables, so the bare
+    # URL can land on the homepage when it is available.
     get route_path("server-info") do |env|
       env.response.content_type = "application/json"
       {
-        demo: {% if flag?(:demo_mode) %} true {% else %} false {% end %},
+        demo:  {% if flag?(:demo_mode) %} true {% else %} false {% end %},
+        views: {
+          dashboard: Grafito.dashboard_enabled?,
+          compose:   Grafito.compose_enabled?,
+          homepage:  Grafito.homepage_enabled?,
+          processes: Grafito.processes_enabled?,
+        },
       }.to_json
     end
 

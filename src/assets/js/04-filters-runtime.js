@@ -137,16 +137,19 @@ function renderActiveFilterChips() {
 function updateBrowserURL() {
   const params = buildFilterURLSearchParams();
   // Persist the active view and its state so reloads and
-  // shared links land back where the user was.
-  Object.keys(VIEWS).forEach(function (name) {
-    if (name === "logs") return;
-    const config = VIEWS[name];
-    const element = document.getElementById(config.element);
-    if (element && !element.hidden) {
-      params.set("view", name);
-      if (config.urlState) config.urlState(params, element);
-    }
-  });
+  // shared links land back where the user was. The homepage is
+  // the root view: it owns the bare URL, so it is the one view
+  // never written into it (and the landing for a URL without
+  // a view= parameter).
+  const mode = currentViewMode();
+  if (mode !== "homepage") {
+    params.set("view", mode);
+    const config = VIEWS[mode];
+    const element = config.element
+      ? document.getElementById(config.element)
+      : null;
+    if (config.urlState && element) config.urlState(params, element);
+  }
   renderActiveFilterChips();
 
   let queryString = params.toString();
