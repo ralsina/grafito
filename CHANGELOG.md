@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.1] - 2026-09-16
+
+### 🐛 Bug Fixes
+
+- *(logs)* Real journal queries returned nothing
+- Address security and correctness findings from the v1.3.0 review
+- *(security)* Loopback by default in shipped unit and installer
+- *(logs)* Use Process::Status#success? for the journalctl exit check
+
+### 🧪 Testing
+
+- Update /context spec for the clamped count
+
 ## [1.3.0] - 2026-09-16
 
 ### 🚀 Features
@@ -15,6 +28,10 @@ All notable changes to this project will be documented in this file.
 - *(demo)* Serve generated logos for fixture app store apps
 - *(ui)* Close the side panel when switching views
 - *(ui)* Make baked JS/CSS always revalidate
+
+### 💼 Other
+
+- Release v1.3.0
 
 ### 📚 Documentation
 
