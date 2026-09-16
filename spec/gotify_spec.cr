@@ -63,6 +63,22 @@ describe Grafito::Gotify do
   end
 
   describe Grafito::Gotify::Rules do
+    it "notifies when a failed unit recovers, exactly once" do
+      rules = Grafito::Gotify::Rules.new
+
+      failed = rules.evaluate(disk_used_pct: 10.0, failed_units: ["web.service"], errors_per_min: 0.0)
+      failed.map(&.rule).should contain("unit_failed")
+
+      # Recovery on the next sample: exactly one notification...
+      recovered = rules.evaluate(disk_used_pct: 10.0, failed_units: [] of String, errors_per_min: 0.0)
+      recovered_rule = recovered.find { |alert| alert.rule == "unit_recovered_web.service" }
+      recovered_rule.should_not be_nil
+      recovered.map(&.title).should contain("Service recovered")
+
+      # ...and not again on the following samples.
+      again = rules.evaluate(disk_used_pct: 10.0, failed_units: [] of String, errors_per_min: 0.0)
+      again.should be_empty
+    end
     now = Time.utc
 
     it "fires the unit-failed rule" do

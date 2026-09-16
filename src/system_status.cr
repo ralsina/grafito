@@ -69,6 +69,111 @@ module SystemStatus
     snapshot.units
   end
 
+  # Per-unit live resource usage for the dashboard's unit table.
+  record UnitResourceUsage,
+    unit : String,
+    cpu_pct : Float64?,
+    mem_mb : Float64?
+
+  # One unit's raw accounting numbers from `systemctl show`.
+  record UnitShowValues, cpu_ns : Int64?, mem_bytes : Int64?
+
+  # Previous CPU-usage readings and sample time, for the CPU% delta.
+  @@unit_cpu_prev = {} of String => Int64
+  @@unit_cpu_prev_at : Time::Span? = nil
+  @@unit_mutex = Mutex.new(protection: :checked)
+
+  # Parses `systemctl show <units...> -p Id -p CPUUsageNSec -p MemoryCurrent`
+  # output: property blocks separated by blank lines, grouped by Id=.
+  # Values the kernel has not set (e.g. "[not set]") become nil.
+  def self.parse_unit_show_output(output : String) : Hash(String, UnitShowValues)
+    result = {} of String => UnitShowValues
+    unit : String? = nil
+    cpu_ns : Int64? = nil
+    mem_bytes : Int64? = nil
+
+    output.each_line do |line|
+      line = line.strip
+      if line.strip.empty?
+        if unit
+          result[unit] = UnitShowValues.new(cpu_ns: cpu_ns, mem_bytes: mem_bytes)
+          unit = nil
+          cpu_ns = nil
+          mem_bytes = nil
+        end
+        next
+      end
+      key, _, value = line.partition("=")
+      case key
+      when "Id"            then unit = value
+      when "CPUUsageNSec"  then cpu_ns = value.to_i64?
+      when "MemoryCurrent" then mem_bytes = value.to_i64?
+      end
+    end
+    if unit
+      result[unit] = UnitShowValues.new(cpu_ns: cpu_ns, mem_bytes: mem_bytes)
+    end
+    result
+  end
+
+  # CPU percentage of one core for a unit, from the NSec delta between
+  # samples. Nil on the first sample or when the counter went
+  # backwards (unit restarted).
+  def self.unit_cpu_pct(current_ns : Int64, previous_ns : Int64, elapsed_sec : Float64) : Float64?
+    return if elapsed_sec <= 0
+    delta = (current_ns - previous_ns).to_f / 1e9
+    return if delta < 0
+    (delta / elapsed_sec * 100.0).clamp(0.0, 100.0 * 64)
+  end
+
+  # Live per-unit CPU% and memory for the dashboard's unit table: one
+  # batched `systemctl show` per call. CPU% needs two samples, so the
+  # first dashboard load shows "—" and the next poll fills it in.
+  def self.unit_resource_usage(units : Array(String)) : Hash(String, UnitResourceUsage)
+    {% if flag?(:demo_mode) %}
+      units.to_h do |unit|
+        wave = Math.sin(unit.bytes.sum(0) / 9.0)
+        cpu = (1.5 + wave * 1.2).clamp(0.0, nil)
+        mem = (unit.bytes.sum(0) % 700 + 60).to_f
+        {unit, UnitResourceUsage.new(unit: unit, cpu_pct: cpu, mem_mb: mem)}
+      end
+    {% else %}
+      @@unit_mutex.synchronize do
+        now = Time.monotonic
+        elapsed = @@unit_cpu_prev_at.try { |at| (now - at).total_seconds }
+        usage = {} of String => UnitResourceUsage
+        values_by_unit = parse_unit_show_output(run_unit_show(units))
+        units.each do |unit|
+          values = values_by_unit[unit]?
+          next unless values
+          cpu_pct = nil
+          if cpu_ns = values.cpu_ns
+            previous = @@unit_cpu_prev[unit]?
+            cpu_pct = unit_cpu_pct(cpu_ns, previous, elapsed || 0.0) if previous
+            @@unit_cpu_prev[unit] = cpu_ns
+          end
+          mem_mb = values.mem_bytes.try { |bytes| bytes.to_f / (1024 * 1024) }
+          usage[unit] = UnitResourceUsage.new(unit: unit, cpu_pct: cpu_pct, mem_mb: mem_mb)
+        end
+        @@unit_cpu_prev_at = now
+        usage
+      end
+    {% end %}
+  end
+
+  # Runs one batched `systemctl show` for the given units. Returns ""
+  # when systemctl is missing or fails (the table renders "—").
+  private def self.run_unit_show(units : Array(String)) : String
+    command = ["systemctl"] + Journalctl.user_flags +
+              ["show", "--no-pager"] + units
+    stdout = IO::Memory.new
+    result = Process.run(command[0], args: command[1..], output: stdout)
+    result.success? ? stdout.to_s : ""
+  rescue ex
+    Log.warn { "systemctl show failed: #{ex.message}" }
+    ""
+  end
+
   # Raw `systemctl status` output for one unit, for the AI explanation
   # endpoint. Read-only, so it needs neither --enable-actions nor root.
   # Journal excerpts are stripped (-n 0) because the AI report already
