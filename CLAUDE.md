@@ -241,6 +241,9 @@ AI log analysis is optional and provider-agnostic:
 - **No perfection claims**: Avoid calling code "perfect" - it invites nagging
 
 ### Git and Release Workflow
+- **All changes via PR**: `main` is branch-protected with the `build`
+  CI check required (strict: PR branches must be up to date). No
+  direct pushes except release commits cut by `do_release.sh`.
 - **Version management**: Uses `git cliff` for automated version bumping and changelog generation
 - **Multi-architecture builds**: Release process generates both AMD64 and ARM64 static binaries
 - **Automated releases**: `do_release.sh` handles the complete release workflow

@@ -757,11 +757,20 @@ Once set up, logs from all client hosts will appear in Grafito on the central se
 
 ## Contributing
 
-1. Fork it (<https://github.com/ralsina/grafito/fork>)
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create a new Pull Request
+All changes land through pull requests — `main` is protected and
+requires the CI check to pass before merging.
+
+1. Fork it (<https://github.com/ralsina/grafito/fork>) or create a
+   branch in the repo (`git checkout -b my-new-feature`)
+2. Commit your changes (`git commit -am 'Add some feature'`;
+   conventional-commit style messages keep the changelog tidy)
+3. Push and open a pull request
+4. CI (format, linter, both test suites) must pass on the PR
+5. A maintainer merges; use `gh pr merge --auto --merge` to queue it
+
+If `src/assets/` files change, the committed concatenated and minified
+bundles must be regenerated too (`make assets-fresh` regenerates them
+and fails if they were stale) — pre-commit and CI both check this.
 
 ## Contributors
 
