@@ -221,6 +221,10 @@ function setViewMode(mode) {
     }
   });
   setViewVisible(mode, true);
+  // The SSE live tail must not keep streaming (and keep a journalctl
+  // follower alive on the server) while another view is on screen;
+  // refreshLiveStream restarts it when logs become active again.
+  if (typeof refreshLiveStream === "function") refreshLiveStream();
 }
 
 const viewSwitcher = document.getElementById("brand-switcher");
@@ -373,12 +377,14 @@ document.addEventListener("DOMContentLoaded", function () {
       .forEach(function (el) {
         el.remove();
       });
-    const allowedUri = /^(https?:|mailto:|#|\/)/i;
+    const allowedUri = /^(https?:|mailto:|#|\/(?!\/))/i;
     tpl.content.querySelectorAll("*").forEach(function (el) {
       Array.from(el.attributes).forEach(function (attr) {
         const name = attr.name.toLowerCase();
         const value = (attr.value || "").trim().toLowerCase();
-        if (name.startsWith("on")) {
+        if (name === "style" || name.startsWith("on")) {
+          // style= survives script removal but still allows CSS
+          // exfiltration tricks; AI output has no honest use for it.
           el.removeAttribute(attr.name);
         } else if (
           (name === "href" || name === "src" || name === "xlink:href") &&
@@ -386,6 +392,8 @@ document.addEventListener("DOMContentLoaded", function () {
           !allowedUri.test(value) &&
           !value.startsWith("data:image/")
         ) {
+          // The negative lookahead also rejects protocol-relative
+          // URLs (//evil.com), which browsers resolve as https:.
           el.removeAttribute(attr.name);
         }
       });
@@ -1475,7 +1483,9 @@ window.closeLogPanel = function () {
 };
 
 window.panelSpinner = function (paneId) {
-  const pane = document.getElementById(paneId);
+  // Call sites render the id with a leading '#' (hx-on strings);
+  // getElementById wants the bare id.
+  const pane = document.getElementById(String(paneId).replace(/^#/, ""));
   if (pane) {
     pane.innerHTML = document.getElementById(
       "details-dialog-loading-spinner-template",
@@ -1484,7 +1494,7 @@ window.panelSpinner = function (paneId) {
 };
 
 window.panelError = function (paneId, status) {
-  const pane = document.getElementById(paneId);
+  const pane = document.getElementById(String(paneId).replace(/^#/, ""));
   if (pane) {
     pane.innerHTML =
       '<p class="inline-alert">Failed to load content (HTTP ' +
@@ -1756,32 +1766,44 @@ function askAIExplanation(cursor) {
       tempDiv.innerHTML = html;
       // Look for the message content in the details
       const messageElement = tempDiv.querySelector("pre");
+      // Journal messages are attacker-controlled (any local user can
+      // write one with logger), so the block is built with DOM APIs
+      // and textContent — never interpolated into innerHTML.
+      let message = "";
       if (messageElement && messageElement.textContent.trim()) {
         try {
           // Parse the JSON and extract just the MESSAGE field
           const logData = JSON.parse(messageElement.textContent.trim());
-          const message = logData.MESSAGE || messageElement.textContent.trim(); // Fallback to full text if no MESSAGE field
-
-          currentTargetLogEntry = message;
-          // Truncate very long messages
-          const truncatedMessage =
-            currentTargetLogEntry.length > 300
-              ? currentTargetLogEntry.substring(0, 300) + "..."
-              : currentTargetLogEntry;
-          targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem; word-break: break-word; line-height: 1.4;">${truncatedMessage}</div>`;
+          message = logData.MESSAGE || messageElement.textContent.trim(); // Fallback to full text if no MESSAGE field
         } catch (e) {
           // If JSON parsing fails, use the full text as fallback
-          currentTargetLogEntry = messageElement.textContent.trim();
-          const truncatedMessage =
-            currentTargetLogEntry.length > 300
-              ? currentTargetLogEntry.substring(0, 300) + "..."
-              : currentTargetLogEntry;
-          targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem; word-break: break-word; line-height: 1.4;">${truncatedMessage}</div>`;
+          message = messageElement.textContent.trim();
         }
+      }
+      if (message) {
+        currentTargetLogEntry = message;
+        // Truncate very long messages
+        const truncatedMessage =
+          message.length > 300 ? message.substring(0, 300) + "..." : message;
+        targetEntryDiv.textContent = "";
+        const label = document.createElement("strong");
+        label.textContent = "Log Message:";
+        const box = document.createElement("div");
+        box.style.marginTop = "0.5rem";
+        box.style.wordBreak = "break-word";
+        box.style.lineHeight = "1.4";
+        box.textContent = truncatedMessage;
+        targetEntryDiv.append(label, document.createElement("br"), box);
       } else {
         // No log entry found or empty content
         currentTargetLogEntry = "";
-        targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem;">Unable to load log message</div>`;
+        targetEntryDiv.textContent = "";
+        const label = document.createElement("strong");
+        label.textContent = "Log Message:";
+        const note = document.createElement("div");
+        note.style.marginTop = "0.5rem";
+        note.textContent = "Unable to load log message";
+        targetEntryDiv.append(label, document.createElement("br"), note);
       }
     })
     .catch((error) => {

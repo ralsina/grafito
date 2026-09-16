@@ -40,6 +40,12 @@ repos:
           - id: check-github-workflows
     - repo: local
       hooks:
+          - id: grafito-assets-fresh
+            name: Regenerate concatenated/minified assets
+            entry: make assets-fresh
+            language: system
+            files: '^src/assets/'
+            pass_filenames: false
           - id: crystal-format
             name: Crystal format check
             entry: crystal tool format --check

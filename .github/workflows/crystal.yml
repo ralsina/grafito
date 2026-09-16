@@ -18,6 +18,12 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install dependencies
       run: shards install
+    - name: Check generated assets are committed fresh
+      run: |
+        cat src/assets/css/*.css > /tmp/style.check
+        cat src/assets/js/*.js > /tmp/app.check
+        diff -u src/assets/style.css /tmp/style.check
+        diff -u src/assets/app.js /tmp/app.check
     - name: Check formatting
       run: crystal tool format --check src spec
     - name: Build and run linter

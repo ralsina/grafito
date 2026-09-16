@@ -80,6 +80,16 @@ $(APP_JS_SRC): $(JS_MODULES)
 	@echo "Concatenating JS modules to $@"
 	cat $(JS_MODULES) > $@
 
+# Regenerates the concatenated and minified assets, then fails when
+# the committed copies are stale. Wired into pre-commit for src/assets
+# edits so a source change can never ship without its bundle (#70).
+.PHONY: assets-fresh
+assets-fresh:
+	@cat $(CSS_MODULES) > $(STYLE_CSS_SRC)
+	@cat $(JS_MODULES) > $(APP_JS_SRC)
+	@$(MAKE) --no-print-directory minify
+	@git diff --exit-code -- $(ASSETS_DIR) || { echo 'Stale committed assets were regenerated: git add src/assets and retry.'; exit 1; }
+
 .PHONY: minify
 minify: $(INDEX_HTML_MIN) $(STYLE_CSS_MIN) $(APP_JS_MIN)
 

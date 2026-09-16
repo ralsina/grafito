@@ -5,6 +5,12 @@ docker run --rm --privileged \
   multiarch/qemu-user-static \
   --reset -p yes
 
+# Regenerate the concatenated and minified assets so the binaries
+# embed what the sources say, not what was last committed (#70).
+cat src/assets/css/*.css > src/assets/style.css
+cat src/assets/js/*.js > src/assets/app.js
+make minify
+
 shards install
 
 # Build for AMD64
