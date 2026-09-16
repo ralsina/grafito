@@ -876,19 +876,7 @@ fall back to the plain severity timeline otherwise.</p>
 
     </div>
     <div class="code">
-        <span id="line-311"><pre class="b" ><code class="b"><span class="t">          </span><span class="t">oldest_log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">min_of</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">timestamp</span><span class="t">)</span><span class="t"></span>
-<span id="line-312"></span><span class="t">          </span><span class="t">metric_points</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">metrics_store</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">history</span><span class="t">(</span><span class="t">oldest_log</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="m">1</span><span class="t">.</span><span class="t">minute</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"></span>
-<span id="line-313"></span><span class="t">                          </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">MetricsStore</span><span class="no">::</span><span class="no">MetricPoint</span><span class="t"></span>
-<span id="line-314"></span><span class="t">          </span><span class="t">div</span><span class="t">(</span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">margin-bottom: 1em;</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-315"></span><span class="t">            </span><span class="nk">if</span><span class="t"> </span><span class="t">metric_points</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
-<span id="line-316"></span><span class="t">              </span><span class="t">html</span><span class="t"> </span><span class="no">Timeline</span><span class="t">.</span><span class="t">generate_svg_timeline</span><span class="t">(</span><span class="t">timeline_data</span><span class="t">)</span><span class="t"></span>
-<span id="line-317"></span><span class="t">            </span><span class="nk">else</span><span class="t"></span>
-<span id="line-318"></span><span class="t">              </span><span class="t">html</span><span class="t"> </span><span class="no">Timeline</span><span class="t">.</span><span class="t">combined_legend</span><span class="t"></span>
-<span id="line-319"></span><span class="t">              </span><span class="t">html</span><span class="t"> </span><span class="no">Timeline</span><span class="t">.</span><span class="t">generate_combined_svg</span><span class="t">(</span><span class="t">metric_points</span><span class="t">,</span><span class="t"> </span><span class="t">timeline_data</span><span class="t">)</span><span class="t"></span>
-<span id="line-320"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
-<span id="line-321"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
-<span id="line-322"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
-<span id="line-323"></span><span class="t">      </span><span class="nk">end</span></code></pre></span>
+        <span id="line-311"><pre class="b" ><code class="b"><span class="t">          </span><span class="t">oldest_log</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">min_of</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">timestamp</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
@@ -897,17 +885,28 @@ fall back to the plain severity timeline otherwise.</p>
         <span class="anchor">
             <a href="#section-25" class="anchor">↦</a>
         </span>
-        <p>Display results count</p>
+        <p>An entry whose timestamp could not be parsed becomes epoch
+(1970): scanning history files from 1970 to now is ~20k
+pointless stat calls per request, so skip the lookup.</p>
 
     </div>
     <div class="code">
-        <span id="line-326"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">count_message_inner_text</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="m">5000</span><span class="t"></span>
-<span id="line-327"></span><span class="t">                                   </span><span class="s">&quot;</span><span class="s">showing first 5000 entries</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-328"></span><span class="t">                                 </span><span class="nk">elsif</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
-<span id="line-329"></span><span class="t">                                   </span><span class="s">&quot;</span><span class="s">showing 1 entry</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-330"></span><span class="t">                                 </span><span class="nk">else</span><span class="t"></span>
-<span id="line-331"></span><span class="t">                                   </span><span class="s">&quot;</span><span class="s">showing </span><span class="lsi">#{</span><span class="t">logs</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="s"> entries</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="c"># Handles 0 and other counts</span><span class="t"></span>
-<span id="line-332"></span><span class="t">                                 </span><span class="nk">end</span></code></pre></span>
+        <span id="line-315"><pre class="b" ><code class="b"><span class="t">          </span><span class="t">metric_points</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">oldest_log</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t">(</span><span class="m">2000</span><span class="t">,</span><span class="t"> </span><span class="m">1</span><span class="t">,</span><span class="t"> </span><span class="m">1</span><span class="t">)</span><span class="t"></span>
+<span id="line-316"></span><span class="t">                            </span><span class="no">Grafito</span><span class="t">.</span><span class="t">metrics_store</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">history</span><span class="t">(</span><span class="t">oldest_log</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="m">1</span><span class="t">.</span><span class="t">minute</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"></span>
+<span id="line-317"></span><span class="t">                              </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">MetricsStore</span><span class="no">::</span><span class="no">MetricPoint</span><span class="t"></span>
+<span id="line-318"></span><span class="t">                          </span><span class="nk">else</span><span class="t"></span>
+<span id="line-319"></span><span class="t">                            </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">MetricsStore</span><span class="no">::</span><span class="no">MetricPoint</span><span class="t"></span>
+<span id="line-320"></span><span class="t">                          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-321"></span><span class="t">          </span><span class="t">div</span><span class="t">(</span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">margin-bottom: 1em;</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-322"></span><span class="t">            </span><span class="nk">if</span><span class="t"> </span><span class="t">metric_points</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-323"></span><span class="t">              </span><span class="t">html</span><span class="t"> </span><span class="no">Timeline</span><span class="t">.</span><span class="t">generate_svg_timeline</span><span class="t">(</span><span class="t">timeline_data</span><span class="t">)</span><span class="t"></span>
+<span id="line-324"></span><span class="t">            </span><span class="nk">else</span><span class="t"></span>
+<span id="line-325"></span><span class="t">              </span><span class="t">html</span><span class="t"> </span><span class="no">Timeline</span><span class="t">.</span><span class="t">combined_legend</span><span class="t"></span>
+<span id="line-326"></span><span class="t">              </span><span class="t">html</span><span class="t"> </span><span class="no">Timeline</span><span class="t">.</span><span class="t">generate_combined_svg</span><span class="t">(</span><span class="t">metric_points</span><span class="t">,</span><span class="t"> </span><span class="t">timeline_data</span><span class="t">)</span><span class="t"></span>
+<span id="line-327"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-328"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-329"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-330"></span><span class="t">      </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -916,38 +915,17 @@ fall back to the plain severity timeline otherwise.</p>
         <span class="anchor">
             <a href="#section-26" class="anchor">↦</a>
         </span>
-        <p>Prepare the styled count message for the header</p>
+        <p>Display results count</p>
 
     </div>
     <div class="code">
-        <span id="line-335"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">styled_count_span</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">%Q(</span><span class="s">&lt;span class=&quot;results-count&quot; style=&quot;font-style: italic; font-size: 0.9em; color: var</span><span class="s">(</span><span class="s">--pico-muted-color</span><span class="s">)</span><span class="s">; margin-left: 0.5em;&quot;&gt;</span><span class="s">(</span><span class="lsi">#{</span><span class="t">count_message_inner_text</span><span class="t"></span><span class="lsi">}</span><span class="s">)</span><span class="s">&lt;/span&gt;</span><span class="s">)</span><span class="s"></span><span class="t"></span>
-<span id="line-336"></span><span class="t">      </span><span class="t">message_header_text</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Message </span><span class="lsi">#{</span><span class="t">styled_count_span</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-337"></span><span class="t"></span>
-<span id="line-338"></span><span class="t">      </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">NamedTuple</span><span class="t">(</span><span class="t">text</span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">hx_vals</span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">key_name</span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"></span>
-<span id="line-339"></span><span class="t"></span>
-<span id="line-340"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_timestamp</span><span class="t"></span>
-<span id="line-341"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="s">&quot;</span><span class="s">timestamp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Timestamp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
-<span id="line-342"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-343"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_hostname</span><span class="t"></span>
-<span id="line-344"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="s">&quot;</span><span class="s">hostname</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Hostname</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
-<span id="line-345"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-346"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_unit</span><span class="t"></span>
-<span id="line-347"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="s">&quot;</span><span class="s">unit</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Unit</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
-<span id="line-348"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-349"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_tag</span><span class="t"></span>
-<span id="line-350"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="s">&quot;</span><span class="s">tag</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Tags</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
-<span id="line-351"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-352"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_priority</span><span class="t"></span>
-<span id="line-353"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="s">&quot;</span><span class="s">priority</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Priority</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
-<span id="line-354"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-355"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_message</span><span class="t"></span>
-<span id="line-356"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="s">&quot;</span><span class="s">message</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">message_header_text</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
-<span id="line-357"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-358"></span><span class="t"></span>
-<span id="line-359"></span><span class="t">      </span><span class="t">table</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">striped</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-360"></span><span class="t">        </span><span class="t">thead</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-361"></span><span class="t">          </span><span class="t">tr</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-362"></span><span class="t">            </span><span class="t">headers_to_display</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">header</span><span class="o">|</span></code></pre></span>
+        <span id="line-333"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">count_message_inner_text</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="m">5000</span><span class="t"></span>
+<span id="line-334"></span><span class="t">                                   </span><span class="s">&quot;</span><span class="s">showing first 5000 entries</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-335"></span><span class="t">                                 </span><span class="nk">elsif</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
+<span id="line-336"></span><span class="t">                                   </span><span class="s">&quot;</span><span class="s">showing 1 entry</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-337"></span><span class="t">                                 </span><span class="nk">else</span><span class="t"></span>
+<span id="line-338"></span><span class="t">                                   </span><span class="s">&quot;</span><span class="s">showing </span><span class="lsi">#{</span><span class="t">logs</span><span class="t">.</span><span class="t">size</span><span class="t"></span><span class="lsi">}</span><span class="s"> entries</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="c"># Handles 0 and other counts</span><span class="t"></span>
+<span id="line-339"></span><span class="t">                                 </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -956,15 +934,38 @@ fall back to the plain severity timeline otherwise.</p>
         <span class="anchor">
             <a href="#section-27" class="anchor">↦</a>
         </span>
-        <p>All remaining headers are sortable and will use this block</p>
+        <p>Prepare the styled count message for the header</p>
 
     </div>
     <div class="code">
-        <span id="line-364"><pre class="b" ><code class="b"><span class="t">              </span><span class="t">th</span><span class="t">(</span><span class="t">{</span><span class="t"></span>
-<span id="line-365"></span><span class="t">                </span><span class="s">&quot;</span><span class="s">style</span><span class="s">&quot;</span><span class="s"></span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">cursor: pointer; vertical-align: middle;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-366"></span><span class="t">                </span><span class="s">&quot;</span><span class="s">scope</span><span class="s">&quot;</span><span class="s"></span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">col</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-367"></span><span class="t">                </span><span class="s">&quot;</span><span class="s">hx-get</span><span class="s">&quot;</span><span class="s"></span><span class="t">  </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">build_url</span><span class="t">(</span><span class="s">&quot;</span><span class="s">logs</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
-<span id="line-368"></span><span class="t">                </span><span class="s">&quot;</span><span class="s">hx-vals</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">header</span><span class="t">[</span><span class="ss">:hx_vals</span><span class="t">]</span><span class="t">,</span></code></pre></span>
+        <span id="line-342"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">styled_count_span</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">%Q(</span><span class="s">&lt;span class=&quot;results-count&quot; style=&quot;font-style: italic; font-size: 0.9em; color: var</span><span class="s">(</span><span class="s">--pico-muted-color</span><span class="s">)</span><span class="s">; margin-left: 0.5em;&quot;&gt;</span><span class="s">(</span><span class="lsi">#{</span><span class="t">count_message_inner_text</span><span class="t"></span><span class="lsi">}</span><span class="s">)</span><span class="s">&lt;/span&gt;</span><span class="s">)</span><span class="s"></span><span class="t"></span>
+<span id="line-343"></span><span class="t">      </span><span class="t">message_header_text</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Message </span><span class="lsi">#{</span><span class="t">styled_count_span</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-344"></span><span class="t"></span>
+<span id="line-345"></span><span class="t">      </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">NamedTuple</span><span class="t">(</span><span class="t">text</span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">hx_vals</span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">key_name</span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"></span>
+<span id="line-346"></span><span class="t"></span>
+<span id="line-347"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_timestamp</span><span class="t"></span>
+<span id="line-348"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="s">&quot;</span><span class="s">timestamp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Timestamp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
+<span id="line-349"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-350"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_hostname</span><span class="t"></span>
+<span id="line-351"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="s">&quot;</span><span class="s">hostname</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Hostname</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
+<span id="line-352"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-353"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_unit</span><span class="t"></span>
+<span id="line-354"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="s">&quot;</span><span class="s">unit</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Unit</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
+<span id="line-355"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-356"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_tag</span><span class="t"></span>
+<span id="line-357"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="s">&quot;</span><span class="s">tag</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Tags</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
+<span id="line-358"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-359"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_priority</span><span class="t"></span>
+<span id="line-360"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="s">&quot;</span><span class="s">priority</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Priority</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
+<span id="line-361"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-362"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">show_message</span><span class="t"></span>
+<span id="line-363"></span><span class="t">        </span><span class="t">headers_to_display</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">_generate_header_attributes</span><span class="t">(</span><span class="s">&quot;</span><span class="s">message</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">message_header_text</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_by</span><span class="t">,</span><span class="t"> </span><span class="t">current_sort_order</span><span class="t">)</span><span class="t"></span>
+<span id="line-364"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-365"></span><span class="t"></span>
+<span id="line-366"></span><span class="t">      </span><span class="t">table</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">striped</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-367"></span><span class="t">        </span><span class="t">thead</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-368"></span><span class="t">          </span><span class="t">tr</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-369"></span><span class="t">            </span><span class="t">headers_to_display</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">header</span><span class="o">|</span></code></pre></span>
     </div>
 </div>
 
@@ -973,19 +974,15 @@ fall back to the plain severity timeline otherwise.</p>
         <span class="anchor">
             <a href="#section-28" class="anchor">↦</a>
         </span>
-        <p>Include every .log-filter so column-visibility toggles and
-the hostname filter survive sort requests (a stale hardcoded
-whitelist used to blank the table here).</p>
+        <p>All remaining headers are sortable and will use this block</p>
 
     </div>
     <div class="code">
-        <span id="line-372"><pre class="b" ><code class="b"><span class="t">                </span><span class="s">&quot;</span><span class="s">hx-include</span><span class="s">&quot;</span><span class="s"></span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">.log-filter</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-373"></span><span class="t">                </span><span class="s">&quot;</span><span class="s">hx-target</span><span class="s">&quot;</span><span class="s"></span><span class="t">    </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">#</span><span class="s">results</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-374"></span><span class="t">                </span><span class="s">&quot;</span><span class="s">hx-indicator</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">#</span><span class="s">loading-spinner</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-375"></span><span class="t">              </span><span class="t">}</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-376"></span><span class="t">                </span><span class="t">html</span><span class="t"> </span><span class="t">header</span><span class="t">[</span><span class="ss">:text</span><span class="t">]</span><span class="t"></span>
-<span id="line-377"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
-<span id="line-378"></span><span class="t">            </span><span class="nk">end</span></code></pre></span>
+        <span id="line-371"><pre class="b" ><code class="b"><span class="t">              </span><span class="t">th</span><span class="t">(</span><span class="t">{</span><span class="t"></span>
+<span id="line-372"></span><span class="t">                </span><span class="s">&quot;</span><span class="s">style</span><span class="s">&quot;</span><span class="s"></span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">cursor: pointer; vertical-align: middle;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-373"></span><span class="t">                </span><span class="s">&quot;</span><span class="s">scope</span><span class="s">&quot;</span><span class="s"></span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">col</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-374"></span><span class="t">                </span><span class="s">&quot;</span><span class="s">hx-get</span><span class="s">&quot;</span><span class="s"></span><span class="t">  </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">build_url</span><span class="t">(</span><span class="s">&quot;</span><span class="s">logs</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-375"></span><span class="t">                </span><span class="s">&quot;</span><span class="s">hx-vals</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">header</span><span class="t">[</span><span class="ss">:hx_vals</span><span class="t">]</span><span class="t">,</span></code></pre></span>
     </div>
 </div>
 
@@ -994,43 +991,19 @@ whitelist used to blank the table here).</p>
         <span class="anchor">
             <a href="#section-29" class="anchor">↦</a>
         </span>
-        <p>The per-row hover actions render as an extra <td> with no
-matching header, which fails the td-has-header accessibility
-rule. Matches the dashboards' plain &quot;Actions&quot; header.</p>
+        <p>Include every .log-filter so column-visibility toggles and
+the hostname filter survive sort requests (a stale hardcoded
+whitelist used to blank the table here).</p>
 
     </div>
     <div class="code">
-        <span id="line-382"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">th</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-383"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Actions</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-384"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
-<span id="line-385"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
-<span id="line-386"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
-<span id="line-387"></span><span class="t">        </span><span class="t">tbody</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-388"></span><span class="t">          </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
-<span id="line-389"></span><span class="t">            </span><span class="t">tr</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-390"></span><span class="t">              </span><span class="t">td</span><span class="t">(</span><span class="t">colspan</span><span class="t">:</span><span class="t"> </span><span class="no">Math</span><span class="t">.</span><span class="t">max</span><span class="t">(</span><span class="m">1</span><span class="t">,</span><span class="t"> </span><span class="t">headers_to_display</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">1</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">text-align: center; padding: 1em;</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-391"></span><span class="t">                </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">No log entries found.</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-392"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
-<span id="line-393"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
-<span id="line-394"></span><span class="t">          </span><span class="nk">else</span><span class="t"></span>
-<span id="line-395"></span><span class="t">            </span><span class="t">logs</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t"></span>
-<span id="line-396"></span><span class="t">              </span><span class="t">html</span><span class="t"> </span><span class="t">log_row</span><span class="t">(</span><span class="t"></span>
-<span id="line-397"></span><span class="t">                </span><span class="t">entry</span><span class="t">,</span><span class="t"></span>
-<span id="line-398"></span><span class="t">                </span><span class="t">search_query</span><span class="t">,</span><span class="t"></span>
-<span id="line-399"></span><span class="t">                </span><span class="t">show_timestamp</span><span class="t">:</span><span class="t"> </span><span class="t">show_timestamp</span><span class="t">,</span><span class="t"></span>
-<span id="line-400"></span><span class="t">                </span><span class="t">show_hostname</span><span class="t">:</span><span class="t"> </span><span class="t">show_hostname</span><span class="t">,</span><span class="t"></span>
-<span id="line-401"></span><span class="t">                </span><span class="t">show_unit</span><span class="t">:</span><span class="t"> </span><span class="t">show_unit</span><span class="t">,</span><span class="t"></span>
-<span id="line-402"></span><span class="t">                </span><span class="t">show_tag</span><span class="t">:</span><span class="t"> </span><span class="t">show_tag</span><span class="t">,</span><span class="t"></span>
-<span id="line-403"></span><span class="t">                </span><span class="t">show_priority</span><span class="t">:</span><span class="t"> </span><span class="t">show_priority</span><span class="t">,</span><span class="t"></span>
-<span id="line-404"></span><span class="t">                </span><span class="t">show_message</span><span class="t">:</span><span class="t"> </span><span class="t">show_message</span><span class="t">,</span><span class="t"></span>
-<span id="line-405"></span><span class="t">                </span><span class="t">highlight_cursor</span><span class="t">:</span><span class="t"> </span><span class="t">highlight_cursor</span><span class="t">,</span><span class="t"></span>
-<span id="line-406"></span><span class="t">              </span><span class="t">)</span><span class="t"></span>
-<span id="line-407"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
-<span id="line-408"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
-<span id="line-409"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
-<span id="line-410"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-411"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-412"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-379"><pre class="b" ><code class="b"><span class="t">                </span><span class="s">&quot;</span><span class="s">hx-include</span><span class="s">&quot;</span><span class="s"></span><span class="t">   </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">.log-filter</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-380"></span><span class="t">                </span><span class="s">&quot;</span><span class="s">hx-target</span><span class="s">&quot;</span><span class="s"></span><span class="t">    </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">#</span><span class="s">results</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-381"></span><span class="t">                </span><span class="s">&quot;</span><span class="s">hx-indicator</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">#</span><span class="s">loading-spinner</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-382"></span><span class="t">              </span><span class="t">}</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-383"></span><span class="t">                </span><span class="t">html</span><span class="t"> </span><span class="t">header</span><span class="t">[</span><span class="ss">:text</span><span class="t">]</span><span class="t"></span>
+<span id="line-384"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-385"></span><span class="t">            </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -1038,6 +1011,51 @@ rule. Matches the dashboards' plain &quot;Actions&quot; header.</p>
     <div class="doc">
         <span class="anchor">
             <a href="#section-30" class="anchor">↦</a>
+        </span>
+        <p>The per-row hover actions render as an extra <td> with no
+matching header, which fails the td-has-header accessibility
+rule. Matches the dashboards' plain &quot;Actions&quot; header.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-389"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">th</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-390"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Actions</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-391"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-392"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-393"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-394"></span><span class="t">        </span><span class="t">tbody</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-395"></span><span class="t">          </span><span class="nk">if</span><span class="t"> </span><span class="t">logs</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-396"></span><span class="t">            </span><span class="t">tr</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-397"></span><span class="t">              </span><span class="t">td</span><span class="t">(</span><span class="t">colspan</span><span class="t">:</span><span class="t"> </span><span class="no">Math</span><span class="t">.</span><span class="t">max</span><span class="t">(</span><span class="m">1</span><span class="t">,</span><span class="t"> </span><span class="t">headers_to_display</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="m">1</span><span class="t">)</span><span class="t">.</span><span class="t">to_s</span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">text-align: center; padding: 1em;</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-398"></span><span class="t">                </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">No log entries found.</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-399"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-400"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-401"></span><span class="t">          </span><span class="nk">else</span><span class="t"></span>
+<span id="line-402"></span><span class="t">            </span><span class="t">logs</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">entry</span><span class="o">|</span><span class="t"></span>
+<span id="line-403"></span><span class="t">              </span><span class="t">html</span><span class="t"> </span><span class="t">log_row</span><span class="t">(</span><span class="t"></span>
+<span id="line-404"></span><span class="t">                </span><span class="t">entry</span><span class="t">,</span><span class="t"></span>
+<span id="line-405"></span><span class="t">                </span><span class="t">search_query</span><span class="t">,</span><span class="t"></span>
+<span id="line-406"></span><span class="t">                </span><span class="t">show_timestamp</span><span class="t">:</span><span class="t"> </span><span class="t">show_timestamp</span><span class="t">,</span><span class="t"></span>
+<span id="line-407"></span><span class="t">                </span><span class="t">show_hostname</span><span class="t">:</span><span class="t"> </span><span class="t">show_hostname</span><span class="t">,</span><span class="t"></span>
+<span id="line-408"></span><span class="t">                </span><span class="t">show_unit</span><span class="t">:</span><span class="t"> </span><span class="t">show_unit</span><span class="t">,</span><span class="t"></span>
+<span id="line-409"></span><span class="t">                </span><span class="t">show_tag</span><span class="t">:</span><span class="t"> </span><span class="t">show_tag</span><span class="t">,</span><span class="t"></span>
+<span id="line-410"></span><span class="t">                </span><span class="t">show_priority</span><span class="t">:</span><span class="t"> </span><span class="t">show_priority</span><span class="t">,</span><span class="t"></span>
+<span id="line-411"></span><span class="t">                </span><span class="t">show_message</span><span class="t">:</span><span class="t"> </span><span class="t">show_message</span><span class="t">,</span><span class="t"></span>
+<span id="line-412"></span><span class="t">                </span><span class="t">highlight_cursor</span><span class="t">:</span><span class="t"> </span><span class="t">highlight_cursor</span><span class="t">,</span><span class="t"></span>
+<span id="line-413"></span><span class="t">              </span><span class="t">)</span><span class="t"></span>
+<span id="line-414"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-415"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-416"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-417"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-418"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-419"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-31" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-31" class="anchor">↦</a>
         </span>
         <p>Renders one log entry as a table row (including hover action
 buttons). Shared by html_log_output and the SSE live tail.
@@ -1047,50 +1065,24 @@ ameba:disable Metrics/CyclomaticComplexity</p>
 
     </div>
     <div class="code">
-        <span id="line-419"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">log_row</span><span class="t">(</span><span class="t"></span>
-<span id="line-420"></span><span class="t">    </span><span class="t">entry</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Journalctl</span><span class="no">::</span><span class="no">LogEntry</span><span class="t">,</span><span class="t"></span>
-<span id="line-421"></span><span class="t">    </span><span class="t">search_query</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t">,</span><span class="t"></span>
-<span id="line-422"></span><span class="t">    </span><span class="t">show_timestamp</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
-<span id="line-423"></span><span class="t">    </span><span class="t">show_hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
-<span id="line-424"></span><span class="t">    </span><span class="t">show_unit</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
-<span id="line-425"></span><span class="t">    </span><span class="t">show_tag</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
-<span id="line-426"></span><span class="t">    </span><span class="t">show_priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
-<span id="line-427"></span><span class="t">    </span><span class="t">show_message</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
-<span id="line-428"></span><span class="t">    </span><span class="t">highlight_cursor</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"></span>
-<span id="line-429"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
-<span id="line-430"></span><span class="t">    </span><span class="t">row_classes</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">log-row-hover-actions</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">priority-</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">priority</span><span class="t">.</span><span class="t">to_i</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"></span>
-<span id="line-431"></span><span class="t">    </span><span class="t">entry_cursor</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">data</span><span class="t">[</span><span class="s">&quot;</span><span class="s">__CURSOR</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
-<span id="line-432"></span><span class="t">    </span><span class="t">is_target</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">!</span><span class="t">highlight_cursor</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="t">highlight_cursor</span><span class="t"></span>
-<span id="line-433"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">is_target</span><span class="t"></span>
-<span id="line-434"></span><span class="t">      </span><span class="t">row_classes</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">highlighted-row</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-435"></span><span class="t">      </span><span class="t">row_classes</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">context-target</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-436"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
-    </div>
-</div>
-
-<div id="section-31" class="grid">
-    <div class="doc">
-        <span class="anchor">
-            <a href="#section-31" class="anchor">↦</a>
-        </span>
-        <p>The cursor rides on the row so a plain click can open the
-detail tab in the sidebar.</p>
-
-    </div>
-    <div class="code">
-        <span id="line-439"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">row_attributes</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">class</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">row_classes</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">}</span><span class="t"></span>
-<span id="line-440"></span><span class="t">    </span><span class="t">row_attributes</span><span class="t">[</span><span class="s">&quot;</span><span class="s">data-cursor</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"></span>
-<span id="line-441"></span><span class="t">    </span><span class="t">row_attributes</span><span class="t">[</span><span class="s">&quot;</span><span class="s">data-epoch</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">timestamp</span><span class="t">.</span><span class="t">to_unix</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
-<span id="line-442"></span><span class="t">    </span><span class="no">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-443"></span><span class="t">      </span><span class="t">tr</span><span class="t">(</span><span class="t">row_attributes</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-444"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">show_timestamp</span><span class="t"></span>
-<span id="line-445"></span><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log-timestamp-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">white-space: nowrap; min-width: 14ch;</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-446"></span><span class="t">            </span><span class="nk">if</span><span class="t"> </span><span class="t">is_target</span><span class="t"></span>
-<span id="line-447"></span><span class="t">              </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">context-target-badge</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-448"></span><span class="t">                </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">this entry</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-449"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
-<span id="line-450"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-451"></span><span class="t">            </span><span class="nk">end</span></code></pre></span>
+        <span id="line-426"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">log_row</span><span class="t">(</span><span class="t"></span>
+<span id="line-427"></span><span class="t">    </span><span class="t">entry</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Journalctl</span><span class="no">::</span><span class="no">LogEntry</span><span class="t">,</span><span class="t"></span>
+<span id="line-428"></span><span class="t">    </span><span class="t">search_query</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t">,</span><span class="t"></span>
+<span id="line-429"></span><span class="t">    </span><span class="t">show_timestamp</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
+<span id="line-430"></span><span class="t">    </span><span class="t">show_hostname</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
+<span id="line-431"></span><span class="t">    </span><span class="t">show_unit</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
+<span id="line-432"></span><span class="t">    </span><span class="t">show_tag</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
+<span id="line-433"></span><span class="t">    </span><span class="t">show_priority</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
+<span id="line-434"></span><span class="t">    </span><span class="t">show_message</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t">,</span><span class="t"></span>
+<span id="line-435"></span><span class="t">    </span><span class="t">highlight_cursor</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t">,</span><span class="t"></span>
+<span id="line-436"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-437"></span><span class="t">    </span><span class="t">row_classes</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">log-row-hover-actions</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">priority-</span><span class="lsi">#{</span><span class="t">entry</span><span class="t">.</span><span class="t">priority</span><span class="t">.</span><span class="t">to_i</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"></span>
+<span id="line-438"></span><span class="t">    </span><span class="t">entry_cursor</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">data</span><span class="t">[</span><span class="s">&quot;</span><span class="s">__CURSOR</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-439"></span><span class="t">    </span><span class="t">is_target</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">!</span><span class="t">highlight_cursor</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="t">highlight_cursor</span><span class="t"></span>
+<span id="line-440"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">is_target</span><span class="t"></span>
+<span id="line-441"></span><span class="t">      </span><span class="t">row_classes</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">highlighted-row</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-442"></span><span class="t">      </span><span class="t">row_classes</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">context-target</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-443"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -1099,15 +1091,24 @@ detail tab in the sidebar.</p>
         <span class="anchor">
             <a href="#section-32" class="anchor">↦</a>
         </span>
-        <p>Using timezone-aware timestamp format: MM-DD HH:MM:SS</p>
+        <p>The cursor rides on the row so a plain click can open the
+detail tab in the sidebar.</p>
 
     </div>
     <div class="code">
-        <span id="line-453"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">text</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_timestamp_with_timezone</span><span class="t">(</span><span class="s">&quot;</span><span class="s">%m-%d %H:%M:%S</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
-<span id="line-454"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
-<span id="line-455"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
-<span id="line-456"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">show_hostname</span><span class="t"></span>
-<span id="line-457"></span><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log-hostname-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span></code></pre></span>
+        <span id="line-446"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">row_attributes</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">{</span><span class="s">&quot;</span><span class="s">class</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">row_classes</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">}</span><span class="t"></span>
+<span id="line-447"></span><span class="t">    </span><span class="t">row_attributes</span><span class="t">[</span><span class="s">&quot;</span><span class="s">data-cursor</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"></span>
+<span id="line-448"></span><span class="t">    </span><span class="t">row_attributes</span><span class="t">[</span><span class="s">&quot;</span><span class="s">data-epoch</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">timestamp</span><span class="t">.</span><span class="t">to_unix</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-449"></span><span class="t">    </span><span class="no">HTML</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-450"></span><span class="t">      </span><span class="t">tr</span><span class="t">(</span><span class="t">row_attributes</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-451"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">show_timestamp</span><span class="t"></span>
+<span id="line-452"></span><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log-timestamp-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">white-space: nowrap; min-width: 14ch;</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-453"></span><span class="t">            </span><span class="nk">if</span><span class="t"> </span><span class="t">is_target</span><span class="t"></span>
+<span id="line-454"></span><span class="t">              </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">context-target-badge</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-455"></span><span class="t">                </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s">this entry</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-456"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-457"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-458"></span><span class="t">            </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -1116,19 +1117,15 @@ detail tab in the sidebar.</p>
         <span class="anchor">
             <a href="#section-33" class="anchor">↦</a>
         </span>
-        <p>Make the hostname clickable to set the filter</p>
+        <p>Using timezone-aware timestamp format: MM-DD HH:MM:SS</p>
 
     </div>
     <div class="code">
-        <span id="line-459"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">display_hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">hostname</span><span class="t">)</span><span class="t"></span>
-<span id="line-460"></span><span class="t">            </span><span class="t">js_arg_hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">hostname</span><span class="t">.</span><span class="t">to_json</span><span class="t"> </span><span class="c"># Ensures proper JS string escaping</span><span class="t"></span>
-<span id="line-461"></span><span class="t">            </span><span class="t">a</span><span class="t">(</span><span class="t">href</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">#</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">return setHostnameFilterAndTrigger(</span><span class="lsi">#{</span><span class="t">js_arg_hostname</span><span class="t"></span><span class="lsi">}</span><span class="s">);</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-462"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="t">display_hostname</span><span class="t"></span>
-<span id="line-463"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
-<span id="line-464"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
-<span id="line-465"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
-<span id="line-466"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">show_unit</span><span class="t"></span>
-<span id="line-467"></span><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log-unit-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span></code></pre></span>
+        <span id="line-460"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">text</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_timestamp_with_timezone</span><span class="t">(</span><span class="s">&quot;</span><span class="s">%m-%d %H:%M:%S</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-461"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-462"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-463"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">show_hostname</span><span class="t"></span>
+<span id="line-464"></span><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log-hostname-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span></code></pre></span>
     </div>
 </div>
 
@@ -1137,11 +1134,19 @@ detail tab in the sidebar.</p>
         <span class="anchor">
             <a href="#section-34" class="anchor">↦</a>
         </span>
-        <p>Make the unit name clickable to set the filter</p>
+        <p>Make the hostname clickable to set the filter</p>
 
     </div>
     <div class="code">
-        <span id="line-469"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">display_unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t">)</span></code></pre></span>
+        <span id="line-466"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">display_hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">hostname</span><span class="t">)</span><span class="t"></span>
+<span id="line-467"></span><span class="t">            </span><span class="t">js_arg_hostname</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">hostname</span><span class="t">.</span><span class="t">to_json</span><span class="t"> </span><span class="c"># Ensures proper JS string escaping</span><span class="t"></span>
+<span id="line-468"></span><span class="t">            </span><span class="t">a</span><span class="t">(</span><span class="t">href</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">#</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">return setHostnameFilterAndTrigger(</span><span class="lsi">#{</span><span class="t">js_arg_hostname</span><span class="t"></span><span class="lsi">}</span><span class="s">);</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-469"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="t">display_hostname</span><span class="t"></span>
+<span id="line-470"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-471"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-472"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-473"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">show_unit</span><span class="t"></span>
+<span id="line-474"></span><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log-unit-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span></code></pre></span>
     </div>
 </div>
 
@@ -1150,18 +1155,11 @@ detail tab in the sidebar.</p>
         <span class="anchor">
             <a href="#section-35" class="anchor">↦</a>
         </span>
-        <p>JSON.generate creates a valid JavaScript string literal, e.g., &quot;&quot;my-unit&quot;&quot;</p>
+        <p>Make the unit name clickable to set the filter</p>
 
     </div>
     <div class="code">
-        <span id="line-471"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">js_arg_unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
-<span id="line-472"></span><span class="t">            </span><span class="t">a</span><span class="t">(</span><span class="t">href</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">#</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">return setUnitFilterAndTrigger(</span><span class="lsi">#{</span><span class="t">js_arg_unit_name</span><span class="t"></span><span class="lsi">}</span><span class="s">);</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-473"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="t">display_unit_name</span><span class="t"></span>
-<span id="line-474"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
-<span id="line-475"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
-<span id="line-476"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
-<span id="line-477"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">show_tag</span><span class="t"></span>
-<span id="line-478"></span><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log-tag-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span></code></pre></span>
+        <span id="line-476"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">display_unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
@@ -1170,42 +1168,18 @@ detail tab in the sidebar.</p>
         <span class="anchor">
             <a href="#section-36" class="anchor">↦</a>
         </span>
-        <p>Make the tag clickable to set the filter, like the
-unit and hostname cells.</p>
+        <p>JSON.generate creates a valid JavaScript string literal, e.g., &quot;&quot;my-unit&quot;&quot;</p>
 
     </div>
     <div class="code">
-        <span id="line-481"><pre class="b" ><code class="b"><span class="t">            </span><span class="nk">if</span><span class="t"> </span><span class="o">!</span><span class="t">entry</span><span class="t">.</span><span class="t">tag</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
-<span id="line-482"></span><span class="t">              </span><span class="t">display_tag</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">tag</span><span class="t">)</span><span class="t"></span>
-<span id="line-483"></span><span class="t">              </span><span class="t">js_arg_tag</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">tag</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
-<span id="line-484"></span><span class="t">              </span><span class="t">a</span><span class="t">(</span><span class="t">href</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">#</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">return setTagFilterAndTrigger(</span><span class="lsi">#{</span><span class="t">js_arg_tag</span><span class="t"></span><span class="lsi">}</span><span class="s">);</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-485"></span><span class="t">                </span><span class="t">text</span><span class="t"> </span><span class="t">display_tag</span><span class="t"></span>
-<span id="line-486"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
-<span id="line-487"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
-<span id="line-488"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
-<span id="line-489"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
-<span id="line-490"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">show_priority</span><span class="t"></span>
-<span id="line-491"></span><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log-priority-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-492"></span><span class="t">            </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">tag</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-493"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="no">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_priority</span><span class="t">)</span><span class="t"></span>
-<span id="line-494"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
-<span id="line-495"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
-<span id="line-496"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
-<span id="line-497"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">show_message</span><span class="t"></span>
-<span id="line-498"></span><span class="t">          </span><span class="t">escaped_message</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">message</span><span class="t">)</span><span class="t"></span>
-<span id="line-499"></span><span class="t">          </span><span class="t">highlighted_message</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">search_query</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">search_query</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
-<span id="line-500"></span><span class="t">                                  </span><span class="t">pattern</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Regex</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">search_query</span><span class="t">)</span><span class="t"></span>
-<span id="line-501"></span><span class="t">                                  </span><span class="t">escaped_message</span><span class="t">.</span><span class="t">gsub</span><span class="t">(</span><span class="s">/</span><span class="lsi">#{</span><span class="t">pattern</span><span class="t"></span><span class="lsi">}</span><span class="s">/</span><span class="s"></span><span class="t">i</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&lt;mark&gt;</span><span class="s">\\</span><span class="s">0&lt;/mark&gt;</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
-<span id="line-502"></span><span class="t">                                </span><span class="nk">else</span><span class="t"></span>
-<span id="line-503"></span><span class="t">                                  </span><span class="t">escaped_message</span><span class="t"></span>
-<span id="line-504"></span><span class="t">                                </span><span class="nk">end</span><span class="t"></span>
-<span id="line-505"></span><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log-message-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-506"></span><span class="t">            </span><span class="t">html</span><span class="t"> </span><span class="t">highlighted_message</span><span class="t"></span>
-<span id="line-507"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
-<span id="line-508"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
-<span id="line-509"></span><span class="t"></span>
-<span id="line-510"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"></span>
-<span id="line-511"></span><span class="t">          </span><span class="t">cursor_param</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">URI</span><span class="no">::</span><span class="no">Params</span><span class="t">.</span><span class="t">encode</span><span class="t">(</span><span class="t">{</span><span class="s">&quot;</span><span class="s">cursor</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t">}</span><span class="t">)</span></code></pre></span>
+        <span id="line-478"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">js_arg_unit_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-479"></span><span class="t">            </span><span class="t">a</span><span class="t">(</span><span class="t">href</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">#</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">return setUnitFilterAndTrigger(</span><span class="lsi">#{</span><span class="t">js_arg_unit_name</span><span class="t"></span><span class="lsi">}</span><span class="s">);</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-480"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="t">display_unit_name</span><span class="t"></span>
+<span id="line-481"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-482"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-483"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-484"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">show_tag</span><span class="t"></span>
+<span id="line-485"></span><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log-tag-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span></code></pre></span>
     </div>
 </div>
 
@@ -1214,12 +1188,42 @@ unit and hostname cells.</p>
         <span class="anchor">
             <a href="#section-37" class="anchor">↦</a>
         </span>
-        <p>All row actions share ONE cell so the table has exactly one
-header column per data column (accessibility: td-has-header).</p>
+        <p>Make the tag clickable to set the filter, like the
+unit and hostname cells.</p>
 
     </div>
     <div class="code">
-        <span id="line-514"><pre class="b" ><code class="b"><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">hover-action-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span></code></pre></span>
+        <span id="line-488"><pre class="b" ><code class="b"><span class="t">            </span><span class="nk">if</span><span class="t"> </span><span class="o">!</span><span class="t">entry</span><span class="t">.</span><span class="t">tag</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-489"></span><span class="t">              </span><span class="t">display_tag</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">tag</span><span class="t">)</span><span class="t"></span>
+<span id="line-490"></span><span class="t">              </span><span class="t">js_arg_tag</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">tag</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-491"></span><span class="t">              </span><span class="t">a</span><span class="t">(</span><span class="t">href</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">#</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">return setTagFilterAndTrigger(</span><span class="lsi">#{</span><span class="t">js_arg_tag</span><span class="t"></span><span class="lsi">}</span><span class="s">);</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-492"></span><span class="t">                </span><span class="t">text</span><span class="t"> </span><span class="t">display_tag</span><span class="t"></span>
+<span id="line-493"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-494"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-495"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-496"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-497"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">show_priority</span><span class="t"></span>
+<span id="line-498"></span><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log-priority-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-499"></span><span class="t">            </span><span class="t">span</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">tag</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-500"></span><span class="t">              </span><span class="t">text</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_priority</span><span class="t"></span>
+<span id="line-501"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-502"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-503"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-504"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">show_message</span><span class="t"></span>
+<span id="line-505"></span><span class="t">          </span><span class="t">escaped_message</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">entry</span><span class="t">.</span><span class="t">message</span><span class="t">)</span><span class="t"></span>
+<span id="line-506"></span><span class="t">          </span><span class="t">highlighted_message</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">search_query</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">search_query</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-507"></span><span class="t">                                  </span><span class="t">pattern</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Regex</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">search_query</span><span class="t">)</span><span class="t"></span>
+<span id="line-508"></span><span class="t">                                  </span><span class="t">escaped_message</span><span class="t">.</span><span class="t">gsub</span><span class="t">(</span><span class="s">/</span><span class="lsi">#{</span><span class="t">pattern</span><span class="t"></span><span class="lsi">}</span><span class="s">/</span><span class="s"></span><span class="t">i</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&lt;mark&gt;</span><span class="s">\\</span><span class="s">0&lt;/mark&gt;</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-509"></span><span class="t">                                </span><span class="nk">else</span><span class="t"></span>
+<span id="line-510"></span><span class="t">                                  </span><span class="t">escaped_message</span><span class="t"></span>
+<span id="line-511"></span><span class="t">                                </span><span class="nk">end</span><span class="t"></span>
+<span id="line-512"></span><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log-message-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-513"></span><span class="t">            </span><span class="t">html</span><span class="t"> </span><span class="t">highlighted_message</span><span class="t"></span>
+<span id="line-514"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-515"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-516"></span><span class="t"></span>
+<span id="line-517"></span><span class="t">        </span><span class="nk">if</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t"></span>
+<span id="line-518"></span><span class="t">          </span><span class="t">cursor_param</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">URI</span><span class="no">::</span><span class="no">Params</span><span class="t">.</span><span class="t">encode</span><span class="t">(</span><span class="t">{</span><span class="s">&quot;</span><span class="s">cursor</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="t">entry_cursor</span><span class="t">}</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
@@ -1228,16 +1232,12 @@ header column per data column (accessibility: td-has-header).</p>
         <span class="anchor">
             <a href="#section-38" class="anchor">↦</a>
         </span>
-        <p>Details button</p>
+        <p>All row actions share ONE cell so the table has exactly one
+header column per data column (accessibility: td-has-header).</p>
 
     </div>
     <div class="code">
-        <span id="line-516"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">html</span><span class="t"> </span><span class="t">_hover_action_button</span><span class="t">(</span><span class="t"></span>
-<span id="line-517"></span><span class="t">              </span><span class="t">title</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">View full details for this log entry</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-518"></span><span class="t">              </span><span class="t">icon</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">search</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-519"></span><span class="t">              </span><span class="t">tab</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">detail</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-520"></span><span class="t">              </span><span class="t">url</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">build_url</span><span class="t">(</span><span class="s">&quot;</span><span class="s">details</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">?</span><span class="lsi">#{</span><span class="t">cursor_param</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-521"></span><span class="t">            </span><span class="t">)</span></code></pre></span>
+        <span id="line-521"><pre class="b" ><code class="b"><span class="t">          </span><span class="t">td</span><span class="t">(</span><span class="nk">class</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">hover-action-cell</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">style</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">width: 1%; white-space: nowrap; text-align: center; padding: 0.1em;</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"> </span><span class="nk">do</span></code></pre></span>
     </div>
 </div>
 
@@ -1246,15 +1246,15 @@ header column per data column (accessibility: td-has-header).</p>
         <span class="anchor">
             <a href="#section-39" class="anchor">↦</a>
         </span>
-        <p>Context button</p>
+        <p>Details button</p>
 
     </div>
     <div class="code">
         <span id="line-523"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">html</span><span class="t"> </span><span class="t">_hover_action_button</span><span class="t">(</span><span class="t"></span>
-<span id="line-524"></span><span class="t">              </span><span class="t">title</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">View context for this log entry (e.g., 5 before &amp; 5 after)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-525"></span><span class="t">              </span><span class="t">icon</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">history</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-526"></span><span class="t">              </span><span class="t">tab</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">context</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-527"></span><span class="t">              </span><span class="t">url</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">build_url</span><span class="t">(</span><span class="s">&quot;</span><span class="s">context</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">?</span><span class="lsi">#{</span><span class="t">cursor_param</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-524"></span><span class="t">              </span><span class="t">title</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">View full details for this log entry</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-525"></span><span class="t">              </span><span class="t">icon</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">search</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-526"></span><span class="t">              </span><span class="t">tab</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">detail</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-527"></span><span class="t">              </span><span class="t">url</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">build_url</span><span class="t">(</span><span class="s">&quot;</span><span class="s">details</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">?</span><span class="lsi">#{</span><span class="t">cursor_param</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
 <span id="line-528"></span><span class="t">            </span><span class="t">)</span></code></pre></span>
     </div>
 </div>
@@ -1264,26 +1264,16 @@ header column per data column (accessibility: td-has-header).</p>
         <span class="anchor">
             <a href="#section-40" class="anchor">↦</a>
         </span>
-        <p>Copy-entry button: copies the entry as a journalctl-style
-line (timestamp hostname unit[pid]: message).</p>
+        <p>Context button</p>
 
     </div>
     <div class="code">
-        <span id="line-531"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">copied_entry_text</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">String</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">str</span><span class="o">|</span><span class="t"></span>
-<span id="line-532"></span><span class="t">              </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_timestamp_with_timezone</span><span class="t">(</span><span class="s">&quot;</span><span class="s">%Y-%m-%d %H:%M:%S</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
-<span id="line-533"></span><span class="t">              </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">hostname</span><span class="t"></span>
-<span id="line-534"></span><span class="t">              </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t"></span>
-<span id="line-535"></span><span class="t">              </span><span class="nk">if</span><span class="t"> </span><span class="t">pid</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">data</span><span class="t">[</span><span class="s">&quot;</span><span class="s">_PID</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
-<span id="line-536"></span><span class="t">                </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">[</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">pid</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">]</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-537"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
-<span id="line-538"></span><span class="t">              </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">: </span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">message</span><span class="t"></span>
-<span id="line-539"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
-<span id="line-540"></span><span class="t">            </span><span class="t">html</span><span class="t"> </span><span class="t">_hover_action_button</span><span class="t">(</span><span class="t"></span>
-<span id="line-541"></span><span class="t">              </span><span class="t">title</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Copy this log entry to the clipboard</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-542"></span><span class="t">              </span><span class="t">icon</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">content_copy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-543"></span><span class="t">              </span><span class="t">tab</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">copy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-544"></span><span class="t">              </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">copyLogEntry(</span><span class="lsi">#{</span><span class="t">copied_entry_text</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span><span class="lsi">}</span><span class="s">, this)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-545"></span><span class="t">            </span><span class="t">)</span></code></pre></span>
+        <span id="line-530"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">html</span><span class="t"> </span><span class="t">_hover_action_button</span><span class="t">(</span><span class="t"></span>
+<span id="line-531"></span><span class="t">              </span><span class="t">title</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">View context for this log entry (e.g., 5 before &amp; 5 after)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-532"></span><span class="t">              </span><span class="t">icon</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">history</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-533"></span><span class="t">              </span><span class="t">tab</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">context</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-534"></span><span class="t">              </span><span class="t">url</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">build_url</span><span class="t">(</span><span class="s">&quot;</span><span class="s">context</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">?</span><span class="lsi">#{</span><span class="t">cursor_param</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-535"></span><span class="t">            </span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
@@ -1292,24 +1282,52 @@ line (timestamp hostname unit[pid]: message).</p>
         <span class="anchor">
             <a href="#section-41" class="anchor">↦</a>
         </span>
+        <p>Copy-entry button: copies the entry as a journalctl-style
+line (timestamp hostname unit[pid]: message).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-538"><pre class="b" ><code class="b"><span class="t">            </span><span class="t">copied_entry_text</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">String</span><span class="t">.</span><span class="t">build</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">str</span><span class="o">|</span><span class="t"></span>
+<span id="line-539"></span><span class="t">              </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">formatted_timestamp_with_timezone</span><span class="t">(</span><span class="s">&quot;</span><span class="s">%Y-%m-%d %H:%M:%S</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-540"></span><span class="t">              </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">hostname</span><span class="t"></span>
+<span id="line-541"></span><span class="t">              </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">unit</span><span class="t"></span>
+<span id="line-542"></span><span class="t">              </span><span class="nk">if</span><span class="t"> </span><span class="t">pid</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">data</span><span class="t">[</span><span class="s">&quot;</span><span class="s">_PID</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-543"></span><span class="t">                </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">[</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">pid</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">]</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-544"></span><span class="t">              </span><span class="nk">end</span><span class="t"></span>
+<span id="line-545"></span><span class="t">              </span><span class="t">str</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="s">&quot;</span><span class="s">: </span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">entry</span><span class="t">.</span><span class="t">message</span><span class="t"></span>
+<span id="line-546"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-547"></span><span class="t">            </span><span class="t">html</span><span class="t"> </span><span class="t">_hover_action_button</span><span class="t">(</span><span class="t"></span>
+<span id="line-548"></span><span class="t">              </span><span class="t">title</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Copy this log entry to the clipboard</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-549"></span><span class="t">              </span><span class="t">icon</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">content_copy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-550"></span><span class="t">              </span><span class="t">tab</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">copy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-551"></span><span class="t">              </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">copyLogEntry(</span><span class="lsi">#{</span><span class="t">copied_entry_text</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span><span class="lsi">}</span><span class="s">, this)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-552"></span><span class="t">            </span><span class="t">)</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-42" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-42" class="anchor">↦</a>
+        </span>
         <p>AI Explanation button (only shown if AI is enabled)</p>
 
     </div>
     <div class="code">
-        <span id="line-547"><pre class="b" ><code class="b"><span class="t">            </span><span class="nk">if</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">ai_enabled?</span><span class="t"></span>
-<span id="line-548"></span><span class="t">              </span><span class="t">html</span><span class="t"> </span><span class="t">_hover_action_button</span><span class="t">(</span><span class="t"></span>
-<span id="line-549"></span><span class="t">                </span><span class="t">title</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Ask AI to explain this log entry</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-550"></span><span class="t">                </span><span class="t">icon</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">psychology</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-551"></span><span class="t">                </span><span class="t">tab</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">ai</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-552"></span><span class="t">                </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">askAIExplanation(</span><span class="lsi">#{</span><span class="t">entry_cursor</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span><span class="lsi">}</span><span class="s">)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-553"></span><span class="t">              </span><span class="t">)</span><span class="t"></span>
-<span id="line-554"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
-<span id="line-555"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
-<span id="line-556"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
-<span id="line-557"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-558"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-559"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-560"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-554"><pre class="b" ><code class="b"><span class="t">            </span><span class="nk">if</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">ai_enabled?</span><span class="t"></span>
+<span id="line-555"></span><span class="t">              </span><span class="t">html</span><span class="t"> </span><span class="t">_hover_action_button</span><span class="t">(</span><span class="t"></span>
+<span id="line-556"></span><span class="t">                </span><span class="t">title</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Ask AI to explain this log entry</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-557"></span><span class="t">                </span><span class="t">icon</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">psychology</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-558"></span><span class="t">                </span><span class="t">tab</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">ai</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-559"></span><span class="t">                </span><span class="t">onclick</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">askAIExplanation(</span><span class="lsi">#{</span><span class="t">entry_cursor</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span><span class="lsi">}</span><span class="s">)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-560"></span><span class="t">              </span><span class="t">)</span><span class="t"></span>
+<span id="line-561"></span><span class="t">            </span><span class="nk">end</span><span class="t"></span>
+<span id="line-562"></span><span class="t">          </span><span class="nk">end</span><span class="t"></span>
+<span id="line-563"></span><span class="t">        </span><span class="nk">end</span><span class="t"></span>
+<span id="line-564"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-565"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-566"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-567"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
