@@ -483,6 +483,32 @@ replayed like every other demo job. Mirrors the role of
         <span class="anchor">
             <a href="#section-3" class="anchor">↦</a>
         </span>
+        <p>A generated stand-in logo for a fixture app: a rounded square in a
+color derived from the app id, with the app's initial. Demo cards
+go through the same <img> path as real store logos, so they look
+right without any fetched store assets.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-145"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">logo_svg</span><span class="t">(</span><span class="t">app_id</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-146"></span><span class="t">    </span><span class="t">name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">find_app</span><span class="t">(</span><span class="t">app_id</span><span class="t">)</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">name</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">app_id</span><span class="t"></span>
+<span id="line-147"></span><span class="t">    </span><span class="t">letter</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">name</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">?</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">name</span><span class="t">[</span><span class="m">0</span><span class="t">,</span><span class="t"> </span><span class="m">1</span><span class="t">]</span><span class="t">.</span><span class="t">upcase</span><span class="t"></span>
+<span id="line-148"></span><span class="t">    </span><span class="t">hue</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">app_id</span><span class="t">.</span><span class="t">bytes</span><span class="t">.</span><span class="t">sum</span><span class="t">(</span><span class="m">0</span><span class="t">)</span><span class="t"> </span><span class="o">%</span><span class="t"> </span><span class="m">360</span><span class="t"></span>
+<span id="line-149"></span><span class="t">    </span><span class="s">&lt;&lt;-SVG</span><span class="t"></span>
+<span id="line-150"></span><span class="s">      &lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;64&quot; height=&quot;64&quot; viewBox=&quot;0 0 64 64&quot;&gt;</span><span class="s"></span>
+<span id="line-151">        &lt;rect width=&quot;64&quot; height=&quot;64&quot; rx=&quot;14&quot; fill=&quot;hsl(</span><span class="lsi">#{</span><span class="t">hue</span><span class="t"></span><span class="lsi">}</span><span class="s">, 60%, 42%)&quot;/&gt;</span><span class="s"></span>
+<span id="line-152">        &lt;text x=&quot;32&quot; y=&quot;43&quot; font-family=&quot;sans-serif&quot; font-size=&quot;30&quot; font-weight=&quot;bold&quot; fill=&quot;</span><span class="s">#</span><span class="s">ffffff&quot; text-anchor=&quot;middle&quot;&gt;</span><span class="lsi">#{</span><span class="no">HTML</span><span class="t">.</span><span class="t">escape</span><span class="t">(</span><span class="t">letter</span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">&lt;/text&gt;</span><span class="s"></span>
+<span id="line-153">      &lt;/svg&gt;</span><span class="s"></span>
+<span id="line-154">      SVG</span><span class="s"></span><span class="t"></span>
+<span id="line-155"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
         <h2>Mutable demo state</h2>
 <p>The installed-apps list is mutable so simulated installs, updates
 and uninstalls have visible effects. Seeded with one fixture
@@ -492,40 +518,22 @@ Guarded: view polls and action endpoints run in fibers.</p>
 
     </div>
     <div class="code">
-        <span id="line-149"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">@@installed_mutex</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Mutex</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">protection</span><span class="t">:</span><span class="t"> </span><span class="ss">:checked</span><span class="t">)</span><span class="t"></span>
-<span id="line-150"></span><span class="t">  </span><span class="t">@@installed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">)</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
-<span id="line-151"></span><span class="t"></span>
-<span id="line-152"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">installed_seed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">)</span><span class="t"></span>
-<span id="line-153"></span><span class="t">    </span><span class="t">[</span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-154"></span><span class="t">      </span><span class="t">store</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">demo</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-155"></span><span class="t">      </span><span class="t">store_url</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">https://demo.invalid/demo-appstore.tar.gz</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-156"></span><span class="t">      </span><span class="t">id</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">whoami</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-157"></span><span class="t">      </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Whoami</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-158"></span><span class="t">      </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">1.10.1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-159"></span><span class="t">      </span><span class="t">tipi_version</span><span class="t">:</span><span class="t"> </span><span class="m">3</span><span class="t">,</span><span class="t"></span>
-<span id="line-160"></span><span class="t">      </span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="m">8380</span><span class="t">,</span><span class="t"></span>
-<span id="line-161"></span><span class="t">      </span><span class="t">project_name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-162"></span><span class="t">      </span><span class="t">installed_at</span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t">.</span><span class="t">to_rfc3339</span><span class="t">,</span><span class="t"></span>
-<span id="line-163"></span><span class="t">    </span><span class="t">)</span><span class="t">]</span><span class="t"></span>
-<span id="line-164"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
-    </div>
-</div>
-
-<div id="section-4" class="grid">
-    <div class="doc">
-        <span class="anchor">
-            <a href="#section-4" class="anchor">↦</a>
-        </span>
-        <p>Every known install. Demo builds carry the fixture install so the
-badge and its buttons are visible without docker.</p>
-
-    </div>
-    <div class="code">
-        <span id="line-168"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">installed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">)</span><span class="t"></span>
-<span id="line-169"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-170"></span><span class="t">      </span><span class="t">(</span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t">)</span><span class="t">.</span><span class="t">dup</span><span class="t"></span>
-<span id="line-171"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-172"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-165"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">@@installed_mutex</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Mutex</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">protection</span><span class="t">:</span><span class="t"> </span><span class="ss">:checked</span><span class="t">)</span><span class="t"></span>
+<span id="line-166"></span><span class="t">  </span><span class="t">@@installed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">)</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-167"></span><span class="t"></span>
+<span id="line-168"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">installed_seed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">)</span><span class="t"></span>
+<span id="line-169"></span><span class="t">    </span><span class="t">[</span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-170"></span><span class="t">      </span><span class="t">store</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">demo</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-171"></span><span class="t">      </span><span class="t">store_url</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">https://demo.invalid/demo-appstore.tar.gz</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-172"></span><span class="t">      </span><span class="t">id</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">whoami</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-173"></span><span class="t">      </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Whoami</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-174"></span><span class="t">      </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">1.10.1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-175"></span><span class="t">      </span><span class="t">tipi_version</span><span class="t">:</span><span class="t"> </span><span class="m">3</span><span class="t">,</span><span class="t"></span>
+<span id="line-176"></span><span class="t">      </span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="m">8380</span><span class="t">,</span><span class="t"></span>
+<span id="line-177"></span><span class="t">      </span><span class="t">project_name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-178"></span><span class="t">      </span><span class="t">installed_at</span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t">.</span><span class="t">to_rfc3339</span><span class="t">,</span><span class="t"></span>
+<span id="line-179"></span><span class="t">    </span><span class="t">)</span><span class="t">]</span><span class="t"></span>
+<span id="line-180"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -534,15 +542,16 @@ badge and its buttons are visible without docker.</p>
         <span class="anchor">
             <a href="#section-5" class="anchor">↦</a>
         </span>
-        <p>One install by compose project name, or nil.</p>
+        <p>Every known install. Demo builds carry the fixture install so the
+badge and its buttons are visible without docker.</p>
 
     </div>
     <div class="code">
-        <span id="line-175"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">find_installed</span><span class="t">(</span><span class="t">project_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">?</span><span class="t"></span>
-<span id="line-176"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-177"></span><span class="t">      </span><span class="t">(</span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t">)</span><span class="t">.</span><span class="t">find</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">project_name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">project_name</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
-<span id="line-178"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-179"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-184"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">installed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">)</span><span class="t"></span>
+<span id="line-185"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-186"></span><span class="t">      </span><span class="t">(</span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t">)</span><span class="t">.</span><span class="t">dup</span><span class="t"></span>
+<span id="line-187"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-188"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -551,31 +560,15 @@ badge and its buttons are visible without docker.</p>
         <span class="anchor">
             <a href="#section-6" class="anchor">↦</a>
         </span>
-        <p>Simulates installing one catalog app: the compose project is the
-app id, like the real renderer's. Reinstalling replaces any
-previous install of the same app.</p>
+        <p>One install by compose project name, or nil.</p>
 
     </div>
     <div class="code">
-        <span id="line-184"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">install</span><span class="t">(</span><span class="t">app_info</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">AppInfo</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t"></span>
-<span id="line-185"></span><span class="t">    </span><span class="t">record</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-186"></span><span class="t">      </span><span class="t">store</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">demo</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-187"></span><span class="t">      </span><span class="t">store_url</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">https://demo.invalid/demo-appstore.tar.gz</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-188"></span><span class="t">      </span><span class="t">id</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">id</span><span class="t">,</span><span class="t"></span>
-<span id="line-189"></span><span class="t">      </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">name</span><span class="t">,</span><span class="t"></span>
-<span id="line-190"></span><span class="t">      </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">version</span><span class="t">,</span><span class="t"></span>
-<span id="line-191"></span><span class="t">      </span><span class="t">tipi_version</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">tipi_version</span><span class="t">,</span><span class="t"></span>
-<span id="line-192"></span><span class="t">      </span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">port</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0</span><span class="t">,</span><span class="t"></span>
-<span id="line-193"></span><span class="t">      </span><span class="t">project_name</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">id</span><span class="t">,</span><span class="t"></span>
-<span id="line-194"></span><span class="t">      </span><span class="t">installed_at</span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t">.</span><span class="t">to_rfc3339</span><span class="t">,</span><span class="t"></span>
-<span id="line-195"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
-<span id="line-196"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-197"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t"></span>
-<span id="line-198"></span><span class="t">      </span><span class="t">list</span><span class="t">.</span><span class="t">reject!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">project_name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">record</span><span class="t">.</span><span class="t">project_name</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
-<span id="line-199"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">record</span><span class="t"></span>
-<span id="line-200"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-201"></span><span class="t">    </span><span class="t">record</span><span class="t"></span>
-<span id="line-202"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-191"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">find_installed</span><span class="t">(</span><span class="t">project_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">?</span><span class="t"></span>
+<span id="line-192"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-193"></span><span class="t">      </span><span class="t">(</span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t">)</span><span class="t">.</span><span class="t">find</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">project_name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">project_name</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-194"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-195"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -584,16 +577,31 @@ previous install of the same app.</p>
         <span class="anchor">
             <a href="#section-7" class="anchor">↦</a>
         </span>
-        <p>Simulates uninstalling an app. Returns true when one was removed.</p>
+        <p>Simulates installing one catalog app: the compose project is the
+app id, like the real renderer's. Reinstalling replaces any
+previous install of the same app.</p>
 
     </div>
     <div class="code">
-        <span id="line-205"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">uninstall</span><span class="t">(</span><span class="t">project_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
-<span id="line-206"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-207"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t"></span>
-<span id="line-208"></span><span class="t">      </span><span class="o">!</span><span class="t">list</span><span class="t">.</span><span class="t">reject!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">project_name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">project_name</span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="nk">nil?</span><span class="t"></span>
-<span id="line-209"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-210"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-200"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">install</span><span class="t">(</span><span class="t">app_info</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">AppInfo</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t"></span>
+<span id="line-201"></span><span class="t">    </span><span class="t">record</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-202"></span><span class="t">      </span><span class="t">store</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">demo</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-203"></span><span class="t">      </span><span class="t">store_url</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">https://demo.invalid/demo-appstore.tar.gz</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-204"></span><span class="t">      </span><span class="t">id</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">id</span><span class="t">,</span><span class="t"></span>
+<span id="line-205"></span><span class="t">      </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">name</span><span class="t">,</span><span class="t"></span>
+<span id="line-206"></span><span class="t">      </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">version</span><span class="t">,</span><span class="t"></span>
+<span id="line-207"></span><span class="t">      </span><span class="t">tipi_version</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">tipi_version</span><span class="t">,</span><span class="t"></span>
+<span id="line-208"></span><span class="t">      </span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">port</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0</span><span class="t">,</span><span class="t"></span>
+<span id="line-209"></span><span class="t">      </span><span class="t">project_name</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">id</span><span class="t">,</span><span class="t"></span>
+<span id="line-210"></span><span class="t">      </span><span class="t">installed_at</span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t">.</span><span class="t">to_rfc3339</span><span class="t">,</span><span class="t"></span>
+<span id="line-211"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-212"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-213"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t"></span>
+<span id="line-214"></span><span class="t">      </span><span class="t">list</span><span class="t">.</span><span class="t">reject!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">project_name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">record</span><span class="t">.</span><span class="t">project_name</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-215"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">record</span><span class="t"></span>
+<span id="line-216"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-217"></span><span class="t">    </span><span class="t">record</span><span class="t"></span>
+<span id="line-218"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -602,35 +610,16 @@ previous install of the same app.</p>
         <span class="anchor">
             <a href="#section-8" class="anchor">↦</a>
         </span>
-        <p>Simulates an app update: the install jumps to the catalog's
-version, so the update badge disappears. Returns true when the
-project was known.</p>
+        <p>Simulates uninstalling an app. Returns true when one was removed.</p>
 
     </div>
     <div class="code">
-        <span id="line-215"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">mark_updated</span><span class="t">(</span><span class="t">project_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
-<span id="line-216"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-217"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t"></span>
-<span id="line-218"></span><span class="t">      </span><span class="t">record</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">list</span><span class="t">.</span><span class="t">find</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">project_name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">project_name</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
-<span id="line-219"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="l">false</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">record</span><span class="t"></span>
-<span id="line-220"></span><span class="t">      </span><span class="t">app_info</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">find_app</span><span class="t">(</span><span class="t">record</span><span class="t">.</span><span class="t">id</span><span class="t">)</span><span class="t"></span>
-<span id="line-221"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="l">false</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">app_info</span><span class="t"></span>
-<span id="line-222"></span><span class="t"></span>
-<span id="line-223"></span><span class="t">      </span><span class="t">list</span><span class="t">.</span><span class="t">delete</span><span class="t">(</span><span class="t">record</span><span class="t">)</span><span class="t"></span>
-<span id="line-224"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-225"></span><span class="t">        </span><span class="t">store</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">store</span><span class="t">,</span><span class="t"></span>
-<span id="line-226"></span><span class="t">        </span><span class="t">store_url</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">store_url</span><span class="t">,</span><span class="t"></span>
-<span id="line-227"></span><span class="t">        </span><span class="t">id</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">id</span><span class="t">,</span><span class="t"></span>
-<span id="line-228"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">name</span><span class="t">,</span><span class="t"></span>
-<span id="line-229"></span><span class="t">        </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">version</span><span class="t">,</span><span class="t"></span>
-<span id="line-230"></span><span class="t">        </span><span class="t">tipi_version</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">tipi_version</span><span class="t">,</span><span class="t"></span>
-<span id="line-231"></span><span class="t">        </span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">port</span><span class="t">,</span><span class="t"></span>
-<span id="line-232"></span><span class="t">        </span><span class="t">project_name</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">project_name</span><span class="t">,</span><span class="t"></span>
-<span id="line-233"></span><span class="t">        </span><span class="t">installed_at</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">installed_at</span><span class="t">,</span><span class="t"></span>
-<span id="line-234"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
-<span id="line-235"></span><span class="t">      </span><span class="l">true</span><span class="t"></span>
-<span id="line-236"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-237"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-221"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">uninstall</span><span class="t">(</span><span class="t">project_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-222"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-223"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t"></span>
+<span id="line-224"></span><span class="t">      </span><span class="o">!</span><span class="t">list</span><span class="t">.</span><span class="t">reject!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">project_name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">project_name</span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="nk">nil?</span><span class="t"></span>
+<span id="line-225"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-226"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -639,18 +628,35 @@ project was known.</p>
         <span class="anchor">
             <a href="#section-9" class="anchor">↦</a>
         </span>
-        <p>The newest version the store offers for an installed app, or nil
-when it is up to date. Data-driven: whatever the fixture catalog
-carries is what the store &quot;offers&quot;.</p>
+        <p>Simulates an app update: the install jumps to the catalog's
+version, so the update badge disappears. Returns true when the
+project was known.</p>
 
     </div>
     <div class="code">
-        <span id="line-242"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">update_available</span><span class="t">(</span><span class="t">installed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t"></span>
-<span id="line-243"></span><span class="t">    </span><span class="t">app_info</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">find_app</span><span class="t">(</span><span class="t">installed</span><span class="t">.</span><span class="t">id</span><span class="t">)</span><span class="t"></span>
-<span id="line-244"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">app_info</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">tipi_version</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="t">installed</span><span class="t">.</span><span class="t">tipi_version</span><span class="t"></span>
-<span id="line-245"></span><span class="t">      </span><span class="t">app_info</span><span class="t">.</span><span class="t">version</span><span class="t"></span>
-<span id="line-246"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-247"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-231"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">mark_updated</span><span class="t">(</span><span class="t">project_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-232"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-233"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t"></span>
+<span id="line-234"></span><span class="t">      </span><span class="t">record</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">list</span><span class="t">.</span><span class="t">find</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">project_name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">project_name</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-235"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="l">false</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">record</span><span class="t"></span>
+<span id="line-236"></span><span class="t">      </span><span class="t">app_info</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">find_app</span><span class="t">(</span><span class="t">record</span><span class="t">.</span><span class="t">id</span><span class="t">)</span><span class="t"></span>
+<span id="line-237"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="l">false</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">app_info</span><span class="t"></span>
+<span id="line-238"></span><span class="t"></span>
+<span id="line-239"></span><span class="t">      </span><span class="t">list</span><span class="t">.</span><span class="t">delete</span><span class="t">(</span><span class="t">record</span><span class="t">)</span><span class="t"></span>
+<span id="line-240"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-241"></span><span class="t">        </span><span class="t">store</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">store</span><span class="t">,</span><span class="t"></span>
+<span id="line-242"></span><span class="t">        </span><span class="t">store_url</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">store_url</span><span class="t">,</span><span class="t"></span>
+<span id="line-243"></span><span class="t">        </span><span class="t">id</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">id</span><span class="t">,</span><span class="t"></span>
+<span id="line-244"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">name</span><span class="t">,</span><span class="t"></span>
+<span id="line-245"></span><span class="t">        </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">version</span><span class="t">,</span><span class="t"></span>
+<span id="line-246"></span><span class="t">        </span><span class="t">tipi_version</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">tipi_version</span><span class="t">,</span><span class="t"></span>
+<span id="line-247"></span><span class="t">        </span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">port</span><span class="t">,</span><span class="t"></span>
+<span id="line-248"></span><span class="t">        </span><span class="t">project_name</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">project_name</span><span class="t">,</span><span class="t"></span>
+<span id="line-249"></span><span class="t">        </span><span class="t">installed_at</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">installed_at</span><span class="t">,</span><span class="t"></span>
+<span id="line-250"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-251"></span><span class="t">      </span><span class="l">true</span><span class="t"></span>
+<span id="line-252"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-253"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -659,17 +665,37 @@ carries is what the store &quot;offers&quot;.</p>
         <span class="anchor">
             <a href="#section-10" class="anchor">↦</a>
         </span>
+        <p>The newest version the store offers for an installed app, or nil
+when it is up to date. Data-driven: whatever the fixture catalog
+carries is what the store &quot;offers&quot;.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-258"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">update_available</span><span class="t">(</span><span class="t">installed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t"></span>
+<span id="line-259"></span><span class="t">    </span><span class="t">app_info</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">find_app</span><span class="t">(</span><span class="t">installed</span><span class="t">.</span><span class="t">id</span><span class="t">)</span><span class="t"></span>
+<span id="line-260"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">app_info</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">tipi_version</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="t">installed</span><span class="t">.</span><span class="t">tipi_version</span><span class="t"></span>
+<span id="line-261"></span><span class="t">      </span><span class="t">app_info</span><span class="t">.</span><span class="t">version</span><span class="t"></span>
+<span id="line-262"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-263"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-11" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-11" class="anchor">↦</a>
+        </span>
         <p>Restores the pristine demo installs (spec hygiene, container
 restarts do the same for the demo site).</p>
 
     </div>
     <div class="code">
-        <span id="line-251"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">reset_demo_state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
-<span id="line-252"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-253"></span><span class="t">      </span><span class="t">@@installed</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
-<span id="line-254"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-255"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-256"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-267"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">reset_demo_state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-268"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-269"></span><span class="t">      </span><span class="t">@@installed</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-270"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-271"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-272"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
