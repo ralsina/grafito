@@ -138,6 +138,22 @@ module FakeAppStore
     find_app(app_id).try(&.description) || ""
   end
 
+  # A generated stand-in logo for a fixture app: a rounded square in a
+  # color derived from the app id, with the app's initial. Demo cards
+  # go through the same <img> path as real store logos, so they look
+  # right without any fetched store assets.
+  def self.logo_svg(app_id : String) : String
+    name = find_app(app_id).try(&.name) || app_id
+    letter = name.empty? ? "?" : name[0, 1].upcase
+    hue = app_id.bytes.sum(0) % 360
+    <<-SVG
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="hsl(#{hue}, 60%, 42%)"/>
+        <text x="32" y="43" font-family="sans-serif" font-size="30" font-weight="bold" fill="#ffffff" text-anchor="middle">#{HTML.escape(letter)}</text>
+      </svg>
+      SVG
+  end
+
   # ## Mutable demo state
   #
   # The installed-apps list is mutable so simulated installs, updates

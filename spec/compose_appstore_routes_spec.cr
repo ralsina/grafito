@@ -134,7 +134,7 @@ require "./spec_helper"
       FakeComposeData.reset_demo_state
     end
 
-    it "sync starts a job and the logo endpoint 404s without logos" do
+    it "sync starts a job and the logo endpoint serves generated svgs" do
       Grafito.enable_actions = true
       Grafito.auth_configured = true
 
@@ -143,7 +143,12 @@ require "./spec_helper"
       response[:body].should contain("appstore-sync")
 
       dispatch_request("POST", "/compose-appstore-sync", "store=nope", FORM_HEADERS)[:status].should eq(400)
-      dispatch_request("GET", "/compose-appstore-logo?store=demo&app=jellyfin")[:status].should eq(404)
+      logo = dispatch_request("GET", "/compose-appstore-logo?store=demo&app=jellyfin")
+      logo[:status].should eq(200)
+      logo[:body].should contain("<svg")
+      logo[:body].should contain(">J<")
+      # Unknown fixture ids still get a generated logo, keyed by the id.
+      dispatch_request("GET", "/compose-appstore-logo?store=demo&app=nope")[:status].should eq(200)
     end
   end
 {% end %}

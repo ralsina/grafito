@@ -106,6 +106,14 @@ module ComposeAppStore
         env.response.status_code = 400
         next "Missing or invalid store/app id."
       end
+      {% if flag?(:demo_mode) %}
+        # Demo builds never touch the store cache: the fixture store
+        # serves a generated logo (hue from the id, the app's initial)
+        # so its cards look like real store cards.
+        env.response.headers["Cache-Control"] = "public, max-age=300"
+        env.response.content_type = "image/svg+xml"
+        next FakeAppStore.logo_svg(app_id)
+      {% end %}
       logo_path = AppStore.app_logo_path(Grafito.data_dir, store_slug, app_id)
       if logo_path.nil?
         env.response.status_code = 404
@@ -643,11 +651,11 @@ module ComposeAppStore
   end
 
   # True when the store cache ships a logo file for the app. Demo
-  # builds never have logos (and never touch the data dir), so their
-  # cards fall back to the initial-letter avatar.
+  # builds always say yes: their logo endpoint generates an SVG per
+  # fixture app, so demo cards look like real store cards.
   private def self.logo_present?(store_slug : String, app_id : String) : Bool
     {% if flag?(:demo_mode) %}
-      false
+      true
     {% else %}
       !AppStore.app_logo_path(Grafito.data_dir, store_slug, app_id).nil?
     {% end %}
