@@ -17,6 +17,7 @@
 
 require "json"
 require "log"
+require "./compose_status"
 
 module ProcessStatus
   Log = ::Log.for(self)
@@ -36,11 +37,20 @@ module ProcessStatus
     res_kb : Int64,
     state : String,
     cpu_time_sec : Float64,
-    command : String do
+    command : String,
+    compose_stack : String? = nil,
+    compose_service : String? = nil do
     include JSON::Serializable
 
     def zombie? : Bool
       state == "Z"
+    end
+
+    # One-line "stack/service" label for the table badge, or "" when
+    # the process is not part of a compose stack.
+    def compose_label : String
+      return "" unless (stack = compose_stack) && (service = compose_service)
+      "#{stack}/#{service}"
     end
   end
 
@@ -90,6 +100,41 @@ module ProcessStatus
   rescue ex
     Log.warn(exception: ex) { "signal #{signal} to pid #{pid} failed" }
     false
+  end
+
+  # Extracts the docker container ID from the lines of
+  # /proc/PID/cgroup, handling both the cgroup v2 systemd layout
+  # ("0::/system.slice/docker-<id>.scope") and the cgroup v1
+  # cgroupfs layout ("9:cpuset:/docker/<id>"). Returns nil for
+  # non-container processes.
+  def self.container_id_from_cgroup_lines(lines : Array(String)) : String?
+    lines.each do |line|
+      path = line.split(':').last?
+      next unless path
+      if match = path.match(/docker-([0-9a-f]{64,})\.scope/)
+        return match[1]
+      end
+      if match = path.match(/\/docker\/([0-9a-f]{64,})/)
+        return match[1]
+      end
+    end
+    nil
+  end
+
+  # Compose attribution for one pid from the cached container map.
+  private def self.compose_attribution_of(
+    pid : Int32,
+    attribution : Hash(String, ComposeStatus::ContainerRef),
+  ) : {String, String}?
+    return if attribution.empty?
+    lines = File.read("/proc/#{pid}/cgroup").lines
+    container_id_from_cgroup_lines(lines).try do |id|
+      if ref = attribution[id]? || attribution[id[0, 12]?]?
+        {ref.stack, ref.service}
+      end
+    end
+  rescue File::NotFoundError | File::AccessDeniedError
+    nil
   end
 
   # Everything the detail panel shows about one process. Read straight
@@ -147,6 +192,11 @@ module ProcessStatus
     core_ticks = read_core_ticks
     mem_total_kb = read_mem_total_kb
 
+    # Compose attribution (container id -> stack/service) is cached in
+    # ComposeStatus for a minute; fetched outside the tick mutex so
+    # its subprocess call never blocks concurrent snapshot reads.
+    attribution = ComposeStatus.container_attribution
+
     MUTEX.synchronize do
       previous_cores = CORE_TICKS.dup
       previous_procs = PROC_TICKS.dup
@@ -172,7 +222,7 @@ module ProcessStatus
       PROC_TICKS.clear
 
       uptime_sec = read_uptime_sec
-      processes = read_processes(previous_procs, now_ms, mem_total_kb, uptime_sec)
+      processes = read_processes(previous_procs, now_ms, mem_total_kb, uptime_sec, attribution)
       processes.sort_by! { |info| -info.cpu_pct }
 
       running = processes.count(&.state.==("R"))
@@ -230,6 +280,7 @@ module ProcessStatus
     now_ms : Int64,
     mem_total_kb : Int64,
     uptime_sec : Float64,
+    attribution : Hash(String, ComposeStatus::ContainerRef),
   ) : Array(ProcessInfo)
     infos = [] of ProcessInfo
     # Read once per snapshot, not once per process: this poll runs every
@@ -239,7 +290,7 @@ module ProcessStatus
     Dir.children("/proc").each do |entry|
       pid = entry.to_i32?
       next unless pid
-      info = process_info(pid, users, previous_procs, now_ms, mem_total_kb, uptime_sec)
+      info = process_info(pid, users, previous_procs, now_ms, mem_total_kb, uptime_sec, attribution)
       infos << info if info
     rescue File::NotFoundError | File::AccessDeniedError
       # The process vanished between listing and reading; skip it.
@@ -256,6 +307,7 @@ module ProcessStatus
     now_ms : Int64,
     mem_total_kb : Int64,
     uptime_sec : Float64,
+    attribution : Hash(String, ComposeStatus::ContainerRef),
   ) : ProcessInfo?
     raw = File.read("/proc/#{pid}/stat")
     tail_start = raw.rindex(')')
@@ -264,7 +316,7 @@ module ProcessStatus
     comm = raw[head_start + 1...tail_start]
     fields = raw[tail_start + 1..].split
     return unless fields.size >= 22
-    process_info_from_fields(pid, comm, users, fields, previous_procs, now_ms, mem_total_kb, uptime_sec)
+    process_info_from_fields(pid, comm, users, fields, previous_procs, now_ms, mem_total_kb, uptime_sec, attribution)
   end
 
   # Assembles the ProcessInfo from the fixed-field tail of a stat file.
@@ -277,7 +329,11 @@ module ProcessStatus
     now_ms : Int64,
     mem_total_kb : Int64,
     uptime_sec : Float64,
+    attribution : Hash(String, ComposeStatus::ContainerRef),
   ) : ProcessInfo
+    attribution_ref = compose_attribution_of(pid, attribution)
+    compose_stack = attribution_ref.try &.[0]
+    compose_service = attribution_ref.try &.[1]
     utime = fields[11].to_i64? || 0i64
     stime = fields[12].to_i64? || 0i64
     starttime = fields[19].to_i64? || 0i64
@@ -300,6 +356,8 @@ module ProcessStatus
       state: fields[0],
       cpu_time_sec: total_ticks.to_f / TICKS_PER_SEC,
       command: command_of(pid, comm),
+      compose_stack: compose_stack,
+      compose_service: compose_service,
     )
   end
 
@@ -613,8 +671,16 @@ module ProcessStatus
     angle = now_sec / 7.0
     cores = 4
 
+    # A couple of fake processes belong to the demo webapp stack, so
+    # the compose attribution badges show on the demo site too.
+    demo_compose = {
+      1240 => {"webapp", "web"},
+      1388 => {"webapp", "db"},
+    } of Int32 => {String, String}
+
     processes = fake_process_rows.map do |entry|
       pid, user, state, cpu, mem_pct, virt, res, command, _unit = entry
+      compose = demo_compose[pid]?
       ProcessInfo.new(
         pid: pid,
         user: user,
@@ -625,6 +691,8 @@ module ProcessStatus
         state: state,
         cpu_time_sec: (pid % 97) * 3.7,
         command: command,
+        compose_stack: compose.try &.[0],
+        compose_service: compose.try &.[1],
       )
     end
     processes.sort_by! { |info| -info.cpu_pct }

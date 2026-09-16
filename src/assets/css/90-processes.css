@@ -205,3 +205,8 @@
   color: var(--accent);
   border-color: var(--accent);
 }
+
+/* Space between the command and the compose stack/service badge. */
+.proc-compose-tag {
+  margin-left: 0.5rem;
+}
