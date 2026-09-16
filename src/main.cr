@@ -220,13 +220,14 @@ def main
   # The `BakedFileHandler` is a custom handler that serves files that are baked
   # into the application. In our case, the Assets class we defined above.
   #
-  # Uses the external ralsina/baked_file_handler library. Cache-Control is
-  # capped so deployments behind caching proxies don't pin stale frontends;
-  # the CacheHeadersHandler further forces no-cache on HTML responses.
+  # Uses the external ralsina/baked_file_handler library. Assets use no-cache
+  # (store, but always revalidate): an upgrade swaps every baked asset at once,
+  # and browsers that trusted a max-age would run a stale frontend until the
+  # cache expired. The files are small, so the revalidation cost is trivial.
   baked_asset_handler = BakedFileHandler::BakedFileHandler.new(
     Assets,
     mount_path: Grafito.base_path,
-    cache_control: "public, max-age=300",
+    cache_control: "no-cache",
   )
   use baked_asset_handler
 

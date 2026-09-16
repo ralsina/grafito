@@ -50,22 +50,26 @@ module Grafito
     @@touch_channel : Channel(Nil)? = nil
   end
 
-  # Sets cache headers appropriate for each asset type: HTML documents
-  # must always revalidate (they link the other assets), while CSS/JS may
-  # be cached briefly by browsers and CDNs. Without this, deployments
-  # under caching proxies (e.g. Cloudflare) serve stale frontends for as
+  # Sets cache headers appropriate for each asset type: HTML, CSS and
+  # JS must always revalidate because they ship inside the binary and
+  # an upgrade replaces them all at once — a cached frontend can
+  # disagree with a new backend. Without this, deployments under
+  # caching proxies (e.g. Cloudflare) serve stale frontends for as
   # long as the default TTL.
   private class CacheHeadersHandler < Kemal::Handler
     def call(context)
       call_next(context)
       content_type = context.response.headers["Content-Type"]?
       if content_type
-        if content_type.starts_with?("text/html")
+        if content_type.starts_with?("text/html") ||
+           content_type.starts_with?("text/css") ||
+           content_type.starts_with?("application/javascript") ||
+           content_type.starts_with?("text/javascript")
+          # Frontend assets ship inside the binary: an upgrade replaces
+          # them all at once, so a cached frontend can disagree with
+          # the new backend (and vice versa). Revalidation is cheap at
+          # this size; a stale UI is not.
           context.response.headers["Cache-Control"] = "no-cache"
-        elsif content_type.starts_with?("text/css") ||
-              content_type.starts_with?("application/javascript") ||
-              content_type.starts_with?("text/javascript")
-          context.response.headers["Cache-Control"] = "public, max-age=300"
         end
       end
     end
