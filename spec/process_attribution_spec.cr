@@ -87,3 +87,57 @@ describe "Process compose attribution" do
     end
   end
 end
+
+describe "Compose service detail member processes (#93)" do
+  member = ProcessStatus::ProcessInfo.new(
+    pid: 4242, user: "www-data", cpu_pct: 2.0, mem_pct: 1.0,
+    virt_kb: 100_000, res_kb: 20_000, state: "S", cpu_time_sec: 12.0,
+    command: "nginx: worker process",
+    compose_stack: "webapp", compose_service: "web",
+  )
+  service = ComposeStatus::Service.new(
+    stack: "webapp", service: "web", container: "webapp-web-1",
+    state: "running", health: "healthy", image: "nginx:1.27",
+    ports: "80/tcp", status_text: "Up 2 hours",
+  )
+
+  it "lists member processes with live stats" do
+    fragment = ComposeDashboard.service_details_fragment(service, false, [member])
+    fragment.should contain("Processes")
+    fragment.should contain("PID 4242")
+    fragment.should contain("nginx: worker process")
+    fragment.should contain("CPU 2.0%")
+    fragment.should contain("live from the process monitor")
+  end
+
+  it "omits the section when the service has no member processes" do
+    fragment = ComposeDashboard.service_details_fragment(service, false, [] of ProcessStatus::ProcessInfo)
+    fragment.should_not contain("Processes")
+  end
+end
+
+describe "Process detail compose jump (#92)" do
+  attributed = ProcessStatus::ProcessDetail.new(
+    pid: 4242, user: "www-data", uid: "33", state: "S", cpu_pct: 2.0,
+    mem_pct: 1.0, virt_kb: 100_000, res_kb: 20_000, cpu_time_sec: 12.0,
+    threads: 1, ppid: 1, started: Time.local, command: "nginx: worker process",
+    unit: "", compose_stack: "webapp", compose_service: "web",
+  )
+
+  it "offers the jump to the compose view for attributed processes" do
+    fragment = ProcessDashboard.process_details_fragment(attributed, true)
+    fragment.should contain("openComposeService")
+    fragment.should contain("webapp")
+  end
+
+  it "keeps the jump out of unattributed processes" do
+    unattributed = ProcessStatus::ProcessDetail.new(
+      pid: 1, user: "root", uid: "0", state: "S", cpu_pct: 0.1,
+      mem_pct: 0.1, virt_kb: 10_000, res_kb: 5_000, cpu_time_sec: 1.0,
+      threads: 1, ppid: 0, started: Time.local, command: "/sbin/init",
+      unit: "", compose_stack: nil, compose_service: nil,
+    )
+    fragment = ProcessDashboard.process_details_fragment(unattributed, true)
+    fragment.should_not contain("openComposeService")
+  end
+end

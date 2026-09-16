@@ -475,6 +475,19 @@ module ProcessDashboard
           end
           text detail.systemd_unit? ? " View logs for #{detail.unit}" : " Search logs for this process"
         end
+
+        if (stack = detail.compose_stack) && (service = detail.compose_service)
+          button(
+            class: "service-panel-viewlogs",
+            title: "Open the #{stack} / #{service} service in the Compose view",
+            onclick: "return openComposeService(#{stack.to_json}, #{service.to_json});",
+          ) do
+            span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+              text "layers"
+            end
+            text " Open #{stack} / #{service} in Compose view"
+          end
+        end
       end
     end
   end

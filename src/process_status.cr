@@ -121,6 +121,14 @@ module ProcessStatus
     nil
   end
 
+  # Processes belonging to one compose stack/service, per the current
+  # snapshot's attribution (#91). Live at panel-open time.
+  def self.processes_for_compose_service(stack : String, service : String) : Array(ProcessInfo)
+    snapshot.processes.select do |info|
+      info.compose_stack == stack && info.compose_service == service
+    end
+  end
+
   # Compose attribution for one pid from the cached container map.
   private def self.compose_attribution_of(
     pid : Int32,
@@ -155,7 +163,9 @@ module ProcessStatus
     ppid : Int32,
     started : Time,
     command : String,
-    unit : String do
+    unit : String,
+    compose_stack : String? = nil,
+    compose_service : String? = nil do
     include JSON::Serializable
 
     def comm : String
@@ -397,7 +407,7 @@ module ProcessStatus
     comm = raw[head_start + 1...tail_start]
     fields = raw[tail_start + 1..].split
     return unless fields.size >= 22
-    detail_from_fields(pid, comm, fields)
+    detail_from_fields(pid, comm, fields, ComposeStatus.container_attribution)
   rescue File::NotFoundError | File::AccessDeniedError
     nil
   end
@@ -405,7 +415,7 @@ module ProcessStatus
   # Assembles the detail record from the fixed-field tail of a stat
   # file. The extras (ppid, threads) share the tail with the fields the
   # table reader uses.
-  private def self.detail_from_fields(pid : Int32, comm : String, fields : Array(String)) : ProcessDetail
+  private def self.detail_from_fields(pid : Int32, comm : String, fields : Array(String), attribution : Hash(String, ComposeStatus::ContainerRef)) : ProcessDetail
     uid = uid_of(pid)
     total_ticks = (fields[11].to_i64? || 0i64) + (fields[12].to_i64? || 0i64)
     starttime = fields[19].to_i64? || 0i64
@@ -430,6 +440,8 @@ module ProcessStatus
       started: process_start_time(starttime),
       command: command_of(pid, comm),
       unit: cgroup_unit(pid),
+      compose_stack: compose_attribution_of(pid, attribution).try &.[0],
+      compose_service: compose_attribution_of(pid, attribution).try &.[1],
     )
   end
 
@@ -578,6 +590,15 @@ module ProcessStatus
   @@demo_killed = Set(Int32).new
   @@demo_states = {} of Int32 => String
 
+  # A couple of fake processes belong to the demo webapp stack, so the
+  # compose attribution badges show on the demo site too.
+  private def self.demo_compose_attribution
+    {
+      1240 => {"webapp", "web"},
+      1388 => {"webapp", "db"},
+    } of Int32 => {String, String}
+  end
+
   # pid, user, state, cpu, mem%, virt KB, res KB, command, unit — the
   # pristine table, without overlays.
   private def self.fake_process_table
@@ -648,6 +669,7 @@ module ProcessStatus
     row = fake_process_rows.find { |entry| entry[0] == pid }
     return unless row
     entry_pid, user, state, _cpu, mem_pct, virt, res, command, unit = row
+    demo_compose = demo_compose_attribution
     ProcessDetail.new(
       pid: entry_pid,
       user: user,
@@ -663,6 +685,8 @@ module ProcessStatus
       started: FAKE_BOOT + (entry_pid % 50).minutes,
       command: command,
       unit: unit,
+      compose_stack: demo_compose[entry_pid]?.try &.[0],
+      compose_service: demo_compose[entry_pid]?.try &.[1],
     )
   end
 
@@ -671,12 +695,7 @@ module ProcessStatus
     angle = now_sec / 7.0
     cores = 4
 
-    # A couple of fake processes belong to the demo webapp stack, so
-    # the compose attribution badges show on the demo site too.
-    demo_compose = {
-      1240 => {"webapp", "web"},
-      1388 => {"webapp", "db"},
-    } of Int32 => {String, String}
+    demo_compose = demo_compose_attribution
 
     processes = fake_process_rows.map do |entry|
       pid, user, state, cpu, mem_pct, virt, res, command, _unit = entry
