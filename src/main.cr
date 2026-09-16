@@ -195,6 +195,14 @@ def main
     Grafito::Log.warn { "Actions are enabled while bound to #{args["--bind"]}: credentials and commands travel unencrypted. Put grafito behind a TLS reverse proxy for remote access (see README: Securing a Remote Deployment)." }
   end
 
+  # Beyond transport: any non-loopback bind without authentication
+  # exposes every journal line, the dashboards and compose files to
+  # the network — warn regardless of whether actions are enabled.
+  if !Grafito.auth_configured? &&
+     !["127.0.0.1", "localhost", "::1"].includes?(args["--bind"].to_s)
+    Grafito::Log.warn { "Bound to #{args["--bind"]} without authentication: logs, dashboards and compose files are readable by anyone on this network. Set GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS or bind to 127.0.0.1 (see README: Securing a Remote Deployment)." }
+  end
+
   # Demo builds always offer actions: every action endpoint simulates
   # its effect against the fake data, so no credentials are needed.
   # Set after the unencrypted-transport warning above, which is about

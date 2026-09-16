@@ -107,17 +107,30 @@ DynamicUser=yes
 # Change if that is not what you want.
 Group=systemd-journal
 
+# --- Network exposure ---
+# Binds to loopback by default: nothing outside this machine can
+# reach it. To serve your LAN, change the bind address below AND set
+# authentication (and prefer a TLS reverse proxy).
+#   ExecStart=${INSTALL_DIR}/${BINARY_NAME} -b 0.0.0.0 -p 1111
+ExecStart=${INSTALL_DIR}/${BINARY_NAME} -p 1111
+
 # --- Authentication Configuration ---
 # Set these environment variables to enable Basic Authentication.
 # If GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS are not set, Grafito will run without authentication.
 # Environment="GRAFITO_AUTH_USER=your_grafito_username"
 # Environment="GRAFITO_AUTH_PASS=your_strong_grafito_password"
 
-# Replace with the actual path to your Grafito directory
 WorkingDirectory=${INSTALL_DIR}/
-# Replace with the actual path and options to the Grafito binary
-ExecStart=${INSTALL_DIR}/${BINARY_NAME} -b 0.0.0.0 -p 1111
 Restart=on-failure
+
+# --- Hardening ---
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+StateDirectory=grafito
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
 
 [Install]
 WantedBy=multi-user.target
@@ -161,7 +174,9 @@ echo "2. Configure authentication (optional but recommended):"
 echo "   Edit the service file: sudo nano ${SERVICE_DIR}/${SERVICE_NAME}"
 echo "   Uncomment and set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS."
 echo "   After editing, run: sudo systemctl daemon-reload && sudo systemctl restart grafito.service"
-echo "3. Access Grafito at http://<your_server_ip>:1111"
+echo "3. Access Grafito at http://localhost:1111 (binds to loopback by"
+echo "   default; to expose it to your network set authentication and"
+echo "   adjust ExecStart — see README: Securing a Remote Deployment)"
 
 # Clean up temporary directory
 # Cleanup is now handled by the trap

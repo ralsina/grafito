@@ -9,17 +9,35 @@ DynamicUser=yes
 # Change if that is not what you want.
 Group=systemd-journal
 
+# --- Network exposure ---
+# Binds to loopback by default: nothing outside this machine can
+# reach it until you decide otherwise. To serve your LAN, change the
+# bind address below AND set authentication (and prefer a TLS
+# reverse proxy — see README: Securing a Remote Deployment):
+#   ExecStart=/usr/local/bin/grafito -b 0.0.0.0 -p 1111
+ExecStart=/usr/local/bin/grafito -p 1111
+
 # --- Authentication Configuration ---
 # Set these environment variables to enable Basic Authentication.
 # If GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS are not set, Grafito will run without authentication.
-Environment="GRAFITO_AUTH_USER=your_grafito_username"
-Environment="GRAFITO_AUTH_PASS=your_strong_grafito_password"
+# Environment="GRAFITO_AUTH_USER=your_grafito_username"
+# Environment="GRAFITO_AUTH_PASS=your_strong_grafito_password"
 
-# Replace with the actual path to your Grafito directory
 WorkingDirectory=/usr/local/bin/
-# Replace with the actual path and options to the Grafito binary
-ExecStart=/usr/local/bin/grafito -b 0.0.0.0 -p 1111
 Restart=on-failure
+
+# --- Hardening ---
+# Log-only deployments need nothing else; the compose view's docker
+# actions talk to /var/run/docker.sock (unaffected by these) and
+# StateDirectory provides /var/lib/grafito (the default --data-dir)
+# owned by the dynamic user, writable despite ProtectSystem.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+StateDirectory=grafito
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
 
 [Install]
 WantedBy=multi-user.target
