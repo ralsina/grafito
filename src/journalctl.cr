@@ -584,8 +584,9 @@ class Journalctl
         entries << entry if allowed_unit?(entry)
       end
 
-      if (code = process.wait) != 0
-        Log.warn { "#{log_context_message}: journalctl exited with code #{code}. Parsed #{entries.size} entries before exit." }
+      status = process.wait
+      unless status.success?
+        Log.warn { "#{log_context_message}: journalctl exited with #{status}. Parsed #{entries.size} entries before exit." }
       end
 
       entries

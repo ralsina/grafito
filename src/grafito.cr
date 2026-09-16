@@ -737,18 +737,26 @@ module Grafito
       history = [] of Hash(String, String)
 
       unless body.empty?
-        json_body = JSON.parse(body)
-        cursor = json_body["cursor"]?.try(&.as_s)
-        provider_id = json_body["provider"]?.try(&.as_s)
-        model_id = json_body["model"]?.try(&.as_s)
-        if raw_history = json_body["history"]?.try(&.as_a)
-          raw_history.each do |item|
-            role = item["role"]?.try(&.as_s)
-            content = item["content"]?.try(&.as_s)
-            if role && content && (role == "user" || role == "assistant")
-              history << {"role" => role, "content" => content}
+        # The parse sits before the provider call's begin/rescue, so it
+        # carries its own: malformed JSON is a 400, not a Kemal 500.
+        begin
+          json_body = JSON.parse(body)
+          cursor = json_body["cursor"]?.try(&.as_s)
+          provider_id = json_body["provider"]?.try(&.as_s)
+          model_id = json_body["model"]?.try(&.as_s)
+          if raw_history = json_body["history"]?.try(&.as_a)
+            raw_history.each do |item|
+              role = item["role"]?.try(&.as_s)
+              content = item["content"]?.try(&.as_s)
+              if role && content && (role == "user" || role == "assistant")
+                history << {"role" => role, "content" => content}
+              end
             end
           end
+        rescue ex : JSON::ParseException | TypeCastError
+          env.response.content_type = "application/json"
+          env.response.status_code = 400
+          next {error: "Invalid JSON in request body: #{ex.message}"}.to_json
         end
         # Only the most recent turns carry useful context; everything
         # older just multiplies token usage.

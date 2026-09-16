@@ -41,6 +41,14 @@ describe "Kemal routes" do
     {% end %}
   end
 
+  it "POST /ask-ai returns 400 for malformed JSON" do
+    Grafito.ai_provider = nil
+    response = dispatch_request("POST", "/ask-ai", body: "{nope")
+
+    response[:status].should eq(400)
+    response[:body].should contain("Invalid JSON in request body")
+  end
+
   it "POST /ask-ai returns 503 when no AI provider is configured" do
     Grafito.ai_provider = nil
     response = dispatch_request("POST", "/ask-ai", body: %({"cursor": "abc"}))
