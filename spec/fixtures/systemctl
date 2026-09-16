@@ -1,0 +1,19 @@
+#!/bin/sh
+# Fake systemctl for the subprocess specs (#61/#72): list-units emits
+# one unit line in --plain format; action calls succeed unless
+# FAKE_SYSTEMCTL_FAIL is set, in which case they print an error to
+# stderr and exit 1.
+echo "invoke: $* | FAIL=${FAKE_SYSTEMCTL_FAIL:-unset}" >> /tmp/fake-systemctl.log
+case "$1" in
+  list-units)
+    echo "spec.service loaded active running Spec unit for specs"
+    ;;
+  start|stop|restart|enable|disable)
+    if [ -n "${FAKE_SYSTEMCTL_FAIL:-}" ]; then
+      echo "spec: action denied by fake polkit" >&2
+      exit 1
+    fi
+    exit 0
+    ;;
+esac
+exit 0
