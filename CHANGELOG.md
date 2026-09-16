@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-09-16
+
+### 🚀 Features
+
+- *(ui)* Land on the homepage when the URL has no view
+- *(ui)* Cache-bust baked assets with the binary version
+
+### 🐛 Bug Fixes
+
+- *(processes)* Style the signal buttons like the rest of the app
+- *(demo)* Serve generated logos for fixture app store apps
+- *(ui)* Close the side panel when switching views
+- *(ui)* Make baked JS/CSS always revalidate
+
+### 📚 Documentation
+
+- *(website)* Reposition grafito as a window into your linux machine
+
 ## [1.2.0] - 2026-09-16
 
 ### 🚀 Features
@@ -83,6 +101,10 @@ All notable changes to this project will be documented in this file.
 - *(compose)* Never evict a running job while finished ones exist
 - *(a11y)* Resolve Lighthouse accessibility findings; trim to two webfonts
 - *(demo)* Fake live tail, coherent cursor lookups, demo disclaimer
+
+### 💼 Other
+
+- Release v1.2.0
 
 ### 🚜 Refactor
 
