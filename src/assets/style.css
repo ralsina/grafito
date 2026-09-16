@@ -1028,7 +1028,8 @@ tr.priority-7 {
 .hover-action-cell .round-button,
 .dashboard-action-cell .round-button,
 .service-panel-actions .round-button,
-.compose-stack-actions .round-button {
+.compose-stack-actions .round-button,
+.proc-actions .round-button {
   width: 1.7rem;
   height: 1.7rem;
   /* 1.7rem shrinks below the 24px touch-target minimum on small
@@ -1049,19 +1050,22 @@ tr.priority-7 {
 .hover-action-cell .round-button:hover,
 .dashboard-action-cell .round-button:hover,
 .service-panel-actions .round-button:hover,
-.compose-stack-actions .round-button:hover {
+.compose-stack-actions .round-button:hover,
+.proc-actions .round-button:hover {
   color: var(--accent);
   border-color: var(--accent);
 }
 /* The row's action buttons share one cell; keep a small gap between
    them now that they are no longer separated by table cell borders. */
-.hover-action-cell .round-button:not(:last-child) {
+.hover-action-cell .round-button:not(:last-child),
+.proc-actions .round-button:not(:last-child) {
   margin-right: 0.2rem;
 }
 .hover-action-cell .material-icons,
 .dashboard-action-cell .material-icons,
 .service-panel-actions .material-icons,
-.compose-stack-actions .material-icons {
+.compose-stack-actions .material-icons,
+.proc-actions .material-icons {
   font-size: 0.9rem;
 }
 
@@ -2049,6 +2053,28 @@ dialog article dd {
 }
 .proc-detail-info span:last-child {
   overflow-wrap: break-word;
+}
+/* Labeled signal buttons in the process detail panel: same visual
+   language as the icon-only round buttons, but sized to fit their
+   SIGTERM/SIGKILL labels instead of the fixed 24px icon box. */
+.signal-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  box-shadow: none;
+  margin-bottom: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.signal-button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 /* =====================================================================
    Homepage (launcher for self-hosted apps)

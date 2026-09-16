@@ -183,3 +183,25 @@
 .proc-detail-info span:last-child {
   overflow-wrap: break-word;
 }
+/* Labeled signal buttons in the process detail panel: same visual
+   language as the icon-only round buttons, but sized to fit their
+   SIGTERM/SIGKILL labels instead of the fixed 24px icon box. */
+.signal-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  box-shadow: none;
+  margin-bottom: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.signal-button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}

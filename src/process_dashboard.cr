@@ -242,7 +242,7 @@ module ProcessDashboard
         end
         if enable_actions
           td(class: "proc-actions") do
-            html kill_button(process_info.pid, "term", "skill", "Send SIGTERM to #{process_info.pid}")
+            html kill_button(process_info.pid, "term", "power_settings_new", "Send SIGTERM to #{process_info.pid}")
             html kill_button(process_info.pid, "kill", "dangerous", "Send SIGKILL to #{process_info.pid}")
           end
         end
@@ -426,7 +426,7 @@ module ProcessDashboard
 
         if enable_actions
           div(class: "service-panel-actions") do
-            html signal_button(detail, "term", "skill", "SIGTERM", "Ask #{detail.pid} to exit (SIGTERM)")
+            html signal_button(detail, "term", "power_settings_new", "SIGTERM", "Ask #{detail.pid} to exit (SIGTERM)")
             if detail.stopped?
               html signal_button(detail, "cont", "play_arrow", "SIGCONT", "Resume #{detail.pid} (SIGCONT)")
             else
@@ -491,7 +491,7 @@ module ProcessDashboard
   private def signal_button(detail : ProcessStatus::ProcessDetail, action : String, icon : String, label : String, title : String) : String
     HTML.build do
       button(
-        class: "round-button",
+        class: "signal-button",
         title: title,
         "hx-post": "process/#{detail.pid}/#{action}?from=panel",
         "hx-target": "#panel-detail-content",
