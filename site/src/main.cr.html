@@ -671,17 +671,16 @@ fine (TLS is then the reverse proxy's or the user's local concern).</p>
         <span class="anchor">
             <a href="#section-17" class="anchor">↦</a>
         </span>
-        <p>Demo builds always offer actions: every action endpoint simulates
-its effect against the fake data, so no credentials are needed.
-Set after the unencrypted-transport warning above, which is about
-real deployments and would only be noise here.</p>
+        <p>Beyond transport: any non-loopback bind without authentication
+exposes every journal line, the dashboards and compose files to
+the network — warn regardless of whether actions are enabled.</p>
 
     </div>
     <div class="code">
-        <span id="line-202"><pre class="b" ><code class="b"><span class="t">  </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:demo_mode</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
-<span id="line-203"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">enable_actions</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t"></span>
-<span id="line-204"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Demo mode: actions enabled, their effects are simulated</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-205"></span><span class="t">  </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span></code></pre></span>
+        <span id="line-201"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="o">!</span><span class="no">Grafito</span><span class="t">.</span><span class="t">auth_configured?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"></span>
+<span id="line-202"></span><span class="t">     </span><span class="o">!</span><span class="t">[</span><span class="s">&quot;</span><span class="s">127.0.0.1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">localhost</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">::1</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--bind</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t"></span>
+<span id="line-203"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Bound to </span><span class="lsi">#{</span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--bind</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"></span><span class="lsi">}</span><span class="s"> without authentication: logs, dashboards and compose files are readable by anyone on this network. Set GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS or bind to 127.0.0.1 (see README: Securing a Remote Deployment).</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-204"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -690,15 +689,17 @@ real deployments and would only be noise here.</p>
         <span class="anchor">
             <a href="#section-18" class="anchor">↦</a>
         </span>
-        <p>Parse homepage view configuration. The view itself is harmless
-without a config file (it renders setup instructions instead), so
-like the other views it is enabled by default.</p>
+        <p>Demo builds always offer actions: every action endpoint simulates
+its effect against the fake data, so no credentials are needed.
+Set after the unencrypted-transport warning above, which is about
+real deployments and would only be noise here.</p>
 
     </div>
     <div class="code">
-        <span id="line-210"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">homepage_enabled</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--homepage</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="o">!=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">false</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-211"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">homepage_config_path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--homepage-config</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
-<span id="line-212"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Homepage view: </span><span class="lsi">#{</span><span class="no">Grafito</span><span class="t">.</span><span class="t">homepage_enabled?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">enabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">disabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span><span class="lsi">}</span><span class="s"> (config: </span><span class="lsi">#{</span><span class="no">Grafito</span><span class="t">.</span><span class="t">homepage_config_path</span><span class="t"></span><span class="lsi">}</span><span class="s">)</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
+        <span id="line-210"><pre class="b" ><code class="b"><span class="t">  </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:demo_mode</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-211"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">enable_actions</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t"></span>
+<span id="line-212"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Demo mode: actions enabled, their effects are simulated</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-213"></span><span class="t">  </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span></code></pre></span>
     </div>
 </div>
 
@@ -707,11 +708,15 @@ like the other views it is enabled by default.</p>
         <span class="anchor">
             <a href="#section-19" class="anchor">↦</a>
         </span>
-        <p>Register all Kemal routes (must be done after base_path is set)</p>
+        <p>Parse homepage view configuration. The view itself is harmless
+without a config file (it renders setup instructions instead), so
+like the other views it is enabled by default.</p>
 
     </div>
     <div class="code">
-        <span id="line-215"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">register_routes</span></code></pre></span>
+        <span id="line-218"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">homepage_enabled</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--homepage</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="o">!=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">false</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-219"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">homepage_config_path</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--homepage-config</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
+<span id="line-220"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Homepage view: </span><span class="lsi">#{</span><span class="no">Grafito</span><span class="t">.</span><span class="t">homepage_enabled?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">enabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">disabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span><span class="lsi">}</span><span class="s"> (config: </span><span class="lsi">#{</span><span class="no">Grafito</span><span class="t">.</span><span class="t">homepage_config_path</span><span class="t"></span><span class="lsi">}</span><span class="s">)</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
     </div>
 </div>
 
@@ -720,11 +725,11 @@ like the other views it is enabled by default.</p>
         <span class="anchor">
             <a href="#section-20" class="anchor">↦</a>
         </span>
-        <p>Initialize AI provider using the abstraction layer</p>
+        <p>Register all Kemal routes (must be done after base_path is set)</p>
 
     </div>
     <div class="code">
-        <span id="line-218"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">setup_ai_provider</span></code></pre></span>
+        <span id="line-223"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">register_routes</span></code></pre></span>
     </div>
 </div>
 
@@ -732,6 +737,19 @@ like the other views it is enabled by default.</p>
     <div class="doc">
         <span class="anchor">
             <a href="#section-21" class="anchor">↦</a>
+        </span>
+        <p>Initialize AI provider using the abstraction layer</p>
+
+    </div>
+    <div class="code">
+        <span id="line-226"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">setup_ai_provider</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-22" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-22" class="anchor">↦</a>
         </span>
         <p>The <code>BakedFileHandler</code> is a custom handler that serves files that are baked
 into the application. In our case, the Assets class we defined above.</p>
@@ -745,31 +763,13 @@ Grafito.register_routes that injects the version into asset URLs
 
     </div>
     <div class="code">
-        <span id="line-230"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">baked_asset_handler</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">BakedFileHandler</span><span class="no">::</span><span class="no">BakedFileHandler</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-231"></span><span class="t">    </span><span class="no">Assets</span><span class="t">,</span><span class="t"></span>
-<span id="line-232"></span><span class="t">    </span><span class="t">mount_path</span><span class="t">:</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">base_path</span><span class="t">,</span><span class="t"></span>
-<span id="line-233"></span><span class="t">    </span><span class="t">cache_control</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">no-cache</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-234"></span><span class="t">    </span><span class="t">serve_index_html</span><span class="t">:</span><span class="t"> </span><span class="l">false</span><span class="t">,</span><span class="t"></span>
-<span id="line-235"></span><span class="t">  </span><span class="t">)</span><span class="t"></span>
-<span id="line-236"></span><span class="t">  </span><span class="t">use</span><span class="t"> </span><span class="t">baked_asset_handler</span></code></pre></span>
-    </div>
-</div>
-
-<div id="section-22" class="grid">
-    <div class="doc">
-        <span class="anchor">
-            <a href="#section-22" class="anchor">↦</a>
-        </span>
-        <p>Check if systemd passed a socket file descriptor to start from</p>
-
-    </div>
-    <div class="code">
-        <span id="line-239"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">listen_fds</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">ENV</span><span class="t">[</span><span class="s">&quot;</span><span class="s">LISTEN_FDS</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">to_i</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-240"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">listen_fds</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
-<span id="line-241"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Unexpectedly got more than 1 socket from systemd</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-242"></span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
-<span id="line-243"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-244"></span><span class="t">  </span><span class="t">socket_activation</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">listen_fds</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="m">1</span></code></pre></span>
+        <span id="line-238"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">baked_asset_handler</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">BakedFileHandler</span><span class="no">::</span><span class="no">BakedFileHandler</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-239"></span><span class="t">    </span><span class="no">Assets</span><span class="t">,</span><span class="t"></span>
+<span id="line-240"></span><span class="t">    </span><span class="t">mount_path</span><span class="t">:</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">base_path</span><span class="t">,</span><span class="t"></span>
+<span id="line-241"></span><span class="t">    </span><span class="t">cache_control</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">no-cache</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-242"></span><span class="t">    </span><span class="t">serve_index_html</span><span class="t">:</span><span class="t"> </span><span class="l">false</span><span class="t">,</span><span class="t"></span>
+<span id="line-243"></span><span class="t">  </span><span class="t">)</span><span class="t"></span>
+<span id="line-244"></span><span class="t">  </span><span class="t">use</span><span class="t"> </span><span class="t">baked_asset_handler</span></code></pre></span>
     </div>
 </div>
 
@@ -778,13 +778,16 @@ Grafito.register_routes that injects the version into asset URLs
         <span class="anchor">
             <a href="#section-23" class="anchor">↦</a>
         </span>
-        <p>Start kemal. That's it. The rest is done in <a href="grafito.cr.html">grafito.cr</a>
-where the kemal endpoints are defined.
-Clear ARGV so Kemal doesn't try to parse command line arguments</p>
+        <p>Check if systemd passed a socket file descriptor to start from</p>
 
     </div>
     <div class="code">
-        <span id="line-249"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">ARGV</span><span class="t">.</span><span class="t">clear</span></code></pre></span>
+        <span id="line-247"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">listen_fds</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">ENV</span><span class="t">[</span><span class="s">&quot;</span><span class="s">LISTEN_FDS</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">to_i</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-248"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">listen_fds</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
+<span id="line-249"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Unexpectedly got more than 1 socket from systemd</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-250"></span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
+<span id="line-251"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-252"></span><span class="t">  </span><span class="t">socket_activation</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">listen_fds</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="m">1</span></code></pre></span>
     </div>
 </div>
 
@@ -793,12 +796,13 @@ Clear ARGV so Kemal doesn't try to parse command line arguments</p>
         <span class="anchor">
             <a href="#section-24" class="anchor">↦</a>
         </span>
-        <p>If systemd socket activation is in use, don't shut down the socket when we exit.
-Systemd manages the lifetime of the socket in that case.</p>
+        <p>Start kemal. That's it. The rest is done in <a href="grafito.cr.html">grafito.cr</a>
+where the kemal endpoints are defined.
+Clear ARGV so Kemal doesn't try to parse command line arguments</p>
 
     </div>
     <div class="code">
-        <span id="line-252"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">Kemal</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">trap_signal</span><span class="t">:</span><span class="t"> </span><span class="o">!</span><span class="t">socket_activation</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">config</span><span class="o">|</span></code></pre></span>
+        <span id="line-257"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">ARGV</span><span class="t">.</span><span class="t">clear</span></code></pre></span>
     </div>
 </div>
 
@@ -807,17 +811,12 @@ Systemd manages the lifetime of the socket in that case.</p>
         <span class="anchor">
             <a href="#section-25" class="anchor">↦</a>
         </span>
-        <p>The HTTP server is initialized by Kemal before starting this block</p>
+        <p>If systemd socket activation is in use, don't shut down the socket when we exit.
+Systemd manages the lifetime of the socket in that case.</p>
 
     </div>
     <div class="code">
-        <span id="line-254"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">server</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">config</span><span class="t">.</span><span class="t">server</span><span class="t"></span>
-<span id="line-255"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">server</span><span class="t">.</span><span class="nk">nil?</span><span class="t"></span>
-<span id="line-256"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Kemal did not initialize an HTTP server</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-257"></span><span class="t">      </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
-<span id="line-258"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-259"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">socket_activation</span><span class="t"></span>
-<span id="line-260"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Starting Grafito server via systemd socket activation</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
+        <span id="line-260"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">Kemal</span><span class="t">.</span><span class="t">run</span><span class="t">(</span><span class="t">trap_signal</span><span class="t">:</span><span class="t"> </span><span class="o">!</span><span class="t">socket_activation</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">config</span><span class="o">|</span></code></pre></span>
     </div>
 </div>
 
@@ -826,13 +825,17 @@ Systemd manages the lifetime of the socket in that case.</p>
         <span class="anchor">
             <a href="#section-26" class="anchor">↦</a>
         </span>
-        <p>Start kemal listening on the socket passed by socket activation</p>
+        <p>The HTTP server is initialized by Kemal before starting this block</p>
 
     </div>
     <div class="code">
-        <span id="line-262"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">server</span><span class="t">.</span><span class="t">bind</span><span class="t">(</span><span class="no">TCPServer</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">fd</span><span class="t">:</span><span class="t"> </span><span class="m">3</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
-<span id="line-263"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
-<span id="line-264"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Starting Grafito server on </span><span class="lsi">#{</span><span class="t">bind_address</span><span class="t"></span><span class="lsi">}</span><span class="s">:</span><span class="lsi">#{</span><span class="t">port</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
+        <span id="line-262"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">server</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">config</span><span class="t">.</span><span class="t">server</span><span class="t"></span>
+<span id="line-263"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">server</span><span class="t">.</span><span class="nk">nil?</span><span class="t"></span>
+<span id="line-264"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Kemal did not initialize an HTTP server</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-265"></span><span class="t">      </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
+<span id="line-266"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-267"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">socket_activation</span><span class="t"></span>
+<span id="line-268"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Starting Grafito server via systemd socket activation</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
     </div>
 </div>
 
@@ -841,14 +844,13 @@ Systemd manages the lifetime of the socket in that case.</p>
         <span class="anchor">
             <a href="#section-27" class="anchor">↦</a>
         </span>
-        <p>Start kemal listening on the user-specified address and port</p>
+        <p>Start kemal listening on the socket passed by socket activation</p>
 
     </div>
     <div class="code">
-        <span id="line-266"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">server</span><span class="t">.</span><span class="t">bind_tcp</span><span class="t">(</span><span class="t">bind_address</span><span class="t">,</span><span class="t"> </span><span class="t">port</span><span class="t">)</span><span class="t"></span>
-<span id="line-267"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-268"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-269"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-270"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">server</span><span class="t">.</span><span class="t">bind</span><span class="t">(</span><span class="no">TCPServer</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">fd</span><span class="t">:</span><span class="t"> </span><span class="m">3</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-271"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-272"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Starting Grafito server on </span><span class="lsi">#{</span><span class="t">bind_address</span><span class="t"></span><span class="lsi">}</span><span class="s">:</span><span class="lsi">#{</span><span class="t">port</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span></code></pre></span>
     </div>
 </div>
 
@@ -857,18 +859,14 @@ Systemd manages the lifetime of the socket in that case.</p>
         <span class="anchor">
             <a href="#section-28" class="anchor">↦</a>
         </span>
-        <p>Parses app store configuration. The app store rides on the compose
-view (and its actions need the same gate as the other compose
-actions); its caches and installed apps live under --data-dir.</p>
+        <p>Start kemal listening on the user-specified address and port</p>
 
     </div>
     <div class="code">
-        <span id="line-274"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">parse_app_store_config</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"></span>
-<span id="line-275"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">apps_enabled</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--apps</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="o">!=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">false</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-276"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">appstores_spec</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--appstores</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"></span>
-<span id="line-277"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">data_dir</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">MetricsStore</span><span class="t">.</span><span class="t">resolve_data_dir</span><span class="t">(</span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--data-dir</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t"></span>
-<span id="line-278"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">App store: </span><span class="lsi">#{</span><span class="no">Grafito</span><span class="t">.</span><span class="t">apps_enabled?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">enabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">disabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span><span class="lsi">}</span><span class="s"> (data dir: </span><span class="lsi">#{</span><span class="no">Grafito</span><span class="t">.</span><span class="t">data_dir</span><span class="t"></span><span class="lsi">}</span><span class="s">)</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-279"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-274"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">server</span><span class="t">.</span><span class="t">bind_tcp</span><span class="t">(</span><span class="t">bind_address</span><span class="t">,</span><span class="t"> </span><span class="t">port</span><span class="t">)</span><span class="t"></span>
+<span id="line-275"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-276"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-277"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -877,25 +875,15 @@ actions); its caches and installed apps live under --data-dir.</p>
         <span class="anchor">
             <a href="#section-29" class="anchor">↦</a>
         </span>
-        <p>Returns the port to listen on, parsing the docopt argument which may
-arrive as Int32 (parsed default or config file) or String (command line).
-Exits with a clear message on invalid values.</p>
+        <p>Parses app store configuration. The app store rides on the compose
+view (and its actions need the same gate as the other compose
+actions); its caches and installed apps live under --data-dir.</p>
 
     </div>
     <div class="code">
-        <span id="line-284"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">parse_port</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"></span>
-<span id="line-285"></span><span class="t">  </span><span class="t">port_value</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--port</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"></span>
-<span id="line-286"></span><span class="t">  </span><span class="t">port</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
-<span id="line-287"></span><span class="t">  </span><span class="nk">case</span><span class="t"> </span><span class="t">port_value</span><span class="t"></span>
-<span id="line-288"></span><span class="t">  </span><span class="nk">when</span><span class="t"> </span><span class="no">Int32</span><span class="t">  </span><span class="nk">then</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">port_value</span><span class="t"></span>
-<span id="line-289"></span><span class="t">  </span><span class="nk">when</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="nk">then</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">port_value</span><span class="t">.</span><span class="t">to_i?</span><span class="t"></span>
-<span id="line-290"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-291"></span><span class="t">  </span><span class="nk">unless</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">&lt;=</span><span class="t"> </span><span class="m">65535</span><span class="t"></span>
-<span id="line-292"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Invalid port &#39;</span><span class="lsi">#{</span><span class="t">port_value</span><span class="t"></span><span class="lsi">}</span><span class="s">&#39;: must be a number between 1 and 65535.</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-293"></span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
-<span id="line-294"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-295"></span><span class="t">  </span><span class="t">port</span><span class="t"></span>
-<span id="line-296"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-282"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">parse_app_store_config</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"></span>
+<span id="line-283"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">apps_enabled</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--apps</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="o">!=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">false</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-284"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">appstores_spec</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--appstores</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span></code></pre></span>
     </div>
 </div>
 
@@ -904,18 +892,22 @@ Exits with a clear message on invalid values.</p>
         <span class="anchor">
             <a href="#section-30" class="anchor">↦</a>
         </span>
-        <p>Applies the units restriction from the parsed arguments, if any.</p>
+        <p>Nothing needs the data dir on a log-only deployment (metrics need
+the dashboard; the app store needs compose+apps), so skip its
+creation entirely instead of logging a scary failure an
+unprivileged log-only user cannot act on.</p>
 
     </div>
     <div class="code">
-        <span id="line-299"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">parse_units</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"></span>
-<span id="line-300"></span><span class="t">  </span><span class="t">units_arg</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--units</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
-<span id="line-301"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">units_arg</span><span class="t">.</span><span class="nk">is_a?</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">units_arg</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
-<span id="line-302"></span><span class="t">    </span><span class="t">units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">units_arg</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="s">&quot;</span><span class="s">,</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">strip</span><span class="t">)</span><span class="t"></span>
-<span id="line-303"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">allowed_units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">units</span><span class="t"></span>
-<span id="line-304"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Restricting to units: </span><span class="lsi">#{</span><span class="t">units</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s">, </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-305"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-306"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-290"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">needs_data_dir</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">dashboard_enabled?</span><span class="t"> </span><span class="o">||</span><span class="t"></span>
+<span id="line-291"></span><span class="t">                   </span><span class="t">(</span><span class="no">Grafito</span><span class="t">.</span><span class="t">compose_enabled?</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">apps_enabled?</span><span class="t">)</span><span class="t"></span>
+<span id="line-292"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">needs_data_dir</span><span class="t"></span>
+<span id="line-293"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">data_dir</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">MetricsStore</span><span class="t">.</span><span class="t">resolve_data_dir</span><span class="t">(</span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--data-dir</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t"></span>
+<span id="line-294"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">App store: </span><span class="lsi">#{</span><span class="no">Grafito</span><span class="t">.</span><span class="t">apps_enabled?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">enabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">disabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span><span class="lsi">}</span><span class="s"> (data dir: </span><span class="lsi">#{</span><span class="no">Grafito</span><span class="t">.</span><span class="t">data_dir</span><span class="t"></span><span class="lsi">}</span><span class="s">)</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-295"></span><span class="t">  </span><span class="nk">else</span><span class="t"></span>
+<span id="line-296"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">App store: disabled (no data dir needed)</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-297"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-298"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -924,19 +916,25 @@ Exits with a clear message on invalid values.</p>
         <span class="anchor">
             <a href="#section-31" class="anchor">↦</a>
         </span>
-        <p>Applies the idle shutdown timeout from the parsed arguments, if any.</p>
+        <p>Returns the port to listen on, parsing the docopt argument which may
+arrive as Int32 (parsed default or config file) or String (command line).
+Exits with a clear message on invalid values.</p>
 
     </div>
     <div class="code">
-        <span id="line-309"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">parse_idle_timeout</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"></span>
-<span id="line-310"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--idle-timeout-sec</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
-<span id="line-311"></span><span class="t">    </span><span class="t">timeout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--idle-timeout-sec</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">to_i32</span><span class="t"></span>
-<span id="line-312"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">timeout</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"></span>
-<span id="line-313"></span><span class="t">      </span><span class="no">Grafito</span><span class="t">.</span><span class="t">idle_timeout_sec</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">timeout</span><span class="t"></span>
-<span id="line-314"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Will shut down after </span><span class="lsi">#{</span><span class="t">timeout</span><span class="t"></span><span class="lsi">}</span><span class="s">s without any requests</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-315"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-316"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-317"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-303"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">parse_port</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"></span>
+<span id="line-304"></span><span class="t">  </span><span class="t">port_value</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--port</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t"></span>
+<span id="line-305"></span><span class="t">  </span><span class="t">port</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-306"></span><span class="t">  </span><span class="nk">case</span><span class="t"> </span><span class="t">port_value</span><span class="t"></span>
+<span id="line-307"></span><span class="t">  </span><span class="nk">when</span><span class="t"> </span><span class="no">Int32</span><span class="t">  </span><span class="nk">then</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">port_value</span><span class="t"></span>
+<span id="line-308"></span><span class="t">  </span><span class="nk">when</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="nk">then</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">port_value</span><span class="t">.</span><span class="t">to_i?</span><span class="t"></span>
+<span id="line-309"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-310"></span><span class="t">  </span><span class="nk">unless</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">port</span><span class="t"> </span><span class="o">&lt;=</span><span class="t"> </span><span class="m">65535</span><span class="t"></span>
+<span id="line-311"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Invalid port &#39;</span><span class="lsi">#{</span><span class="t">port_value</span><span class="t"></span><span class="lsi">}</span><span class="s">&#39;: must be a number between 1 and 65535.</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-312"></span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
+<span id="line-313"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-314"></span><span class="t">  </span><span class="t">port</span><span class="t"></span>
+<span id="line-315"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -945,24 +943,18 @@ Exits with a clear message on invalid values.</p>
         <span class="anchor">
             <a href="#section-32" class="anchor">↦</a>
         </span>
-        <p>Initializes the AI provider from the configured API keys, if any.
-Supports: Anthropic (ANTHROPIC_API_KEY), Z.AI (Z_AI_API_KEY),
-OpenAI (OPENAI_API_KEY), Groq (GROQ_API_KEY), Ollama (GRAFITO_AI_ENDPOINT),
-and ChatJimmy (GRAFITO_AI_PROVIDER=jimmy, never auto-detected).</p>
+        <p>Applies the units restriction from the parsed arguments, if any.</p>
 
     </div>
     <div class="code">
-        <span id="line-323"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">setup_ai_provider</span><span class="t"></span>
-<span id="line-324"></span><span class="t">  </span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">AI</span><span class="no">::</span><span class="no">Config</span><span class="t">.</span><span class="t">provider</span><span class="t"></span>
-<span id="line-325"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">ai_provider</span><span class="t"></span>
-<span id="line-326"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI features enabled: </span><span class="lsi">#{</span><span class="t">ai_provider</span><span class="t">.</span><span class="t">name</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-327"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">ai_provider</span><span class="t"></span>
-<span id="line-328"></span><span class="t">  </span><span class="nk">else</span><span class="t"></span>
-<span id="line-329"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI features disabled - no provider configured</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-330"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">  Set ANTHROPIC_API_KEY or Z_AI_API_KEY to enable</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-331"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
-<span id="line-332"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-333"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-318"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">parse_units</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"></span>
+<span id="line-319"></span><span class="t">  </span><span class="t">units_arg</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--units</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-320"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">units_arg</span><span class="t">.</span><span class="nk">is_a?</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="o">!</span><span class="t">units_arg</span><span class="t">.</span><span class="t">strip</span><span class="t">.</span><span class="t">empty?</span><span class="t"></span>
+<span id="line-321"></span><span class="t">    </span><span class="t">units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">units_arg</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="s">&quot;</span><span class="s">,</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">strip</span><span class="t">)</span><span class="t"></span>
+<span id="line-322"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">allowed_units</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">units</span><span class="t"></span>
+<span id="line-323"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Restricting to units: </span><span class="lsi">#{</span><span class="t">units</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s">, </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-324"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-325"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -971,17 +963,19 @@ and ChatJimmy (GRAFITO_AI_PROVIDER=jimmy, never auto-detected).</p>
         <span class="anchor">
             <a href="#section-33" class="anchor">↦</a>
         </span>
-        <p>Enables basic authentication when both credentials are configured,
-refuses to run half-configured, and warns when running unprotected.</p>
+        <p>Applies the idle shutdown timeout from the parsed arguments, if any.</p>
 
     </div>
     <div class="code">
-        <span id="line-337"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">setup_basic_auth</span><span class="t">(</span><span class="t">auth_user</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t">,</span><span class="t"> </span><span class="t">auth_pass</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t">)</span><span class="t"></span>
-<span id="line-338"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">auth_pass</span><span class="t"></span>
-<span id="line-339"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Basic Authentication enabled. User: </span><span class="lsi">#{</span><span class="t">auth_user</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-340"></span><span class="t">    </span><span class="t">basic_auth</span><span class="t"> </span><span class="t">auth_user</span><span class="t">,</span><span class="t"> </span><span class="t">auth_pass</span><span class="t"></span>
-<span id="line-341"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">auth_configured</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t"></span>
-<span id="line-342"></span><span class="t">  </span><span class="nk">elsif</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">auth_pass</span></code></pre></span>
+        <span id="line-328"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">parse_idle_timeout</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"></span>
+<span id="line-329"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--idle-timeout-sec</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-330"></span><span class="t">    </span><span class="t">timeout</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--idle-timeout-sec</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">to_i32</span><span class="t"></span>
+<span id="line-331"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">timeout</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="m">0</span><span class="t"></span>
+<span id="line-332"></span><span class="t">      </span><span class="no">Grafito</span><span class="t">.</span><span class="t">idle_timeout_sec</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">timeout</span><span class="t"></span>
+<span id="line-333"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Will shut down after </span><span class="lsi">#{</span><span class="t">timeout</span><span class="t"></span><span class="lsi">}</span><span class="s">s without any requests</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-334"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-335"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-336"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -990,14 +984,24 @@ refuses to run half-configured, and warns when running unprotected.</p>
         <span class="anchor">
             <a href="#section-34" class="anchor">↦</a>
         </span>
-        <p>Only one of the credentials was set - this is a misconfiguration.
-Exit with an error code to prevent running in an insecure state.</p>
+        <p>Initializes the AI provider from the configured API keys, if any.
+Supports: Anthropic (ANTHROPIC_API_KEY), Z.AI (Z_AI_API_KEY),
+OpenAI (OPENAI_API_KEY), Groq (GROQ_API_KEY), Ollama (GRAFITO_AI_ENDPOINT),
+and ChatJimmy (GRAFITO_AI_PROVIDER=jimmy, never auto-detected).</p>
 
     </div>
     <div class="code">
-        <span id="line-345"><pre class="b" ><code class="b"><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Basic Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended.</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-346"></span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
-<span id="line-347"></span><span class="t">  </span><span class="nk">else</span></code></pre></span>
+        <span id="line-342"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">setup_ai_provider</span><span class="t"></span>
+<span id="line-343"></span><span class="t">  </span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">AI</span><span class="no">::</span><span class="no">Config</span><span class="t">.</span><span class="t">provider</span><span class="t"></span>
+<span id="line-344"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">ai_provider</span><span class="t"></span>
+<span id="line-345"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI features enabled: </span><span class="lsi">#{</span><span class="t">ai_provider</span><span class="t">.</span><span class="t">name</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-346"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">ai_provider</span><span class="t"></span>
+<span id="line-347"></span><span class="t">  </span><span class="nk">else</span><span class="t"></span>
+<span id="line-348"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI features disabled - no provider configured</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-349"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">  Set ANTHROPIC_API_KEY or Z_AI_API_KEY to enable</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-350"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">ai_provider</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-351"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-352"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -1006,13 +1010,17 @@ Exit with an error code to prevent running in an insecure state.</p>
         <span class="anchor">
             <a href="#section-35" class="anchor">↦</a>
         </span>
-        <p>Neither username nor password are set, run without authentication.</p>
+        <p>Enables basic authentication when both credentials are configured,
+refuses to run half-configured, and warns when running unprotected.</p>
 
     </div>
     <div class="code">
-        <span id="line-349"><pre class="b" ><code class="b"><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Basic Authentication is DISABLED. To enable, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS environment variables.</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-350"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-351"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-356"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">setup_basic_auth</span><span class="t">(</span><span class="t">auth_user</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t">,</span><span class="t"> </span><span class="t">auth_pass</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t">)</span><span class="t"></span>
+<span id="line-357"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">auth_pass</span><span class="t"></span>
+<span id="line-358"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Basic Authentication enabled. User: </span><span class="lsi">#{</span><span class="t">auth_user</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-359"></span><span class="t">    </span><span class="t">basic_auth</span><span class="t"> </span><span class="t">auth_user</span><span class="t">,</span><span class="t"> </span><span class="t">auth_pass</span><span class="t"></span>
+<span id="line-360"></span><span class="t">    </span><span class="no">Grafito</span><span class="t">.</span><span class="t">auth_configured</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">true</span><span class="t"></span>
+<span id="line-361"></span><span class="t">  </span><span class="nk">elsif</span><span class="t"> </span><span class="t">auth_user</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">auth_pass</span></code></pre></span>
     </div>
 </div>
 
@@ -1021,17 +1029,14 @@ Exit with an error code to prevent running in an insecure state.</p>
         <span class="anchor">
             <a href="#section-36" class="anchor">↦</a>
         </span>
-        <p>Applies the dashboard options and starts the metrics sampler (with
-Gotify alert evaluation as the per-sample callback) when enabled.</p>
+        <p>Only one of the credentials was set - this is a misconfiguration.
+Exit with an error code to prevent running in an insecure state.</p>
 
     </div>
     <div class="code">
-        <span id="line-355"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">setup_dashboard</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
-<span id="line-356"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">dashboard_enabled</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--dashboard</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="o">!=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">false</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-357"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">enable_actions</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--enable-actions</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">true</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-358"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Dashboard: </span><span class="lsi">#{</span><span class="no">Grafito</span><span class="t">.</span><span class="t">dashboard_enabled?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">enabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">disabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-359"></span><span class="t"></span>
-<span id="line-360"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">enable_actions?</span></code></pre></span>
+        <span id="line-364"><pre class="b" ><code class="b"><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">fatal</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Basic Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended.</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-365"></span><span class="t">    </span><span class="t">exit</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
+<span id="line-366"></span><span class="t">  </span><span class="nk">else</span></code></pre></span>
     </div>
 </div>
 
@@ -1040,29 +1045,13 @@ Gotify alert evaluation as the per-sample callback) when enabled.</p>
         <span class="anchor">
             <a href="#section-37" class="anchor">↦</a>
         </span>
-        <p>State-changing endpoints on an unauthenticated server are a bad
-idea, full stop: actions require credentials.</p>
+        <p>Neither username nor password are set, run without authentication.</p>
 
     </div>
     <div class="code">
-        <span id="line-363"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">auth_configured?</span><span class="t"></span>
-<span id="line-364"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Unit actions: enabled (permitted by the user grafito runs as and polkit)</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-365"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
-<span id="line-366"></span><span class="t">      </span><span class="no">Grafito</span><span class="t">.</span><span class="t">enable_actions</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">false</span><span class="t"></span>
-<span id="line-367"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Unit actions disabled: authentication is not configured (set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS)</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-368"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+        <span id="line-368"><pre class="b" ><code class="b"><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Basic Authentication is DISABLED. To enable, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS environment variables.</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
 <span id="line-369"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-370"></span><span class="t"></span>
-<span id="line-371"></span><span class="t">  </span><span class="nk">return</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">dashboard_enabled?</span><span class="t"></span>
-<span id="line-372"></span><span class="t"></span>
-<span id="line-373"></span><span class="t">  </span><span class="t">interval</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--sample-interval-sec</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">to_i?</span><span class="t"></span>
-<span id="line-374"></span><span class="t">  </span><span class="t">interval</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">30</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">interval</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">interval</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="m">5</span><span class="t"></span>
-<span id="line-375"></span><span class="t">  </span><span class="t">retention</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--retention-days</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">to_i?</span><span class="t"></span>
-<span id="line-376"></span><span class="t">  </span><span class="t">retention</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">7</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">retention</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">retention</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
-<span id="line-377"></span><span class="t">  </span><span class="t">data_dir</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">MetricsStore</span><span class="t">.</span><span class="t">resolve_data_dir</span><span class="t">(</span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--data-dir</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t"></span>
-<span id="line-378"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Metrics: sampling every </span><span class="lsi">#{</span><span class="t">interval</span><span class="t"></span><span class="lsi">}</span><span class="s">s into </span><span class="lsi">#{</span><span class="t">data_dir</span><span class="t"></span><span class="lsi">}</span><span class="s">, keeping </span><span class="lsi">#{</span><span class="t">retention</span><span class="t"></span><span class="lsi">}</span><span class="s"> days</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-379"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">metrics_store</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">MetricsStore</span><span class="t">.</span><span class="t">start</span><span class="t">(</span><span class="t">data_dir</span><span class="t">,</span><span class="t"> </span><span class="t">interval</span><span class="t">,</span><span class="t"> </span><span class="t">retention</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">snapshot</span><span class="o">|</span><span class="t"> </span><span class="t">evaluate_alerts</span><span class="t">(</span><span class="t">snapshot</span><span class="t">)</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-380"></span><span class="nk">end</span></code></pre></span>
+<span id="line-370"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -1071,14 +1060,17 @@ idea, full stop: actions require credentials.</p>
         <span class="anchor">
             <a href="#section-38" class="anchor">↦</a>
         </span>
-        <p>Evaluates the Gotify alert rules against a fresh system snapshot and
-sends any debounced alerts. Called from the metrics sampler fiber; a
-failure here must never take sampling down, so everything is guarded.</p>
+        <p>Applies the dashboard options and starts the metrics sampler (with
+Gotify alert evaluation as the per-sample callback) when enabled.</p>
 
     </div>
     <div class="code">
-        <span id="line-385"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">evaluate_alerts</span><span class="t">(</span><span class="t">snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">SystemStatus</span><span class="no">::</span><span class="no">Snapshot</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
-<span id="line-386"></span><span class="t">  </span><span class="nk">return</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Gotify</span><span class="no">::</span><span class="no">Config</span><span class="t">.</span><span class="t">enabled?</span></code></pre></span>
+        <span id="line-374"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">setup_dashboard</span><span class="t">(</span><span class="t">args</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-375"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">dashboard_enabled</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--dashboard</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="o">!=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">false</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-376"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">enable_actions</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--enable-actions</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">true</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-377"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Dashboard: </span><span class="lsi">#{</span><span class="no">Grafito</span><span class="t">.</span><span class="t">dashboard_enabled?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">enabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">disabled</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-378"></span><span class="t"></span>
+<span id="line-379"></span><span class="t">  </span><span class="nk">if</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">enable_actions?</span></code></pre></span>
     </div>
 </div>
 
@@ -1087,27 +1079,29 @@ failure here must never take sampling down, so everything is guarded.</p>
         <span class="anchor">
             <a href="#section-39" class="anchor">↦</a>
         </span>
-        <p>The error rate needs a journal query; skip the cost when there is
-no Gotify server configured.</p>
+        <p>State-changing endpoints on an unauthenticated server are a bad
+idea, full stop: actions require credentials.</p>
 
     </div>
     <div class="code">
-        <span id="line-390"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">error_count</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Journalctl</span><span class="t">.</span><span class="t">query</span><span class="t">(</span><span class="t">since</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">-1m</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">priority</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">3</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">lines</span><span class="t">:</span><span class="t"> </span><span class="m">1000</span><span class="t">)</span><span class="t"></span>
-<span id="line-391"></span><span class="t">  </span><span class="t">errors_per_min</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">error_count</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">error_count</span><span class="t">.</span><span class="t">size</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="m">0.0</span><span class="t"></span>
-<span id="line-392"></span><span class="t"></span>
-<span id="line-393"></span><span class="t">  </span><span class="t">client</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Gotify</span><span class="no">::</span><span class="no">Client</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
-<span id="line-394"></span><span class="t">  </span><span class="t">alerts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">ALERT_RULES</span><span class="t">.</span><span class="t">evaluate</span><span class="t">(</span><span class="t"></span>
-<span id="line-395"></span><span class="t">    </span><span class="t">disk_used_pct</span><span class="t">:</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">disk_used_pct</span><span class="t">,</span><span class="t"></span>
-<span id="line-396"></span><span class="t">    </span><span class="t">failed_units</span><span class="t">:</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">units</span><span class="t">.</span><span class="nk">select</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">failed?</span><span class="t">)</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">unit</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
-<span id="line-397"></span><span class="t">    </span><span class="t">errors_per_min</span><span class="t">:</span><span class="t"> </span><span class="t">errors_per_min</span><span class="t">,</span><span class="t"></span>
-<span id="line-398"></span><span class="t">  </span><span class="t">)</span><span class="t"></span>
-<span id="line-399"></span><span class="t">  </span><span class="t">alerts</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">alert</span><span class="o">|</span><span class="t"></span>
-<span id="line-400"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Gotify</span><span class="no">::</span><span class="no">Config</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Sending alert &#39;</span><span class="lsi">#{</span><span class="t">alert</span><span class="t">.</span><span class="t">rule</span><span class="t"></span><span class="lsi">}</span><span class="s">&#39;: </span><span class="lsi">#{</span><span class="t">alert</span><span class="t">.</span><span class="t">title</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-401"></span><span class="t">    </span><span class="t">client</span><span class="t">.</span><span class="t">send_notification</span><span class="t">(</span><span class="t">alert</span><span class="t">.</span><span class="t">title</span><span class="t">,</span><span class="t"> </span><span class="t">alert</span><span class="t">.</span><span class="t">message</span><span class="t">)</span><span class="t"></span>
-<span id="line-402"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-403"></span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
-<span id="line-404"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Gotify</span><span class="no">::</span><span class="no">Config</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Alert evaluation failed</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-405"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-382"><pre class="b" ><code class="b"><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">auth_configured?</span><span class="t"></span>
+<span id="line-383"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Unit actions: enabled (permitted by the user grafito runs as and polkit)</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-384"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-385"></span><span class="t">      </span><span class="no">Grafito</span><span class="t">.</span><span class="t">enable_actions</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">false</span><span class="t"></span>
+<span id="line-386"></span><span class="t">      </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">warn</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Unit actions disabled: authentication is not configured (set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS)</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-387"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-388"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-389"></span><span class="t"></span>
+<span id="line-390"></span><span class="t">  </span><span class="nk">return</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="no">Grafito</span><span class="t">.</span><span class="t">dashboard_enabled?</span><span class="t"></span>
+<span id="line-391"></span><span class="t"></span>
+<span id="line-392"></span><span class="t">  </span><span class="t">interval</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--sample-interval-sec</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">to_i?</span><span class="t"></span>
+<span id="line-393"></span><span class="t">  </span><span class="t">interval</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">30</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">interval</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">interval</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="m">5</span><span class="t"></span>
+<span id="line-394"></span><span class="t">  </span><span class="t">retention</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--retention-days</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">.</span><span class="t">to_i?</span><span class="t"></span>
+<span id="line-395"></span><span class="t">  </span><span class="t">retention</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">7</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">retention</span><span class="t">.</span><span class="nk">nil?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="t">retention</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="m">1</span><span class="t"></span>
+<span id="line-396"></span><span class="t">  </span><span class="t">data_dir</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">MetricsStore</span><span class="t">.</span><span class="t">resolve_data_dir</span><span class="t">(</span><span class="t">args</span><span class="t">[</span><span class="s">&quot;</span><span class="s">--data-dir</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t"></span>
+<span id="line-397"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Metrics: sampling every </span><span class="lsi">#{</span><span class="t">interval</span><span class="t"></span><span class="lsi">}</span><span class="s">s into </span><span class="lsi">#{</span><span class="t">data_dir</span><span class="t"></span><span class="lsi">}</span><span class="s">, keeping </span><span class="lsi">#{</span><span class="t">retention</span><span class="t"></span><span class="lsi">}</span><span class="s"> days</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-398"></span><span class="t">  </span><span class="no">Grafito</span><span class="t">.</span><span class="t">metrics_store</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">MetricsStore</span><span class="t">.</span><span class="t">start</span><span class="t">(</span><span class="t">data_dir</span><span class="t">,</span><span class="t"> </span><span class="t">interval</span><span class="t">,</span><span class="t"> </span><span class="t">retention</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">snapshot</span><span class="o">|</span><span class="t"> </span><span class="t">evaluate_alerts</span><span class="t">(</span><span class="t">snapshot</span><span class="t">)</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-399"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -1116,13 +1110,58 @@ no Gotify server configured.</p>
         <span class="anchor">
             <a href="#section-40" class="anchor">↦</a>
         </span>
+        <p>Evaluates the Gotify alert rules against a fresh system snapshot and
+sends any debounced alerts. Called from the metrics sampler fiber; a
+failure here must never take sampling down, so everything is guarded.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-404"><pre class="b" ><code class="b"><span class="nk">def</span><span class="t"> </span><span class="nv">evaluate_alerts</span><span class="t">(</span><span class="t">snapshot</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">SystemStatus</span><span class="no">::</span><span class="no">Snapshot</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-405"></span><span class="t">  </span><span class="nk">return</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Gotify</span><span class="no">::</span><span class="no">Config</span><span class="t">.</span><span class="t">enabled?</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-41" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-41" class="anchor">↦</a>
+        </span>
+        <p>The error rate needs a journal query; skip the cost when there is
+no Gotify server configured.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-409"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">error_count</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Journalctl</span><span class="t">.</span><span class="t">query</span><span class="t">(</span><span class="t">since</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">-1m</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">priority</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">3</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="t">lines</span><span class="t">:</span><span class="t"> </span><span class="m">1000</span><span class="t">)</span><span class="t"></span>
+<span id="line-410"></span><span class="t">  </span><span class="t">errors_per_min</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">error_count</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="t">error_count</span><span class="t">.</span><span class="t">size</span><span class="t">.</span><span class="t">to_f</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="m">0.0</span><span class="t"></span>
+<span id="line-411"></span><span class="t"></span>
+<span id="line-412"></span><span class="t">  </span><span class="t">client</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Gotify</span><span class="no">::</span><span class="no">Client</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-413"></span><span class="t">  </span><span class="t">alerts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">ALERT_RULES</span><span class="t">.</span><span class="t">evaluate</span><span class="t">(</span><span class="t"></span>
+<span id="line-414"></span><span class="t">    </span><span class="t">disk_used_pct</span><span class="t">:</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">disk_used_pct</span><span class="t">,</span><span class="t"></span>
+<span id="line-415"></span><span class="t">    </span><span class="t">failed_units</span><span class="t">:</span><span class="t"> </span><span class="t">snapshot</span><span class="t">.</span><span class="t">units</span><span class="t">.</span><span class="nk">select</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">failed?</span><span class="t">)</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">unit</span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-416"></span><span class="t">    </span><span class="t">errors_per_min</span><span class="t">:</span><span class="t"> </span><span class="t">errors_per_min</span><span class="t">,</span><span class="t"></span>
+<span id="line-417"></span><span class="t">  </span><span class="t">)</span><span class="t"></span>
+<span id="line-418"></span><span class="t">  </span><span class="t">alerts</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">alert</span><span class="o">|</span><span class="t"></span>
+<span id="line-419"></span><span class="t">    </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Gotify</span><span class="no">::</span><span class="no">Config</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Sending alert &#39;</span><span class="lsi">#{</span><span class="t">alert</span><span class="t">.</span><span class="t">rule</span><span class="t"></span><span class="lsi">}</span><span class="s">&#39;: </span><span class="lsi">#{</span><span class="t">alert</span><span class="t">.</span><span class="t">title</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-420"></span><span class="t">    </span><span class="t">client</span><span class="t">.</span><span class="t">send_notification</span><span class="t">(</span><span class="t">alert</span><span class="t">.</span><span class="t">title</span><span class="t">,</span><span class="t"> </span><span class="t">alert</span><span class="t">.</span><span class="t">message</span><span class="t">)</span><span class="t"></span>
+<span id="line-421"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-422"></span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-423"></span><span class="t">  </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Gotify</span><span class="no">::</span><span class="no">Config</span><span class="no">::</span><span class="no">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Alert evaluation failed</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-424"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-42" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-42" class="anchor">↦</a>
+        </span>
         <p>Long-lived alert rules so the debounce state survives across samples.</p>
 
     </div>
     <div class="code">
-        <span id="line-408"><pre class="b" ><code class="b"><span class="no">ALERT_RULES</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Gotify</span><span class="no">::</span><span class="no">Rules</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
-<span id="line-409"></span><span class="t"></span>
-<span id="line-410"></span><span class="t">main</span><span class="t">(</span><span class="t">)</span></code></pre></span>
+        <span id="line-427"><pre class="b" ><code class="b"><span class="no">ALERT_RULES</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Grafito</span><span class="no">::</span><span class="no">Gotify</span><span class="no">::</span><span class="no">Rules</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-428"></span><span class="t"></span>
+<span id="line-429"></span><span class="t">main</span><span class="t">(</span><span class="t">)</span></code></pre></span>
     </div>
 </div>
 
