@@ -26,11 +26,19 @@ describe "Kemal routes" do
     response[:body].should contain("Missing cursor")
   end
 
-  it "GET /context returns 400 for a non-positive count" do
-    response = dispatch_request("GET", "/context?cursor=abc&count=0")
+  it "GET /context clamps the count instead of running an unbounded query" do
+    # A huge count used to reach journalctl verbatim (a memory/CPU
+    # DoS); it now clamps to the same ceiling as /logs (500).
+    response = dispatch_request("GET", "/context?cursor=abc&count=100000000")
 
-    response[:status].should eq(400)
-    response[:body].should contain("count must be positive")
+    response[:status].should eq(200)
+    {% if flag?(:demo_mode) %}
+      # The fixture journal resolves the cursor and renders with the
+      # clamped count.
+      response[:body].should contain("Log Context (500 before")
+    {% else %}
+      response[:body].should contain("Could not retrieve context")
+    {% end %}
   end
 
   it "POST /ask-ai returns 503 when no AI provider is configured" do
