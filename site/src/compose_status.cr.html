@@ -165,6 +165,24 @@
 
             <li>
 
+                <a href="src/app_store.cr.html"><span>src/app_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/assets.cr.html"><span>src/assets.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_appstore.cr.html"><span>src/compose_appstore.cr</span></a>
+
+            </li>
+
+            <li>
+
                 <a href="src/compose_dashboard.cr.html"><span>src/compose_dashboard.cr</span></a>
 
             </li>
@@ -184,6 +202,12 @@
             <li>
 
                 <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_appstore_data.cr.html"><span>src/fake_appstore_data.cr</span></a>
 
             </li>
 
@@ -309,7 +333,7 @@ Compose labels (<code>com.docker.compose.project</code>,
 <p>Containers whose project is missing from <code>compose ls</code> (config files
 moved or deleted) still show up, with no config files and therefore no
 stack-level actions.</p>
-<p>When compiled with <code>-Dfake_journal</code> (the demo build) it returns a
+<p>When compiled with <code>-Ddemo_mode</code> (the demo build) it returns a
 small deterministic snapshot instead, so the compose view works
 without Docker.</p>
 
@@ -318,7 +342,7 @@ without Docker.</p>
         <span id="line-27"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">json</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
 <span id="line-28"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">log</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
 <span id="line-29"></span><span class="t"></span>
-<span id="line-30"></span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-30"></span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:demo_mode</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
 <span id="line-31"></span><span class="t">  </span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./fake_compose_data</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
 <span id="line-32"></span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
 <span id="line-33"></span><span class="t"></span>
@@ -538,7 +562,7 @@ demo build this is fake data; otherwise it queries docker.</p>
     </div>
     <div class="code">
         <span id="line-169"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">stacks</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Stack</span><span class="t">)</span><span class="t"></span>
-<span id="line-170"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-170"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:demo_mode</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
 <span id="line-171"></span><span class="t">      </span><span class="no">FakeComposeData</span><span class="t">.</span><span class="t">stacks</span><span class="t"></span>
 <span id="line-172"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">else</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
 <span id="line-173"></span><span class="t">      </span><span class="t">real_stacks</span><span class="t"></span>

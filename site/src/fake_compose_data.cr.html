@@ -165,6 +165,24 @@
 
             <li>
 
+                <a href="src/app_store.cr.html"><span>src/app_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/assets.cr.html"><span>src/assets.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_appstore.cr.html"><span>src/compose_appstore.cr</span></a>
+
+            </li>
+
+            <li>
+
                 <a href="src/compose_dashboard.cr.html"><span>src/compose_dashboard.cr</span></a>
 
             </li>
@@ -184,6 +202,12 @@
             <li>
 
                 <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_appstore_data.cr.html"><span>src/fake_appstore_data.cr</span></a>
 
             </li>
 
@@ -291,17 +315,23 @@
             <a href="#fake-compose-data" class="anchor">↦</a>
         </span>
         <h1>Fake compose data</h1>
-<p>Deterministic compose stacks for demo builds (<code>-Dfake_journal</code>), the
+<p>Deterministic compose stacks for demo builds (<code>-Ddemo_mode</code>), the
 same idea as the fake journal and systemd data: a running stack, a
 stack with an unhealthy service and a stopped one, and one orphaned
 project whose compose files are gone, so every UI state is visible
 without Docker.</p>
+<p>The world is also <em>mutable</em>: simulated stack and service actions
+flip states (stopping the webapp stack really shows it as exited),
+and apps installed from the fake app store appear as real stacks.
+Overlays sit on top of the fixtures below, so bringing things back
+up restores the seeded scenario.</p>
 
     </div>
     <div class="code">
-        <span id="line-9"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./compose_status</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-10"></span><span class="t"></span>
-<span id="line-11"></span><span class="nk">module</span><span class="t"> </span><span class="no">FakeComposeData</span></code></pre></span>
+        <span id="line-15"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./compose_status</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-16"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./app_store</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-17"></span><span class="t"></span>
+<span id="line-18"></span><span class="nk">module</span><span class="t"> </span><span class="no">FakeComposeData</span></code></pre></span>
     </div>
 </div>
 
@@ -314,101 +344,32 @@ without Docker.</p>
 
     </div>
     <div class="code">
-        <span id="line-13"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">WEB_COMPOSE_YAML</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&lt;&lt;-YAML</span><span class="t"></span>
-<span id="line-14"></span><span class="s">    services:</span><span class="s"></span>
-<span id="line-15">      web:</span><span class="s"></span>
-<span id="line-16">        image: nginx:1.27-alpine</span><span class="s"></span>
-<span id="line-17">        ports:</span><span class="s"></span>
-<span id="line-18">          - &quot;8080:80&quot;</span><span class="s"></span>
-<span id="line-19">        healthcheck:</span><span class="s"></span>
-<span id="line-20">          test: [&quot;CMD&quot;, &quot;wget&quot;, &quot;-q&quot;, &quot;-O&quot;, &quot;-&quot;, &quot;http://localhost/&quot;]</span><span class="s"></span>
-<span id="line-21">          interval: 30s</span><span class="s"></span>
-<span id="line-22">      api:</span><span class="s"></span>
-<span id="line-23">        image: ghcr.io/example/webapp-api:latest</span><span class="s"></span>
-<span id="line-24">        environment:</span><span class="s"></span>
-<span id="line-25">          DATABASE_URL: postgres://db:5432/webapp</span><span class="s"></span>
-<span id="line-26">        depends_on:</span><span class="s"></span>
-<span id="line-27">          - db</span><span class="s"></span>
-<span id="line-28">        healthcheck:</span><span class="s"></span>
-<span id="line-29">          test: [&quot;CMD&quot;, &quot;curl&quot;, &quot;-f&quot;, &quot;http://localhost:3000/healthz&quot;]</span><span class="s"></span>
-<span id="line-30">          interval: 15s</span><span class="s"></span>
-<span id="line-31">          retries: 3</span><span class="s"></span>
-<span id="line-32">      db:</span><span class="s"></span>
-<span id="line-33">        image: postgres:16-alpine</span><span class="s"></span>
-<span id="line-34">        volumes:</span><span class="s"></span>
-<span id="line-35">          - db-data:/var/lib/postgresql/data</span><span class="s"></span>
-<span id="line-36">    volumes:</span><span class="s"></span>
-<span id="line-37">      db-data:</span><span class="s"></span>
-<span id="line-38">    YAML</span><span class="s"></span><span class="t"></span>
-<span id="line-39"></span><span class="t"></span>
-<span id="line-40"></span><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">stacks</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">)</span><span class="t"></span>
-<span id="line-41"></span><span class="t">    </span><span class="t">web_services</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
-<span id="line-42"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-43"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-44"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">api</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-45"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp-api-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-46"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-47"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">unhealthy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-48"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">ghcr.io/example/webapp-api:latest</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-49"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-50"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Up 2 hours (unhealthy)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-51"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
-<span id="line-52"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-53"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-54"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">db</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-55"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp-db-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-56"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-57"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">healthy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-58"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">postgres:16-alpine</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-59"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">127.0.0.1:5432-&gt;5432/tcp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-60"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Up 3 days (healthy)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-61"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
-<span id="line-62"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-63"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-64"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">web</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-65"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp-web-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-66"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-67"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">healthy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-68"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">nginx:1.27-alpine</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-69"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">0.0.0.0:8080-&gt;80/tcp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-70"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Up 3 days (healthy)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-71"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
-<span id="line-72"></span><span class="t">    </span><span class="t">]</span><span class="t"></span>
-<span id="line-73"></span><span class="t">    </span><span class="t">monitoring_services</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
-<span id="line-74"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-75"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-76"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">gotify</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-77"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring-gotify-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-78"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-79"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">starting</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-80"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">gotify/server:latest</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-81"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">0.0.0.0:8081-&gt;80/tcp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-82"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Up 20 seconds (health: starting)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-83"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
-<span id="line-84"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-85"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-86"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">vector</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-87"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring-vector-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-88"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">exited</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-89"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-90"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">timberio/vector:latest-alpine</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-91"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-92"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Exited (0) 5 minutes ago</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-93"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
-<span id="line-94"></span><span class="t">    </span><span class="t">]</span><span class="t"></span>
-<span id="line-95"></span><span class="t">    </span><span class="t">[</span><span class="t"></span>
-<span id="line-96"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-97"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-98"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running(1)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-99"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">/opt/stacks/monitoring/compose.yaml</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">,</span><span class="t"></span>
-<span id="line-100"></span><span class="t">        </span><span class="t">services</span><span class="t">:</span><span class="t"> </span><span class="t">monitoring_services</span><span class="t">,</span><span class="t"></span>
-<span id="line-101"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
-<span id="line-102"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-103"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-104"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running(3)</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-105"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">/opt/stacks/webapp/compose.yaml</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">,</span><span class="t"></span>
-<span id="line-106"></span><span class="t">        </span><span class="t">services</span><span class="t">:</span><span class="t"> </span><span class="t">web_services</span><span class="t">,</span><span class="t"></span>
-<span id="line-107"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span></code></pre></span>
+        <span id="line-20"><pre class="b" ><code class="b"><span class="t">  </span><span class="no">WEB_COMPOSE_YAML</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&lt;&lt;-YAML</span><span class="t"></span>
+<span id="line-21"></span><span class="s">    services:</span><span class="s"></span>
+<span id="line-22">      web:</span><span class="s"></span>
+<span id="line-23">        image: nginx:1.27-alpine</span><span class="s"></span>
+<span id="line-24">        ports:</span><span class="s"></span>
+<span id="line-25">          - &quot;8080:80&quot;</span><span class="s"></span>
+<span id="line-26">        healthcheck:</span><span class="s"></span>
+<span id="line-27">          test: [&quot;CMD&quot;, &quot;wget&quot;, &quot;-q&quot;, &quot;-O&quot;, &quot;-&quot;, &quot;http://localhost/&quot;]</span><span class="s"></span>
+<span id="line-28">          interval: 30s</span><span class="s"></span>
+<span id="line-29">      api:</span><span class="s"></span>
+<span id="line-30">        image: ghcr.io/example/webapp-api:latest</span><span class="s"></span>
+<span id="line-31">        environment:</span><span class="s"></span>
+<span id="line-32">          DATABASE_URL: postgres://db:5432/webapp</span><span class="s"></span>
+<span id="line-33">        depends_on:</span><span class="s"></span>
+<span id="line-34">          - db</span><span class="s"></span>
+<span id="line-35">        healthcheck:</span><span class="s"></span>
+<span id="line-36">          test: [&quot;CMD&quot;, &quot;curl&quot;, &quot;-f&quot;, &quot;http://localhost:3000/healthz&quot;]</span><span class="s"></span>
+<span id="line-37">          interval: 15s</span><span class="s"></span>
+<span id="line-38">          retries: 3</span><span class="s"></span>
+<span id="line-39">      db:</span><span class="s"></span>
+<span id="line-40">        image: postgres:16-alpine</span><span class="s"></span>
+<span id="line-41">        volumes:</span><span class="s"></span>
+<span id="line-42">          - db-data:/var/lib/postgresql/data</span><span class="s"></span>
+<span id="line-43">    volumes:</span><span class="s"></span>
+<span id="line-44">      db-data:</span><span class="s"></span>
+<span id="line-45">    YAML</span><span class="s"></span></code></pre></span>
     </div>
 </div>
 
@@ -417,30 +378,16 @@ without Docker.</p>
         <span class="anchor">
             <a href="#section-2" class="anchor">↦</a>
         </span>
-        <p>An orphaned project: containers exist but the compose files are
-gone, so no stack-level actions are possible.</p>
+        <p>Guarded mutable state: stacks brought down, individual services
+stopped (&quot;stack/service&quot; keys), and stacks created by app store
+installs (project name =&gt; catalog app).</p>
 
     </div>
     <div class="code">
-        <span id="line-110"><pre class="b" ><code class="b"><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-111"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">legacy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-112"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-113"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
-<span id="line-114"></span><span class="t">        </span><span class="t">services</span><span class="t">:</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
-<span id="line-115"></span><span class="t">          </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-116"></span><span class="t">            </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">legacy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-117"></span><span class="t">            </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">old-app</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-118"></span><span class="t">            </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">legacy-old-app-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-119"></span><span class="t">            </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">exited</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-120"></span><span class="t">            </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-121"></span><span class="t">            </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">example/old-app:1.0</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-122"></span><span class="t">            </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-123"></span><span class="t">            </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Exited (0) 2 months ago</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
-<span id="line-124"></span><span class="t">          </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
-<span id="line-125"></span><span class="t">        </span><span class="t">]</span><span class="t">,</span><span class="t"></span>
-<span id="line-126"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
-<span id="line-127"></span><span class="t">    </span><span class="t">]</span><span class="t"></span>
-<span id="line-128"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-50"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">@@mutex</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Mutex</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">protection</span><span class="t">:</span><span class="t"> </span><span class="ss">:checked</span><span class="t">)</span><span class="t"></span>
+<span id="line-51"></span><span class="t">  </span><span class="t">@@down_stacks</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Set</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-52"></span><span class="t">  </span><span class="t">@@stopped_services</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Set</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t"></span>
+<span id="line-53"></span><span class="t">  </span><span class="t">@@installed_stacks</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">{</span><span class="t">}</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">String</span><span class="t"> </span><span class="o">=&gt;</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">AppInfo</span></code></pre></span>
     </div>
 </div>
 
@@ -449,18 +396,16 @@ gone, so no stack-level actions are possible.</p>
         <span class="anchor">
             <a href="#section-3" class="anchor">↦</a>
         </span>
-        <p>The fake compose.yaml served by the YAML view for the web stack;
-other stacks get a generic placeholder so the view is never empty.</p>
+        <p>The current world: fixture stacks with overlays applied, plus one
+stack per simulated app store install.</p>
 
     </div>
     <div class="code">
-        <span id="line-132"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">compose_yaml</span><span class="t">(</span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
-<span id="line-133"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">stack_name</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-134"></span><span class="t">      </span><span class="no">WEB_COMPOSE_YAML</span><span class="t"></span>
-<span id="line-135"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
-<span id="line-136"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">#</span><span class="s"> </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s">\n</span><span class="s">services: {}</span><span class="s">\n</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-137"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-138"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-57"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">stacks</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">)</span><span class="t"></span>
+<span id="line-58"></span><span class="t">    </span><span class="t">@@mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-59"></span><span class="t">      </span><span class="t">fixture_stacks</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">installed_stacks</span><span class="t"></span>
+<span id="line-60"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-61"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -469,22 +414,336 @@ other stacks get a generic placeholder so the view is never empty.</p>
         <span class="anchor">
             <a href="#section-4" class="anchor">↦</a>
         </span>
+        <p>Simulates a stack-level compose action. Returns false for an
+unknown stack. Demo builds only: no docker runs anywhere.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-65"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">apply_stack_action</span><span class="t">(</span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">action</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-66"></span><span class="t">    </span><span class="t">@@mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-67"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="l">false</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">stack_known_locked?</span><span class="t">(</span><span class="t">stack_name</span><span class="t">)</span><span class="t"></span>
+<span id="line-68"></span><span class="t"></span>
+<span id="line-69"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">action</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">stop</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-70"></span><span class="t">        </span><span class="t">@@down_stacks</span><span class="t">.</span><span class="t">add</span><span class="t">(</span><span class="t">stack_name</span><span class="t">)</span><span class="t"></span>
+<span id="line-71"></span><span class="t">      </span><span class="nk">else</span><span class="t"> </span><span class="c"># up, restart, update: everything running again</span><span class="t"></span>
+<span id="line-72"></span><span class="t">        </span><span class="t">@@down_stacks</span><span class="t">.</span><span class="t">delete</span><span class="t">(</span><span class="t">stack_name</span><span class="t">)</span><span class="t"></span>
+<span id="line-73"></span><span class="t">        </span><span class="t">@@stopped_services</span><span class="t">.</span><span class="t">reject!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">starts_with?</span><span class="t">(</span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s">/</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-74"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-75"></span><span class="t">      </span><span class="l">true</span><span class="t"></span>
+<span id="line-76"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-77"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>Simulates a service-level compose action. Returns false for an
+unknown stack/service pair. Starting a service of a down stack
+brings the stack back up, like <code>docker compose start</code> would want.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-82"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">apply_service_action</span><span class="t">(</span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">service_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">action</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-83"></span><span class="t">    </span><span class="t">@@mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-84"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="l">false</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">service_known_locked?</span><span class="t">(</span><span class="t">stack_name</span><span class="t">,</span><span class="t"> </span><span class="t">service_name</span><span class="t">)</span><span class="t"></span>
+<span id="line-85"></span><span class="t"></span>
+<span id="line-86"></span><span class="t">      </span><span class="t">key</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s">/</span><span class="lsi">#{</span><span class="t">service_name</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-87"></span><span class="t">      </span><span class="nk">if</span><span class="t"> </span><span class="t">action</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">stop</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-88"></span><span class="t">        </span><span class="t">@@stopped_services</span><span class="t">.</span><span class="t">add</span><span class="t">(</span><span class="t">key</span><span class="t">)</span><span class="t"></span>
+<span id="line-89"></span><span class="t">      </span><span class="nk">else</span><span class="t"> </span><span class="c"># start, restart</span><span class="t"></span>
+<span id="line-90"></span><span class="t">        </span><span class="t">@@stopped_services</span><span class="t">.</span><span class="t">delete</span><span class="t">(</span><span class="t">key</span><span class="t">)</span><span class="t"></span>
+<span id="line-91"></span><span class="t">        </span><span class="t">@@down_stacks</span><span class="t">.</span><span class="t">delete</span><span class="t">(</span><span class="t">stack_name</span><span class="t">)</span><span class="t"></span>
+<span id="line-92"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-93"></span><span class="t">      </span><span class="l">true</span><span class="t"></span>
+<span id="line-94"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-95"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>Adds a stack for an app installed from the (fake) app store.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-98"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">add_installed_stack</span><span class="t">(</span><span class="t">project_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">app_info</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">AppInfo</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-99"></span><span class="t">    </span><span class="t">@@mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-100"></span><span class="t">      </span><span class="t">@@installed_stacks</span><span class="t">[</span><span class="t">project_name</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">app_info</span><span class="t"></span>
+<span id="line-101"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-102"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>Removes a dynamically installed stack. Fixture scenery is
+unaffected (uninstalling the fixture whoami keeps the webapp
+stack; only the store badge goes away).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-107"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">remove_installed_stack</span><span class="t">(</span><span class="t">project_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-108"></span><span class="t">    </span><span class="t">@@mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-109"></span><span class="t">      </span><span class="t">@@installed_stacks</span><span class="t">.</span><span class="t">delete</span><span class="t">(</span><span class="t">project_name</span><span class="t">)</span><span class="t"> </span><span class="o">!=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-110"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-111"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>Restores the pristine demo compose world (spec hygiene, container
+restarts do the same for the demo site).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-115"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">reset_demo_state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-116"></span><span class="t">    </span><span class="t">@@mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-117"></span><span class="t">      </span><span class="t">@@down_stacks</span><span class="t">.</span><span class="t">clear</span><span class="t"></span>
+<span id="line-118"></span><span class="t">      </span><span class="t">@@stopped_services</span><span class="t">.</span><span class="t">clear</span><span class="t"></span>
+<span id="line-119"></span><span class="t">      </span><span class="t">@@installed_stacks</span><span class="t">.</span><span class="t">clear</span><span class="t"></span>
+<span id="line-120"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-121"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>The fake compose.yaml served by the YAML view for the web stack;
+other stacks get a generic placeholder so the view is never empty.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-125"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">compose_yaml</span><span class="t">(</span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-126"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">stack_name</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-127"></span><span class="t">      </span><span class="no">WEB_COMPOSE_YAML</span><span class="t"></span>
+<span id="line-128"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-129"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">#</span><span class="s"> </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s">\n</span><span class="s">services: {}</span><span class="s">\n</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-130"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-131"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
         <p>Fake output for the job runner so the demo build can show the live
 output view for any action.</p>
 
     </div>
     <div class="code">
-        <span id="line-142"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fake_action_output</span><span class="t">(</span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">action</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
-<span id="line-143"></span><span class="t">    </span><span class="nk">case</span><span class="t"> </span><span class="t">action</span><span class="t"></span>
-<span id="line-144"></span><span class="t">    </span><span class="nk">when</span><span class="t"> </span><span class="s">&quot;</span><span class="s">update</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-145"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">Pulling </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> ...</span><span class="s">\n</span><span class="s"> Container </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s">-web-1  Pulled</span><span class="s">\n</span><span class="s"> Starting </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> ...</span><span class="s">\n</span><span class="s"> Stack </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> updated</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-146"></span><span class="t">    </span><span class="nk">when</span><span class="t"> </span><span class="s">&quot;</span><span class="s">up</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-147"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">Starting </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> ...</span><span class="s">\n</span><span class="s"> Stack </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> started</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-148"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
-<span id="line-149"></span><span class="t">      </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">action</span><span class="t">.</span><span class="t">capitalize</span><span class="t"></span><span class="lsi">}</span><span class="s"> </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> done</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-150"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-151"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-152"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-135"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fake_action_output</span><span class="t">(</span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">action</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-136"></span><span class="t">    </span><span class="nk">case</span><span class="t"> </span><span class="t">action</span><span class="t"></span>
+<span id="line-137"></span><span class="t">    </span><span class="nk">when</span><span class="t"> </span><span class="s">&quot;</span><span class="s">update</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-138"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">Pulling </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> ...</span><span class="s">\n</span><span class="s"> Container </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s">-web-1  Pulled</span><span class="s">\n</span><span class="s"> Starting </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> ...</span><span class="s">\n</span><span class="s"> Stack </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> updated</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-139"></span><span class="t">    </span><span class="nk">when</span><span class="t"> </span><span class="s">&quot;</span><span class="s">up</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-140"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">Starting </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> ...</span><span class="s">\n</span><span class="s"> Stack </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> started</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-141"></span><span class="t">    </span><span class="nk">when</span><span class="t"> </span><span class="s">&quot;</span><span class="s">install</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-142"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">Rendering </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> files ...</span><span class="s">\n</span><span class="s"> Pulling </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> ...</span><span class="s">\n</span><span class="s"> Container </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s">-1  Started</span><span class="s">\n</span><span class="s"> App </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> installed</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-143"></span><span class="t">    </span><span class="nk">when</span><span class="t"> </span><span class="s">&quot;</span><span class="s">sync</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-144"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">Downloading store tarball ...</span><span class="s">\n</span><span class="s"> Unpacking ...</span><span class="s">\n</span><span class="s"> Store synced</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-145"></span><span class="t">    </span><span class="nk">when</span><span class="t"> </span><span class="s">&quot;</span><span class="s">uninstall</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-146"></span><span class="t">      </span><span class="s">&quot;</span><span class="s">Stopping and removing containers ...</span><span class="s">\n</span><span class="s"> Removing app files ...</span><span class="s">\n</span><span class="s"> App </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> uninstalled</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-147"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-148"></span><span class="t">      </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">action</span><span class="t">.</span><span class="t">capitalize</span><span class="t"></span><span class="lsi">}</span><span class="s"> </span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s"> done</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-149"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-150"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-11" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-11" class="anchor">↦</a>
+        </span>
+        <h2>Internals (call only while holding the mutex)</h2>
+
+    </div>
+    <div class="code">
+        <span id="line-154"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">stack_known_locked?</span><span class="t">(</span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-155"></span><span class="t">    </span><span class="t">{</span><span class="s">&quot;</span><span class="s">monitoring</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">legacy</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">stack_name</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"></span>
+<span id="line-156"></span><span class="t">      </span><span class="t">@@installed_stacks</span><span class="t">.</span><span class="t">has_key?</span><span class="t">(</span><span class="t">stack_name</span><span class="t">)</span><span class="t"></span>
+<span id="line-157"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-158"></span><span class="t"></span>
+<span id="line-159"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">service_known_locked?</span><span class="t">(</span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">service_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-160"></span><span class="t">    </span><span class="t">(</span><span class="t">fixture_stacks</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">installed_stacks</span><span class="t">)</span><span class="t">.</span><span class="t">flat_map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">services</span><span class="t">)</span><span class="t">.</span><span class="t">any?</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">service</span><span class="o">|</span><span class="t"></span>
+<span id="line-161"></span><span class="t">      </span><span class="t">service</span><span class="t">.</span><span class="t">stack</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="t">stack_name</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">service</span><span class="t">.</span><span class="t">service</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="t">service_name</span><span class="t"></span>
+<span id="line-162"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-163"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-12" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-12" class="anchor">↦</a>
+        </span>
+        <p>The seeded scenery: a partially unhealthy webapp, a monitoring
+stack that is still starting up, and an orphaned legacy project.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-167"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">fixture_stacks</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">)</span><span class="t"></span>
+<span id="line-168"></span><span class="t">    </span><span class="t">monitoring</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
+<span id="line-169"></span><span class="t">      </span><span class="t">service</span><span class="t">(</span><span class="s">&quot;</span><span class="s">monitoring</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">gotify</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring-gotify-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">starting</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-170"></span><span class="t">        </span><span class="s">&quot;</span><span class="s">gotify/server:latest</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">0.0.0.0:8081-&gt;80/tcp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Up 20 seconds (health: starting)</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-171"></span><span class="t">      </span><span class="t">service</span><span class="t">(</span><span class="s">&quot;</span><span class="s">monitoring</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">vector</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring-vector-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">exited</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-172"></span><span class="t">        </span><span class="s">&quot;</span><span class="s">timberio/vector:latest-alpine</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Exited (0) 5 minutes ago</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-173"></span><span class="t">    </span><span class="t">]</span><span class="t"></span>
+<span id="line-174"></span><span class="t">    </span><span class="t">webapp</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
+<span id="line-175"></span><span class="t">      </span><span class="t">service</span><span class="t">(</span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">api</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp-api-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">unhealthy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-176"></span><span class="t">        </span><span class="s">&quot;</span><span class="s">ghcr.io/example/webapp-api:latest</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Up 2 hours (unhealthy)</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-177"></span><span class="t">      </span><span class="t">service</span><span class="t">(</span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">db</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp-db-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">healthy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-178"></span><span class="t">        </span><span class="s">&quot;</span><span class="s">postgres:16-alpine</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">127.0.0.1:5432-&gt;5432/tcp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Up 3 days (healthy)</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-179"></span><span class="t">      </span><span class="t">service</span><span class="t">(</span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">web</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp-web-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">healthy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-180"></span><span class="t">        </span><span class="s">&quot;</span><span class="s">nginx:1.27-alpine</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">0.0.0.0:8080-&gt;80/tcp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Up 3 days (healthy)</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-181"></span><span class="t">    </span><span class="t">]</span><span class="t"></span>
+<span id="line-182"></span><span class="t">    </span><span class="t">legacy</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
+<span id="line-183"></span><span class="t">      </span><span class="t">service</span><span class="t">(</span><span class="s">&quot;</span><span class="s">legacy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">old-app</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">legacy-old-app-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">exited</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-184"></span><span class="t">        </span><span class="s">&quot;</span><span class="s">example/old-app:1.0</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Exited (0) 2 months ago</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-185"></span><span class="t">    </span><span class="t">]</span><span class="t"></span>
+<span id="line-186"></span><span class="t">    </span><span class="t">[</span><span class="t"></span>
+<span id="line-187"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-188"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">monitoring</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-189"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="t">stack_status</span><span class="t">(</span><span class="s">&quot;</span><span class="s">monitoring</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running(1)</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-190"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">/opt/stacks/monitoring/compose.yaml</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-191"></span><span class="t">        </span><span class="t">services</span><span class="t">:</span><span class="t"> </span><span class="t">monitoring</span><span class="t">,</span><span class="t"></span>
+<span id="line-192"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-193"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-194"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-195"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="t">stack_status</span><span class="t">(</span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running(3)</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-196"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">/opt/stacks/webapp/compose.yaml</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-197"></span><span class="t">        </span><span class="t">services</span><span class="t">:</span><span class="t"> </span><span class="t">webapp</span><span class="t">,</span><span class="t"></span>
+<span id="line-198"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-13" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-13" class="anchor">↦</a>
+        </span>
+        <p>An orphaned project: containers exist but the compose files are
+gone, so no stack-level actions are possible.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-201"><pre class="b" ><code class="b"><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-202"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">legacy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-203"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="t">stack_status</span><span class="t">(</span><span class="s">&quot;</span><span class="s">legacy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-204"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="o">[]</span><span class="t"> </span><span class="nk">of</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-205"></span><span class="t">        </span><span class="t">services</span><span class="t">:</span><span class="t"> </span><span class="t">legacy</span><span class="t">,</span><span class="t"></span>
+<span id="line-206"></span><span class="t">      </span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-207"></span><span class="t">    </span><span class="t">]</span><span class="t"></span>
+<span id="line-208"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-14" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-14" class="anchor">↦</a>
+        </span>
+        <p>One stack per simulated app store install, running the app's
+fixture image. Ports are arbitrary but stable, like a real
+rendered compose file would be.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-213"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">installed_stacks</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">)</span><span class="t"></span>
+<span id="line-214"></span><span class="t">    </span><span class="t">@@installed_stacks</span><span class="t">.</span><span class="t">map</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">project</span><span class="t">,</span><span class="t"> </span><span class="t">app_info</span><span class="o">|</span><span class="t"></span>
+<span id="line-215"></span><span class="t">      </span><span class="t">app_port</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">port</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">8080</span><span class="t"></span>
+<span id="line-216"></span><span class="t">      </span><span class="t">running</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="t"></span>
+<span id="line-217"></span><span class="t">        </span><span class="t">service</span><span class="t">(</span><span class="t">project</span><span class="t">,</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">id</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">project</span><span class="t"></span><span class="lsi">}</span><span class="s">-</span><span class="lsi">#{</span><span class="t">app_info</span><span class="t">.</span><span class="t">id</span><span class="t"></span><span class="lsi">}</span><span class="s">-1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">healthy</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-218"></span><span class="t">          </span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">app_info</span><span class="t">.</span><span class="t">id</span><span class="t"></span><span class="lsi">}</span><span class="s">:latest</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">0.0.0.0:</span><span class="lsi">#{</span><span class="m">20_000</span><span class="t"> </span><span class="o">+</span><span class="t"> </span><span class="t">app_port</span><span class="t"></span><span class="lsi">}</span><span class="s">-&gt;</span><span class="lsi">#{</span><span class="t">app_port</span><span class="t"></span><span class="lsi">}</span><span class="s">/tcp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-219"></span><span class="t">          </span><span class="s">&quot;</span><span class="s">Up a few seconds (healthy)</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-220"></span><span class="t">      </span><span class="t">]</span><span class="t"></span>
+<span id="line-221"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Stack</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-222"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="t">project</span><span class="t">,</span><span class="t"></span>
+<span id="line-223"></span><span class="t">        </span><span class="t">status</span><span class="t">:</span><span class="t"> </span><span class="t">stack_status</span><span class="t">(</span><span class="t">project</span><span class="t">,</span><span class="t"> </span><span class="s">&quot;</span><span class="s">running(1)</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">,</span><span class="t"></span>
+<span id="line-224"></span><span class="t">        </span><span class="t">config_files</span><span class="t">:</span><span class="t"> </span><span class="t">[</span><span class="s">&quot;</span><span class="s">/opt/stacks/</span><span class="lsi">#{</span><span class="t">project</span><span class="t"></span><span class="lsi">}</span><span class="s">/compose.yaml</span><span class="s">&quot;</span><span class="s"></span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-225"></span><span class="t">        </span><span class="t">services</span><span class="t">:</span><span class="t"> </span><span class="t">running</span><span class="t">,</span><span class="t"></span>
+<span id="line-226"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-227"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-228"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-15" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-15" class="anchor">↦</a>
+        </span>
+        <p>A service record with the overlay applied: anything inside a down
+stack, or individually stopped, reads as exited with no health.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-232"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">service</span><span class="t">(</span><span class="t"></span>
+<span id="line-233"></span><span class="t">    </span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">service_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">container</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-234"></span><span class="t">    </span><span class="t">default_state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">default_health</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">image</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-235"></span><span class="t">    </span><span class="t">ports</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">default_status</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"></span>
+<span id="line-236"></span><span class="t">  </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t"></span>
+<span id="line-237"></span><span class="t">    </span><span class="t">stopped</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@@down_stacks</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">stack_name</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"></span>
+<span id="line-238"></span><span class="t">              </span><span class="t">@@stopped_services</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="s">&quot;</span><span class="lsi">#{</span><span class="t">stack_name</span><span class="t"></span><span class="lsi">}</span><span class="s">/</span><span class="lsi">#{</span><span class="t">service_name</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-239"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">stopped</span><span class="t"></span>
+<span id="line-240"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-241"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="t">stack_name</span><span class="t">,</span><span class="t"></span>
+<span id="line-242"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="t">service_name</span><span class="t">,</span><span class="t"></span>
+<span id="line-243"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="t">container</span><span class="t">,</span><span class="t"></span>
+<span id="line-244"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">exited</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-245"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-246"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="t">image</span><span class="t">,</span><span class="t"></span>
+<span id="line-247"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="t">ports</span><span class="t">,</span><span class="t"></span>
+<span id="line-248"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Exited (0) a few seconds ago</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-249"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-250"></span><span class="t">    </span><span class="nk">else</span><span class="t"></span>
+<span id="line-251"></span><span class="t">      </span><span class="no">ComposeStatus</span><span class="no">::</span><span class="no">Service</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-252"></span><span class="t">        </span><span class="t">stack</span><span class="t">:</span><span class="t"> </span><span class="t">stack_name</span><span class="t">,</span><span class="t"></span>
+<span id="line-253"></span><span class="t">        </span><span class="t">service</span><span class="t">:</span><span class="t"> </span><span class="t">service_name</span><span class="t">,</span><span class="t"></span>
+<span id="line-254"></span><span class="t">        </span><span class="t">container</span><span class="t">:</span><span class="t"> </span><span class="t">container</span><span class="t">,</span><span class="t"></span>
+<span id="line-255"></span><span class="t">        </span><span class="t">state</span><span class="t">:</span><span class="t"> </span><span class="t">default_state</span><span class="t">,</span><span class="t"></span>
+<span id="line-256"></span><span class="t">        </span><span class="t">health</span><span class="t">:</span><span class="t"> </span><span class="t">default_health</span><span class="t">,</span><span class="t"></span>
+<span id="line-257"></span><span class="t">        </span><span class="t">image</span><span class="t">:</span><span class="t"> </span><span class="t">image</span><span class="t">,</span><span class="t"></span>
+<span id="line-258"></span><span class="t">        </span><span class="t">ports</span><span class="t">:</span><span class="t"> </span><span class="t">ports</span><span class="t">,</span><span class="t"></span>
+<span id="line-259"></span><span class="t">        </span><span class="t">status_text</span><span class="t">:</span><span class="t"> </span><span class="t">default_status</span><span class="t">,</span><span class="t"></span>
+<span id="line-260"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-261"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-262"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-16" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-16" class="anchor">↦</a>
+        </span>
+        <p>The <code>compose ls</code> status line, blanked to &quot;exited&quot; while the stack
+is stopped.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-266"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">stack_status</span><span class="t">(</span><span class="t">stack_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="t">default_status</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-267"></span><span class="t">    </span><span class="t">@@down_stacks</span><span class="t">.</span><span class="t">includes?</span><span class="t">(</span><span class="t">stack_name</span><span class="t">)</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="s">&quot;</span><span class="s">exited</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">default_status</span><span class="t"></span>
+<span id="line-268"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-269"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 

@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>shard.yml</title>
+    <title>assets.cr</title>
     <!-- Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -159,7 +159,7 @@
 
             <li>
 
-                <span>shard.yml</span>
+                <a href="shard.yml.html"><span>shard.yml</span></a>
 
             </li>
 
@@ -171,7 +171,7 @@
 
             <li>
 
-                <a href="src/assets.cr.html"><span>src/assets.cr</span></a>
+                <span>src/assets.cr</span>
 
             </li>
 
@@ -317,15 +317,8 @@
 
     </div>
     <div class="code">
-        <span id="line-1"><pre class="b" ><code class="b"><span class="nt">name</span><span class="p">:</span><span class="tw"> </span><span class="l">grafito</span><span class="tw"></span>
-<span id="line-2"></span><span class="tw"></span><span class="nt">version</span><span class="p">:</span><span class="tw"> </span><span class="m">1.1</span><span class="m">.1</span><span class="tw"></span>
-<span id="line-3"></span><span class="tw"></span>
-<span id="line-4"></span><span class="tw"></span><span class="nt">authors</span><span class="p">:</span><span class="tw"></span>
-<span id="line-5"></span><span class="tw"></span><span class="tw">  </span><span class="t">- </span><span class="l">Roberto Alsina &lt;roberto.alsina@gmail.com&gt;</span><span class="tw"></span>
-<span id="line-6"></span><span class="tw"></span>
-<span id="line-7"></span><span class="tw"></span><span class="nt">targets</span><span class="p">:</span><span class="tw"></span>
-<span id="line-8"></span><span class="tw"></span><span class="tw">  </span><span class="nt">grafito</span><span class="p">:</span><span class="tw"></span>
-<span id="line-9"></span><span class="tw"></span><span class="tw">    </span><span class="nt">main</span><span class="p">:</span><span class="tw"> </span><span class="l">src/main.cr</span></code></pre></span>
+        <span id="line-1"><pre class="b" ><code class="b"><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">baked_file_handler</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-2"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">baked_file_system</span><span class="s">&quot;</span><span class="s"></span></code></pre></span>
     </div>
 </div>
 
@@ -334,87 +327,30 @@
         <span class="anchor">
             <a href="#section-1" class="anchor">↦</a>
         </span>
-        <p>Trying to keep dependencies to a minimum.</p>
+        <h2>The Assets class</h2>
+<p>Bake all files from the src/assets directory into the binary.
+The keys in the baked FS will be like &quot;/index.html&quot; for &quot;assets/index.html&quot;, etc.</p>
+<p>This is important because it's what allows distributing Grafito as a single binary
+without the need to ship a bunch of files alongside it.</p>
+<p>All the things that are needed to function are baked-in:</p>
 <ul>
-<li><code>kemal</code> and <code>kemal-basic-auth</code> to make this a web app</li>
-<li><code>docopt</code> because I like it and it's small</li>
-<li><code>baked-file-system</code> because it <em>must</em> be a single binary</li>
-<li><code>html_builder</code> because generating complex HTML tables without it
-makes for horrible-looking code</li>
+<li>pico.css</li>
+<li>htmx</li>
+<li>index.html</li>
+<li>style.css</li>
+<li>robots.txt</li>
+<li>llms.txt</li>
 </ul>
+<p>We are not embedding fonts and icons because they are not strictly
+needed for Grafito to run, so if you run it without Internet access
+it will work fine but fonts will look different and icons may be missing.</p>
 
     </div>
     <div class="code">
-        <span id="line-19"><pre class="b" ><code class="b"><span class="nt">dependencies</span><span class="p">:</span><span class="tw"></span>
-<span id="line-20"></span><span class="tw"></span><span class="tw">  </span><span class="nt">baked_file_system</span><span class="p">:</span><span class="tw"></span>
-<span id="line-21"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/baked_file_system</span><span class="tw"></span>
-<span id="line-22"></span><span class="tw">    </span><span class="nt">branch</span><span class="p">:</span><span class="tw"> </span><span class="l">master</span><span class="tw"></span>
-<span id="line-23"></span><span class="tw">  </span><span class="nt">docopt</span><span class="p">:</span><span class="tw"></span>
-<span id="line-24"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/docopt.cr</span><span class="tw"></span>
-<span id="line-25"></span><span class="tw">  </span><span class="nt">docopt-config</span><span class="p">:</span><span class="tw"></span>
-<span id="line-26"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/docopt-config</span><span class="tw"></span>
-<span id="line-27"></span><span class="tw">  </span><span class="nt">html_builder</span><span class="p">:</span><span class="tw"></span>
-<span id="line-28"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">crystal-lang/html_builder</span><span class="tw"></span>
-<span id="line-29"></span><span class="tw">  </span><span class="nt">kemal</span><span class="p">:</span><span class="tw"></span>
-<span id="line-30"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">kemalcr/kemal</span><span class="tw"></span>
-<span id="line-31"></span><span class="tw">  </span><span class="nt">kemal-basic-auth</span><span class="p">:</span><span class="tw"></span>
-<span id="line-32"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">kemalcr/kemal-basic-auth</span><span class="tw"></span>
-<span id="line-33"></span><span class="tw">  </span><span class="nt">baked_file_handler</span><span class="p">:</span><span class="tw"></span>
-<span id="line-34"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">ralsina/baked_file_handler</span></code></pre></span>
-    </div>
-</div>
-
-<div id="section-2" class="grid">
-    <div class="doc">
-        <span class="anchor">
-            <a href="#section-2" class="anchor">↦</a>
-        </span>
-        <p>Anthropic/Claude AI provider</p>
-
-    </div>
-    <div class="code">
-        <span id="line-36"><pre class="b" ><code class="b"><span class="tw">  </span><span class="nt">anthropic</span><span class="p">:</span><span class="tw"></span>
-<span id="line-37"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">jgaskins/anthropic</span></code></pre></span>
-    </div>
-</div>
-
-<div id="section-3" class="grid">
-    <div class="doc">
-        <span class="anchor">
-            <a href="#section-3" class="anchor">↦</a>
-        </span>
-        <p>Tar archive reader, used to unpack app store tarballs (the stdlib
-only ships gzip/zip, not tar)</p>
-
-    </div>
-    <div class="code">
-        <span id="line-40"><pre class="b" ><code class="b"><span class="tw">  </span><span class="nt">crystar</span><span class="p">:</span><span class="tw"></span>
-<span id="line-41"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">naqvis/crystar</span><span class="tw"></span>
-<span id="line-42"></span><span class="tw">    </span><span class="nt">version</span><span class="p">:</span><span class="tw"> </span><span class="s2">&quot;&gt;= 0.4.0&quot;</span></code></pre></span>
-    </div>
-</div>
-
-<div id="section-4" class="grid">
-    <div class="doc">
-        <span class="anchor">
-            <a href="#section-4" class="anchor">↦</a>
-        </span>
-        <p>Faker is used for the demo version which displays
-fake data.</p>
-
-    </div>
-    <div class="code">
-        <span id="line-46"><pre class="b" ><code class="b"><span class="nt">development_dependencies</span><span class="p">:</span><span class="tw"></span>
-<span id="line-47"></span><span class="tw"></span><span class="tw">  </span><span class="nt">ameba</span><span class="p">:</span><span class="tw"></span>
-<span id="line-48"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">crystal-ameba/ameba</span><span class="tw"></span>
-<span id="line-49"></span><span class="tw">  </span><span class="nt">faker</span><span class="p">:</span><span class="tw"></span>
-<span id="line-50"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">askn/faker</span><span class="tw"></span>
-<span id="line-51"></span><span class="tw">  </span><span class="nt">webmock</span><span class="p">:</span><span class="tw"></span>
-<span id="line-52"></span><span class="tw"></span><span class="tw">    </span><span class="nt">github</span><span class="p">:</span><span class="tw"> </span><span class="l">manastech/webmock.cr</span><span class="tw"></span>
-<span id="line-53"></span><span class="tw"></span>
-<span id="line-54"></span><span class="tw"></span><span class="nt">crystal</span><span class="p">:</span><span class="tw"> </span><span class="s2">&quot;&gt;=1.16.0&quot;</span><span class="tw"></span>
-<span id="line-55"></span><span class="tw"></span>
-<span id="line-56"></span><span class="tw"></span><span class="nt">license</span><span class="p">:</span><span class="tw"> </span><span class="l">MIT</span></code></pre></span>
+        <span id="line-24"><pre class="b" ><code class="b"><span class="nk">class</span><span class="t"> </span><span class="no">Assets</span><span class="t"></span>
+<span id="line-25"></span><span class="t">  </span><span class="nk">extend</span><span class="t"> </span><span class="no">BakedFileSystem</span><span class="t"></span>
+<span id="line-26"></span><span class="t">  </span><span class="t">bake_folder</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./assets</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-27"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 

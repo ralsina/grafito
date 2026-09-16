@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>fake_appstore_data.cr</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chivo&family=Chivo+Mono&display=swap" rel="stylesheet">
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <!-- Custom style-->
+    <style>
+        .b {color: #d8d8d8;background-color: #181818;font-weight: 600;tab-size: 8;}.lh {color: #7cafc2;background-color: #282828;}.t {color: #d8d8d8;}.e {color: #ab4642;}.c {color: #585858;}.cp {color: #a16946;}.cpf {color: #a1b56c;font-weight: 600;}.k {color: #ba8baf;}.kt {color: #ab4642;}.na {color: #7cafc2;}.nb {color: #ab4642;}.nbp {color: #ab4642;font-style: italic;}.nc {color: #7cafc2;}.no {color: #dc9656;}.nd {color: #dc9656;font-style: italic;}.nf {color: #7cafc2;}.nn {color: #ba8baf;font-style: italic;}.nt {color: #ba8baf;}.nv {color: #7cafc2;}.nvi {color: #ab4642;}.m {color: #dc9656;}.o {color: #86c1b9;}.ow {color: #ba8baf;}.l {color: #a1b56c;}.s {color: #a1b56c;}.lsi {color: #a16946;}.sr {color: #86c1b9;}.ss {color: #dc9656;}.p {color: #d8d8d8;}.tw {color: #d8d8d8;}.cm {color: #585858;font-style: italic;}.s1 {color: #a1b56c;}.lso {color: #a1b56c;}.sc {color: #a1b56c;}.sb {color: #a1b56c;}.sa {color: #dc9656;}.sd {color: #7cafc2;font-style: italic;}.se {color: #a16946;}.lnf {color: #dc9656;}.lnh {color: #dc9656;}.lni {color: #dc9656;}.lno {color: #dc9656;}.lnb {color: #dc9656;}.kr {color: #ba8baf;font-weight: 600;}.kd {color: #ba8baf;font-style: italic;}.kn {color: #ba8baf;}.kp {color: #ba8baf;font-style: italic;}.kc {color: #ab4642;}.cs {color: #a16946;font-weight: 600;}.ch {color: #585858;font-weight: 600;}.gh {color: #7cafc2;font-weight: 600;}.gu {color: #7cafc2;font-weight: 600;font-style: italic;}.gs {color: #ab4642;font-weight: 600;}.ge {color: #dc9656;font-style: italic;}.gd {color: #ab4642;}.gi {color: #a1b56c;}.gp {color: #7cafc2;}.go {color: #d8d8d8;}.gt {color: #ab4642;}.gr {color: #ab4642;}.gl {color: #d8d8d8;text-decoration: underline;}.x {color: #d8d8d8;}
+    </style>
+
+<style>
+/* These are just a tiny fraction of the pico color variables,
+   will add more as I know what they do and which semantic
+   value from base16 may make sense */
+
+/* Theme: Apathy */
+/* Author: Jannik Siebert (https://github.com/janniks) */
+
+:root {
+    --pico-background-color: #031a16; /* Default backround */
+    --pico-color: #81b5ac; /* Default foreground */
+    --pico-text-selection-color: #184e45; /* Selection background */
+    --pico-primary: #96883e; /* Headings */
+    --pico-primary-underline: var(--pico-primary);
+    --pico-primary-background: #184e45;
+    --pico-primary-hover: #3e7996; /* Link URL */
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+    --pico-h1-color: var(--pico-primary); /* Default foreground */
+    --pico-h2-color: var(--pico-primary); /* Default foreground */
+    --pico-h3-color: var(--pico-primary); /* Default foreground */
+    --pico-h4-color: var(--pico-primary); /* Default foreground */
+    --pico-h5-color: var(--pico-primary); /* Default foreground */
+    --pico-h6-color: var(--pico-primary); /* Default foreground */
+}
+</style>
+
+
+<style>
+    html * {
+        font-family: Chivo, sans-serif;
+        font-weight: 300;
+        overflow: visible;
+    }
+
+    html {
+        background: linear-gradient(to right, var(--pico-background-color) 2.5%, #0b342d 2.5%);
+        background-size: 2000% 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer {
+        text-align: center;
+        border-top: solid 1px #5f9c92;
+        background-color: #031a16;
+        margin-top: auto;
+    }
+    code, div.code>pre>code {
+        font-family: 'Chivo Mono', monospace !important;
+        padding: .15rem;
+        background-color: #0b342d !important;
+    }
+
+    code>span {
+        font-family: 'Chivo Mono', monospace !important;
+    }
+
+    div.doc>pre>code {
+        overflow-x: auto !important;
+    }
+    span.anchor {
+        position: relative;
+    }
+
+    a.anchor {
+        position: absolute;
+        text-decoration: none;
+        left: -1.2em;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s linear;
+    }
+
+    div.doc:hover .anchor {
+        opacity: 1;
+    }
+
+    @media (width < 768px) {
+        html {
+            background: var(--pico-background-color);
+        }
+
+        pre.code>code {
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<style>
+    aside {
+        position: fixed;
+        top: 0;
+        right: -20em;
+        bottom: 0;
+        width: 20em;
+        background: var(--pico-background-color);
+        overflow-y: auto;
+        z-index: 100;
+        padding: 1em;
+        transition: right .25s;
+        opacity: 90%;
+    }
+
+    #show-sidebar,
+    #close-sidebar {
+        position: absolute;
+        top: 0em;
+        right: 0em;
+        padding: .5em;
+        color: var(--pico-color-slate-100);
+        text-decoration: none;
+        background-color: var(--pico-color-slate-500);
+        border-radius: 0 0 0 .5em;
+        opacity: 75%;
+        cursor: pointer;
+    }
+
+    #show-sidebar {
+        position: fixed;
+    }
+</style>
+
+</head>
+
+<body>
+
+<a id="show-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='0em'">⬅
+</a>
+<aside id="sidebar">
+    <a id="close-sidebar" class="secondary" onclick="document.getElementById('sidebar').style.right='-20em'">✖</a>
+    <header>
+        <h2>Documents</h2>
+    </header>
+    <nav>
+        <ul>
+
+            <li>
+
+                <a href="shard.yml.html"><span>shard.yml</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/app_store.cr.html"><span>src/app_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/assets.cr.html"><span>src/assets.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_appstore.cr.html"><span>src/compose_appstore.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_dashboard.cr.html"><span>src/compose_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_jobs.cr.html"><span>src/compose_jobs.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_status.cr.html"><span>src/compose_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <span>src/fake_appstore_data.cr</span>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_compose_data.cr.html"><span>src/fake_compose_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_homepage_data.cr.html"><span>src/fake_homepage_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_journal_data.cr.html"><span>src/fake_journal_data.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito.cr.html"><span>src/grafito.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/grafito_helpers.cr.html"><span>src/grafito_helpers.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/homepage.cr.html"><span>src/homepage.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/homepage_config.cr.html"><span>src/homepage_config.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/journalctl.cr.html"><span>src/journalctl.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/main.cr.html"><span>src/main.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/metrics_store.cr.html"><span>src/metrics_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_dashboard.cr.html"><span>src/process_dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/process_status.cr.html"><span>src/process_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/system_status.cr.html"><span>src/system_status.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/timeline.cr.html"><span>src/timeline.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/weather.cr.html"><span>src/weather.cr</span></a>
+
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+    <main class="container">
+
+</div>
+
+<div id="fake-app-store-data" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#fake-app-store-data" class="anchor">↦</a>
+        </span>
+        <h1>Fake app store data</h1>
+<p>The demo build (-Ddemo_mode) has no network, no docker and no
+writable data dir, but its compose view still shows the app store
+surface: a small fixture catalog, one fixture install (so the stack
+badge and its update/uninstall buttons are visible), and job output
+replayed like every other demo job. Mirrors the role of
+<a href="fake_compose_data.cr.html">fake_compose_data.cr</a> for the stack list.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-10"><pre class="b" ><code class="b"><span class="nk">module</span><span class="t"> </span><span class="no">FakeAppStore</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-1" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-1" class="anchor">↦</a>
+        </span>
+        <p>The demo has exactly one store; its URL is never fetched.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-12"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">stores</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">AppStore</span><span class="no">::</span><span class="no">Store</span><span class="t">)</span><span class="t"></span>
+<span id="line-13"></span><span class="t">    </span><span class="t">[</span><span class="no">AppStore</span><span class="no">::</span><span class="no">Store</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-14"></span><span class="t">      </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Demo Store</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-15"></span><span class="t">      </span><span class="t">slug</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">demo</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-16"></span><span class="t">      </span><span class="t">url</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">https://demo.invalid/demo-appstore.tar.gz</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-17"></span><span class="t">    </span><span class="t">)</span><span class="t">]</span><span class="t"></span>
+<span id="line-18"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-19"></span><span class="t"></span>
+<span id="line-20"></span><span class="t">  </span><span class="no">WHOAMI_CONFIG</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&lt;&lt;-&#39;JSON&#39;</span><span class="t"></span>
+<span id="line-21"></span><span class="s">    {</span><span class="s"></span>
+<span id="line-22">      &quot;id&quot;: &quot;whoami&quot;,</span><span class="s"></span>
+<span id="line-23">      &quot;name&quot;: &quot;Whoami&quot;,</span><span class="s"></span>
+<span id="line-24">      &quot;available&quot;: true,</span><span class="s"></span>
+<span id="line-25">      &quot;port&quot;: 8380,</span><span class="s"></span>
+<span id="line-26">      &quot;short_desc&quot;: &quot;Tiny server that prints os, hostname and headers.&quot;,</span><span class="s"></span>
+<span id="line-27">      &quot;description&quot;: &quot;**Whoami** is a tiny container that echoes whatever it knows about the request: operating system, hostname, and headers.</span><span class="s">\</span><span class="s">\</span><span class="s">n</span><span class="s">\</span><span class="s">\</span><span class="s">nHandy to check that a fresh install actually answers on its port.&quot;,</span><span class="s"></span>
+<span id="line-28">      &quot;categories&quot;: [&quot;utilities&quot;, &quot;development&quot;],</span><span class="s"></span>
+<span id="line-29">      &quot;version&quot;: &quot;1.10.1&quot;,</span><span class="s"></span>
+<span id="line-30">      &quot;tipi_version&quot;: 3,</span><span class="s"></span>
+<span id="line-31">      &quot;author&quot;: &quot;containous&quot;,</span><span class="s"></span>
+<span id="line-32">      &quot;source&quot;: &quot;https://github.com/traefik/whoami&quot;,</span><span class="s"></span>
+<span id="line-33">      &quot;exposable&quot;: true,</span><span class="s"></span>
+<span id="line-34">      &quot;form_fields&quot;: [</span><span class="s"></span>
+<span id="line-35">        {</span><span class="s"></span>
+<span id="line-36">          &quot;type&quot;: &quot;text&quot;,</span><span class="s"></span>
+<span id="line-37">          &quot;label&quot;: &quot;Greeting message&quot;,</span><span class="s"></span>
+<span id="line-38">          &quot;env_variable&quot;: &quot;WHOAMI_MESSAGE&quot;,</span><span class="s"></span>
+<span id="line-39">          &quot;default&quot;: &quot;hello from grafito&quot;,</span><span class="s"></span>
+<span id="line-40">          &quot;hint&quot;: &quot;Sent as the with-message response body.&quot;</span><span class="s"></span>
+<span id="line-41">        },</span><span class="s"></span>
+<span id="line-42">        {</span><span class="s"></span>
+<span id="line-43">          &quot;type&quot;: &quot;boolean&quot;,</span><span class="s"></span>
+<span id="line-44">          &quot;label&quot;: &quot;Include hostname&quot;,</span><span class="s"></span>
+<span id="line-45">          &quot;env_variable&quot;: &quot;WHOAMI_HOSTNAME&quot;,</span><span class="s"></span>
+<span id="line-46">          &quot;default&quot;: true</span><span class="s"></span>
+<span id="line-47">        },</span><span class="s"></span>
+<span id="line-48">        {</span><span class="s"></span>
+<span id="line-49">          &quot;type&quot;: &quot;random&quot;,</span><span class="s"></span>
+<span id="line-50">          &quot;label&quot;: &quot;API token&quot;,</span><span class="s"></span>
+<span id="line-51">          &quot;env_variable&quot;: &quot;WHOAMI_TOKEN&quot;,</span><span class="s"></span>
+<span id="line-52">          &quot;min&quot;: 16,</span><span class="s"></span>
+<span id="line-53">          &quot;max&quot;: 16</span><span class="s"></span>
+<span id="line-54">        }</span><span class="s"></span>
+<span id="line-55">      ]</span><span class="s"></span>
+<span id="line-56">    }</span><span class="s"></span>
+<span id="line-57">    JSON</span><span class="s"></span><span class="t"></span>
+<span id="line-58"></span><span class="t"></span>
+<span id="line-59"></span><span class="t">  </span><span class="no">JELLYFIN_CONFIG</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&lt;&lt;-JSON</span><span class="t"></span>
+<span id="line-60"></span><span class="s">    {</span><span class="s"></span>
+<span id="line-61">      &quot;id&quot;: &quot;jellyfin&quot;,</span><span class="s"></span>
+<span id="line-62">      &quot;name&quot;: &quot;Jellyfin&quot;,</span><span class="s"></span>
+<span id="line-63">      &quot;available&quot;: true,</span><span class="s"></span>
+<span id="line-64">      &quot;port&quot;: 8096,</span><span class="s"></span>
+<span id="line-65">      &quot;short_desc&quot;: &quot;Media system that puts you in control of your media.&quot;,</span><span class="s"></span>
+<span id="line-66">      &quot;description&quot;: &quot;Jellyfin is the volunteer-built media solution: movies, shows and music to every device, no strings attached.&quot;,</span><span class="s"></span>
+<span id="line-67">      &quot;categories&quot;: [&quot;media&quot;],</span><span class="s"></span>
+<span id="line-68">      &quot;version&quot;: &quot;10.9.11&quot;,</span><span class="s"></span>
+<span id="line-69">      &quot;tipi_version&quot;: 42,</span><span class="s"></span>
+<span id="line-70">      &quot;author&quot;: &quot;jellyfin&quot;,</span><span class="s"></span>
+<span id="line-71">      &quot;source&quot;: &quot;https://github.com/jellyfin/jellyfin&quot;,</span><span class="s"></span>
+<span id="line-72">      &quot;exposable&quot;: true,</span><span class="s"></span>
+<span id="line-73">      &quot;form_fields&quot;: []</span><span class="s"></span>
+<span id="line-74">    }</span><span class="s"></span>
+<span id="line-75">    JSON</span><span class="s"></span><span class="t"></span>
+<span id="line-76"></span><span class="t"></span>
+<span id="line-77"></span><span class="t">  </span><span class="no">FILEBROWSER_CONFIG</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&lt;&lt;-JSON</span><span class="t"></span>
+<span id="line-78"></span><span class="s">    {</span><span class="s"></span>
+<span id="line-79">      &quot;id&quot;: &quot;filebrowser&quot;,</span><span class="s"></span>
+<span id="line-80">      &quot;name&quot;: &quot;File Browser&quot;,</span><span class="s"></span>
+<span id="line-81">      &quot;available&quot;: true,</span><span class="s"></span>
+<span id="line-82">      &quot;port&quot;: 8390,</span><span class="s"></span>
+<span id="line-83">      &quot;short_desc&quot;: &quot;Web file manager with a clean Material Design interface.&quot;,</span><span class="s"></span>
+<span id="line-84">      &quot;description&quot;: &quot;File Browser provides a file managing interface within a directory, upload, download, and share included.&quot;,</span><span class="s"></span>
+<span id="line-85">      &quot;categories&quot;: [&quot;utilities&quot;, &quot;development&quot;],</span><span class="s"></span>
+<span id="line-86">      &quot;version&quot;: &quot;2.27.0&quot;,</span><span class="s"></span>
+<span id="line-87">      &quot;tipi_version&quot;: 7,</span><span class="s"></span>
+<span id="line-88">      &quot;author&quot;: &quot;filebrowser&quot;,</span><span class="s"></span>
+<span id="line-89">      &quot;source&quot;: &quot;https://github.com/filebrowser/filebrowser&quot;,</span><span class="s"></span>
+<span id="line-90">      &quot;exposable&quot;: true,</span><span class="s"></span>
+<span id="line-91">      &quot;form_fields&quot;: [</span><span class="s"></span>
+<span id="line-92">        {</span><span class="s"></span>
+<span id="line-93">          &quot;type&quot;: &quot;text&quot;,</span><span class="s"></span>
+<span id="line-94">          &quot;label&quot;: &quot;Interface style&quot;,</span><span class="s"></span>
+<span id="line-95">          &quot;env_variable&quot;: &quot;FB_THEME&quot;,</span><span class="s"></span>
+<span id="line-96">          &quot;options&quot;: [</span><span class="s"></span>
+<span id="line-97">            {&quot;label&quot;: &quot;Light&quot;, &quot;value&quot;: &quot;light&quot;},</span><span class="s"></span>
+<span id="line-98">            {&quot;label&quot;: &quot;Dark&quot;, &quot;value&quot;: &quot;dark&quot;}</span><span class="s"></span>
+<span id="line-99">          ],</span><span class="s"></span>
+<span id="line-100">          &quot;default&quot;: &quot;dark&quot;</span><span class="s"></span>
+<span id="line-101">        }</span><span class="s"></span>
+<span id="line-102">      ]</span><span class="s"></span>
+<span id="line-103">    }</span><span class="s"></span>
+<span id="line-104">    JSON</span><span class="s"></span><span class="t"></span>
+<span id="line-105"></span><span class="t"></span>
+<span id="line-106"></span><span class="t">  </span><span class="no">UNAVAILABLE_CONFIG</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&lt;&lt;-JSON</span><span class="t"></span>
+<span id="line-107"></span><span class="s">    {</span><span class="s"></span>
+<span id="line-108">      &quot;id&quot;: &quot;retired-app&quot;,</span><span class="s"></span>
+<span id="line-109">      &quot;name&quot;: &quot;Retired App&quot;,</span><span class="s"></span>
+<span id="line-110">      &quot;available&quot;: false,</span><span class="s"></span>
+<span id="line-111">      &quot;port&quot;: 9999,</span><span class="s"></span>
+<span id="line-112">      &quot;short_desc&quot;: &quot;Hidden from the catalog because available is false.&quot;,</span><span class="s"></span>
+<span id="line-113">      &quot;categories&quot;: [&quot;utilities&quot;],</span><span class="s"></span>
+<span id="line-114">      &quot;version&quot;: &quot;0.0.1&quot;,</span><span class="s"></span>
+<span id="line-115">      &quot;tipi_version&quot;: 1,</span><span class="s"></span>
+<span id="line-116">      &quot;author&quot;: &quot;nobody&quot;,</span><span class="s"></span>
+<span id="line-117">      &quot;source&quot;: &quot;https://example.invalid/retired&quot;</span><span class="s"></span>
+<span id="line-118">    }</span><span class="s"></span>
+<span id="line-119">    JSON</span><span class="s"></span><span class="t"></span>
+<span id="line-120"></span><span class="t"></span>
+<span id="line-121"></span><span class="t">  </span><span class="no">CONFIGS</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">[</span><span class="no">WHOAMI_CONFIG</span><span class="t">,</span><span class="t"> </span><span class="no">JELLYFIN_CONFIG</span><span class="t">,</span><span class="t"> </span><span class="no">FILEBROWSER_CONFIG</span><span class="t">,</span><span class="t"> </span><span class="no">UNAVAILABLE_CONFIG</span><span class="t">]</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-2" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-2" class="anchor">↦</a>
+        </span>
+        <p>Every <em>available</em> fixture app, sorted like the real catalog.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-124"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">list_apps</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">AppStore</span><span class="no">::</span><span class="no">AppInfo</span><span class="t">)</span><span class="t"></span>
+<span id="line-125"></span><span class="t">    </span><span class="t">apps</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">CONFIGS</span><span class="t">.</span><span class="t">compact_map</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">json</span><span class="o">|</span><span class="t"></span>
+<span id="line-126"></span><span class="t">      </span><span class="no">AppStore</span><span class="no">::</span><span class="no">AppInfo</span><span class="t">.</span><span class="t">from_json</span><span class="t">(</span><span class="t">json</span><span class="t">)</span><span class="t"></span>
+<span id="line-127"></span><span class="t">    </span><span class="nk">rescue</span><span class="t"></span>
+<span id="line-128"></span><span class="t">      </span><span class="l">nil</span><span class="t"></span>
+<span id="line-129"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-130"></span><span class="t">    </span><span class="t">apps</span><span class="t">.</span><span class="nk">select</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">available?</span><span class="t">)</span><span class="t">.</span><span class="t">sort_by!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">name</span><span class="t">.</span><span class="t">downcase</span><span class="t">)</span><span class="t"></span>
+<span id="line-131"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-132"></span><span class="t"></span>
+<span id="line-133"></span><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">find_app</span><span class="t">(</span><span class="t">app_id</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">AppInfo</span><span class="t">?</span><span class="t"></span>
+<span id="line-134"></span><span class="t">    </span><span class="t">list_apps</span><span class="t">.</span><span class="t">find</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">id</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">app_id</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-135"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-136"></span><span class="t"></span>
+<span id="line-137"></span><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">description</span><span class="t">(</span><span class="t">app_id</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-138"></span><span class="t">    </span><span class="t">find_app</span><span class="t">(</span><span class="t">app_id</span><span class="t">)</span><span class="t">.</span><span class="t">try</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">description</span><span class="t">)</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="s">&quot;</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-139"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-3" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-3" class="anchor">↦</a>
+        </span>
+        <h2>Mutable demo state</h2>
+<p>The installed-apps list is mutable so simulated installs, updates
+and uninstalls have visible effects. Seeded with one fixture
+install parked on the webapp stack (one tipi revision behind the
+catalog, so the update badge shows until a simulated update).
+Guarded: view polls and action endpoints run in fibers.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-149"><pre class="b" ><code class="b"><span class="t">  </span><span class="t">@@installed_mutex</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Mutex</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">protection</span><span class="t">:</span><span class="t"> </span><span class="ss">:checked</span><span class="t">)</span><span class="t"></span>
+<span id="line-150"></span><span class="t">  </span><span class="t">@@installed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">)</span><span class="t">?</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-151"></span><span class="t"></span>
+<span id="line-152"></span><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">installed_seed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">)</span><span class="t"></span>
+<span id="line-153"></span><span class="t">    </span><span class="t">[</span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-154"></span><span class="t">      </span><span class="t">store</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">demo</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-155"></span><span class="t">      </span><span class="t">store_url</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">https://demo.invalid/demo-appstore.tar.gz</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-156"></span><span class="t">      </span><span class="t">id</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">whoami</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-157"></span><span class="t">      </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Whoami</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-158"></span><span class="t">      </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">1.10.1</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-159"></span><span class="t">      </span><span class="t">tipi_version</span><span class="t">:</span><span class="t"> </span><span class="m">3</span><span class="t">,</span><span class="t"></span>
+<span id="line-160"></span><span class="t">      </span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="m">8380</span><span class="t">,</span><span class="t"></span>
+<span id="line-161"></span><span class="t">      </span><span class="t">project_name</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">webapp</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-162"></span><span class="t">      </span><span class="t">installed_at</span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t">.</span><span class="t">to_rfc3339</span><span class="t">,</span><span class="t"></span>
+<span id="line-163"></span><span class="t">    </span><span class="t">)</span><span class="t">]</span><span class="t"></span>
+<span id="line-164"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-4" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-4" class="anchor">↦</a>
+        </span>
+        <p>Every known install. Demo builds carry the fixture install so the
+badge and its buttons are visible without docker.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-168"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">installed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">)</span><span class="t"></span>
+<span id="line-169"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-170"></span><span class="t">      </span><span class="t">(</span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t">)</span><span class="t">.</span><span class="t">dup</span><span class="t"></span>
+<span id="line-171"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-172"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-5" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-5" class="anchor">↦</a>
+        </span>
+        <p>One install by compose project name, or nil.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-175"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">find_installed</span><span class="t">(</span><span class="t">project_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">?</span><span class="t"></span>
+<span id="line-176"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-177"></span><span class="t">      </span><span class="t">(</span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t">)</span><span class="t">.</span><span class="t">find</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">project_name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">project_name</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-178"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-179"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-6" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-6" class="anchor">↦</a>
+        </span>
+        <p>Simulates installing one catalog app: the compose project is the
+app id, like the real renderer's. Reinstalling replaces any
+previous install of the same app.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-184"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">install</span><span class="t">(</span><span class="t">app_info</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">AppInfo</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t"></span>
+<span id="line-185"></span><span class="t">    </span><span class="t">record</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-186"></span><span class="t">      </span><span class="t">store</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">demo</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-187"></span><span class="t">      </span><span class="t">store_url</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">https://demo.invalid/demo-appstore.tar.gz</span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"></span>
+<span id="line-188"></span><span class="t">      </span><span class="t">id</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">id</span><span class="t">,</span><span class="t"></span>
+<span id="line-189"></span><span class="t">      </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">name</span><span class="t">,</span><span class="t"></span>
+<span id="line-190"></span><span class="t">      </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">version</span><span class="t">,</span><span class="t"></span>
+<span id="line-191"></span><span class="t">      </span><span class="t">tipi_version</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">tipi_version</span><span class="t">,</span><span class="t"></span>
+<span id="line-192"></span><span class="t">      </span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">port</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="m">0</span><span class="t">,</span><span class="t"></span>
+<span id="line-193"></span><span class="t">      </span><span class="t">project_name</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">id</span><span class="t">,</span><span class="t"></span>
+<span id="line-194"></span><span class="t">      </span><span class="t">installed_at</span><span class="t">:</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t">.</span><span class="t">to_rfc3339</span><span class="t">,</span><span class="t"></span>
+<span id="line-195"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-196"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-197"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t"></span>
+<span id="line-198"></span><span class="t">      </span><span class="t">list</span><span class="t">.</span><span class="t">reject!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">project_name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">record</span><span class="t">.</span><span class="t">project_name</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-199"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="t">record</span><span class="t"></span>
+<span id="line-200"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-201"></span><span class="t">    </span><span class="t">record</span><span class="t"></span>
+<span id="line-202"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-7" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-7" class="anchor">↦</a>
+        </span>
+        <p>Simulates uninstalling an app. Returns true when one was removed.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-205"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">uninstall</span><span class="t">(</span><span class="t">project_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-206"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-207"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t"></span>
+<span id="line-208"></span><span class="t">      </span><span class="o">!</span><span class="t">list</span><span class="t">.</span><span class="t">reject!</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">project_name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">project_name</span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="nk">nil?</span><span class="t"></span>
+<span id="line-209"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-210"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-8" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-8" class="anchor">↦</a>
+        </span>
+        <p>Simulates an app update: the install jumps to the catalog's
+version, so the update badge disappears. Returns true when the
+project was known.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-215"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">mark_updated</span><span class="t">(</span><span class="t">project_name</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Bool</span><span class="t"></span>
+<span id="line-216"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-217"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">@@installed</span><span class="t"> </span><span class="o">||=</span><span class="t"> </span><span class="t">installed_seed</span><span class="t"></span>
+<span id="line-218"></span><span class="t">      </span><span class="t">record</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">list</span><span class="t">.</span><span class="t">find</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">project_name</span><span class="t">.</span><span class="o">==</span><span class="t">(</span><span class="t">project_name</span><span class="t">)</span><span class="t">)</span><span class="t"></span>
+<span id="line-219"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="l">false</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">record</span><span class="t"></span>
+<span id="line-220"></span><span class="t">      </span><span class="t">app_info</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">find_app</span><span class="t">(</span><span class="t">record</span><span class="t">.</span><span class="t">id</span><span class="t">)</span><span class="t"></span>
+<span id="line-221"></span><span class="t">      </span><span class="nk">return</span><span class="t"> </span><span class="l">false</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">app_info</span><span class="t"></span>
+<span id="line-222"></span><span class="t"></span>
+<span id="line-223"></span><span class="t">      </span><span class="t">list</span><span class="t">.</span><span class="t">delete</span><span class="t">(</span><span class="t">record</span><span class="t">)</span><span class="t"></span>
+<span id="line-224"></span><span class="t">      </span><span class="t">list</span><span class="t"> </span><span class="o">&lt;&lt;</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-225"></span><span class="t">        </span><span class="t">store</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">store</span><span class="t">,</span><span class="t"></span>
+<span id="line-226"></span><span class="t">        </span><span class="t">store_url</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">store_url</span><span class="t">,</span><span class="t"></span>
+<span id="line-227"></span><span class="t">        </span><span class="t">id</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">id</span><span class="t">,</span><span class="t"></span>
+<span id="line-228"></span><span class="t">        </span><span class="t">name</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">name</span><span class="t">,</span><span class="t"></span>
+<span id="line-229"></span><span class="t">        </span><span class="t">version</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">version</span><span class="t">,</span><span class="t"></span>
+<span id="line-230"></span><span class="t">        </span><span class="t">tipi_version</span><span class="t">:</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">tipi_version</span><span class="t">,</span><span class="t"></span>
+<span id="line-231"></span><span class="t">        </span><span class="t">port</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">port</span><span class="t">,</span><span class="t"></span>
+<span id="line-232"></span><span class="t">        </span><span class="t">project_name</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">project_name</span><span class="t">,</span><span class="t"></span>
+<span id="line-233"></span><span class="t">        </span><span class="t">installed_at</span><span class="t">:</span><span class="t"> </span><span class="t">record</span><span class="t">.</span><span class="t">installed_at</span><span class="t">,</span><span class="t"></span>
+<span id="line-234"></span><span class="t">      </span><span class="t">)</span><span class="t"></span>
+<span id="line-235"></span><span class="t">      </span><span class="l">true</span><span class="t"></span>
+<span id="line-236"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-237"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-9" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-9" class="anchor">↦</a>
+        </span>
+        <p>The newest version the store offers for an installed app, or nil
+when it is up to date. Data-driven: whatever the fixture catalog
+carries is what the store &quot;offers&quot;.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-242"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">update_available</span><span class="t">(</span><span class="t">installed</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">AppStore</span><span class="no">::</span><span class="no">InstalledApp</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">?</span><span class="t"></span>
+<span id="line-243"></span><span class="t">    </span><span class="t">app_info</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">find_app</span><span class="t">(</span><span class="t">installed</span><span class="t">.</span><span class="t">id</span><span class="t">)</span><span class="t"></span>
+<span id="line-244"></span><span class="t">    </span><span class="nk">if</span><span class="t"> </span><span class="t">app_info</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">app_info</span><span class="t">.</span><span class="t">tipi_version</span><span class="t"> </span><span class="o">&gt;</span><span class="t"> </span><span class="t">installed</span><span class="t">.</span><span class="t">tipi_version</span><span class="t"></span>
+<span id="line-245"></span><span class="t">      </span><span class="t">app_info</span><span class="t">.</span><span class="t">version</span><span class="t"></span>
+<span id="line-246"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-247"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-10" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-10" class="anchor">↦</a>
+        </span>
+        <p>Restores the pristine demo installs (spec hygiene, container
+restarts do the same for the demo site).</p>
+
+    </div>
+    <div class="code">
+        <span id="line-251"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">reset_demo_state</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-252"></span><span class="t">    </span><span class="t">@@installed_mutex</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-253"></span><span class="t">      </span><span class="t">@@installed</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="l">nil</span><span class="t"></span>
+<span id="line-254"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-255"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-256"></span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+
+    </main>
+    <footer>
+        » Generated by <a href="https://crycco.ralsina.me">Crycco</a>
+        » Layout
+sidebyside
+
+        » Theme: Apathy
+        » Powered by <a href="https://picocss.com">PicoCSS</a> and <a href="https://www.omnibus-type.com/">Chivo Font
+            Family</a>
+    </footer>
+</body>
+
+</html>

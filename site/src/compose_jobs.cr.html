@@ -165,6 +165,24 @@
 
             <li>
 
+                <a href="src/app_store.cr.html"><span>src/app_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/assets.cr.html"><span>src/assets.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_appstore.cr.html"><span>src/compose_appstore.cr</span></a>
+
+            </li>
+
+            <li>
+
                 <a href="src/compose_dashboard.cr.html"><span>src/compose_dashboard.cr</span></a>
 
             </li>
@@ -184,6 +202,12 @@
             <li>
 
                 <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_appstore_data.cr.html"><span>src/fake_appstore_data.cr</span></a>
 
             </li>
 
@@ -309,7 +333,7 @@ be exercised end to end.</p>
 <span id="line-17"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">process</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
 <span id="line-18"></span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">random</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
 <span id="line-19"></span><span class="t"></span>
-<span id="line-20"></span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-20"></span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:demo_mode</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
 <span id="line-21"></span><span class="t">  </span><span class="nk">require</span><span class="t"> </span><span class="s">&quot;</span><span class="s">./fake_compose_data</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
 <span id="line-22"></span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
 <span id="line-23"></span><span class="t"></span>
@@ -463,7 +487,7 @@ then up -d.)</p>
 <span id="line-91"></span><span class="t">      </span><span class="t">prune_locked</span><span class="t"></span>
 <span id="line-92"></span><span class="t">      </span><span class="no">JOBS</span><span class="t">[</span><span class="t">id</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">job</span><span class="t"></span>
 <span id="line-93"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-94"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-94"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:demo_mode</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
 <span id="line-95"></span><span class="t">      </span><span class="t">run_fake</span><span class="t">(</span><span class="t">job</span><span class="t">)</span><span class="t"></span>
 <span id="line-96"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">else</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
 <span id="line-97"></span><span class="t">      </span><span class="t">run_real</span><span class="t">(</span><span class="t">job</span><span class="t">,</span><span class="t"> </span><span class="t">commands</span><span class="t">)</span><span class="t"></span>
@@ -495,27 +519,28 @@ then up -d.)</p>
         <span class="anchor">
             <a href="#section-10" class="anchor">↦</a>
         </span>
-        <p>Drops finished jobs past the TTL and, if things ever run away,
-the oldest ones above the cap — preferring finished jobs and only
-touching running ones as an absolute last resort (a client polling
-an evicted running job would see a 404 while docker is still
-working).</p>
+        <p>Starts a <em>custom</em> job whose body is Crystal code instead of a
+fixed command sequence: the block runs in a background fiber with
+the job in hand, appends lines with <code>job.append</code>, runs commands
+with <code>run_command</code>, and calls <code>job.finish</code> (if it forgets, the job
+is finished with exit code 0 when the block returns). Used by flows
+that mix computation with compose commands, like the app store's
+sync/update/uninstall jobs. Demo builds replay fake output like
+any other job and never run the block.</p>
 
     </div>
     <div class="code">
-        <span id="line-114"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">prune_locked</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
-<span id="line-115"></span><span class="t">    </span><span class="t">cutoff</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="no">JOB_TTL</span><span class="t"></span>
-<span id="line-116"></span><span class="t">    </span><span class="no">JOBS</span><span class="t">.</span><span class="t">reject!</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">_</span><span class="t">,</span><span class="t"> </span><span class="t">job</span><span class="o">|</span><span class="t"></span>
-<span id="line-117"></span><span class="t">      </span><span class="t">snapshot</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">job</span><span class="t">.</span><span class="t">snapshot</span><span class="t"></span>
-<span id="line-118"></span><span class="t">      </span><span class="o">!</span><span class="t">snapshot</span><span class="t">.</span><span class="t">running</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">job</span><span class="t">.</span><span class="t">created_at</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="t">cutoff</span><span class="t"></span>
-<span id="line-119"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-120"></span><span class="t">    </span><span class="nk">while</span><span class="t"> </span><span class="no">JOBS</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="no">MAX_JOBS</span><span class="t"></span>
-<span id="line-121"></span><span class="t">      </span><span class="t">finished</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">JOBS</span><span class="t">.</span><span class="t">reject</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">_</span><span class="t">,</span><span class="t"> </span><span class="t">job</span><span class="o">|</span><span class="t"> </span><span class="t">job</span><span class="t">.</span><span class="t">snapshot</span><span class="t">.</span><span class="t">running</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-122"></span><span class="t">      </span><span class="t">candidates</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">finished</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="no">JOBS</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">finished</span><span class="t"></span>
-<span id="line-123"></span><span class="t">      </span><span class="t">oldest</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">candidates</span><span class="t">.</span><span class="t">min_by</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">_</span><span class="t">,</span><span class="t"> </span><span class="t">job</span><span class="o">|</span><span class="t"> </span><span class="t">job</span><span class="t">.</span><span class="t">created_at</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-124"></span><span class="t">      </span><span class="no">JOBS</span><span class="t">.</span><span class="t">delete</span><span class="t">(</span><span class="t">oldest</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">)</span><span class="t"></span>
-<span id="line-125"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-126"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-117"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">start_custom</span><span class="t">(</span><span class="t">title</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t">,</span><span class="t"> </span><span class="o">&amp;</span><span class="t">runner</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Job</span><span class="t"> </span><span class="o">-&gt;</span><span class="t"> </span><span class="no">Nil</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">String</span><span class="t"></span>
+<span id="line-118"></span><span class="t">    </span><span class="t">id</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Random</span><span class="no">::</span><span class="no">Secure</span><span class="t">.</span><span class="t">hex</span><span class="t">(</span><span class="m">8</span><span class="t">)</span><span class="t"></span>
+<span id="line-119"></span><span class="t">    </span><span class="t">job</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Job</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t">id</span><span class="t">,</span><span class="t"> </span><span class="t">title</span><span class="t">)</span><span class="t"></span>
+<span id="line-120"></span><span class="t">    </span><span class="t">callback</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">runner</span><span class="t"></span>
+<span id="line-121"></span><span class="t">    </span><span class="no">JOBS_MUTEX</span><span class="t">.</span><span class="t">synchronize</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-122"></span><span class="t">      </span><span class="t">prune_locked</span><span class="t"></span>
+<span id="line-123"></span><span class="t">      </span><span class="no">JOBS</span><span class="t">[</span><span class="t">id</span><span class="t">]</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">job</span><span class="t"></span>
+<span id="line-124"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-125"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:demo_mode</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-126"></span><span class="t">      </span><span class="t">run_fake</span><span class="t">(</span><span class="t">job</span><span class="t">)</span><span class="t"></span>
+<span id="line-127"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">else</span><span class="t"> </span><span class="o">%}</span></code></pre></span>
     </div>
 </div>
 
@@ -524,27 +549,22 @@ working).</p>
         <span class="anchor">
             <a href="#section-11" class="anchor">↦</a>
         </span>
-        <p>Runs the commands in order, streaming stdout and stderr lines into
-the job from reader fibers. A failing command stops the sequence.</p>
+        <p><code>callback</code> (not <code>runner</code>) because the block capture is not
+visible inside code that comes from the macro branch below.</p>
 
     </div>
     <div class="code">
-        <span id="line-130"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">run_real</span><span class="t">(</span><span class="t">job</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Job</span><span class="t">,</span><span class="t"> </span><span class="t">commands</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
-<span id="line-131"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Compose job </span><span class="lsi">#{</span><span class="t">job</span><span class="t">.</span><span class="t">id</span><span class="t"></span><span class="lsi">}</span><span class="s">: </span><span class="lsi">#{</span><span class="t">commands</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s"> &amp;&amp; </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-132"></span><span class="t">    </span><span class="t">spawn</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-133"></span><span class="t">      </span><span class="t">exit_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">0</span><span class="t"></span>
-<span id="line-134"></span><span class="t">      </span><span class="t">commands</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">command</span><span class="o">|</span><span class="t"></span>
-<span id="line-135"></span><span class="t">        </span><span class="t">exit_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">run_one</span><span class="t">(</span><span class="t">job</span><span class="t">,</span><span class="t"> </span><span class="t">command</span><span class="t">)</span><span class="t"></span>
-<span id="line-136"></span><span class="t">        </span><span class="nk">break</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">exit_code</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="m">0</span><span class="t"></span>
+        <span id="line-130"><pre class="b" ><code class="b"><span class="t">      </span><span class="t">spawn</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-131"></span><span class="t">        </span><span class="t">callback</span><span class="t">.</span><span class="t">call</span><span class="t">(</span><span class="t">job</span><span class="t">)</span><span class="t"></span>
+<span id="line-132"></span><span class="t">        </span><span class="t">job</span><span class="t">.</span><span class="t">finish</span><span class="t">(</span><span class="m">0</span><span class="t">)</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">job</span><span class="t">.</span><span class="t">snapshot</span><span class="t">.</span><span class="t">running</span><span class="t"></span>
+<span id="line-133"></span><span class="t">      </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-134"></span><span class="t">        </span><span class="t">job</span><span class="t">.</span><span class="t">append</span><span class="t">(</span><span class="s">&quot;</span><span class="s">Failed to run job: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-135"></span><span class="t">        </span><span class="t">job</span><span class="t">.</span><span class="t">finish</span><span class="t">(</span><span class="m">1</span><span class="t">)</span><span class="t"></span>
+<span id="line-136"></span><span class="t">        </span><span class="no">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Compose job </span><span class="lsi">#{</span><span class="t">job</span><span class="t">.</span><span class="t">id</span><span class="t"></span><span class="lsi">}</span><span class="s"> failed</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
 <span id="line-137"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-138"></span><span class="t">      </span><span class="t">job</span><span class="t">.</span><span class="t">finish</span><span class="t">(</span><span class="t">exit_code</span><span class="t">)</span><span class="t"></span>
-<span id="line-139"></span><span class="t">      </span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Compose job </span><span class="lsi">#{</span><span class="t">job</span><span class="t">.</span><span class="t">id</span><span class="t"></span><span class="lsi">}</span><span class="s"> finished with exit code </span><span class="lsi">#{</span><span class="t">exit_code</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-140"></span><span class="t">    </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
-<span id="line-141"></span><span class="t">      </span><span class="t">job</span><span class="t">.</span><span class="t">append</span><span class="t">(</span><span class="s">&quot;</span><span class="s">Failed to run compose job: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
-<span id="line-142"></span><span class="t">      </span><span class="t">job</span><span class="t">.</span><span class="t">finish</span><span class="t">(</span><span class="m">1</span><span class="t">)</span><span class="t"></span>
-<span id="line-143"></span><span class="t">      </span><span class="no">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Compose job </span><span class="lsi">#{</span><span class="t">job</span><span class="t">.</span><span class="t">id</span><span class="t"></span><span class="lsi">}</span><span class="s"> failed</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-144"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-145"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+<span id="line-138"></span><span class="t">    </span><span class="o">{%</span><span class="t"> </span><span class="nk">end</span><span class="t"> </span><span class="o">%}</span><span class="t"></span>
+<span id="line-139"></span><span class="t">    </span><span class="t">id</span><span class="t"></span>
+<span id="line-140"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -553,23 +573,15 @@ the job from reader fibers. A failing command stops the sequence.</p>
         <span class="anchor">
             <a href="#section-12" class="anchor">↦</a>
         </span>
-        <p>Runs one command of a job, appending its output lines; returns the
-process exit code.</p>
+        <p>Runs one command with its output streaming into the job, and
+returns the process exit code. Public so custom job runners can
+interleave commands with other work.</p>
 
     </div>
     <div class="code">
-        <span id="line-149"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">run_one</span><span class="t">(</span><span class="t">job</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Job</span><span class="t">,</span><span class="t"> </span><span class="t">command</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"></span>
-<span id="line-150"></span><span class="t">    </span><span class="t">process</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Process</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
-<span id="line-151"></span><span class="t">      </span><span class="t">command</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
-<span id="line-152"></span><span class="t">      </span><span class="t">args</span><span class="t">:</span><span class="t"> </span><span class="t">command</span><span class="t">[</span><span class="m">1</span><span class="t">..</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
-<span id="line-153"></span><span class="t">      </span><span class="t">output</span><span class="t">:</span><span class="t"> </span><span class="no">Process</span><span class="no">::</span><span class="no">Redirect</span><span class="no">::</span><span class="no">Pipe</span><span class="t">,</span><span class="t"></span>
-<span id="line-154"></span><span class="t">      </span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="no">Process</span><span class="no">::</span><span class="no">Redirect</span><span class="no">::</span><span class="no">Pipe</span><span class="t">,</span><span class="t"></span>
-<span id="line-155"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
-<span id="line-156"></span><span class="t">    </span><span class="t">reader</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">-&gt;</span><span class="t">(</span><span class="t">stream</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">IO</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-157"></span><span class="t">      </span><span class="t">stream</span><span class="t">.</span><span class="t">each_line</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
-<span id="line-158"></span><span class="t">        </span><span class="t">job</span><span class="t">.</span><span class="t">append</span><span class="t">(</span><span class="t">line</span><span class="t">)</span><span class="t"></span>
-<span id="line-159"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-160"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+        <span id="line-145"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">run_command</span><span class="t">(</span><span class="t">job</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Job</span><span class="t">,</span><span class="t"> </span><span class="t">command</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"></span>
+<span id="line-146"></span><span class="t">    </span><span class="t">run_one</span><span class="t">(</span><span class="t">job</span><span class="t">,</span><span class="t"> </span><span class="t">command</span><span class="t">)</span><span class="t"></span>
+<span id="line-147"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -578,25 +590,27 @@ process exit code.</p>
         <span class="anchor">
             <a href="#section-13" class="anchor">↦</a>
         </span>
-        <p>Wait for the readers first: they hit EOF when the child exits,
-and Process#wait closes the pipes, so waiting on the process
-first would pull the streams out from under the readers.</p>
+        <p>Drops finished jobs past the TTL and, if things ever run away,
+the oldest ones above the cap — preferring finished jobs and only
+touching running ones as an absolute last resort (a client polling
+an evicted running job would see a 404 while docker is still
+working).</p>
 
     </div>
     <div class="code">
-        <span id="line-164"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">done</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Channel</span><span class="t">(</span><span class="no">Nil</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="m">2</span><span class="t">)</span><span class="t"></span>
-<span id="line-165"></span><span class="t">    </span><span class="t">spawn</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-166"></span><span class="t">      </span><span class="t">reader</span><span class="t">.</span><span class="t">call</span><span class="t">(</span><span class="t">process</span><span class="t">.</span><span class="t">output</span><span class="t">)</span><span class="t"></span>
-<span id="line-167"></span><span class="t">      </span><span class="t">done</span><span class="t">.</span><span class="t">send</span><span class="t">(</span><span class="l">nil</span><span class="t">)</span><span class="t"></span>
-<span id="line-168"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-169"></span><span class="t">    </span><span class="t">spawn</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-170"></span><span class="t">      </span><span class="t">reader</span><span class="t">.</span><span class="t">call</span><span class="t">(</span><span class="t">process</span><span class="t">.</span><span class="t">error</span><span class="t">)</span><span class="t"></span>
-<span id="line-171"></span><span class="t">      </span><span class="t">done</span><span class="t">.</span><span class="t">send</span><span class="t">(</span><span class="l">nil</span><span class="t">)</span><span class="t"></span>
-<span id="line-172"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-173"></span><span class="t">    </span><span class="m">2</span><span class="t">.</span><span class="t">times</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="t">done</span><span class="t">.</span><span class="t">receive</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-174"></span><span class="t">    </span><span class="t">exit_status</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">process</span><span class="t">.</span><span class="t">wait</span><span class="t"></span>
-<span id="line-175"></span><span class="t">    </span><span class="t">exit_status</span><span class="t">.</span><span class="t">system_exit_status</span><span class="t">.</span><span class="t">to_i32</span><span class="t"></span>
-<span id="line-176"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+        <span id="line-154"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">prune_locked</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-155"></span><span class="t">    </span><span class="t">cutoff</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Time</span><span class="t">.</span><span class="t">utc</span><span class="t"> </span><span class="o">-</span><span class="t"> </span><span class="no">JOB_TTL</span><span class="t"></span>
+<span id="line-156"></span><span class="t">    </span><span class="no">JOBS</span><span class="t">.</span><span class="t">reject!</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">_</span><span class="t">,</span><span class="t"> </span><span class="t">job</span><span class="o">|</span><span class="t"></span>
+<span id="line-157"></span><span class="t">      </span><span class="t">snapshot</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">job</span><span class="t">.</span><span class="t">snapshot</span><span class="t"></span>
+<span id="line-158"></span><span class="t">      </span><span class="o">!</span><span class="t">snapshot</span><span class="t">.</span><span class="t">running</span><span class="t"> </span><span class="o">&amp;&amp;</span><span class="t"> </span><span class="t">job</span><span class="t">.</span><span class="t">created_at</span><span class="t"> </span><span class="o">&lt;</span><span class="t"> </span><span class="t">cutoff</span><span class="t"></span>
+<span id="line-159"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-160"></span><span class="t">    </span><span class="nk">while</span><span class="t"> </span><span class="no">JOBS</span><span class="t">.</span><span class="t">size</span><span class="t"> </span><span class="o">&gt;=</span><span class="t"> </span><span class="no">MAX_JOBS</span><span class="t"></span>
+<span id="line-161"></span><span class="t">      </span><span class="t">finished</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">JOBS</span><span class="t">.</span><span class="t">reject</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">_</span><span class="t">,</span><span class="t"> </span><span class="t">job</span><span class="o">|</span><span class="t"> </span><span class="t">job</span><span class="t">.</span><span class="t">snapshot</span><span class="t">.</span><span class="t">running</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-162"></span><span class="t">      </span><span class="t">candidates</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">finished</span><span class="t">.</span><span class="t">empty?</span><span class="t"> </span><span class="t">?</span><span class="t"> </span><span class="no">JOBS</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="t">finished</span><span class="t"></span>
+<span id="line-163"></span><span class="t">      </span><span class="t">oldest</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">candidates</span><span class="t">.</span><span class="t">min_by</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="o">|</span><span class="t">_</span><span class="t">,</span><span class="t"> </span><span class="t">job</span><span class="o">|</span><span class="t"> </span><span class="t">job</span><span class="t">.</span><span class="t">created_at</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-164"></span><span class="t">      </span><span class="no">JOBS</span><span class="t">.</span><span class="t">delete</span><span class="t">(</span><span class="t">oldest</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">)</span><span class="t"></span>
+<span id="line-165"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-166"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
@@ -605,25 +619,109 @@ first would pull the streams out from under the readers.</p>
         <span class="anchor">
             <a href="#section-14" class="anchor">↦</a>
         </span>
-        <p>Demo-build stand-in: no docker, just a few plausible lines with a
-short delay so the polling UI shows a running state first.</p>
+        <p>Runs the commands in order, streaming stdout and stderr lines into
+the job from reader fibers. A failing command stops the sequence.</p>
 
     </div>
     <div class="code">
-        <span id="line-180"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">run_fake</span><span class="t">(</span><span class="t">job</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Job</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
-<span id="line-181"></span><span class="t">    </span><span class="t">spawn</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
-<span id="line-182"></span><span class="t">      </span><span class="t">parts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">job</span><span class="t">.</span><span class="t">title</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">2</span><span class="t">)</span><span class="t"></span>
-<span id="line-183"></span><span class="t">      </span><span class="t">action</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parts</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">?</span><span class="t"></span>
-<span id="line-184"></span><span class="t">      </span><span class="t">stack_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parts</span><span class="t">[</span><span class="m">1</span><span class="t">]</span><span class="t">?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="s">&quot;</span><span class="s">demo</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-185"></span><span class="t">      </span><span class="t">lines</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">FakeComposeData</span><span class="t">.</span><span class="t">fake_action_output</span><span class="t">(</span><span class="t">stack_name</span><span class="t">,</span><span class="t"> </span><span class="t">action</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t"></span>
-<span id="line-186"></span><span class="t">      </span><span class="t">lines</span><span class="t">.</span><span class="t">each_line</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
-<span id="line-187"></span><span class="t">        </span><span class="t">sleep</span><span class="t"> </span><span class="m">0.4</span><span class="t">.</span><span class="t">seconds</span><span class="t"></span>
-<span id="line-188"></span><span class="t">        </span><span class="t">job</span><span class="t">.</span><span class="t">append</span><span class="t">(</span><span class="t">line</span><span class="t">)</span><span class="t"></span>
-<span id="line-189"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-190"></span><span class="t">      </span><span class="t">job</span><span class="t">.</span><span class="t">finish</span><span class="t">(</span><span class="m">0</span><span class="t">)</span><span class="t"></span>
-<span id="line-191"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
-<span id="line-192"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
-<span id="line-193"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-170"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">run_real</span><span class="t">(</span><span class="t">job</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Job</span><span class="t">,</span><span class="t"> </span><span class="t">commands</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-171"></span><span class="t">    </span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Compose job </span><span class="lsi">#{</span><span class="t">job</span><span class="t">.</span><span class="t">id</span><span class="t"></span><span class="lsi">}</span><span class="s">: </span><span class="lsi">#{</span><span class="t">commands</span><span class="t">.</span><span class="t">map</span><span class="t">(</span><span class="o">&amp;</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t">)</span><span class="t">.</span><span class="t">join</span><span class="t">(</span><span class="s">&quot;</span><span class="s"> &amp;&amp; </span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-172"></span><span class="t">    </span><span class="t">spawn</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-173"></span><span class="t">      </span><span class="t">exit_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">0</span><span class="t"></span>
+<span id="line-174"></span><span class="t">      </span><span class="t">commands</span><span class="t">.</span><span class="t">each</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">command</span><span class="o">|</span><span class="t"></span>
+<span id="line-175"></span><span class="t">        </span><span class="t">exit_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">run_one</span><span class="t">(</span><span class="t">job</span><span class="t">,</span><span class="t"> </span><span class="t">command</span><span class="t">)</span><span class="t"></span>
+<span id="line-176"></span><span class="t">        </span><span class="nk">break</span><span class="t"> </span><span class="nk">unless</span><span class="t"> </span><span class="t">exit_code</span><span class="t"> </span><span class="o">==</span><span class="t"> </span><span class="m">0</span><span class="t"></span>
+<span id="line-177"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-178"></span><span class="t">      </span><span class="t">job</span><span class="t">.</span><span class="t">finish</span><span class="t">(</span><span class="t">exit_code</span><span class="t">)</span><span class="t"></span>
+<span id="line-179"></span><span class="t">      </span><span class="no">Log</span><span class="t">.</span><span class="t">info</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Compose job </span><span class="lsi">#{</span><span class="t">job</span><span class="t">.</span><span class="t">id</span><span class="t"></span><span class="lsi">}</span><span class="s"> finished with exit code </span><span class="lsi">#{</span><span class="t">exit_code</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-180"></span><span class="t">    </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"></span>
+<span id="line-181"></span><span class="t">      </span><span class="t">job</span><span class="t">.</span><span class="t">append</span><span class="t">(</span><span class="s">&quot;</span><span class="s">Failed to run compose job: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-182"></span><span class="t">      </span><span class="t">job</span><span class="t">.</span><span class="t">finish</span><span class="t">(</span><span class="m">1</span><span class="t">)</span><span class="t"></span>
+<span id="line-183"></span><span class="t">      </span><span class="no">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Compose job </span><span class="lsi">#{</span><span class="t">job</span><span class="t">.</span><span class="t">id</span><span class="t"></span><span class="lsi">}</span><span class="s"> failed</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-184"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-185"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-15" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-15" class="anchor">↦</a>
+        </span>
+        <p>Runs one command of a job, appending its output lines; returns the
+process exit code.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-189"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">run_one</span><span class="t">(</span><span class="t">job</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Job</span><span class="t">,</span><span class="t"> </span><span class="t">command</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Array</span><span class="t">(</span><span class="no">String</span><span class="t">)</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Int32</span><span class="t"></span>
+<span id="line-190"></span><span class="t">    </span><span class="t">process</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Process</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="t"></span>
+<span id="line-191"></span><span class="t">      </span><span class="t">command</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-192"></span><span class="t">      </span><span class="t">args</span><span class="t">:</span><span class="t"> </span><span class="t">command</span><span class="t">[</span><span class="m">1</span><span class="t">..</span><span class="t">]</span><span class="t">,</span><span class="t"></span>
+<span id="line-193"></span><span class="t">      </span><span class="t">output</span><span class="t">:</span><span class="t"> </span><span class="no">Process</span><span class="no">::</span><span class="no">Redirect</span><span class="no">::</span><span class="no">Pipe</span><span class="t">,</span><span class="t"></span>
+<span id="line-194"></span><span class="t">      </span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="no">Process</span><span class="no">::</span><span class="no">Redirect</span><span class="no">::</span><span class="no">Pipe</span><span class="t">,</span><span class="t"></span>
+<span id="line-195"></span><span class="t">    </span><span class="t">)</span><span class="t"></span>
+<span id="line-196"></span><span class="t">    </span><span class="t">reader</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="o">-&gt;</span><span class="t">(</span><span class="t">stream</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">IO</span><span class="t">)</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-197"></span><span class="t">      </span><span class="t">stream</span><span class="t">.</span><span class="t">each_line</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
+<span id="line-198"></span><span class="t">        </span><span class="t">job</span><span class="t">.</span><span class="t">append</span><span class="t">(</span><span class="t">line</span><span class="t">)</span><span class="t"></span>
+<span id="line-199"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-200"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-16" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-16" class="anchor">↦</a>
+        </span>
+        <p>Wait for the readers first: they hit EOF when the child exits,
+and Process#wait closes the pipes, so waiting on the process
+first would pull the streams out from under the readers.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-204"><pre class="b" ><code class="b"><span class="t">    </span><span class="t">done</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">Channel</span><span class="t">(</span><span class="no">Nil</span><span class="t">)</span><span class="t">.</span><span class="t">new</span><span class="t">(</span><span class="m">2</span><span class="t">)</span><span class="t"></span>
+<span id="line-205"></span><span class="t">    </span><span class="t">spawn</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-206"></span><span class="t">      </span><span class="t">reader</span><span class="t">.</span><span class="t">call</span><span class="t">(</span><span class="t">process</span><span class="t">.</span><span class="t">output</span><span class="t">)</span><span class="t"></span>
+<span id="line-207"></span><span class="t">      </span><span class="t">done</span><span class="t">.</span><span class="t">send</span><span class="t">(</span><span class="l">nil</span><span class="t">)</span><span class="t"></span>
+<span id="line-208"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-209"></span><span class="t">    </span><span class="t">spawn</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-210"></span><span class="t">      </span><span class="t">reader</span><span class="t">.</span><span class="t">call</span><span class="t">(</span><span class="t">process</span><span class="t">.</span><span class="t">error</span><span class="t">)</span><span class="t"></span>
+<span id="line-211"></span><span class="t">      </span><span class="t">done</span><span class="t">.</span><span class="t">send</span><span class="t">(</span><span class="l">nil</span><span class="t">)</span><span class="t"></span>
+<span id="line-212"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-213"></span><span class="t">    </span><span class="m">2</span><span class="t">.</span><span class="t">times</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="t">done</span><span class="t">.</span><span class="t">receive</span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-214"></span><span class="t">    </span><span class="t">exit_status</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">process</span><span class="t">.</span><span class="t">wait</span><span class="t"></span>
+<span id="line-215"></span><span class="t">    </span><span class="t">exit_status</span><span class="t">.</span><span class="t">system_exit_status</span><span class="t">.</span><span class="t">to_i32</span><span class="t"></span>
+<span id="line-216"></span><span class="t">  </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-17" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-17" class="anchor">↦</a>
+        </span>
+        <p>Demo-build stand-in: no docker, just a few plausible lines with a
+short delay so the polling UI shows a running state first. The
+leading line says what every demo visitor should know: this is
+simulated.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-222"><pre class="b" ><code class="b"><span class="t">  </span><span class="nk">private</span><span class="t"> </span><span class="nk">def</span><span class="t"> </span><span class="nv">self</span><span class="t">.</span><span class="t">run_fake</span><span class="t">(</span><span class="t">job</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Job</span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Nil</span><span class="t"></span>
+<span id="line-223"></span><span class="t">    </span><span class="t">spawn</span><span class="t"> </span><span class="nk">do</span><span class="t"></span>
+<span id="line-224"></span><span class="t">      </span><span class="t">parts</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">job</span><span class="t">.</span><span class="t">title</span><span class="t">.</span><span class="t">split</span><span class="t">(</span><span class="s">&quot;</span><span class="s"> </span><span class="s">&quot;</span><span class="s"></span><span class="t">,</span><span class="t"> </span><span class="m">2</span><span class="t">)</span><span class="t"></span>
+<span id="line-225"></span><span class="t">      </span><span class="t">action</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parts</span><span class="t">[</span><span class="m">0</span><span class="t">]</span><span class="t">?</span><span class="t"></span>
+<span id="line-226"></span><span class="t">      </span><span class="t">stack_name</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">parts</span><span class="t">[</span><span class="m">1</span><span class="t">]</span><span class="t">?</span><span class="t"> </span><span class="o">||</span><span class="t"> </span><span class="s">&quot;</span><span class="s">demo</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-227"></span><span class="t">      </span><span class="t">job</span><span class="t">.</span><span class="t">append</span><span class="t">(</span><span class="s">&quot;</span><span class="s">Demo mode: this output is simulated</span><span class="s">&quot;</span><span class="s"></span><span class="t">)</span><span class="t"></span>
+<span id="line-228"></span><span class="t">      </span><span class="t">lines</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="no">FakeComposeData</span><span class="t">.</span><span class="t">fake_action_output</span><span class="t">(</span><span class="t">stack_name</span><span class="t">,</span><span class="t"> </span><span class="t">action</span><span class="t">.</span><span class="t">to_s</span><span class="t">)</span><span class="t"></span>
+<span id="line-229"></span><span class="t">      </span><span class="t">lines</span><span class="t">.</span><span class="t">each_line</span><span class="t"> </span><span class="nk">do</span><span class="t"> </span><span class="o">|</span><span class="t">line</span><span class="o">|</span><span class="t"></span>
+<span id="line-230"></span><span class="t">        </span><span class="t">sleep</span><span class="t"> </span><span class="m">0.4</span><span class="t">.</span><span class="t">seconds</span><span class="t"></span>
+<span id="line-231"></span><span class="t">        </span><span class="t">job</span><span class="t">.</span><span class="t">append</span><span class="t">(</span><span class="t">line</span><span class="t">)</span><span class="t"></span>
+<span id="line-232"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-233"></span><span class="t">      </span><span class="t">job</span><span class="t">.</span><span class="t">finish</span><span class="t">(</span><span class="m">0</span><span class="t">)</span><span class="t"></span>
+<span id="line-234"></span><span class="t">    </span><span class="nk">end</span><span class="t"></span>
+<span id="line-235"></span><span class="t">  </span><span class="nk">end</span><span class="t"></span>
+<span id="line-236"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 

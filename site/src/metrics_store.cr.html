@@ -165,6 +165,24 @@
 
             <li>
 
+                <a href="src/app_store.cr.html"><span>src/app_store.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/assets.cr.html"><span>src/assets.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/compose_appstore.cr.html"><span>src/compose_appstore.cr</span></a>
+
+            </li>
+
+            <li>
+
                 <a href="src/compose_dashboard.cr.html"><span>src/compose_dashboard.cr</span></a>
 
             </li>
@@ -184,6 +202,12 @@
             <li>
 
                 <a href="src/dashboard.cr.html"><span>src/dashboard.cr</span></a>
+
+            </li>
+
+            <li>
+
+                <a href="src/fake_appstore_data.cr.html"><span>src/fake_appstore_data.cr</span></a>
 
             </li>
 
@@ -494,7 +518,7 @@ optional callback (used for Gotify alert rules).</p>
 <span id="line-111"></span><span class="t">    </span><span class="t">)</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">MetricsStore</span><span class="t"></span>
 <span id="line-112"></span><span class="t">      </span><span class="t">store</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="t">new</span><span class="t">(</span><span class="t">data_dir</span><span class="t">)</span><span class="t"></span>
 <span id="line-113"></span><span class="t">      </span><span class="t">store</span><span class="t">.</span><span class="t">prune</span><span class="t">(</span><span class="t">retention_days</span><span class="t">)</span><span class="t"></span>
-<span id="line-114"></span><span class="t">      </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:fake_journal</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span></code></pre></span>
+<span id="line-114"></span><span class="t">      </span><span class="o">{%</span><span class="t"> </span><span class="nk">if</span><span class="t"> </span><span class="t">flag?</span><span class="t">(</span><span class="ss">:demo_mode</span><span class="t">)</span><span class="t"> </span><span class="o">%}</span></code></pre></span>
     </div>
 </div>
 
