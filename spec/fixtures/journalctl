@@ -1,0 +1,11 @@
+#!/bin/sh
+# Fake journalctl for the subprocess-path specs (#61): ignores all
+# arguments and emits canned journal JSON on stdout, so the real
+# Process.new / line-parsing / exit-status code path in
+# Journalctl.query is observable. Set FAKE_EXIT_CODE to control the
+# exit status.
+cat <<'JSON'
+{"__CURSOR":"spec-cursor-0002","__REALTIME_TIMESTAMP":"1699999999999999","MESSAGE":"spec log entry two","PRIORITY":"3","_HOSTNAME":"spec-host","SYSLOG_IDENTIFIER":"specd","_PID":"42","_SYSTEMD_UNIT":"spec.service"}
+{"__CURSOR":"spec-cursor-0001","__REALTIME_TIMESTAMP":"1699999998999998","MESSAGE":"spec log entry one","PRIORITY":"6","_HOSTNAME":"spec-host","SYSLOG_IDENTIFIER":"specd","_PID":"42","_SYSTEMD_UNIT":"spec.service"}
+JSON
+exit "${FAKE_EXIT_CODE:-0}"
