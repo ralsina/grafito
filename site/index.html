@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Grafito: Your friendly, self-hosted Systemd Journal Log Viewer. Effortlessly navigate, filter, and understand your system logs."
+      content="Grafito: a self-hosted window into your Linux machine. Logs, services, processes, containers and self-hosted apps — your whole system in one web page."
     />
     <meta name="color-scheme" content="dark light" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,10 +16,10 @@
     />
 
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <title>Grafito - Friendly Systemd Journal Log Viewer</title>
+    <title>Grafito - A Window Into Your Linux Machine</title>
     <style>
       /* ===================================================================
-         GRAFITO // LOG NAVIGATION CONSOLE
+         GRAFITO // MISSION CONTROL
          A retrofuturistic cockpit / CRT phosphor terminal look.
          =================================================================== */
       :root {
@@ -578,8 +578,11 @@
   </head>
   <body>
     <div class="cockpit-bar">
-      <span>grafito // log navigation console</span>
-      <span class="bar-label">sys.journal — read/write: ok — uptime: ∞</span>
+      <span>grafito // mission control</span>
+      <span class="bar-label"
+        >sys.online — cpu <span id="stat-cpu">3</span>% — mem
+        <span id="stat-mem">41</span>% — uptime: ∞</span
+      >
       <span class="lights">
         <span class="light green"></span>
         <span class="light amber"></span>
@@ -599,8 +602,9 @@
       <canvas id="rain-canvas"></canvas>
       <div class="wrap">
         <p class="boot-lines">
-          boot &gt; journald.sys <span class="ok">[online]</span> &nbsp; index
-          &gt; 0 entries lost <span class="ok">[ok]</span> &nbsp; ai.link
+          boot &gt; systemd <span class="ok">[online]</span> &nbsp; units &gt;
+          all nominal <span class="ok">[ok]</span> &nbsp; containers &gt; up
+          <span class="ok">[ok]</span> &nbsp; ai.link
           <span class="ok">[standby]</span>
         </p>
         <h1 class="grafito-title">
@@ -608,16 +612,15 @@
             >Grafito<span class="cursor"></span
           ></a>
         </h1>
-        <p class="subtitle">
-          Your friendly, self-hosted systemd journal log viewer
-        </p>
+        <p class="subtitle">A window into your Linux machine</p>
 
         <div class="hero-text-content">
           <p>
-            <span class="prompt">$ grafito --navigate</span><br />
-            Effortlessly navigate, filter, and understand your system logs with
-            a clean, web-based interface. No more complex terminal commands for
-            everyday log viewing!
+            <span class="prompt">$ grafito --port 3000</span><br />
+            Grafito started as a log viewer. It grew into a window into your
+            Linux machine: read the journal, watch services and processes,
+            steer your containers, install apps — your whole system, live, in
+            one self-hosted web page.
           </p>
         </div>
 
@@ -722,76 +725,20 @@
         </div>
       </article>
 
-      <p class="section-label">modules 02–16 — capabilities</p>
+      <p class="section-label">modules 02–07 — the whole machine</p>
       <div class="features-grid">
         <article class="panel">
-          <h2><span class="module-id">02</span>Powerful Filtering</h2>
+          <h2><span class="module-id">02</span>The Journal, Live</h2>
           <p>
-            Quickly find what you need. Search by text, systemd unit, syslog
-            tag, time range (e.g., "last 15 min", "last week"), and log
-            priority. Filters update dynamically as you type! Detail and context
-            views!
+            Every line your machine writes, as it writes it. Filter by text,
+            unit, tag, time range or priority, watch new entries stream in
+            live, and click the frequency chart to jump straight to any
+            moment.
           </p>
         </article>
 
         <article class="panel">
-          <h2><span class="module-id">03</span>Live Log Streaming</h2>
-          <p>
-            Monitor logs in real-time with the "Live View" feature. See new
-            entries appear automatically without manual refreshes, perfect for
-            active troubleshooting.
-          </p>
-        </article>
-
-        <article class="panel">
-          <h2><span class="module-id">04</span>Understand Your Commands</h2>
-          <p>
-            Curious about the underlying `journalctl` magic? Grafito shows you
-            the equivalent terminal command for your currently active filters.
-          </p>
-        </article>
-
-        <article class="panel">
-          <h2>
-            <span class="module-id">05</span>Shareable & Bookmarkable Views
-          </h2>
-          <p>
-            Easily copy a URL that includes all your current filter settings.
-            Share it with colleagues or bookmark it for quick access to common
-            log views.
-          </p>
-        </article>
-
-        <article class="panel">
-          <h2><span class="module-id">06</span>Export Logs</h2>
-          <p>
-            Need logs offline? Download your filtered log entries as a plain
-            text file for archiving, sharing, or further analysis in other
-            tools.
-          </p>
-        </article>
-
-        <article class="panel">
-          <h2><span class="module-id">07</span>Self-Hosted & Secure</h2>
-          <p>
-            Grafito runs on your own server. Your log data stays private and
-            under your control. Ideal for individuals and teams who prioritize
-            data security.
-          </p>
-        </article>
-
-        <article class="panel">
-          <h2><span class="module-id">08</span>Lightweight & Responsive</h2>
-          <p>
-            Built with Crystal and HTMX, Grafito is designed to be fast and
-            efficient, providing a smooth user experience even with many log
-            entries. Since it's not <b>a lot</b> of code, you can
-            <a href="src/main.cr.html">read the explained source code!</a>
-          </p>
-        </article>
-
-        <article class="panel">
-          <h2><span class="module-id">09</span>AI-Powered Log Analysis</h2>
+          <h2><span class="module-id">03</span>AI-Powered Log Analysis</h2>
           <p>
             Stuck on a confusing error? Get intelligent explanations from LLMs
             with a single click, and ask follow-up questions in context.
@@ -802,45 +749,17 @@
         </article>
 
         <article class="panel">
-          <h2><span class="module-id">10</span>Clean & Intuitive UI</h2>
+          <h2><span class="module-id">04</span>Server Dashboard</h2>
           <p>
-            A modern, clutter-free interface. Supports both light and dark modes
-            to match your preference and reduce eye strain.
-          </p>
-        </article>
-
-        <article class="panel">
-          <h2><span class="module-id">11</span>Server Dashboard</h2>
-          <p>
-            More than logs: a dashboard with system health, the state of your
-            systemd units, and a history chart of memory, disk and load —
+            The state of your machine at a glance: system health, the state of
+            your systemd units, and a history chart of memory, disk and load —
             sampled in the background, stored as plain JSONL, no database.
             Optional Gotify push alerts for failing units and full disks.
           </p>
         </article>
 
         <article class="panel">
-          <h2><span class="module-id">12</span>Docker Compose View</h2>
-          <p>
-            See your compose stacks, the services inside each one, and their
-            health at a glance. Start, stop, restart and update stacks with
-            job output streaming live into the page, Dockge-style. Read the
-            compose.yaml, tail service logs.
-          </p>
-        </article>
-
-        <article class="panel">
-          <h2><span class="module-id">13</span>App Store</h2>
-          <p>
-            Install popular self-hosted apps without writing YAML: a
-            Runtipi-compatible app store that renders catalog apps as ordinary
-            compose stacks — pick a port, fill in the form, and Grafito pulls
-            and runs it. Updates and uninstalls included.
-          </p>
-        </article>
-
-        <article class="panel">
-          <h2><span class="module-id">14</span>Process Monitor</h2>
+          <h2><span class="module-id">05</span>Process Monitor</h2>
           <p>
             htop on a page: per-core CPU meters and a live process table that
             sorts by any column and filters by user, pid or command. Click a
@@ -849,30 +768,32 @@
         </article>
 
         <article class="panel">
-          <h2><span class="module-id">15</span>Homepage Launcher</h2>
+          <h2><span class="module-id">06</span>Containers & Apps</h2>
           <p>
-            A simple start page for your self-hosted apps: service cards
-            grouped your way, up/down reachability dots, and an optional
-            weather widget. Configured with one small YAML file.
+            Your compose stacks and their health at a glance: start, stop,
+            restart and update them with job output streaming into the page,
+            Dockge-style. Then install popular self-hosted apps without
+            writing YAML via the Runtipi-compatible app store — pick a port,
+            fill in the form, and Grafito pulls and runs it.
           </p>
         </article>
 
         <article class="panel">
-          <h2><span class="module-id">16</span>Opt-in Actions & Security</h2>
+          <h2><span class="module-id">07</span>Self-Hosted & Lightweight</h2>
           <p>
-            Every privileged operation (unit control, process signals, stack
-            actions, app installs) is off by default and gated behind
-            authentication. Cross-site POSTs are rejected, and a docs page
-            shows how to put it safely behind a TLS reverse proxy.
+            Everything stays on your hardware: Grafito runs on your own server
+            as one small, self-contained binary. Built with Crystal and HTMX,
+            it's fast and easy on resources.
           </p>
         </article>
       </div>
 
       <section class="cta-section">
-        <h2>Ready to Simplify Your Log Viewing?</h2>
+        <h2>Ready to Open a Window Into Your Machine?</h2>
         <p>
-          Grafito is open-source and easy to set up. Explore the full source
-          code and other installation methods on GitHub:
+          Grafito is open-source and self-contained: one binary, no database,
+          and your data never leaves your box. Explore the full source code
+          and other installation methods on GitHub:
         </p>
         <a
           class="console-button primary"
@@ -1009,6 +930,15 @@
                 copyButton.textContent = "failed";
               });
           });
+        }
+        // --- FAKE TELEMETRY: a window, after all --------------------------
+        const cpuStat = document.getElementById("stat-cpu");
+        const memStat = document.getElementById("stat-mem");
+        if (cpuStat && memStat) {
+          setInterval(() => {
+            cpuStat.textContent = 2 + Math.floor(Math.random() * 9);
+            memStat.textContent = 34 + Math.floor(Math.random() * 14);
+          }, 2000);
         }
       });
     </script>
