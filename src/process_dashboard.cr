@@ -536,7 +536,7 @@ module ProcessDashboard
   # Severity buckets over the dashboard's default window, matching the
   # combo chart in the log stream and the server dashboard.
   private def self.chart_data : Tuple(Array(Grafito::MetricsStore::MetricPoint), Array(Timeline::TimelinePoint))
-    history = Grafito.metrics_store.try(&.history(Dashboard::DEFAULT_DASHBOARD_SINCE)) ||
+    history = Grafito.metrics_store.try(&.history(Dashboard.default_dashboard_since)) ||
               [] of Grafito::MetricsStore::MetricPoint
     buckets = Dashboard.severity_buckets(cached_journal_entries, history)
     {history, buckets}
@@ -766,6 +766,12 @@ module ProcessDashboard
       unless Grafito.processes_enabled?
         env.response.status_code = 404
         next "Process view is disabled."
+      end
+
+      # Read-only, but a cross-site page could still burn the
+      # operator's paid AI quota; same gate as the action routes.
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
       end
 
       provider = Grafito.ai_provider

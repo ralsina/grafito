@@ -221,6 +221,10 @@ function setViewMode(mode) {
     }
   });
   setViewVisible(mode, true);
+  // The SSE live tail must not keep streaming (and keep a journalctl
+  // follower alive on the server) while another view is on screen;
+  // refreshLiveStream restarts it when logs become active again.
+  if (typeof refreshLiveStream === "function") refreshLiveStream();
 }
 
 const viewSwitcher = document.getElementById("brand-switcher");

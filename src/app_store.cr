@@ -73,6 +73,12 @@ module AppStore
   CONNECT_TIMEOUT = 5.seconds
   READ_TIMEOUT    = 120.seconds
 
+  # Download/extract ceilings. Store URLs are admin-configured, but a
+  # compromised or misconfigured store should fill neither the data
+  # dir nor /tmp before the sync's ensure cleanup runs.
+  MAX_TARBALL_BYTES = 200 * 1024 * 1024
+  MAX_ENTRY_BYTES   = 50 * 1024 * 1024
+
   # Whitelist for app ids and store slugs, which end up in file paths.
   # Runtipi ids are lowercase alphanumerics with dashes/underscores.
   VALID_ID = /^[a-z0-9][a-z0-9_-]*$/
@@ -370,7 +376,10 @@ module AppStore
         raise SyncError.new("HTTP #{response.status.code} fetching #{url}")
       end
       File.open(path, "w") do |file|
-        IO.copy(response.body_io, file)
+        copied = IO.copy(response.body_io, file, MAX_TARBALL_BYTES + 1)
+        if copied > MAX_TARBALL_BYTES
+          raise SyncError.new("Store tarball from #{url} exceeds the #{MAX_TARBALL_BYTES}-byte size limit.")
+        end
       end
     end
   rescue ex : SyncError
@@ -407,12 +416,19 @@ module AppStore
     return if relative.empty?
     return unless relative.starts_with?("apps/")
 
+    if entry.size > MAX_ENTRY_BYTES
+      raise SyncError.new("Store entry '#{relative}' declares #{entry.size} bytes, over the #{MAX_ENTRY_BYTES}-byte limit.")
+    end
+
     destination = File.expand_path(File.join(staging, relative))
     return unless destination.starts_with?(File.expand_path(staging) + File::SEPARATOR)
 
     Dir.mkdir_p(File.dirname(destination))
     File.open(destination, "w") do |file|
-      IO.copy(entry.io, file)
+      copied = IO.copy(entry.io, file, MAX_ENTRY_BYTES + 1)
+      if copied > MAX_ENTRY_BYTES
+        raise SyncError.new("Store entry '#{relative}' exceeds the #{MAX_ENTRY_BYTES}-byte size limit.")
+      end
     end
   end
 
@@ -625,8 +641,12 @@ module AppStore
 
     dir = install_dir(root, store.slug, app.id)
     Dir.mkdir_p(dir)
+    # The .env carries generated secrets and the installer's answers:
+    # only the process owner may read it (the dir too — under a
+    # DynamicUser the data dir would otherwise be world-traversable).
+    File.chmod(dir, 0o700)
     File.write(File.join(dir, "docker-compose.yml"), rendered)
-    File.write(File.join(dir, ".env"), env_file_content(input.env))
+    File.write(File.join(dir, ".env"), env_file_content(input.env), perm: 0o600)
     File.write(File.join(dir, "app.json"), "#{installed.to_pretty_json}\n")
     installed
   end
@@ -674,8 +694,9 @@ module AppStore
     installed.port = input.port
     dir = install_dir(root, installed.store, installed.id)
     Dir.mkdir_p(dir)
+    File.chmod(dir, 0o700)
     File.write(installed.compose_file(root), transform_compose(File.read(app_compose_path(root, installed.store, app.id)), app.id))
-    File.write(installed.env_file(root), env_file_content(merged))
+    File.write(installed.env_file(root), env_file_content(merged), perm: 0o600)
     File.write(File.join(dir, "app.json"), "#{installed.to_pretty_json}\n")
 
     messages = ["Updated app files: #{app.name} #{app.version} (package v#{app.tipi_version})."]

@@ -274,8 +274,19 @@ end
 def parse_app_store_config(args)
   Grafito.apps_enabled = args["--apps"].to_s != "false"
   Grafito.appstores_spec = args["--appstores"].to_s
-  Grafito.data_dir = Grafito::MetricsStore.resolve_data_dir(args["--data-dir"].to_s)
-  Grafito::Log.info { "App store: #{Grafito.apps_enabled? ? "enabled" : "disabled"} (data dir: #{Grafito.data_dir})" }
+
+  # Nothing needs the data dir on a log-only deployment (metrics need
+  # the dashboard; the app store needs compose+apps), so skip its
+  # creation entirely instead of logging a scary failure an
+  # unprivileged log-only user cannot act on.
+  needs_data_dir = Grafito.dashboard_enabled? ||
+                   (Grafito.compose_enabled? && Grafito.apps_enabled?)
+  if needs_data_dir
+    Grafito.data_dir = Grafito::MetricsStore.resolve_data_dir(args["--data-dir"].to_s)
+    Grafito::Log.info { "App store: #{Grafito.apps_enabled? ? "enabled" : "disabled"} (data dir: #{Grafito.data_dir})" }
+  else
+    Grafito::Log.info { "App store: disabled (no data dir needed)" }
+  end
 end
 
 # Returns the port to listen on, parsing the docopt argument which may

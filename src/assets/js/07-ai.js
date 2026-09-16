@@ -158,32 +158,44 @@ function askAIExplanation(cursor) {
       tempDiv.innerHTML = html;
       // Look for the message content in the details
       const messageElement = tempDiv.querySelector("pre");
+      // Journal messages are attacker-controlled (any local user can
+      // write one with logger), so the block is built with DOM APIs
+      // and textContent — never interpolated into innerHTML.
+      let message = "";
       if (messageElement && messageElement.textContent.trim()) {
         try {
           // Parse the JSON and extract just the MESSAGE field
           const logData = JSON.parse(messageElement.textContent.trim());
-          const message = logData.MESSAGE || messageElement.textContent.trim(); // Fallback to full text if no MESSAGE field
-
-          currentTargetLogEntry = message;
-          // Truncate very long messages
-          const truncatedMessage =
-            currentTargetLogEntry.length > 300
-              ? currentTargetLogEntry.substring(0, 300) + "..."
-              : currentTargetLogEntry;
-          targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem; word-break: break-word; line-height: 1.4;">${truncatedMessage}</div>`;
+          message = logData.MESSAGE || messageElement.textContent.trim(); // Fallback to full text if no MESSAGE field
         } catch (e) {
           // If JSON parsing fails, use the full text as fallback
-          currentTargetLogEntry = messageElement.textContent.trim();
-          const truncatedMessage =
-            currentTargetLogEntry.length > 300
-              ? currentTargetLogEntry.substring(0, 300) + "..."
-              : currentTargetLogEntry;
-          targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem; word-break: break-word; line-height: 1.4;">${truncatedMessage}</div>`;
+          message = messageElement.textContent.trim();
         }
+      }
+      if (message) {
+        currentTargetLogEntry = message;
+        // Truncate very long messages
+        const truncatedMessage =
+          message.length > 300 ? message.substring(0, 300) + "..." : message;
+        targetEntryDiv.textContent = "";
+        const label = document.createElement("strong");
+        label.textContent = "Log Message:";
+        const box = document.createElement("div");
+        box.style.marginTop = "0.5rem";
+        box.style.wordBreak = "break-word";
+        box.style.lineHeight = "1.4";
+        box.textContent = truncatedMessage;
+        targetEntryDiv.append(label, document.createElement("br"), box);
       } else {
         // No log entry found or empty content
         currentTargetLogEntry = "";
-        targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem;">Unable to load log message</div>`;
+        targetEntryDiv.textContent = "";
+        const label = document.createElement("strong");
+        label.textContent = "Log Message:";
+        const note = document.createElement("div");
+        note.style.marginTop = "0.5rem";
+        note.textContent = "Unable to load log message";
+        targetEntryDiv.append(label, document.createElement("br"), note);
       }
     })
     .catch((error) => {

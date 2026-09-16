@@ -577,6 +577,7 @@
         <div
           id="processes-view"
           hidden
+          hx-ext="morph"
           hx-get="processes"
           hx-trigger="every 5s[!document.getElementById('processes-view').hidden]"
           hx-include="#processes-view form"

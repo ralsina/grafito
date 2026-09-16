@@ -84,7 +84,9 @@ window.closeLogPanel = function () {
 };
 
 window.panelSpinner = function (paneId) {
-  const pane = document.getElementById(paneId);
+  // Call sites render the id with a leading '#' (hx-on strings);
+  // getElementById wants the bare id.
+  const pane = document.getElementById(String(paneId).replace(/^#/, ""));
   if (pane) {
     pane.innerHTML = document.getElementById(
       "details-dialog-loading-spinner-template",
@@ -93,7 +95,7 @@ window.panelSpinner = function (paneId) {
 };
 
 window.panelError = function (paneId, status) {
-  const pane = document.getElementById(paneId);
+  const pane = document.getElementById(String(paneId).replace(/^#/, ""));
   if (pane) {
     pane.innerHTML =
       '<p class="inline-alert">Failed to load content (HTTP ' +

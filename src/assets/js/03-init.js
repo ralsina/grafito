@@ -86,12 +86,14 @@ document.addEventListener("DOMContentLoaded", function () {
       .forEach(function (el) {
         el.remove();
       });
-    const allowedUri = /^(https?:|mailto:|#|\/)/i;
+    const allowedUri = /^(https?:|mailto:|#|\/(?!\/))/i;
     tpl.content.querySelectorAll("*").forEach(function (el) {
       Array.from(el.attributes).forEach(function (attr) {
         const name = attr.name.toLowerCase();
         const value = (attr.value || "").trim().toLowerCase();
-        if (name.startsWith("on")) {
+        if (name === "style" || name.startsWith("on")) {
+          // style= survives script removal but still allows CSS
+          // exfiltration tricks; AI output has no honest use for it.
           el.removeAttribute(attr.name);
         } else if (
           (name === "href" || name === "src" || name === "xlink:href") &&
@@ -99,6 +101,8 @@ document.addEventListener("DOMContentLoaded", function () {
           !allowedUri.test(value) &&
           !value.startsWith("data:image/")
         ) {
+          // The negative lookahead also rejects protocol-relative
+          // URLs (//evil.com), which browsers resolve as https:.
           el.removeAttribute(attr.name);
         }
       });

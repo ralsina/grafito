@@ -10,6 +10,7 @@
 # and could use some refactoring.
 
 require "./grafito_helpers"
+require "./assets"
 require "./journalctl"
 require "./timeline"
 require "./system_status"
@@ -51,6 +52,29 @@ module Grafito
 
   # Global unit restriction - when set, only logs from these units will be shown
   class_property allowed_units : Array(String)? = nil
+
+  # /ask-ai request ceilings: the AI call burns the operator's paid
+  # quota, and both the body and the replayed history multiply usage.
+  MAX_ASK_BODY_BYTES = 64 * 1024
+  MAX_ASK_HISTORY    = 20
+
+  # Name-based check of the --units whitelist for the action and
+  # explain endpoints. Nil whitelist (no --units given) allows
+  # everything; otherwise the same raw/cleaned/substring tiers as the
+  # log query apply, so a unit that shows up in a scoped deployment's
+  # UI is exactly the one that may be acted on.
+  def self.unit_allowed?(unit_name : String) : Bool
+    whitelist = allowed_units
+    return true unless whitelist
+
+    cleaned = unit_name.sub(/\.service$/, "")
+    return true if whitelist.includes?(unit_name) || whitelist.includes?(cleaned)
+    whitelist.any? do |allowed|
+      unit_name.downcase.includes?(allowed.downcase) ||
+        cleaned.downcase.includes?(allowed.downcase) ||
+        allowed.downcase.includes?(cleaned.downcase)
+    end
+  end
 
   # Idle timeout - when set, will shut down if idle for the set number of seconds
   class_property idle_timeout_sec : Int32 = 0
@@ -142,6 +166,15 @@ module Grafito
     else
       "#{base_path}/#{path}"
     end
+  end
+
+  # Writes one SSE `log` event. The row is emitted as one `data:`
+  # line per source line — SSE joins them back with "\n" on the
+  # client — so multi-line journal messages cannot split the frame.
+  private def self.send_log_event(env : HTTP::Server::Context, row : String) : Nil
+    row.each_line { |data_line| env.response.puts "data: #{data_line}" }
+    env.response.puts ""
+    env.response.flush
   end
 
   # Register all Kemal routes (called after base_path is set)
@@ -314,9 +347,7 @@ module Grafito
                 show_message: show_message,
               )
               env.response.puts "event: log"
-              env.response.puts "data: #{row}"
-              env.response.puts ""
-              env.response.flush
+              send_log_event(env, row)
               IdleShutdownHandler.touch
             end
             sleep 2.seconds
@@ -331,7 +362,9 @@ module Grafito
         )
         Log.info { "Live tail starting: #{command.inspect}" }
 
-        done = Channel(Nil).new
+        # Buffered: the cleanup below must never block on a send
+        # whose heartbeat receiver is already gone.
+        done = Channel(Nil).new(1)
         process = Process.new(
           command[0], args: command[1..],
           output: Process::Redirect::Pipe,
@@ -381,16 +414,17 @@ module Grafito
               show_message: show_message,
             )
             env.response.puts "event: log"
-            env.response.puts "data: #{row}"
-            env.response.puts ""
-            env.response.flush
+            send_log_event(env, row)
           end
         rescue IO::Error
           # Client disconnected — the normal way a tail ends.
         ensure
-          done.send(nil)
+          # Kill and reap the journalctl follower first; the done
+          # channel is buffered, so this ordering cannot leak either
+          # the process or the heartbeat fiber.
           process.signal(Signal::TERM) rescue nil
           process.wait rescue nil
+          done.send(nil)
           Log.info { "Live tail ended" }
         end
       {% end %}
@@ -533,12 +567,10 @@ module Grafito
         halt env, status_code: 400, response: "<p class=\"error\">Missing cursor parameter. Cannot load context.</p>"
       end
 
-      # Default to 5 if not provided or invalid
-      count = count_str.try(&.to_i?) || 5
-      if count <= 0
-        env.response.content_type = "text/html"
-        halt env, status_code: 400, response: "<p class=\"error\">Context count must be positive.</p>"
-      end
+      # Default to 5 if not provided or invalid. Clamped like the
+      # other log endpoints: an unbounded count would run
+      # `journalctl -n <count>` twice over the whole journal.
+      count = (count_str.try(&.to_i?) || 5).clamp(1, 500)
 
       # Get `count` entries before and after the cursor
       context_entries = Journalctl.context(cursor, count)
@@ -682,31 +714,45 @@ module Grafito
     post route_path("ask-ai") do |env|
       Log.debug { "Received #{base_path}/ask-ai request" }
 
-      # Parse JSON to check for provider/model override
-      body = env.request.body.try(&.gets_to_end) || ""
+      # Read-only, but a cross-site page could still burn the
+      # operator's paid AI quota; same gate as the action routes.
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
+
+      # Parse JSON to check for provider/model override. The body is
+      # capped and malformed JSON falls through to the 400 handler at
+      # the end of the route instead of being swallowed here.
+      body_io = IO::Memory.new
+      if raw_body = env.request.body
+        if IO.copy(raw_body, body_io, MAX_ASK_BODY_BYTES + 1) > MAX_ASK_BODY_BYTES
+          env.response.status_code = 413
+          next "Request body too large."
+        end
+      end
+      body = body_io.to_s
       provider_id : String? = nil
       model_id : String? = nil
       cursor : String? = nil
       history = [] of Hash(String, String)
 
       unless body.empty?
-        begin
-          json_body = JSON.parse(body)
-          cursor = json_body["cursor"]?.try(&.as_s)
-          provider_id = json_body["provider"]?.try(&.as_s)
-          model_id = json_body["model"]?.try(&.as_s)
-          if raw_history = json_body["history"]?.try(&.as_a)
-            raw_history.each do |item|
-              role = item["role"]?.try(&.as_s)
-              content = item["content"]?.try(&.as_s)
-              if role && content && (role == "user" || role == "assistant")
-                history << {"role" => role, "content" => content}
-              end
+        json_body = JSON.parse(body)
+        cursor = json_body["cursor"]?.try(&.as_s)
+        provider_id = json_body["provider"]?.try(&.as_s)
+        model_id = json_body["model"]?.try(&.as_s)
+        if raw_history = json_body["history"]?.try(&.as_a)
+          raw_history.each do |item|
+            role = item["role"]?.try(&.as_s)
+            content = item["content"]?.try(&.as_s)
+            if role && content && (role == "user" || role == "assistant")
+              history << {"role" => role, "content" => content}
             end
           end
-        rescue
-          # Will be handled below
         end
+        # Only the most recent turns carry useful context; everything
+        # older just multiplies token usage.
+        history.shift(history.size - MAX_ASK_HISTORY) if history.size > MAX_ASK_HISTORY
       end
 
       # Get provider (either specified or default), with optional model.
@@ -793,7 +839,7 @@ module Grafito
           provider: response.provider,
           usage:    response.usage,
         }.to_json
-      rescue ex : JSON::ParseException
+      rescue ex : JSON::ParseException | TypeCastError
         env.response.content_type = "application/json"
         env.response.status_code = 400
         {error: "Invalid JSON in request body: #{ex.message}"}.to_json

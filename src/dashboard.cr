@@ -710,6 +710,12 @@ module Dashboard
         next "Dashboard is disabled."
       end
 
+      # Read-only, but a cross-site page could still burn the
+      # operator's paid AI quota; same gate as the action routes.
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
+
       provider = Grafito.ai_provider
       unless provider
         env.response.content_type = "application/json"
@@ -731,6 +737,14 @@ module Dashboard
         env.response.content_type = "text/html"
         env.response.status_code = 404
         next "Unit '#{HTML.escape(name)}' not found."
+      end
+
+      # The --units whitelist scopes explanations too, matching the
+      # action route's behavior.
+      unless Grafito.unit_allowed?(unit_state.unit)
+        env.response.content_type = "text/html"
+        env.response.status_code = 403
+        next "Unit '#{HTML.escape(name)}' is outside this deployment's --units whitelist."
       end
 
       flags = Grafito.enable_actions? ? SystemStatus.unit_flags_map[name]? : nil
@@ -816,6 +830,13 @@ module Dashboard
         next "Unit '#{HTML.escape(unit_name)}' not found."
       end
 
+      # The --units whitelist scopes the whole operator UI to a subset
+      # of units; actions must honor it, not just the log queries.
+      unless Grafito.unit_allowed?(full_unit)
+        env.response.status_code = 403
+        next "Unit '#{HTML.escape(unit_name)}' is outside this deployment's --units whitelist."
+      end
+
       {% if flag?(:demo_mode) %}
         # Demo build: simulate the systemctl action against the fake
         # unit table; nothing runs on the host.
@@ -887,7 +908,11 @@ module Dashboard
   # ## Dashboard helpers
 
   # Default time window for the dashboard history chart and error count.
-  DEFAULT_DASHBOARD_SINCE = Time.utc - 6.hours
+  # A method, not a constant: a constant is evaluated once at boot,
+  # so the default window would grow with the process's uptime.
+  def self.default_dashboard_since
+    Time.utc - 6.hours
+  end
 
   # Counts journal entries at priority <= 3 (error or worse) for one
   # unit since the given relative time. Bounded like the dashboard's
@@ -909,7 +934,7 @@ module Dashboard
     unit_flags : Hash(String, SystemStatus::UnitFileFlags) = {} of String => SystemStatus::UnitFileFlags,
   ) : String
     snapshot = SystemStatus.snapshot
-    since_time = parse_since(since_text.to_s) || DEFAULT_DASHBOARD_SINCE
+    since_time = parse_since(since_text.to_s) || default_dashboard_since
     history = Grafito.metrics_store.try(&.history(since_time)) || [] of Grafito::MetricsStore::MetricPoint
     entries = dashboard_journal_entries(since_text.presence || "-6h")
     buckets = severity_buckets(entries, history)
