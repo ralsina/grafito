@@ -2013,17 +2013,7 @@ entry. The client sends the follow-up question as the last turn.</p>
 <span id="line-847"></span><span class="t">          </span><span class="t">provider</span><span class="t">:</span><span class="t"> </span><span class="t">response</span><span class="t">.</span><span class="t">provider</span><span class="t">,</span><span class="t"></span>
 <span id="line-848"></span><span class="t">          </span><span class="t">usage</span><span class="t">:</span><span class="t">    </span><span class="t">response</span><span class="t">.</span><span class="t">usage</span><span class="t">,</span><span class="t"></span>
 <span id="line-849"></span><span class="t">        </span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
-<span id="line-850"></span><span class="t">      </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">ParseException</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="no">TypeCastError</span><span class="t"></span>
-<span id="line-851"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">application/json</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-852"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">400</span><span class="t"></span>
-<span id="line-853"></span><span class="t">        </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">Invalid JSON in request body: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
-<span id="line-854"></span><span class="t">      </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Exception</span><span class="t"></span>
-<span id="line-855"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">application/json</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
-<span id="line-856"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">500</span><span class="t"></span>
-<span id="line-857"></span><span class="t">        </span><span class="no">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI provider error: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
-<span id="line-858"></span><span class="t">        </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI request failed: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
-<span id="line-859"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
-<span id="line-860"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+<span id="line-850"></span><span class="t">      </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">JSON</span><span class="no">::</span><span class="no">ParseException</span><span class="t"> </span><span class="o">|</span><span class="t"> </span><span class="no">TypeCastError</span></code></pre></span>
     </div>
 </div>
 
@@ -2031,6 +2021,29 @@ entry. The client sends the follow-up question as the last turn.</p>
     <div class="doc">
         <span class="anchor">
             <a href="#section-88" class="anchor">↦</a>
+        </span>
+        <p>Request-body parse errors have their own rescue above, so a
+parse failure here comes from the provider's response.</p>
+
+    </div>
+    <div class="code">
+        <span id="line-853"><pre class="b" ><code class="b"><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">application/json</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-854"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">502</span><span class="t"></span>
+<span id="line-855"></span><span class="t">        </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI provider returned an invalid response: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-856"></span><span class="t">      </span><span class="nk">rescue</span><span class="t"> </span><span class="t">ex</span><span class="t"> </span><span class="t">:</span><span class="t"> </span><span class="no">Exception</span><span class="t"></span>
+<span id="line-857"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">content_type</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="s">&quot;</span><span class="s">application/json</span><span class="s">&quot;</span><span class="s"></span><span class="t"></span>
+<span id="line-858"></span><span class="t">        </span><span class="t">env</span><span class="t">.</span><span class="t">response</span><span class="t">.</span><span class="t">status_code</span><span class="t"> </span><span class="o">=</span><span class="t"> </span><span class="m">500</span><span class="t"></span>
+<span id="line-859"></span><span class="t">        </span><span class="no">Log</span><span class="t">.</span><span class="t">error</span><span class="t">(</span><span class="t">exception</span><span class="t">:</span><span class="t"> </span><span class="t">ex</span><span class="t">)</span><span class="t"> </span><span class="t">{</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI provider error: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t"> </span><span class="t">}</span><span class="t"></span>
+<span id="line-860"></span><span class="t">        </span><span class="t">{</span><span class="t">error</span><span class="t">:</span><span class="t"> </span><span class="s">&quot;</span><span class="s">AI request failed: </span><span class="lsi">#{</span><span class="t">ex</span><span class="t">.</span><span class="t">message</span><span class="t"></span><span class="lsi">}</span><span class="s">&quot;</span><span class="s"></span><span class="t">}</span><span class="t">.</span><span class="t">to_json</span><span class="t"></span>
+<span id="line-861"></span><span class="t">      </span><span class="nk">end</span><span class="t"></span>
+<span id="line-862"></span><span class="t">    </span><span class="nk">end</span></code></pre></span>
+    </div>
+</div>
+
+<div id="section-89" class="grid">
+    <div class="doc">
+        <span class="anchor">
+            <a href="#section-89" class="anchor">↦</a>
         </span>
         <h2>Views</h2>
 <p>Each view owns its endpoints in its own module; adding a view
@@ -2040,13 +2053,13 @@ in src/assets/index.html for the frontend side.</p>
 
     </div>
     <div class="code">
-        <span id="line-868"><pre class="b" ><code class="b"><span class="t">    </span><span class="no">Dashboard</span><span class="t">.</span><span class="t">register_routes</span><span class="t"></span>
-<span id="line-869"></span><span class="t">    </span><span class="no">ComposeDashboard</span><span class="t">.</span><span class="t">register_routes</span><span class="t"></span>
-<span id="line-870"></span><span class="t">    </span><span class="no">ComposeAppStore</span><span class="t">.</span><span class="t">register_routes</span><span class="t"></span>
-<span id="line-871"></span><span class="t">    </span><span class="no">ProcessDashboard</span><span class="t">.</span><span class="t">register_routes</span><span class="t"></span>
-<span id="line-872"></span><span class="t">    </span><span class="no">HomepageDashboard</span><span class="t">.</span><span class="t">register_routes</span><span class="t"></span>
-<span id="line-873"></span><span class="t">  </span><span class="nk">end</span><span class="t"> </span><span class="c"># register_routes</span><span class="t"></span>
-<span id="line-874"></span><span class="nk">end</span></code></pre></span>
+        <span id="line-870"><pre class="b" ><code class="b"><span class="t">    </span><span class="no">Dashboard</span><span class="t">.</span><span class="t">register_routes</span><span class="t"></span>
+<span id="line-871"></span><span class="t">    </span><span class="no">ComposeDashboard</span><span class="t">.</span><span class="t">register_routes</span><span class="t"></span>
+<span id="line-872"></span><span class="t">    </span><span class="no">ComposeAppStore</span><span class="t">.</span><span class="t">register_routes</span><span class="t"></span>
+<span id="line-873"></span><span class="t">    </span><span class="no">ProcessDashboard</span><span class="t">.</span><span class="t">register_routes</span><span class="t"></span>
+<span id="line-874"></span><span class="t">    </span><span class="no">HomepageDashboard</span><span class="t">.</span><span class="t">register_routes</span><span class="t"></span>
+<span id="line-875"></span><span class="t">  </span><span class="nk">end</span><span class="t"> </span><span class="c"># register_routes</span><span class="t"></span>
+<span id="line-876"></span><span class="nk">end</span></code></pre></span>
     </div>
 </div>
 
