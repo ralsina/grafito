@@ -224,10 +224,14 @@ def main
   # (store, but always revalidate): an upgrade swaps every baked asset at once,
   # and browsers that trusted a max-age would run a stale frontend until the
   # cache expired. The files are small, so the revalidation cost is trivial.
+  # Index serving is disabled because "/" is handled by a route in
+  # Grafito.register_routes that injects the version into asset URLs
+  # (cache busting for CDNs that override cache headers, e.g. Cloudflare).
   baked_asset_handler = BakedFileHandler::BakedFileHandler.new(
     Assets,
     mount_path: Grafito.base_path,
     cache_control: "no-cache",
+    serve_index_html: false,
   )
   use baked_asset_handler
 

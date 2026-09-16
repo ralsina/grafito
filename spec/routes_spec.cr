@@ -64,6 +64,14 @@ describe "Kemal routes" do
     response[:body].should contain(%("homepage":true))
   end
 
+  it "GET / serves the app shell with versioned asset URLs" do
+    response = dispatch_request("GET", "/")
+
+    response[:status].should eq(200)
+    response[:body].should contain(%(app.min.js?v=#{Grafito::VERSION}))
+    response[:body].should_not contain("%%VERSION%%")
+  end
+
   describe "cross-site POST rejection" do
     it "rejects state-changing POSTs with a cross-site Sec-Fetch-Site" do
       headers = HTTP::Headers{"Sec-Fetch-Site" => "cross-site"}

@@ -160,6 +160,21 @@ module Grafito
       end
     end
 
+    # ## The application shell
+    #
+    # Served through a route (instead of the baked handler's index
+    # support) so the asset URLs can be cache-busted: %%VERSION%% in
+    # index.html becomes the binary's version, so every release gives
+    # CDNs and browsers a brand-new URL for each asset, no matter how
+    # aggressively they pin cache headers (e.g. Cloudflare's browser
+    # TTL).
+    app_shell_path = base_path == "/" ? "/" : "#{base_path}/"
+    get app_shell_path do |env|
+      env.response.content_type = "text/html"
+      index = Assets.get?("/index.html").try(&.gets_to_end) || ""
+      index.gsub("%%VERSION%%", VERSION)
+    end
+
     # ## The `/logs` endpoint
     #
     # Exposes the Journalctl wrapper via a REST API.
