@@ -62,7 +62,8 @@ module ProcessDashboard
     matched = needle.empty? ? sorted : sorted.select do |process_info|
       process_info.user.downcase.includes?(needle) ||
         process_info.command.downcase.includes?(needle) ||
-        process_info.pid.to_s.includes?(needle)
+        process_info.pid.to_s.includes?(needle) ||
+        process_info.compose_label.downcase.includes?(needle)
     end
     show_all = limit == "all"
     visible = show_all ? matched : matched.first(ROW_CAP)
@@ -239,6 +240,12 @@ module ProcessDashboard
         td(class: "proc-num") { text format_cpu_time(process_info.cpu_time_sec) }
         td(class: "proc-cmd", title: process_info.command) do
           text process_info.command
+          unless process_info.compose_label.empty?
+            span(
+              class: "tag tag-muted proc-compose-tag",
+              title: "Part of the #{process_info.compose_stack} compose stack (service: #{process_info.compose_service})"
+            ) { text process_info.compose_label }
+          end
         end
         if enable_actions
           td(class: "proc-actions") do

@@ -97,6 +97,62 @@ module ComposeStatus
     end
   end
 
+  # Which compose stack/service a container belongs to. The process
+  # view keys on docker container IDs found in /proc/PID/cgroup to
+  # attribute host processes to stacks and services.
+  record ContainerRef, stack : String, service : String
+
+  @@attribution_mutex = Mutex.new(protection: :checked)
+  @@attribution : {Time, Hash(String, ContainerRef)}? = nil
+  ATTRIBUTION_TTL = 60.seconds
+
+  # Maps docker container IDs (full and 12-char prefix) to the compose
+  # stack/service that owns them, from the running containers. Cached
+  # for a minute: the process view polls every 5s and must not shell
+  # out to `docker ps` on every tick.
+  def self.container_attribution : Hash(String, ContainerRef)
+    return {} of String => ContainerRef unless Grafito.compose_enabled?
+
+    @@attribution_mutex.synchronize do
+      cached = @@attribution
+      return cached[1] if cached && (Time.utc - cached[0]) < ATTRIBUTION_TTL
+
+      map = {} of String => ContainerRef
+      ps_output = run_docker(["ps", "--format", "{{json .}}"])
+      parse_containers(ps_output).each do |container|
+        next unless container.state == "running"
+        labels = container.labels_or_empty
+        project = labels["com.docker.compose.project"]?
+        service = labels["com.docker.compose.service"]?
+        id = container.id
+        next if project.nil? || service.nil? || id.nil? || id.empty?
+        ref = ContainerRef.new(stack: project, service: service)
+        map[id] = ref
+        map[id[0, 12]] = ref if id.size >= 12
+      end
+      @@attribution = {Time.utc, map}
+      map
+    end
+  end
+
+  # Pure helper for specs: keys are the full container ID and its
+  # 12-character prefix, values the stack/service pair.
+  def self.attribution_from_containers(containers : Array(RawContainer)) : Hash(String, ContainerRef)
+    map = {} of String => ContainerRef
+    containers.each do |container|
+      next unless container.state == "running"
+      labels = container.labels_or_empty
+      project = labels["com.docker.compose.project"]?
+      service = labels["com.docker.compose.service"]?
+      id = container.id
+      next if project.nil? || service.nil? || id.nil? || id.empty?
+      ref = ContainerRef.new(stack: project, service: service)
+      map[id] = ref
+      map[id[0, 12]] = ref if id.size >= 12
+    end
+    map
+  end
+
   # The raw fields of one line of `docker ps --format '{{json .}}'` that
   # we care about. JSON::Serializable ignores unknown keys, so the rest
   # of docker's output is simply not mapped. Fields vary by CLI version:
@@ -105,6 +161,9 @@ module ComposeStatus
   # by labels_or_empty, and Ports is nilable.
   class RawContainer
     include JSON::Serializable
+
+    @[JSON::Field(key: "ID")]
+    getter id : String?
 
     @[JSON::Field(key: "Names")]
     getter names : String
