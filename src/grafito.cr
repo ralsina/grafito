@@ -4,7 +4,7 @@
 #
 # Since Grafito is not a very complicated application, the backend is just a few endpoints
 # exposing enough functionality to let you access log information. Because it's all
-# read only, they all use the `GET` method.
+# read-only unless started with --enable-actions, and mutating actions additionally require authentication.
 #
 # Some of them have perhaps too many arguments because they have grown following the UI
 # and could use some refactoring.

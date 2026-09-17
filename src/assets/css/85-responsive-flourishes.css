@@ -1,10 +1,6 @@
 /* =====================================================================
    Mission layout flourishes
    ===================================================================== */
-.brand {
-  height: 2.1rem;
-  align-items: center;
-}
 #stream {
   padding: 0;
 }
@@ -19,7 +15,6 @@
    Small screens: collapse chrome gracefully, two-line entries
    ===================================================================== */
 @media (max-width: 1100px) {
-  .brand-sub,
   .topbar-tool-label {
     display: none;
   }

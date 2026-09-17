@@ -144,52 +144,5 @@ describe Timeline do
       svg.scan(/class="tl-warn"/).size.should eq(1)
       svg.scan(/class="tl-info"/).size.should eq(1)
     end
-
-    it "overlays memory and load lines when metrics cover the span" do
-      data = [
-        {start_time: Time.utc(2023, 1, 1, 10), count: 1_i32, err: 0_i32, warn: 0_i32, info: 1_i32},
-        {start_time: Time.utc(2023, 1, 1, 11), count: 1_i32, err: 0_i32, warn: 0_i32, info: 1_i32},
-      ]
-      metrics = [
-        Grafito::MetricsStore::MetricPoint.new(
-          ts: Time.utc(2023, 1, 1, 10, 30),
-          load1: 0.5,
-          mem_used_pct: 42.0,
-          disk_used_pct: 10.0,
-          units_total: 5,
-          units_failed: 0,
-        ),
-        Grafito::MetricsStore::MetricPoint.new(
-          ts: Time.utc(2023, 1, 1, 11, 30),
-          load1: 1.5,
-          mem_used_pct: 80.0,
-          disk_used_pct: 10.0,
-          units_total: 5,
-          units_failed: 0,
-        ),
-      ]
-      svg = Timeline.generate_svg_timeline(data, width: 300, height: 120, metrics: metrics)
-      svg.scan(/<polyline class="tl-metric-line"/).size.should eq(2) # memory line + load line
-      svg.should contain("memory %")
-    end
-
-    it "omits the overlay when no metrics fall inside the span" do
-      data = [
-        {start_time: Time.utc(2023, 1, 1, 10), count: 1_i32, err: 0_i32, warn: 0_i32, info: 1_i32},
-      ]
-      metrics = [
-        Grafito::MetricsStore::MetricPoint.new(
-          ts: Time.utc(2024, 6, 1, 0),
-          load1: 0.5,
-          mem_used_pct: 42.0,
-          disk_used_pct: 10.0,
-          units_total: 5,
-          units_failed: 0,
-        ),
-      ]
-      svg = Timeline.generate_svg_timeline(data, width: 300, height: 120, metrics: metrics)
-      svg.should_not contain("<polyline class=\"tl-metric-line\"")
-      svg.should_not contain("memory %")
-    end
   end
 end

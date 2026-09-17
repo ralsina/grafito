@@ -13,14 +13,6 @@
   flex-wrap: wrap;
 }
 
-.brand {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  padding-right: 0.9rem;
-  border-right: 1px solid var(--line);
-  white-space: nowrap;
-}
 .brand-mark {
   width: 14px;
   height: 14px;
@@ -29,18 +21,6 @@
   /* The pencil from favicon.svg, tinted with the theme accent. */
   -webkit-mask: url("favicon.svg") center / contain no-repeat;
   mask: url("favicon.svg") center / contain no-repeat;
-}
-.grafito-title-link {
-  font-family: var(--font-display);
-  font-weight: var(--brand-weight);
-  font-size: 1.25rem;
-  color: var(--txt);
-  text-decoration: none;
-  letter-spacing: 0.01em;
-}
-.brand-sub {
-  color: var(--faint);
-  font-size: 0.72rem;
 }
 
 /* Omnibox / search (log omnibox + dashboard service filter) */
