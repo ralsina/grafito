@@ -11,19 +11,59 @@ document.addEventListener("DOMContentLoaded", function () {
   );
 
   if (globalErrorDialog && globalErrorDialogContent) {
-    document.body.addEventListener("htmx:afterRequest", function (event) {
-      if (event.detail.error) {
-        console.error("HTMX Request Failed. Details:", event.detail); // For debugging
-        let errorText = event.detail.error.message || "Failed to send request";
-        globalErrorDialogContent.innerHTML = `
+    // Around page load, htmx occasionally reports a failed request for
+    // a transient reason: one network hiccup, or a request aborted
+    // because a parent swap replaced the element that sent it. The
+    // next poll succeeds milliseconds later, so interrupting the user
+    // with a modal dialog for the first failure reads as "the app is
+    // broken". A failure only opens the dialog after this grace
+    // period expires without any request succeeding; a real outage
+    // still surfaces (every failure re-arms the message), while a
+    // recovery cancels it. HTTP-level errors (4xx/5xx) skip the grace
+    // period: the server answered, so something is genuinely wrong.
+    const ERROR_DIALOG_GRACE_MS = 1500;
+    let errorDialogTimer = null;
+    let pendingErrorText = null;
+
+    function showErrorDialog(errorText) {
+      globalErrorDialogContent.innerHTML = `
                 <p role="alert" class="inline-alert">
                   <strong>Details:</strong> ${errorText}
                 </p>`;
-        if (!globalErrorDialog.open) {
-          globalErrorDialog.showModal();
+      if (!globalErrorDialog.open) {
+        globalErrorDialog.showModal();
+      }
+    }
+
+    function cancelPendingErrorDialog() {
+      if (errorDialogTimer !== null) {
+        clearTimeout(errorDialogTimer);
+        errorDialogTimer = null;
+        pendingErrorText = null;
+      }
+    }
+
+    document.body.addEventListener("htmx:afterRequest", function (event) {
+      if (event.detail.error) {
+        console.error("HTMX Request Failed. Details:", event.detail); // For debugging
+        pendingErrorText = event.detail.error.message || "Failed to send request";
+        if (globalErrorDialog.open) {
+          // Already up: refresh the message right away.
+          showErrorDialog(pendingErrorText);
+        } else if (errorDialogTimer === null) {
+          errorDialogTimer = setTimeout(function () {
+            errorDialogTimer = null;
+            if (pendingErrorText !== null) {
+              showErrorDialog(pendingErrorText);
+              pendingErrorText = null;
+            }
+          }, ERROR_DIALOG_GRACE_MS);
         }
       } else if (event.detail.successful) {
-        // If any request succeeds, assume connectivity is restored and close the global error dialog if it's open.
+        // Any success right after a failure means the failure was a
+        // transient hiccup, not an outage: drop the pending dialog.
+        cancelPendingErrorDialog();
+        pendingErrorText = null;
         if (globalErrorDialog.open) {
           globalErrorDialog.close();
           globalErrorDialogContent.innerHTML = ""; // Clear content
@@ -37,6 +77,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // htmx:afterRequest with an error detail, so handle them here or
     // the user just sees a silently empty results area.
     document.body.addEventListener("htmx:responseError", function (event) {
+      // The server answered, so this is not a transient hiccup: show
+      // it immediately, dropping any pending network-error dialog so
+      // the more specific HTTP message is not overwritten later.
+      cancelPendingErrorDialog();
       const status = event.detail.xhr ? event.detail.xhr.status : "?";
       console.error(
         "HTMX Request Failed. Status:",
@@ -45,13 +89,7 @@ document.addEventListener("DOMContentLoaded", function () {
         event.detail,
       );
       let errorText = `Server request failed (HTTP ${status})`;
-      globalErrorDialogContent.innerHTML = `
-              <p role="alert" class="inline-alert">
-                <strong>Details:</strong> ${errorText}
-              </p>`;
-      if (!globalErrorDialog.open) {
-        globalErrorDialog.showModal();
-      }
+      showErrorDialog(errorText);
       // If the failed request was meant to fill the results area,
       // show the error inline instead of leaving it blank.
       const target = event.detail.target || event.detail.elt;
