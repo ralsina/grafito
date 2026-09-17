@@ -91,7 +91,8 @@ module ComposeAppStore
         next "App '#{HTML.escape(app_id)}' not found in store."
       end
       env.response.content_type = "text/html"
-      app_form_html(store, app, installed: AppStore.find_installed(Grafito.data_dir, app.id))
+      app_form_html(store, app, description: app_description_markdown(store, app),
+        installed: AppStore.find_installed(Grafito.data_dir, app.id))
     end
 
     # One app's logo straight from the store cache.
@@ -245,7 +246,7 @@ module ComposeAppStore
         input = AppStore.validate_input(app, body_param(env, "port"), body_param(env, "domain"), form_field_values(env), Grafito.data_dir)
         if input.errors.any?
           env.response.content_type = "text/html"
-          next app_form_html(store, app, input: input)
+          next app_form_html(store, app, input: input, description: app_description_markdown(store, app))
         end
 
         begin
@@ -803,6 +804,18 @@ module ComposeAppStore
     end
   end
 
+  # Store descriptions usually open with "# <App Name>", which would
+  # duplicate the panel header once rendered as markdown. Trim that
+  # leading title when it matches the app's name.
+  private def self.app_description_markdown(store : AppStore::Store, app : AppStore::AppInfo) : String
+    description = store_description(store, app.id).lstrip
+    first_line, newline, rest = description.partition("\n")
+    if newline.empty? || !first_line.starts_with?("# ")
+      return description
+    end
+    first_line[2..].strip.downcase == app.name.downcase ? rest : description
+  end
+
   # The #97/#98 section of an installed app's store view: the
   # auto-update toggle and the app-data backup list with restore
   # buttons.
@@ -877,10 +890,11 @@ module ComposeAppStore
     app : AppStore::AppInfo,
     input : AppStore::InputResult? = nil,
     installed : AppStore::InstalledApp? = nil,
+    description : String? = nil,
   ) : String
     port_value = input ? (input.port > 0 ? input.port.to_s : "") : app.port.try(&.to_s) || ""
     domain_value = input ? input.env["APP_DOMAIN"]? || "" : ""
-    description = store_description(store, app.id)
+    description = description || store_description(store, app.id)
     HTML.build do
       div(class: "service-panel appstore-panel") do
         div(class: "appstore-form-header") do
@@ -898,7 +912,9 @@ module ComposeAppStore
           text description
         end
         tag("script") do
-          text description_script(app.id, description)
+          # Raw, not text(): the payload is JS, and escaping it would
+          # make htmx's script evaluation die on &-escaped tokens.
+          html description_script(app.id, description)
         end
 
         div(class: "service-panel-info") do
@@ -1026,9 +1042,11 @@ module ComposeAppStore
 
   # The description is rendered client-side through the existing
   # sanitizing markdown renderer; the raw markdown is embedded as a
-  # JSON string with "</" escaped so it cannot close its own script.
+  # JSON string with every "<" escaped to \u003c, so the text can
+  # neither close its own script tag nor open HTML comment/script
+  # parsing states inside it.
   private def self.description_script(app_id : String, description : String) : String
-    payload = description.to_json.gsub("</", "<\\/")
+    payload = description.to_json.gsub("<", "\\u003c")
     <<-JS
       (function () {
         var el = document.getElementById("appstore-desc-#{app_id}");

@@ -2608,3 +2608,34 @@ dialog article dd {
   margin-left: 0.4rem;
   font-size: 0.7rem;
 }
+
+/* Markdown-rendered app descriptions. */
+.appstore-desc h1 {
+  font-size: 1.1rem;
+  margin: 0.4rem 0 0.3rem;
+}
+.appstore-desc h2, .appstore-desc h3 {
+  font-size: 0.95rem;
+  margin: 0.5rem 0 0.3rem;
+}
+.appstore-desc p {
+  margin: 0 0 0.45rem;
+}
+.appstore-desc ul, .appstore-desc ol {
+  margin: 0 0 0.45rem;
+  padding-left: 1.2rem;
+}
+.appstore-desc code {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  background: var(--panel-2);
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+}
+.appstore-desc pre {
+  overflow-x: auto;
+  background: var(--panel-2);
+  padding: 0.5rem;
+  border-radius: 5px;
+  font-size: 0.78rem;
+}
