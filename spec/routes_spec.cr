@@ -169,6 +169,22 @@ describe "Kemal routes" do
     response[:body].should contain("Invalid 'since'")
   end
 
+  it "GET /status/history downsamples when max_points is given" do
+    response = dispatch_request("GET", "/status/history?since=-1h&max_points=10")
+
+    response[:status].should eq(200)
+    JSON.parse(response[:body])["points"].as_a.size.should be <= 10
+  end
+
+  it "GET /status/history/export returns a CSV attachment" do
+    response = dispatch_request("GET", "/status/history/export?since=-1h")
+
+    response[:status].should eq(200)
+    response[:headers]["Content-Type"].should contain("text/csv")
+    response[:headers]["Content-Disposition"].should contain("attachment")
+    response[:body].should start_with("ts,load1")
+  end
+
   it "GET /dashboard returns the dashboard fragment" do
     response = dispatch_request("GET", "/dashboard")
 

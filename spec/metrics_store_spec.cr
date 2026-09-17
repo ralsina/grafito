@@ -90,6 +90,95 @@ describe Grafito::MetricsStore do
     end
   end
 
+  it "downsamples long history to at most max_points" do
+    with_store do |store|
+      # 100 points, one per second.
+      100.times do |back|
+        point = Grafito::MetricsStore::MetricPoint.new(
+          ts: Time.utc - back.seconds,
+          load1: 1.0,
+          mem_used_pct: 50.0,
+          disk_used_pct: 40.0,
+          units_total: 8,
+          units_failed: 1,
+          net_rx_bps: 100.0,
+          net_tx_bps: 50.0,
+        )
+        store.record(point)
+      end
+
+      downsampled = store.history_downsampled(Time.utc - 2.minutes, max_points: 10)
+      downsampled.size.should eq(10)
+      # Averages land on the bucket means; ordering is preserved.
+      downsampled.all? { |point| (point.mem_used_pct - 50.0).abs < 0.001 }.should be_true
+      downsampled.all? { |point| (point.net_rx_bps || 0.0) == 100.0 }.should be_true
+      downsampled.first.ts.should be <= downsampled.last.ts
+      # Per-interface breakdown is dropped from downsampled points.
+      downsampled.first.net.should be_nil
+    end
+  end
+
+  it "returns history untouched when it is within max_points" do
+    with_store do |store|
+      store.record(point_at(60))
+      store.record(point_at(30))
+      downsampled = store.history_downsampled(Time.utc - 2.minutes, max_points: 10)
+      downsampled.size.should eq(2)
+    end
+  end
+
+  it "keeps the worst failure count of each downsample bucket" do
+    with_store do |store|
+      6.times do |back|
+        failed = back == 3 ? 4 : 0
+        store.record(Grafito::MetricsStore::MetricPoint.new(
+          ts: Time.utc - back.seconds,
+          load1: 1.0,
+          mem_used_pct: 50.0,
+          disk_used_pct: 40.0,
+          units_total: 10,
+          units_failed: failed,
+        ))
+      end
+      downsampled = store.history_downsampled(Time.utc - 1.minute, max_points: 2)
+      downsampled.max_of(&.units_failed).should eq(4)
+    end
+  end
+
+  it "exports the points as CSV with a header row and all fields" do
+    points = [
+      Grafito::MetricsStore::MetricPoint.new(
+        ts: Time.utc,
+        load1: 1.5,
+        mem_used_pct: 42.0,
+        disk_used_pct: 55.0,
+        units_total: 10,
+        units_failed: 1,
+      ),
+      Grafito::MetricsStore::MetricPoint.new(
+        ts: Time.utc - 30.seconds,
+        load1: 1.0,
+        mem_used_pct: 50.0,
+        disk_used_pct: 40.0,
+        units_total: 8,
+        units_failed: 0,
+        swap_used_pct: 63.5,
+        net_rx_bps: 1200.5,
+        net_tx_bps: 300.0,
+        net: {"eth0" => SystemStatus::NetRate.new(rx_bps: 1200.5, tx_bps: 300.0)},
+      ),
+    ]
+    csv = Dashboard.metrics_csv(points)
+    lines = csv.strip.split("\n")
+    lines.size.should eq(3)
+    lines.first.should eq("ts,load1,mem_used_pct,disk_used_pct,swap_used_pct,units_total,units_failed,net_rx_bps,net_tx_bps,net")
+    # Pre-network row: optional fields are empty cells.
+    lines[1].should match(/^20\d\d-.*,,,$/)
+    # Newer row: swap and the compact per-interface breakdown present.
+    lines[2].should contain("63.5")
+    lines[2].should contain("eth0:1200.5/300.0")
+  end
+
   it "sums per-interface rates into aggregate chart values" do
     net = {
       "eth0"  => SystemStatus::NetRate.new(rx_bps: 1000.0, tx_bps: 100.0),
