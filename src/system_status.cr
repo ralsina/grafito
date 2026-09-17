@@ -50,6 +50,9 @@ module SystemStatus
     units_total : Int32,
     units_failed : Int32,
     units : Array(UnitState),
+    # Swap usage percentage, or nil when the machine runs without swap
+    # (SwapTotal is 0) or /proc/meminfo is unreadable.
+    swap_used_pct : Float64? = nil,
     # Per-interface receive/transmit rates in bytes/s, loopback
     # excluded, zero-rate interfaces omitted. Nil on the first sample
     # (rates need two readings) or when /proc/net/dev is unreadable.
@@ -471,7 +474,7 @@ module SystemStatus
   # average that bounces around, and a nearly-stable disk. Used by both
   # the live fake snapshot and the demo history pre-seeding, so the
   # chart has no visible seam between seeded and live samples.
-  def self.fake_metrics_at(ts : Time) : NamedTuple(load1: Float64, mem_used_pct: Float64, disk_used_pct: Float64, net: Hash(String, NetRate))
+  def self.fake_metrics_at(ts : Time) : NamedTuple(load1: Float64, mem_used_pct: Float64, disk_used_pct: Float64, swap_used_pct: Float64, net: Hash(String, NetRate))
     angle = (ts - Time.local.at_beginning_of_day).total_minutes / 45.0
     # Two fake interfaces with wave-shaped traffic so the network
     # chart has something to show and the seeded history matches the
@@ -482,6 +485,7 @@ module SystemStatus
       load1:         (1.1 + 0.6 * Math.sin(angle / 2.5 + 1.0) + rand(-0.3..0.6)).clamp(0.05, 9.0),
       mem_used_pct:  (55.0 + 9.0 * Math.sin(angle) + rand(-1.5..1.5)).clamp(5.0, 95.0),
       disk_used_pct: (47.5 + 0.4 * Math.sin(angle / 8.0) + rand(0.0..0.15)).clamp(0.0, 100.0),
+      swap_used_pct: (31.0 + 5.0 * Math.sin(angle / 2.0)).clamp(0.0, 100.0),
       net:           {
         "eth0"  => NetRate.new(rx_bps: rx * 0.8, tx_bps: tx),
         "wlan0" => NetRate.new(rx_bps: rx * 0.2, tx_bps: rx * 0.05),
@@ -504,6 +508,7 @@ module SystemStatus
       units_total: units.size,
       units_failed: units.count(&.failed?),
       units: units,
+      swap_used_pct: metrics[:swap_used_pct],
       net: metrics[:net],
     )
   end
@@ -519,6 +524,7 @@ module SystemStatus
       units_total: units.size,
       units_failed: units.count(&.failed?),
       units: units,
+      swap_used_pct: read_swap_used_pct,
       net: read_net_rates,
     )
   end
@@ -543,13 +549,7 @@ module SystemStatus
   # Computes memory usage percentage from /proc/meminfo, using
   # MemAvailable (which accounts for caches) rather than MemFree.
   private def self.read_mem_used_pct : Float64
-    values = Hash(String, Int64).new
-    File.each_line("/proc/meminfo") do |line|
-      parts = line.split
-      key = parts[0]?.try(&.chomp(":"))
-      value = parts[1]?.try(&.to_i64?)
-      values[key] = value if key && value
-    end
+    values = read_meminfo
     total = values["MemTotal"]?
     available = values["MemAvailable"]?
     if total && total > 0 && available
@@ -560,6 +560,33 @@ module SystemStatus
   rescue ex
     Log.warn(exception: ex) { "Failed to read memory info" }
     0.0
+  end
+
+  # Parses /proc/meminfo into a key → kB hash. Shared by the memory
+  # and swap gauges.
+  private def self.read_meminfo : Hash(String, Int64)
+    values = Hash(String, Int64).new
+    File.each_line("/proc/meminfo") do |line|
+      parts = line.split
+      key = parts[0]?.try(&.chomp(":"))
+      value = parts[1]?.try(&.to_i64?)
+      values[key] = value if key && value
+    end
+    values
+  end
+
+  # Swap usage percentage, or nil when the machine runs without swap
+  # (SwapTotal 0 or missing) — which is a legitimate setup, not an
+  # error, so the dashboard card renders "—" instead of 0%.
+  private def self.read_swap_used_pct : Float64?
+    values = read_meminfo
+    total = values["SwapTotal"]?
+    free = values["SwapFree"]?
+    return unless total && free && total > 0
+    ((total - free).to_f / total * 100).clamp(0.0, 100.0)
+  rescue ex
+    Log.warn(exception: ex) { "Failed to read swap info" }
+    nil
   end
 
   # Computes root filesystem usage via `df -k -P /`. POSIX output makes

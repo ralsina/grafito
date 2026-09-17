@@ -118,5 +118,54 @@ describe Grafito::Gotify do
       later = rules.evaluate(disk_used_pct: 95.0, failed_units: [] of String, errors_per_min: 0.0, now: now + 11.minutes)
       later.map(&.rule).should eq(["disk_full"])
     end
+
+    it "fires the swap rule over the threshold and stays quiet under it" do
+      rules = Grafito::Gotify::Rules.new(swap_threshold_pct: 90.0)
+      alerts = rules.evaluate(disk_used_pct: 0.0, failed_units: [] of String, errors_per_min: 0.0, swap_used_pct: 95.0, now: now)
+      alerts.map(&.rule).should eq(["swap_high"])
+
+      rules = Grafito::Gotify::Rules.new(swap_threshold_pct: 90.0)
+      rules.evaluate(disk_used_pct: 0.0, failed_units: [] of String, errors_per_min: 0.0, swap_used_pct: 50.0, now: now).should be_empty
+      # Machines without swap (nil) are a legitimate setup, not an alert.
+      rules.evaluate(disk_used_pct: 0.0, failed_units: [] of String, errors_per_min: 0.0, swap_used_pct: nil, now: now).should be_empty
+    end
+
+    it "notifies once when swap recovers, exactly once" do
+      rules = Grafito::Gotify::Rules.new(swap_threshold_pct: 90.0)
+      high = rules.evaluate(disk_used_pct: 0.0, failed_units: [] of String, errors_per_min: 0.0, swap_used_pct: 95.0, now: now)
+      high.map(&.rule).should eq(["swap_high"])
+
+      # Back under the threshold: the recovery notification is the
+      # interesting event.
+      recovered = rules.evaluate(disk_used_pct: 0.0, failed_units: [] of String, errors_per_min: 0.0, swap_used_pct: 40.0, now: now + 1.minutes)
+      recovered.map(&.rule).should eq(["swap_recovered"])
+
+      # And again nothing on the following samples.
+      rules.evaluate(disk_used_pct: 0.0, failed_units: [] of String, errors_per_min: 0.0, swap_used_pct: 40.0, now: now + 2.minutes).should be_empty
+    end
+
+    it "does not treat a missing swap reading as a recovery" do
+      rules = Grafito::Gotify::Rules.new(swap_threshold_pct: 90.0)
+      rules.evaluate(disk_used_pct: 0.0, failed_units: [] of String, errors_per_min: 0.0, swap_used_pct: 95.0, now: now)
+
+      # A nil reading (meminfo unreadable) carries no information about
+      # swap pressure: the high state survives, and a later real
+      # under-threshold reading still reports the recovery.
+      alerts = rules.evaluate(disk_used_pct: 0.0, failed_units: [] of String, errors_per_min: 0.0, swap_used_pct: nil, now: now + 1.minutes)
+      alerts.map(&.rule).should_not contain("swap_recovered")
+
+      recovered = rules.evaluate(disk_used_pct: 0.0, failed_units: [] of String, errors_per_min: 0.0, swap_used_pct: 40.0, now: now + 2.minutes)
+      recovered.map(&.rule).should eq(["swap_recovered"])
+    end
+
+    it "fires when the kernel OOM killer terminated a process" do
+      rules = Grafito::Gotify::Rules.new
+      alerts = rules.evaluate(disk_used_pct: 0.0, failed_units: [] of String, errors_per_min: 0.0, oom_kills: 2, now: now)
+      alerts.map(&.rule).should eq(["oom_kill"])
+      alerts.first.message.should contain("2 processes")
+
+      single = Grafito::Gotify::Rules.new
+      single.evaluate(disk_used_pct: 0.0, failed_units: [] of String, errors_per_min: 0.0, oom_kills: 1, now: now).first.message.should contain("1 process ")
+    end
   end
 end

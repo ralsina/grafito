@@ -39,6 +39,7 @@ module Grafito
       disk_used_pct : Float64,
       units_total : Int32,
       units_failed : Int32,
+      swap_used_pct : Float64? = nil,
       net_rx_bps : Float64? = nil,
       net_tx_bps : Float64? = nil,
       net : Hash(String, SystemStatus::NetRate)? = nil do
@@ -77,6 +78,7 @@ module Grafito
         disk_used_pct: snapshot.disk_used_pct,
         units_total: snapshot.units_total,
         units_failed: snapshot.units_failed,
+        swap_used_pct: snapshot.swap_used_pct,
         net_rx_bps: net_rx_bps,
         net_tx_bps: net_tx_bps,
         net: snapshot.net,
@@ -178,6 +180,7 @@ module Grafito
           disk_used_pct: metrics[:disk_used_pct],
           units_total: 5,
           units_failed: 1,
+          swap_used_pct: metrics[:swap_used_pct],
           net_rx_bps: net_rx_bps,
           net_tx_bps: net_tx_bps,
           net: metrics[:net],

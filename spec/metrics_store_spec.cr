@@ -41,6 +41,7 @@ describe Grafito::MetricsStore do
       points.first.net_rx_bps.should be_nil
       points.first.net_tx_bps.should be_nil
       points.first.net.should be_nil
+      points.first.swap_used_pct.should be_nil
     end
   end
 
@@ -69,6 +70,23 @@ describe Grafito::MetricsStore do
       loaded.net_tx_bps.should eq(390.0)
       loaded.net.should_not be_nil
       loaded.net.try(&.["eth0"].rx_bps).should eq(1200.5)
+    end
+  end
+
+  it "roundtrips swap data through the JSONL file" do
+    with_store do |store|
+      store.record(Grafito::MetricsStore::MetricPoint.new(
+        ts: Time.utc - 30.seconds,
+        load1: 1.5,
+        mem_used_pct: 42.0,
+        disk_used_pct: 55.0,
+        units_total: 10,
+        units_failed: 1,
+        swap_used_pct: 63.5,
+      ))
+
+      reopened = Grafito::MetricsStore.new(store.data_dir)
+      reopened.history(Time.utc - 1.minute).first.swap_used_pct.should eq(63.5)
     end
   end
 
