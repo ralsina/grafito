@@ -48,6 +48,8 @@ services:
       - /run/systemd/private:/run/systemd/private
       - /var/run/docker.sock:/var/run/docker.sock
       - ./:/var/lib/grafito
+      # The homepage launcher's config (kept next to the compose file).
+      - ./homepage.yml:/etc/grafito/homepage.yml:ro
     env_file:
       - .env
     environment:
