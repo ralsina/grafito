@@ -13,6 +13,7 @@ require "json"
 require "log"
 
 require "./access"
+require "./view_helpers"
 require "./proxy_settings"
 
 module AccessPanel
@@ -200,7 +201,7 @@ module AccessPanel
   end
 
   private def self.base : String
-    Grafito.base_path == "/" ? "" : Grafito.base_path
+    ViewHelpers.base_prefix
   end
 
   # ## Fragments

@@ -24,8 +24,11 @@ require "./metrics_store"
 require "./ai/config"
 require "./ai/request"
 
+require "./view_helpers"
+
 module Dashboard
   extend self
+  include ViewHelpers
 
   Log = ::Log.for(self)
 
@@ -253,16 +256,6 @@ module Dashboard
   end
 
   # One health card. Reuses the log view's `.stat` styling.
-  private def card(label : String, value : String, warn : Bool = false) : String
-    HTML.build do
-      div(class: "stat") do
-        span(class: "stat-label") { text label }
-        span(class: warn ? "stat-value stat-error" : "stat-value") do
-          text value
-        end
-      end
-    end
-  end
 
   # Swap usage card. Machines without swap render an em-dash — that is
   # a legitimate setup, not a zero-percent-full disk.
@@ -373,13 +366,13 @@ module Dashboard
   end
 
   private def unit_explain_url(unit_name : String) : String
-    base = Grafito.base_path == "/" ? "" : Grafito.base_path
+    base = base_prefix
     "#{base}/unit-explain?name=#{URI.encode_path(unit_name)}"
   end
 
   # CSV download link for the selected history window.
   private def export_csv_url(since_text : String?) : String
-    base = Grafito.base_path == "/" ? "" : Grafito.base_path
+    base = base_prefix
     "#{base}/status/history/export?since=#{URI.encode_path(since_text.presence || "-6h")}"
   end
 
@@ -542,21 +535,9 @@ module Dashboard
   # Renders a failed unit action as an error block for the service
   # panel. The message is systemd's own (e.g. "Access denied"), shown
   # verbatim so the user can act on it.
-  def action_error_fragment(action : String, unit_name : String, message : String) : String
-    HTML.build do
-      div(class: "service-panel service-panel-error") do
-        tag("h4") do
-          text "#{action[0].upcase}#{action[1..]} failed: #{unit_name}"
-        end
-        tag("pre", class: "service-panel-error-message") do
-          text message
-        end
-      end
-    end
-  end
 
   private def unit_details_url(unit_name : String) : String
-    base = Grafito.base_path == "/" ? "" : Grafito.base_path
+    base = base_prefix
     "#{base}/unit-details?name=#{URI.encode_path(unit_name)}"
   end
 
@@ -571,18 +552,14 @@ module Dashboard
             when "dead", "inactive"        then "debug"
             else                                "muted"
             end
-    HTML.build do
-      span(class: "tag tag-#{color}") do
-        text value
-      end
-    end
+    pill(value, color)
   end
 
   # Start/stop/restart buttons. htmx's hx-confirm attribute supplies the
   # confirmation dialog; the POST swaps the refreshed dashboard in.
 
   private def build_action_url(unit_name : String, action : String) : String
-    base = Grafito.base_path == "/" ? "" : Grafito.base_path
+    base = base_prefix
     "#{base}/unit/#{URI.encode_path(unit_name)}/#{action}"
   end
 
