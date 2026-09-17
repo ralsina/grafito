@@ -131,6 +131,30 @@ function showError(container, message) {
   container.appendChild(p);
 }
 
+// Renders the "Log Message:" block in the AI panel's target-entry
+// area. `message` is the raw MESSAGE field (truncated here if long)
+// or null/empty when there is nothing to show, in which case
+// `unavailableText` is displayed instead. Journal messages are
+// attacker-controlled (any local user can write one with `logger`),
+// so this is built with DOM APIs and textContent — never
+// interpolated into innerHTML.
+function renderTargetLogMessage(targetEntryDiv, message, unavailableText) {
+  targetEntryDiv.textContent = "";
+  const label = document.createElement("strong");
+  label.textContent = "Log Message:";
+  const box = document.createElement("div");
+  box.style.marginTop = "0.5rem";
+  if (message) {
+    box.style.wordBreak = "break-word";
+    box.style.lineHeight = "1.4";
+    box.textContent =
+      message.length > 300 ? message.substring(0, 300) + "..." : message;
+  } else {
+    box.textContent = unavailableText || "Unable to load log message";
+  }
+  targetEntryDiv.append(label, document.createElement("br"), box);
+}
+
 function askAIExplanation(cursor) {
   const content = document.getElementById("ai-explanation-dialog-content");
   const targetEntryDiv = document.getElementById("target-log-entry");
@@ -180,36 +204,13 @@ function askAIExplanation(cursor) {
           message = messageElement.textContent.trim();
         }
       }
-      if (message) {
-        currentTargetLogEntry = message;
-        // Truncate very long messages
-        const truncatedMessage =
-          message.length > 300 ? message.substring(0, 300) + "..." : message;
-        targetEntryDiv.textContent = "";
-        const label = document.createElement("strong");
-        label.textContent = "Log Message:";
-        const box = document.createElement("div");
-        box.style.marginTop = "0.5rem";
-        box.style.wordBreak = "break-word";
-        box.style.lineHeight = "1.4";
-        box.textContent = truncatedMessage;
-        targetEntryDiv.append(label, document.createElement("br"), box);
-      } else {
-        // No log entry found or empty content
-        currentTargetLogEntry = "";
-        targetEntryDiv.textContent = "";
-        const label = document.createElement("strong");
-        label.textContent = "Log Message:";
-        const note = document.createElement("div");
-        note.style.marginTop = "0.5rem";
-        note.textContent = "Unable to load log message";
-        targetEntryDiv.append(label, document.createElement("br"), note);
-      }
+      currentTargetLogEntry = message;
+      renderTargetLogMessage(targetEntryDiv, message ? message : null);
     })
     .catch((error) => {
       console.error("Error fetching log details:", error);
       currentTargetLogEntry = "";
-      targetEntryDiv.innerHTML = `<strong>Log Message:</strong><br><div style="margin-top: 0.5rem;">Error loading log message</div>`;
+      renderTargetLogMessage(targetEntryDiv, null, "Error loading log message");
     });
 
   // Call the AI endpoint with selected provider and model
@@ -285,50 +286,29 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// Shared clipboard helper: copies text and flashes the button (check
-// icon plus label) so the user sees it worked. Falls back to an alert
-// where clipboard access is unavailable.
+// Copies text to the clipboard and flashes the button's label
+// (check icon + "Copied") so the user sees it worked.
 function copyTextToClipboard(text, button) {
-  if (window.isSecureContext && navigator.clipboard) {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        if (!button) return;
-        const original = button.innerHTML;
-        button.innerHTML =
-          '<span class="material-icons" style="vertical-align: middle; font-size: 1rem">check</span> Copied';
-        setTimeout(function () {
-          button.innerHTML = original;
-        }, 2000);
-      })
-      .catch((err) => {
-        alert("Failed to copy: " + err.message);
-      });
-  } else {
-    alert("Copy the text manually:\n\n" + text);
-  }
+  copyToClipboard(text, {
+    manualFallbackLabel: "Copy the text manually",
+    onSuccess: function () {
+      flashButtonLabel(
+        button,
+        '<span class="material-icons" style="vertical-align: middle; font-size: 1rem">check</span> Copied',
+      );
+    },
+  });
 }
 
 // Quick copy of a log entry from a table row. Row buttons are
 // icon-only, so flash the icon instead of swapping in a label.
 function copyLogEntry(text, button) {
-  if (window.isSecureContext && navigator.clipboard) {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        const icon = button ? button.querySelector(".material-icons") : null;
-        if (!icon) return;
-        icon.textContent = "check";
-        setTimeout(function () {
-          icon.textContent = "content_copy";
-        }, 1500);
-      })
-      .catch((err) => {
-        alert("Failed to copy: " + err.message);
-      });
-  } else {
-    alert("Log entry (copy manually):\n\n" + text);
-  }
+  copyToClipboard(text, {
+    manualFallbackLabel: "Log entry (copy manually)",
+    onSuccess: function () {
+      flashButtonIcon(button, "check", "content_copy");
+    },
+  });
 }
 
 function copyEquivalentCommand() {
@@ -370,25 +350,13 @@ function copyAIExplanation() {
     alert("No AI explanation to copy.");
     return;
   }
-
-  if (window.isSecureContext && navigator.clipboard) {
-    navigator.clipboard
-      .writeText(currentAIExplanation)
-      .then(() => {
-        // Show brief success feedback
-        const copyBtn = document.getElementById("copy-ai-explanation-btn");
-        const originalText = copyBtn.innerHTML;
-        copyBtn.innerHTML =
-          '<span class="material-icons" style="vertical-align: middle">check</span> Copied!';
-        setTimeout(() => {
-          copyBtn.innerHTML = originalText;
-        }, 2000);
-      })
-      .catch((err) => {
-        alert("Failed to copy AI explanation: " + err.message);
-      });
-  } else {
-    // Fallback for non-secure contexts
-    alert("AI Explanation (copy manually):\n\n" + currentAIExplanation);
-  }
+  copyToClipboard(currentAIExplanation, {
+    manualFallbackLabel: "AI Explanation (copy manually)",
+    onSuccess: function () {
+      flashButtonLabel(
+        document.getElementById("copy-ai-explanation-btn"),
+        '<span class="material-icons" style="vertical-align: middle">check</span> Copied!',
+      );
+    },
+  });
 }
