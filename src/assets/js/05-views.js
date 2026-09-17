@@ -2,22 +2,6 @@
 // View wrappers, process table sort/limit, process panel log
 // // jumps, dashboard sorting and the services minimap.
 
-// --- VIEW WRAPPERS ---
-// Thin per-view aliases over setViewVisible: they keep the
-// call sites (URL restore, panel jumps, sort handlers) readable.
-
-function setDashboardVisible(visible, options) {
-  setViewVisible("dashboard", visible, options);
-}
-
-function setComposeVisible(visible, options) {
-  setViewVisible("compose", visible, options);
-}
-
-function setProcessesVisible(visible, options) {
-  setViewVisible("processes", visible, options);
-}
-
 // --- PROCESS TABLE SORTING + FILTER ---
 // Like the dashboard, the current sort lives in #processes-view's
 // dataset so the polls and reopening preserve it; the filter

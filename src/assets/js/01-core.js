@@ -2,12 +2,72 @@
 // Base path resolution and the VIEWS registry: the single
 // // source of truth for which views exist, how they open and close,
 // // their minimap kind, URL persistence and restore.
+//
+// All modules under js/ are concatenated into one script (see the
+// Makefile), not loaded as separate <script> tags or ES modules, so
+// a single "use strict" here (the first statement of the bundle)
+// puts the whole thing in strict mode: it catches accidental
+// implicit globals (assigning to an undeclared name) and a few
+// other footguns without requiring every module to be wrapped in
+// its own IIFE, which would break the cross-module references
+// (e.g. VIEWS below reads dashboardQueryParams from 05-views.js)
+// that rely on whole-script function hoisting.
+"use strict";
 
 // Get base path from data attribute (set by BakedFileHandler for deployment flexibility),
 // falling back to the path the page itself was served from, so that
 // deployments under a base path (e.g. /grafito) work without config.
 const pagePath = window.location.pathname.replace(/\/+$/, "");
 const basePath = document.body.dataset.basePath || pagePath;
+
+// Shared clipboard helper: writes text to the clipboard and reports
+// success/failure through callbacks, falling back to a manual-copy
+// alert where the Clipboard API is unavailable (non-secure
+// contexts). Centralizes the copy-then-flash-the-button pattern
+// used by the AI panel, the log rows and the shareable-link button.
+function copyToClipboard(text, options) {
+  options = options || {};
+  const manualFallbackLabel = options.manualFallbackLabel || "Copy the text manually";
+  if (window.isSecureContext && navigator.clipboard) {
+    navigator.clipboard
+      .writeText(text)
+      .then(function () {
+        if (options.onSuccess) options.onSuccess();
+      })
+      .catch(function (err) {
+        if (options.onError) {
+          options.onError(err);
+        } else {
+          alert("Failed to copy: " + err.message);
+        }
+      });
+  } else {
+    alert(manualFallbackLabel + ":\n\n" + text);
+  }
+}
+
+// Flashes a button's innerHTML with a checkmark + label for a couple
+// of seconds, then restores the original content.
+function flashButtonLabel(button, flashHtml, durationMs) {
+  if (!button) return;
+  const original = button.innerHTML;
+  button.innerHTML = flashHtml;
+  setTimeout(function () {
+    button.innerHTML = original;
+  }, durationMs || 2000);
+}
+
+// Flashes an icon-only button's material-icons glyph, then restores
+// the original glyph. Used for row actions where there is no label
+// to swap.
+function flashButtonIcon(button, flashText, revertText, durationMs) {
+  const icon = button ? button.querySelector(".material-icons") : null;
+  if (!icon) return;
+  icon.textContent = flashText;
+  setTimeout(function () {
+    icon.textContent = revertText;
+  }, durationMs || 1500);
+}
 
 // Helper to build URLs with proper base path handling
 function buildUrl(path) {

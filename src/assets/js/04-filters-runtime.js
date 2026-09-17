@@ -2,10 +2,15 @@
 // Filter URL building, the omnibox tokenizer and cross-view
 // // jumps (setUnitFilterAndTrigger).
 
-// Helper function to build URLSearchParams from current filters
-function buildFilterURLSearchParams() {
+// Helper function to build URLSearchParams from current filters.
+// `options.exclude` skips listed params (used by the plain-text
+// export, where a live-tail flag makes no sense).
+function buildFilterURLSearchParams(options) {
+  options = options || {};
+  const exclude = options.exclude || [];
   const params = new URLSearchParams();
   SHARED_FILTER_CONFIGS.forEach((config) => {
+    if (exclude.includes(config.param)) return;
     const element = document.getElementById(config.id);
     if (element) {
       if (config.type === "checkbox") {
@@ -164,41 +169,17 @@ function copyShareableLink() {
   const shareUrl =
     window.location.origin + window.location.pathname + "?" + params.toString();
 
-  if (window.isSecureContext && navigator.clipboard) {
-    navigator.clipboard
-      .writeText(shareUrl)
-      .then(() => alert("Link copied to clipboard!"))
-      .catch((err) => alert("Failed to copy link: " + err));
-  } else {
-    // Fallback for non-secure contexts or if clipboard API is not available
-    alert("Shareable Link (copy manually):\n\n" + shareUrl);
-  }
+  copyToClipboard(shareUrl, {
+    manualFallbackLabel: "Shareable Link (copy manually)",
+    onSuccess: function () {
+      alert("Link copied to clipboard!");
+    },
+  });
 }
 
 function exportLogsAsText() {
-  const params = new URLSearchParams();
-  SHARED_FILTER_CONFIGS.forEach((config) => {
-    // The 'live-view' parameter is not relevant for a static export
-    if (config.param === "live-view") {
-      return; // Skip this parameter
-    }
-
-    const element = document.getElementById(config.id);
-    if (element) {
-      if (config.type === "checkbox") {
-        // For any other potential checkboxes
-        if (element.checked) {
-          params.set(config.param, config.trueValue);
-        }
-      } else if (element.value) {
-        // For text inputs and selects
-        // Sending empty values (e.g., "" for "Any time") is fine,
-        // the backend's optional_query_param handles them as nil.
-        params.set(config.param, element.value);
-      }
-    }
-  });
-
+  // The 'live-view' parameter is not relevant for a static export.
+  const params = buildFilterURLSearchParams({ exclude: ["live-view"] });
   params.set("format", "text"); // Specify text format for the export
 
   const exportUrl = buildUrl("logs") + "?" + params.toString();
