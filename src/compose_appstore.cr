@@ -1050,10 +1050,25 @@ module ComposeAppStore
     <<-JS
       (function () {
         var el = document.getElementById("appstore-desc-#{app_id}");
-        if (el && window.renderSafeMarkdown) {
-          el.innerHTML = window.renderSafeMarkdown(#{payload});
-        }
-      })();
+        if (!el || !window.renderSafeMarkdown) return;
+        el.innerHTML = window.renderSafeMarkdown(#{payload});
+        // Store descriptions hotlink screenshots that routinely rot
+        // (the URL starts serving HTML instead of the image). Replace
+        // broken ones with their alt text instead of a broken-image
+        // glyph.
+        el.querySelectorAll("img").forEach(function (img) {
+          img.loading = "lazy";
+          img.style.maxWidth = "100%";
+          var markMissing = function () {
+            var note = document.createElement("span");
+            note.className = "appstore-desc-img-missing";
+            note.textContent = img.alt || "(screenshot unavailable)";
+            img.replaceWith(note);
+          };
+          img.addEventListener("error", markMissing);
+          if (img.complete && img.naturalWidth === 0) markMissing();
+        });
+      })( );
       JS
   end
 
