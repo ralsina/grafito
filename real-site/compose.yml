@@ -32,6 +32,10 @@ services:
     container_name: grafito
     restart: unless-stopped
     pid: "host"
+    tmpfs:
+      # systemctl refuses to run unless this directory exists (its
+      # init-detection); tmpfs keeps it ephemeral and restart-proof.
+      - /run/systemd/system
     ports:
       - "1111:1111"
     command: ["-p", "1111", "--enable-actions"]
