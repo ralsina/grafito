@@ -42,7 +42,10 @@ describe ComposeDashboard do
     fragment.should contain("nginx:1.27-alpine")
     # Single-escaped: text() escapes, so the arrow shows as "->" on
     # screen (the old double-escaped &amp;gt; rendered literally).
-    fragment.should contain("0.0.0.0:8080-&gt;80/tcp")
+    # The table shows the compacted mapping, not docker's raw string
+    # with the 0.0.0.0: listen address.
+    fragment.should contain("8080-&gt;80/tcp")
+    fragment.should_not contain("0.0.0.0:8080")
     fragment.should contain("tag-ok") # healthy pill
     fragment.should contain("compose-output-area-webapp")
   end
@@ -73,6 +76,92 @@ describe ComposeDashboard do
     fragment.should contain("webapp-web-1")
     fragment.should contain("compose-logs?stack=webapp&amp;service=web")
     fragment.should contain("/compose-service/webapp/web/stop")
+  end
+
+  it "renders port mappings as chips in the detail fragment" do
+    fragment = ComposeDashboard.service_details_fragment(SERVICES[0], true)
+    fragment.should contain("port-chip")
+    fragment.should contain("port-host")
+    fragment.should contain("port-arrow")
+    fragment.should contain("port-container")
+    fragment.should contain("port-proto")
+  end
+
+  it "renders a dash instead of chips when there are no ports" do
+    fragment = ComposeDashboard.service_details_fragment(SERVICES[1], false)
+    fragment.should contain("—")
+    fragment.should_not contain("port-chip")
+  end
+
+  describe "merged_log_tail" do
+    it "interleaves compose and journald lines chronologically" do
+      # Compose --timestamps puts the RFC3339 stamp after the
+      # "container |" prefix, so that's the shape parsed here.
+      compose_output = "web-1  | 2026-09-17T02:00:05Z later\nweb-1  | 2026-09-17T02:00:01Z first"
+      entries = [new_journal_entry(Time.utc(2026, 9, 17, 2, 0, 3), "from journal")]
+      merged = ComposeDashboard.merged_log_tail(compose_output, entries)
+      lines = merged.split("\n")
+      lines.size.should eq(3)
+      lines[0].should contain("web-1 | first")
+      lines[1].should contain("from journal")
+      lines[2].should contain("web-1 | later")
+      # Same timestamp shape the log stream view uses, regardless of
+      # the machine's configured timezone.
+      lines.each { |line| line.should match(/^\d{2}-\d{2} \d{2}:\d{2}:\d{2}  /) }
+    end
+
+    it "also parses timestamps without a container prefix" do
+      compose_output = "2026-09-17T02:00:01Z bare message"
+      merged = ComposeDashboard.merged_log_tail(compose_output, [] of Journalctl::LogEntry)
+      merged.split("\n").size.should eq(1)
+      merged.should contain("bare message")
+      merged.should_not contain("2026-09-17")
+    end
+
+    it "keeps multiline compose messages together" do
+      compose_output = "web-1  | 2026-09-17T02:00:01Z line one\ncontinuation"
+      merged = ComposeDashboard.merged_log_tail(compose_output, [] of Journalctl::LogEntry)
+      merged.split("\n").size.should eq(2)
+      merged.should contain("line one\ncontinuation")
+    end
+
+    it "falls back to journald only when compose logs are empty" do
+      entries = [new_journal_entry(Time.utc(2026, 9, 17, 2, 0, 3), "from journal")]
+      merged = ComposeDashboard.merged_log_tail("", entries)
+      merged.split("\n").size.should eq(1)
+      merged.should contain("from journal")
+    end
+  end
+
+  describe "parse_ports" do
+    it "dedupes IPv4/IPv6 duplicates into one structured mapping" do
+      raw = "0.0.0.0:8887-8888->8887-8888/tcp, [::]:8887-8888->8887-8888/tcp"
+      mappings = ComposeDashboard.parse_ports(raw)
+      mappings.size.should eq(1)
+      mappings[0].host.should eq("8887-8888")
+      mappings[0].container.should eq("8887-8888")
+      mappings[0].protocol.should eq("tcp")
+    end
+
+    it "keeps distinct mappings" do
+      mappings = ComposeDashboard.parse_ports("0.0.0.0:8080->80/tcp, 0.0.0.0:9090->90/udp")
+      mappings.size.should eq(2)
+      mappings[0].host.should eq("8080")
+      mappings[1].host.should eq("9090")
+      mappings[1].protocol.should eq("udp")
+    end
+
+    it "parses exposed-only ports without a host side" do
+      mappings = ComposeDashboard.parse_ports("8888/tcp")
+      mappings.size.should eq(1)
+      mappings[0].host.should be_nil
+      mappings[0].container.should eq("8888")
+      mappings[0].protocol.should eq("tcp")
+    end
+
+    it "returns nothing for an empty ports string" do
+      ComposeDashboard.parse_ports("").should be_empty
+    end
   end
 
   it "renders the yaml and logs fragments" do
@@ -119,6 +208,16 @@ describe ComposeDashboard do
     fragment.should contain("Stop failed: webapp/web")
     fragment.should contain("Access denied")
   end
+end
+
+private def new_journal_entry(timestamp : Time, message : String) : Journalctl::LogEntry
+  Journalctl::LogEntry.new(
+    timestamp: timestamp,
+    message_raw: message,
+    raw_priority_val: "5",
+    internal_unit_name: "vector.service",
+    data: {"SYSLOG_IDENTIFIER" => "freshrss"} of String => String,
+  )
 end
 
 private def new_job : ComposeJobs::Job

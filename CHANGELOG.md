@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2026-09-17
+
+### 🚀 Features
+
+- *(deploy)* Mount the homepage config on rocky
+- *(compose)* Render port mappings as chips in the detail panel
+- *(compose)* Merge journald entries into the service log tail
+
+### 🐛 Bug Fixes
+
+- *(docker)* Install ca-certificates in the runtime image
+- *(ui)* Only show the global error dialog after a grace period
+
 ## [1.5.0] - 2026-09-17
 
 ### 🚀 Features
@@ -14,6 +27,10 @@ All notable changes to this project will be documented in this file.
 - *(deploy)* Mount the host systemd private socket
 - *(deploy)* Tmpfs marker dir so systemctl runs in the container
 - *(compose)* Readable ports and a working Service logs button
+
+### 💼 Other
+
+- Release v1.5.0
 
 ## [1.4.0] - 2026-09-16
 

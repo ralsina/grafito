@@ -219,7 +219,7 @@ module ComposeDashboard
           text compose_service.image
         end
         td do
-          text compose_service.ports
+          text compose_service.ports.empty? ? "—" : compact_ports(compose_service.ports)
         end
         if enable_actions
           td(class: "dashboard-action-cell") do
@@ -412,6 +412,39 @@ module ComposeDashboard
     end
   end
 
+  # One entry of docker's Ports string, with the listen address
+  # ("0.0.0.0:", "[::]:") stripped: host is the published host-side
+  # port or range, nil when the port is only exposed inside the
+  # container network.
+  record PortMapping, host : String?, container : String, protocol : String
+
+  # Parses docker's raw Ports string ("0.0.0.0:8887-8888->8887-8888/tcp,
+  # [::]:8887-8888->8887-8888/tcp, 53/udp") into structured mappings,
+  # dropping the listen addresses and the duplicated IPv4/IPv6 entries.
+  # Parts that don't look like port mappings are skipped.
+  def self.parse_ports(raw : String) : Array(PortMapping)
+    mappings = [] of PortMapping
+    raw.split(", ").each do |part|
+      mapping = parse_port_mapping(part)
+      next if mapping.nil?
+      mappings << mapping unless mappings.includes?(mapping)
+    end
+    mappings
+  end
+
+  private def self.parse_port_mapping(part : String) : PortMapping?
+    if idx = part.index("->")
+      host = part[0...idx].sub(/^.*:/, "")
+      container_side = part[(idx + 2)..]
+    else
+      host = nil
+      container_side = part
+    end
+    pieces = container_side.split("/", 2)
+    return unless pieces.size == 2
+    PortMapping.new(host, pieces[0], pieces[1])
+  end
+
   # The sidebar Detail-tab fragment for one service: pills, identity
   # info, actions, a pollable log tail, and the stack's YAML.
   # Compacts docker's Ports string ("0.0.0.0:8887-8888->8887-8888/tcp,
@@ -455,9 +488,25 @@ module ComposeDashboard
             span(class: "stat-label") { text "Image" }
             span { text compose_service.image }
           end
-          div do
+          div(class: "service-panel-ports") do
             span(class: "stat-label") { text "Ports" }
-            span { text compose_service.ports.empty? ? "—" : compact_ports(compose_service.ports) }
+            port_mappings = parse_ports(compose_service.ports)
+            if port_mappings.empty?
+              span { text "—" }
+            else
+              span(class: "port-chips") do
+                port_mappings.each do |port_mapping|
+                  span(class: "port-chip") do
+                    if host = port_mapping.host
+                      span(class: "port-host") { text host }
+                      span(class: "port-arrow") { text "→" }
+                    end
+                    span(class: "port-container") { text port_mapping.container }
+                    span(class: "port-proto") { text "/#{port_mapping.protocol}" }
+                  end
+                end
+              end
+            end
           end
           div do
             span(class: "stat-label") { text "Status" }
@@ -524,6 +573,57 @@ module ComposeDashboard
         end
       end
     end
+  end
+
+  # Merges `docker compose logs --timestamps` output with journald
+  # entries (matched by the service's syslog tag, e.g. the "freshrss"
+  # tag a shipper like vector attaches) into one chronological tail.
+  # Compose lines carry an RFC3339 timestamp after the optional
+  # "container |" prefix; lines without one are continuations of the
+  # previous (multiline) message. Each merged line is prefixed with a
+  # timestamp in the configured timezone, in the same format the log
+  # stream view uses.
+  def self.merged_log_tail(
+    compose_output : String,
+    journal_entries : Array(Journalctl::LogEntry),
+    tail : Int32 = 200,
+  ) : String
+    merged = [] of Tuple(Time, String)
+
+    compose_output.each_line do |line|
+      stamped = false
+      if match = line.match(/^(.*?)(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2}))\s+(.*)$/)
+        time = begin
+          Time.parse_rfc3339(match[2])
+        rescue Time::Format::Error
+          nil
+        end
+        if time
+          prefix = match[1].rstrip.chomp("|").rstrip
+          merged << {time, prefix.empty? ? match[3] : "#{prefix} | #{match[3]}"}
+          stamped = true
+        end
+      end
+      next if stamped
+      # Continuation of the previous multiline message; an undated
+      # leading line is parked at the epoch so it sorts first.
+      if merged.empty?
+        merged << {Time.unix(0), line}
+      else
+        last_time, last_text = merged.last
+        merged[-1] = {last_time, "#{last_text}\n#{line}"}
+      end
+    end
+
+    journal_entries.each do |journal_entry|
+      merged << {journal_entry.timestamp, journal_entry.message}
+    end
+
+    merged.sort_by!(&.first)
+    merged = merged.last(tail) if merged.size > tail
+    merged.map do |entry_time, entry_text|
+      "#{Journalctl::LogEntry.convert_to_timezone(entry_time).to_s("%m-%d %H:%M:%S")}  #{entry_text}"
+    end.join("\n")
   end
 
   # The service log tail fragment. Polls itself every 5 seconds so the
@@ -739,7 +839,11 @@ module ComposeDashboard
       ComposeDashboard.yaml_fragment(compose_stack.name, content)
     end
 
-    # Recent log tail for one service, via `docker compose logs`.
+    # Recent log tail for one service, merging `docker compose logs`
+    # with journald: services that ship their logs to the journal (a
+    # syslog logging driver or a shipper like vector) have an empty
+    # `docker compose logs`, with the entries living in the journal
+    # under the service's syslog tag instead.
     # Pollable: the fragment re-requests itself every few seconds
     # while the panel is open.
     get route_path("compose-logs") do |env|
@@ -766,8 +870,10 @@ module ComposeDashboard
         next "Service '#{HTML.escape(service_name.to_s)}' of stack '#{HTML.escape(stack_name.to_s)}' not found."
       end
 
-      args = compose_command_prefix(compose_stack) + ["logs", "--no-color", "--tail", tail.to_s, compose_service.service]
-      content = ComposeStatus.run_docker(args)
+      args = compose_args(compose_stack) + ["logs", "--no-color", "--timestamps", "--tail", tail.to_s, compose_service.service]
+      compose_output = ComposeStatus.run_docker(args)
+      journal_entries = Journalctl.query(tag: compose_service.service, lines: tail) || [] of Journalctl::LogEntry
+      content = ComposeDashboard.merged_log_tail(compose_output, journal_entries, tail: tail)
       env.response.content_type = "text/html"
       ComposeDashboard.logs_fragment(compose_service.stack, compose_service.service, content)
     end
@@ -975,5 +1081,12 @@ module ComposeDashboard
   # never from user input.
   private def self.compose_command_prefix(compose_stack : ComposeStatus::Stack) : Array(String)
     ["docker", "compose"] + compose_stack.config_files.flat_map { |config_file| ["-f", config_file] }
+  end
+
+  # The compose prefix for `ComposeStatus.run_docker`, which names the
+  # docker binary itself — compose_command_prefix is shaped for
+  # full-command background jobs, which name it as argv[0].
+  private def self.compose_args(compose_stack : ComposeStatus::Stack) : Array(String)
+    compose_command_prefix(compose_stack)[1..]
   end
 end
