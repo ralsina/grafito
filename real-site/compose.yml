@@ -1,32 +1,46 @@
-# Real Grafito stack for rocky: the actual system journal, with AI
-# explanations from the built-in ChatJimmy provider (free, unofficial
-# endpoint, enabled explicitly via GRAFITO_AI_PROVIDER - no proxy
-# sidecar needed anymore).
+# Real Grafito stack for rocky: the host's actual system journal, with
+# AI explanations from the built-in ChatJimmy provider (free,
+# unofficial endpoint, enabled explicitly via GRAFITO_AI_PROVIDER).
 #
-# The grafito image is ghcr.io/ralsina/grafito-arm64 (built from the
-# repo's Dockerfile: ubuntu + systemd's journalctl + the static
+# The grafito image is ghcr.io/ralsina/grafito-arm64:latest (built from
+# the repo's Dockerfile: ubuntu + systemd's journalctl + the static
 # binary). It needs the host journal and machine-id to see the real
 # logs, and the host timezone so timestamps match.
 #
-# One-time cleanup after switching from the old jimmy-proxy layout:
-#   rm -f proxy.py && docker compose up -d --remove-orphans
+# Container-visibility mounts (each with its reason):
+# - pid: "host" — the process monitor must see host processes, not the
+#   container's PID namespace. Note: with --enable-actions this also
+#   means signal buttons act on real host processes. That is the point,
+#   and it is why authentication is not optional here.
+# - /var/run/dbus/system_bus_socket — lets systemctl inside the
+#   container talk to the host systemd (unit states, resource usage).
+# - /var/run/docker.sock — lets the Compose view and app store talk to
+#   the host docker daemon.
+# - ./data — persistent state: metrics history, app store caches and
+#   installed apps survive container recreation.
+#
+# One-time setup on the server:
+#   echo "GRAFITO_AUTH_USER=you"  > .env
+#   echo "GRAFITO_AUTH_PASS=..." >> .env   # openssl rand -hex 12
 services:
-  # Grafito over the real system journal.
   grafito:
     image: ghcr.io/ralsina/grafito-arm64:latest
     container_name: grafito
     restart: unless-stopped
+    pid: "host"
     ports:
       - "1111:1111"
-    command: ["-p", "1111"]
+    command: ["-p", "1111", "--enable-actions"]
     volumes:
       - /var/log/journal:/var/log/journal:ro
       - /run/log/journal:/run/log/journal:ro
       - /etc/machine-id:/etc/machine-id:ro
       - /etc/localtime:/etc/localtime:ro
+      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/var/lib/grafito
+    env_file:
+      - .env
     environment:
       GRAFITO_AI_PROVIDER: jimmy
       GRAFITO_AI_PROVIDER_NAME: "ChatJimmy (Llama 3.1 8B)"
-      # Uncomment to require authentication:
-      # GRAFITO_AUTH_USER: changeme
-      # GRAFITO_AUTH_PASS: changeme
