@@ -1,9 +1,9 @@
 require "./spec_helper"
 
 # A minimal valid config object; specs tweak it via YAML below.
-def render_config(yaml : String, weather : Weather::Snapshot? = nil, statuses = {} of String => HomepageDashboard::ReachResult) : String
+def render_config(yaml : String, weather : Weather::Snapshot? = nil, statuses = {} of String => HomepageDashboard::ReachResult, metrics : Grafito::MetricsStore::MetricPoint? = nil) : String
   config = HomepageConfig::Config.from_yaml(yaml)
-  HomepageDashboard.render_html(config, weather, statuses)
+  HomepageDashboard.render_html(config, weather, statuses, metrics: metrics)
 end
 
 SAMPLE_YAML = <<-YAML
@@ -45,6 +45,34 @@ describe HomepageDashboard do
       html.should contain("https://jellyfin.example.com")
       html.should contain("Movies")
       html.should contain("rel=\"noopener noreferrer\"")
+    end
+
+    it "renders the machine stats strip when the sampler has data" do
+      metrics = Grafito::MetricsStore::MetricPoint.new(
+        ts: Time.utc,
+        load1: 0.42,
+        mem_used_pct: 37.5,
+        disk_used_pct: 61.0,
+        units_total: 10,
+        units_failed: 0,
+        swap_used_pct: 12.0,
+        net_rx_bps: 1536.0,
+        net_tx_bps: 204.8,
+      )
+      html = render_config(SAMPLE_YAML, metrics: metrics)
+
+      html.should contain("homepage-stats")
+      html.should contain("Load (1m)")
+      html.should contain(">0.42</span>")
+      html.should contain(">37.5%</span>")
+      html.should contain(">61.0%</span>")
+      html.should contain(">12.0%</span>")
+      html.should contain("1.5 KiB/s")
+      html.should contain("dashboard") # links into the charts
+    end
+
+    it "omits the machine stats strip without sampler data" do
+      render_config(SAMPLE_YAML).should_not contain("homepage-stats")
     end
 
     it "renders material, emoji and image icons" do

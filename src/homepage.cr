@@ -23,6 +23,7 @@ require "mutex"
 
 require "./homepage_config"
 require "./weather"
+require "./timeline"
 
 module HomepageDashboard
   extend self
@@ -58,6 +59,7 @@ module HomepageDashboard
     statuses : Hash(String, ReachResult) = {} of String => ReachResult,
     failed_units : Array(String) = [] of String,
     errors_last_hour : Int32 = 0,
+    metrics : Grafito::MetricsStore::MetricPoint? = nil,
   ) : String
     HTML.build do
       div(class: "homepage-top") do
@@ -69,7 +71,10 @@ module HomepageDashboard
         end
       end
 
-      html system_card(failed_units, errors_last_hour)
+      div(class: "homepage-health") do
+        html system_card(failed_units, errors_last_hour)
+        html machine_stats_fragment(metrics)
+      end
 
       unless config.groups.empty?
         div(class: "homepage-grid") do
@@ -105,6 +110,51 @@ module HomepageDashboard
         end
         span(class: "tag tag-muted") do
           text "#{errors_last_hour} errors in the last hour"
+        end
+      end
+    end
+  end
+
+  # Machine stats from the metrics sampler's most recent point (load,
+  # memory, disk, swap, network rates). Read from the in-memory tail,
+  # so the strip costs nothing per poll — no extra systemctl or df.
+  # Hidden entirely when the dashboard (and with it the sampler) is
+  # disabled, or until the first sample exists. Links into the
+  # dashboard, where the full charts live.
+  private def self.machine_stats_fragment(metrics : Grafito::MetricsStore::MetricPoint?) : String
+    return "" unless metrics
+
+    base = Grafito.base_path == "/" ? "" : Grafito.base_path
+    swap = metrics.swap_used_pct
+    HTML.build do
+      a(href: "#{base}/dashboard", class: "homepage-stats", title: "Open the dashboard for charts and details") do
+        div(class: "homepage-stat") do
+          span(class: "stat-label") { text "Load (1m)" }
+          span(class: "stat-value") { text metrics.load1.round(2).to_s }
+        end
+        div(class: "homepage-stat") do
+          span(class: "stat-label") { text "Memory" }
+          span(class: "stat-value", style: metrics.mem_used_pct >= 90.0 ? "color: var(--err)" : "") do
+            text "#{metrics.mem_used_pct.round(1)}%"
+          end
+        end
+        div(class: "homepage-stat") do
+          span(class: "stat-label") { text "Disk" }
+          span(class: "stat-value", style: metrics.disk_used_pct >= 90.0 ? "color: var(--err)" : "") do
+            text "#{metrics.disk_used_pct.round(1)}%"
+          end
+        end
+        if swap
+          div(class: "homepage-stat") do
+            span(class: "stat-label") { text "Swap" }
+            span(class: "stat-value") { text "#{swap.round(1)}%" }
+          end
+        end
+        if (rx = metrics.net_rx_bps) && (tx = metrics.net_tx_bps)
+          div(class: "homepage-stat") do
+            span(class: "stat-label") { text "Net ↓/↑" }
+            span(class: "stat-value") { text "#{Timeline.humanize_bytes(rx)}/s · #{Timeline.humanize_bytes(tx)}/s" }
+          end
         end
       end
     end
@@ -471,7 +521,7 @@ module HomepageDashboard
         Weather.snapshot(weather_config.latitude, weather_config.longitude)
       end
       failed_units, errors_last_hour = system_health_data
-      return render_html(config, weather_snapshot, statuses, failed_units, errors_last_hour)
+      return render_html(config, weather_snapshot, statuses, failed_units, errors_last_hour, metrics: Grafito.metrics_store.try(&.latest))
     {% end %}
 
     unless File.exists?(path)
@@ -486,7 +536,7 @@ module HomepageDashboard
     end
     statuses = service_statuses(config.groups.flat_map(&.services))
     failed_units, errors_last_hour = system_health_data
-    render_html(config, weather_snapshot, statuses, failed_units, errors_last_hour)
+    render_html(config, weather_snapshot, statuses, failed_units, errors_last_hour, metrics: Grafito.metrics_store.try(&.latest))
   rescue ex
     # Body locals are nilable in rescue, so the path is read again.
     message = ex.message || ex.class.name
