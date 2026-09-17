@@ -21,6 +21,7 @@ require "./compose_dashboard"
 require "./compose_jobs"
 require "./app_store"
 require "./compose_appstore"
+require "./access_panel"
 require "./process_status"
 require "./process_dashboard"
 require "./homepage_config"
@@ -132,6 +133,9 @@ module Grafito
   # caches (appstores/), installed apps (apps/) and their data
   # (app-data/). Mirrors --data-dir.
   class_property data_dir : String = "/var/lib/grafito"
+
+  # Path to the lego binary used for DNS-01 wildcard certificates.
+  class_property lego_bin : String = "/usr/bin/lego"
 
   # Metrics sampler, nil when the dashboard is disabled (and in specs).
   class_property metrics_store : MetricsStore? = nil
@@ -869,6 +873,7 @@ module Grafito
     # in src/assets/index.html for the frontend side.
     Dashboard.register_routes
     ComposeDashboard.register_routes
+    AccessPanel.register_routes
     ComposeAppStore.register_routes
     ProcessDashboard.register_routes
     HomepageDashboard.register_routes

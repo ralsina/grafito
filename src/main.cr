@@ -86,6 +86,7 @@ DOC = <<-DOCOPT
     --compose=BOOL               Enable the Docker Compose view (true/false) [default: true].
     --apps=BOOL                  Enable the app store in the Compose view (true/false) [default: true].
     --appstores=LIST             App stores as comma-separated name=tarball-url pairs [default: official=https://codeload.github.com/runtipi/runtipi-appstore/tar.gz/refs/heads/master].
+    --lego-bin=PATH              Path to the lego binary used to obtain/renew the wildcard certificate [default: /usr/bin/lego].
     --processes=BOOL             Enable the process monitor view (true/false) [default: true].
     --homepage=BOOL              Enable the homepage view (true/false) [default: true].
     --homepage-config=PATH       Homepage view config file (YAML) [default: /etc/grafito/homepage.yml].
@@ -290,6 +291,7 @@ end
 def parse_app_store_config(args)
   Grafito.apps_enabled = args["--apps"].to_s != "false"
   Grafito.appstores_spec = args["--appstores"].to_s
+  Grafito.lego_bin = args["--lego-bin"].to_s
 
   # Nothing needs the data dir on a log-only deployment (metrics need
   # the dashboard; the app store needs compose+apps), so skip its
@@ -408,6 +410,27 @@ def setup_dashboard(args) : Nil
   data_dir = Grafito::MetricsStore.resolve_data_dir(args["--data-dir"].to_s)
   Grafito::Log.info { "Metrics: sampling every #{interval}s into #{data_dir}, keeping #{retention} days" }
   Grafito.metrics_store = Grafito::MetricsStore.start(data_dir, interval, retention) { |snapshot| evaluate_alerts(snapshot) }
+  start_certificate_renewal_fiber
+end
+
+# #138: daily check for the wildcard certificate's expiry; lego
+# renews when the window closes in. Best-effort, like alerting.
+def start_certificate_renewal_fiber : Nil
+  spawn(name: "certificate-renewal(daily)") do
+    loop do
+      sleep 24.hours
+      begin
+        settings = ProxySettings.load(Grafito.data_dir)
+        next unless settings && settings.enabled?
+        next unless ProxySettings.renewal_due?(Grafito.data_dir, settings)
+        Grafito::Log.info { "Wildcard certificate due for renewal; running lego renew" }
+        result = ProxySettings.run_lego(settings, Grafito.data_dir, "renew")
+        Grafito::Log.info { "Certificate renewal finished (success: #{result[:success]})" }
+      rescue ex
+        Grafito::Log.error(exception: ex) { "Certificate renewal check failed" }
+      end
+    end
+  end
 end
 
 # Evaluates the Gotify alert rules against a fresh system snapshot and
