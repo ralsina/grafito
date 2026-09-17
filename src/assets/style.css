@@ -2639,3 +2639,15 @@ dialog article dd {
   border-radius: 5px;
   font-size: 0.78rem;
 }
+
+.appstore-desc img {
+  border-radius: 6px;
+  margin: 0.3rem 0;
+}
+.appstore-desc-img-missing {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-style: italic;
+  margin: 0.3rem 0;
+}
