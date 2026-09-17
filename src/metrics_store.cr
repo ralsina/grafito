@@ -100,6 +100,17 @@ module Grafito
     # Day files are the source of truth; the in-memory tail is the
     # fallback for when file writes fail.
     def history(since : Time) : Array(MetricPoint)
+      # The in-memory tail spans up to 24h; when the requested window
+      # starts within it, the memory copy IS the day files' content —
+      # skip the disk read/parse on every dashboard poll and hit the
+      # files only for windows reaching further back.
+      @mutex.synchronize do
+        oldest = @recent.first?
+        if oldest && oldest.ts <= since
+          return @recent.select(&.ts.>=(since))
+        end
+      end
+
       points = history_from_files(since)
       return points unless points.empty?
       history_from_memory(since)
