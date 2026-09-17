@@ -161,12 +161,15 @@ class Journalctl
 
     # Converts the timestamp to a formatted string using the configured timezone
     def formatted_timestamp_with_timezone(format = "%m-%d %H:%M:%S") : String
-      time_in_timezone = convert_to_timezone(@timestamp)
+      time_in_timezone = LogEntry.convert_to_timezone(@timestamp)
       time_in_timezone.to_s(format)
     end
 
-    # Converts a Time object to the configured timezone
-    def convert_to_timezone(time : Time) : Time
+    # Converts a Time object to the configured timezone. Also callable
+    # without an entry (see the class method below), so other views
+    # (e.g. the compose service log tail, which merges journald
+    # entries with docker's timestamps) render times the same way.
+    def self.convert_to_timezone(time : Time) : Time
       # Normalize timezone string: strip whitespace and leading slashes
       # This handles cases where /etc/timezone contains "Etc/UTC" but gets read as "/UTC"
       timezone_config = Grafito.timezone.strip.lstrip('/')
@@ -185,7 +188,7 @@ class Journalctl
           # labelled with the target zone).
           time.in(Time::Location.load(timezone_config))
         rescue ex
-          # Try GMT offset format (e.g., GMT+5, GMT-3:30)
+          # Try GMT offset format (e.g. GMT+5, GMT-3:30)
           if timezone_config.match(/^GMT([+-]\d+)(?::(\d+))?$/i)
             sign = $1[0]
             hours = $1[1..].to_i
@@ -202,6 +205,12 @@ class Journalctl
           end
         end
       end
+    end
+
+    # Per-entry timezone conversion, kept as an instance method for
+    # callers like the timeline; delegates to the class method.
+    def convert_to_timezone(time : Time) : Time
+      LogEntry.convert_to_timezone(time)
     end
 
     # Converts the numeric priority string to its textual representation.

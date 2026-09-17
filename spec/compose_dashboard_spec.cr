@@ -93,6 +93,46 @@ describe ComposeDashboard do
     fragment.should_not contain("port-chip")
   end
 
+  describe "merged_log_tail" do
+    it "interleaves compose and journald lines chronologically" do
+      # Compose --timestamps puts the RFC3339 stamp after the
+      # "container |" prefix, so that's the shape parsed here.
+      compose_output = "web-1  | 2026-09-17T02:00:05Z later\nweb-1  | 2026-09-17T02:00:01Z first"
+      entries = [new_journal_entry(Time.utc(2026, 9, 17, 2, 0, 3), "from journal")]
+      merged = ComposeDashboard.merged_log_tail(compose_output, entries)
+      lines = merged.split("\n")
+      lines.size.should eq(3)
+      lines[0].should contain("web-1 | first")
+      lines[1].should contain("from journal")
+      lines[2].should contain("web-1 | later")
+      # Same timestamp shape the log stream view uses, regardless of
+      # the machine's configured timezone.
+      lines.each { |line| line.should match(/^\d{2}-\d{2} \d{2}:\d{2}:\d{2}  /) }
+    end
+
+    it "also parses timestamps without a container prefix" do
+      compose_output = "2026-09-17T02:00:01Z bare message"
+      merged = ComposeDashboard.merged_log_tail(compose_output, [] of Journalctl::LogEntry)
+      merged.split("\n").size.should eq(1)
+      merged.should contain("bare message")
+      merged.should_not contain("2026-09-17")
+    end
+
+    it "keeps multiline compose messages together" do
+      compose_output = "web-1  | 2026-09-17T02:00:01Z line one\ncontinuation"
+      merged = ComposeDashboard.merged_log_tail(compose_output, [] of Journalctl::LogEntry)
+      merged.split("\n").size.should eq(2)
+      merged.should contain("line one\ncontinuation")
+    end
+
+    it "falls back to journald only when compose logs are empty" do
+      entries = [new_journal_entry(Time.utc(2026, 9, 17, 2, 0, 3), "from journal")]
+      merged = ComposeDashboard.merged_log_tail("", entries)
+      merged.split("\n").size.should eq(1)
+      merged.should contain("from journal")
+    end
+  end
+
   describe "parse_ports" do
     it "dedupes IPv4/IPv6 duplicates into one structured mapping" do
       raw = "0.0.0.0:8887-8888->8887-8888/tcp, [::]:8887-8888->8887-8888/tcp"
@@ -168,6 +208,16 @@ describe ComposeDashboard do
     fragment.should contain("Stop failed: webapp/web")
     fragment.should contain("Access denied")
   end
+end
+
+private def new_journal_entry(timestamp : Time, message : String) : Journalctl::LogEntry
+  Journalctl::LogEntry.new(
+    timestamp: timestamp,
+    message_raw: message,
+    raw_priority_val: "5",
+    internal_unit_name: "vector.service",
+    data: {"SYSLOG_IDENTIFIER" => "freshrss"} of String => String,
+  )
 end
 
 private def new_job : ComposeJobs::Job
