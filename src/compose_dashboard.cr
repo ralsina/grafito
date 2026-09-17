@@ -559,7 +559,15 @@ module ComposeDashboard
   end
 
   # A read-only compose.yaml for one stack, shown in the Detail tab.
-  def yaml_fragment(stack_name : String, content : String) : String
+  # A read-only compose.yaml for one stack, shown in the Detail tab.
+  # With actions enabled it doubles as the entry point for the stack
+  # file editors (compose.yaml and .env).
+  def yaml_fragment(
+    stack_name : String,
+    content : String,
+    can_edit_yaml : Bool = false,
+    can_edit_env : Bool = false,
+  ) : String
     HTML.build do
       div(class: "service-panel") do
         tag("h4") do
@@ -570,6 +578,222 @@ module ComposeDashboard
         end
         tag("pre", class: "compose-yaml") do
           text content
+        end
+        if can_edit_yaml || can_edit_env
+          div(class: "service-panel-actions") do
+            if can_edit_yaml
+              button(
+                class: "round-button",
+                title: "Edit compose.yaml",
+                "hx-get": "#{file_edit_url(stack_name, StackFile::ComposeYaml)}",
+                "hx-target": "#panel-detail-content",
+                "hx-swap": "innerHTML",
+                "hx-indicator": "#loading-spinner",
+              ) do
+                text "Edit compose.yaml"
+              end
+            end
+            if can_edit_env
+              button(
+                class: "round-button",
+                title: "Edit the stack's .env file",
+                "hx-get": "#{file_edit_url(stack_name, StackFile::Env)}",
+                "hx-target": "#panel-detail-content",
+                "hx-swap": "innerHTML",
+                "hx-indicator": "#loading-spinner",
+              ) do
+                text "Edit .env"
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  # The two editable files of a stack: the compose file itself (the
+  # first docker-reported config file) and its sibling .env.
+  enum StackFile
+    ComposeYaml
+    Env
+
+    # URL parameter, form field and filename fragment.
+    def param : String
+      self == ComposeYaml ? "yaml" : "env"
+    end
+
+    def self.from_param(value : String?) : StackFile?
+      case value
+      when "yaml" then ComposeYaml
+      when "env"  then Env
+      end
+    end
+
+    def label : String
+      self == ComposeYaml ? "compose.yaml" : ".env"
+    end
+  end
+
+  # Editor fragment for one stack file: the current content in a
+  # textarea; "Review changes" posts the draft to the diff endpoint,
+  # which shows the applied diff before anything touches disk.
+  def file_editor_fragment(
+    stack_name : String,
+    file : StackFile,
+    path : String,
+    content : String,
+  ) : String
+    HTML.build do
+      div(class: "service-panel") do
+        tag("h4") do
+          text "Edit #{file.label} — #{stack_name}"
+        end
+        span(class: "stat-label") { text path }
+        tag("form", {"class" => "compose-editor-form", "onsubmit" => "return false"}) do
+          tag("textarea", {
+            "name":       "content",
+            "class":      "compose-editor-textarea",
+            "spellcheck": "false",
+            "rows":       "20",
+          }) do
+            text content
+          end
+          input(type: "hidden", name: "stack", value: stack_name)
+          input(type: "hidden", name: "file", value: file.param)
+          div(class: "service-panel-actions") do
+            button(
+              class: "round-button",
+              "hx-post": file_diff_url(stack_name, file),
+              "hx-include": "closest form",
+              "hx-target": "#panel-detail-content",
+              "hx-swap": "innerHTML",
+              "hx-indicator": "#loading-spinner",
+            ) do
+              text "Review changes"
+            end
+            button(
+              class: "round-button",
+              "hx-get": compose_yaml_url(stack_name),
+              "hx-target": "#panel-detail-content",
+              "hx-swap": "innerHTML",
+              "hx-indicator": "#loading-spinner",
+            ) do
+              text "Cancel"
+            end
+            span(class: "service-panel-hint") { text "Nothing is written until you apply the reviewed diff." }
+          end
+        end
+      end
+    end
+  end
+
+  # The review step: a unified diff of current vs. drafted content
+  # plus an Apply button that posts the same draft again.
+  def file_diff_fragment(
+    stack_name : String,
+    file : StackFile,
+    path : String,
+    content : String,
+    diff : String,
+  ) : String
+    HTML.build do
+      div(class: "service-panel") do
+        tag("h4") do
+          text "Review changes — #{file.label} (#{stack_name})"
+        end
+        span(class: "stat-label") { text path }
+        if diff.empty?
+          tag("p") { text "No changes: the draft matches the file on disk." }
+        else
+          tag("pre", class: "compose-file-diff") do
+            diff.each_line do |line|
+              line = line.chomp("\n")
+              kind = line.starts_with?("+") && !line.starts_with?("+++") ? "add" : (line.starts_with?("-") && !line.starts_with?("---") ? "del" : "ctx")
+              span(class: "diff-#{kind}") { text line + "\n" }
+            end
+          end
+        end
+        tag("form", {"class" => "compose-editor-form", "onsubmit" => "return false"}) do
+          tag("textarea", {"name": "content", "class": "hidden-input"}) do
+            text content
+          end
+          input(type: "hidden", name: "stack", value: stack_name)
+          input(type: "hidden", name: "file", value: file.param)
+          div(class: "service-panel-actions") do
+            unless diff.empty?
+              button(
+                class: "round-button",
+                "hx-post": file_apply_url(stack_name, file),
+                "hx-include": "closest form",
+                "hx-target": "#panel-detail-content",
+                "hx-swap": "innerHTML",
+                "hx-indicator": "#loading-spinner",
+                "hx-confirm": "Write the reviewed changes to #{path}?",
+              ) do
+                text "Apply"
+              end
+            end
+            button(
+              class: "round-button",
+              "hx-get": file_edit_url(stack_name, file),
+              "hx-target": "#panel-detail-content",
+              "hx-swap": "innerHTML",
+              "hx-indicator": "#loading-spinner",
+            ) do
+              text "Back to editing"
+            end
+          end
+        end
+      end
+    end
+  end
+
+  # Success fragment after an apply: shows what was written and, when
+  # stack actions are enabled, offers the up -d that activates it.
+  def file_applied_fragment(
+    stack_name : String,
+    file : StackFile,
+    path : String,
+    diff : String,
+    enable_actions : Bool,
+  ) : String
+    HTML.build do
+      div(class: "service-panel") do
+        tag("h4") do
+          text "#{file.label} written — #{stack_name}"
+        end
+        span(class: "stat-label") { text path }
+        tag("p") do
+          text "Changes saved. "
+          if file == StackFile::ComposeYaml
+            text "Run the stack's \"up\" action to recreate containers with the new definition."
+          else
+            text "Run the stack's \"up\" action (or recreate) for the new values to take effect."
+          end
+        end
+        if enable_actions
+          div(class: "service-panel-actions") do
+            button(
+              class: "round-button",
+              title: "up -d: recreate containers whose configuration changed",
+              "hx-post": stack_action_url(stack_name, "up") + "?from=panel",
+              "hx-target": "#panel-detail-content",
+              "hx-swap": "innerHTML",
+              "hx-indicator": "#loading-spinner",
+              "hx-confirm": "Run 'up -d' on stack #{stack_name} now?",
+            ) do
+              text "up -d now"
+            end
+          end
+        end
+        unless diff.empty?
+          tag("pre", class: "compose-file-diff") do
+            diff.each_line do |line|
+              line = line.chomp("\n")
+              kind = line.starts_with?("+") && !line.starts_with?("+++") ? "add" : (line.starts_with?("-") && !line.starts_with?("---") ? "del" : "ctx")
+              span(class: "diff-#{kind}") { text line + "\n" }
+            end
+          end
         end
       end
     end
@@ -735,6 +959,22 @@ module ComposeDashboard
     "#{base}/compose-yaml?stack=#{URI.encode_path(stack_name)}"
   end
 
+  private def compose_yaml_url(stack_name : String) : String
+    yaml_url(stack_name)
+  end
+
+  private def file_edit_url(stack_name : String, file : StackFile) : String
+    "#{base}/compose-file-edit?stack=#{URI.encode_path(stack_name)}&file=#{file.param}"
+  end
+
+  private def file_diff_url(stack_name : String, file : StackFile) : String
+    "#{base}/compose-file-diff?stack=#{URI.encode_path(stack_name)}&file=#{file.param}"
+  end
+
+  private def file_apply_url(stack_name : String, file : StackFile) : String
+    "#{base}/compose-file-apply?stack=#{URI.encode_path(stack_name)}&file=#{file.param}"
+  end
+
   private def stack_action_url(stack_name : String, action : String) : String
     "#{base}/compose-stack/#{URI.encode_path(stack_name)}/#{action}"
   end
@@ -836,7 +1076,122 @@ module ComposeDashboard
 
       content = compose_yaml_content(compose_stack)
       env.response.content_type = "text/html"
-      ComposeDashboard.yaml_fragment(compose_stack.name, content)
+      can_edit = compose_actions_allowed? && compose_stack.actionable?
+      ComposeDashboard.yaml_fragment(
+        compose_stack.name,
+        content,
+        can_edit_yaml: can_edit,
+        can_edit_env: can_edit && !ComposeDashboard.stack_file_path(compose_stack, StackFile::Env).nil?,
+      )
+    end
+
+    # ## Stack file editors (compose.yaml and .env)
+    #
+    # Load → edit → review diff → apply, gated like every state-
+    # changing compose action. The paths never come from user input:
+    # the compose file is the docker-reported config file, the .env is
+    # its sibling. Applies validate the draft with
+    # `docker compose config` (compose file only) and keep one
+    # rolling backup next to the file.
+
+    get route_path("compose-file-edit") do |env|
+      gated = file_edit_gate(env)
+      if gated.is_a?(GateError)
+        halt env, status_code: gated.status, response: gated.message
+      end
+      compose_stack, file = gated
+      path = stack_file_path(compose_stack, file)
+      unless path
+        env.response.content_type = "text/html"
+        next ComposeDashboard.action_error_fragment("Edit", compose_stack.name, "This stack has no .env file next to its compose file.")
+      end
+
+      content = ""
+      {% if flag?(:demo_mode) %}
+        content = file == StackFile::ComposeYaml ? compose_yaml_content(compose_stack) : ""
+      {% else %}
+        read_content = read_stack_file(path)
+        if read_content.nil?
+          env.response.content_type = "text/html"
+          next ComposeDashboard.action_error_fragment("Edit", compose_stack.name, "The file is too large to edit in the browser (limit #{MAX_EDIT_FILE_BYTES / 1024} KiB).")
+        end
+        content = read_content
+      {% end %}
+
+      env.response.content_type = "text/html"
+      ComposeDashboard.file_editor_fragment(compose_stack.name, file, path, content)
+    end
+
+    post route_path("compose-file-diff") do |env|
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
+      gated = file_edit_gate(env)
+      if gated.is_a?(GateError)
+        halt env, status_code: gated.status, response: gated.message
+      end
+      compose_stack, file = gated
+      path = stack_file_path(compose_stack, file)
+      unless path
+        env.response.content_type = "text/html"
+        next ComposeDashboard.action_error_fragment("Edit", compose_stack.name, "This stack has no .env file next to its compose file.")
+      end
+
+      content = env.params.body["content"]?.to_s
+      if content.bytesize > MAX_EDIT_FILE_BYTES
+        halt env, status_code: 413, response: "Draft too large (limit #{MAX_EDIT_FILE_BYTES / 1024} KiB)."
+      end
+
+      old_content = ""
+      {% if flag?(:demo_mode) %}
+        old_content = file == StackFile::ComposeYaml ? compose_yaml_content(compose_stack) : ""
+      {% else %}
+        old_content = read_stack_file(path) || ""
+      {% end %}
+      diff = unified_diff(old_content, content)
+      env.response.content_type = "text/html"
+      ComposeDashboard.file_diff_fragment(compose_stack.name, file, path, content, diff)
+    end
+
+    post route_path("compose-file-apply") do |env|
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
+      gated = file_edit_gate(env)
+      if gated.is_a?(GateError)
+        halt env, status_code: gated.status, response: gated.message
+      end
+      compose_stack, file = gated
+      path = stack_file_path(compose_stack, file)
+      unless path
+        env.response.content_type = "text/html"
+        next ComposeDashboard.action_error_fragment("Edit", compose_stack.name, "This stack has no .env file next to its compose file.")
+      end
+
+      content = env.params.body["content"]?.to_s
+      if content.bytesize > MAX_EDIT_FILE_BYTES
+        halt env, status_code: 413, response: "Draft too large (limit #{MAX_EDIT_FILE_BYTES / 1024} KiB)."
+      end
+
+      old_content = ""
+      {% if flag?(:demo_mode) %}
+        # Demo build: nothing is written; the diff is computed against
+        # the fake content so the flow is fully visible.
+        old_content = file == StackFile::ComposeYaml ? compose_yaml_content(compose_stack) : ""
+      {% else %}
+        if file == StackFile::ComposeYaml && (complaint = validate_compose_file_draft(compose_stack, content))
+          env.response.content_type = "text/html"
+          next ComposeDashboard.action_error_fragment("Validate", compose_stack.name, complaint)
+        end
+      {% end %}
+      diff = unified_diff(old_content, content)
+      {% unless flag?(:demo_mode) %}
+        apply_stack_file(path, content)
+        ComposeDashboard::Log.info { "Stack file written: #{path} (stack #{compose_stack.name})" }
+      {% end %}
+
+      env.response.content_type = "text/html"
+      ComposeDashboard.file_applied_fragment(compose_stack.name, file, path, diff, Grafito.enable_actions?)
     end
 
     # Recent log tail for one service, merging `docker compose logs`
@@ -1060,6 +1415,220 @@ module ComposeDashboard
         ""
       end
     {% end %}
+  end
+
+  # ## Stack file editors
+  #
+  # Edits the compose file and its sibling .env in place. The flow is
+  # load → edit → review diff → apply (backup + atomic rename), with a
+  # \`docker compose config\` validation step for the compose file.
+  # Every route is gated like the other state-changing compose actions.
+
+  # Upper bound for editable files, so a runaway file can't be loaded
+  # into a textarea (or posted back) by accident.
+  MAX_EDIT_FILE_BYTES = 512 * 1024
+
+  # Resolves the on-disk path of an editable stack file. The compose
+  # file comes from the docker-reported config_files whitelist; the
+  # .env is its sibling in the same directory and only counts when it
+  # exists (it is optional). Paths are never taken from user input, so
+  # there is no traversal surface.
+  def self.stack_file_path(compose_stack : ComposeStatus::Stack, file : StackFile) : String?
+    return if compose_stack.config_files.empty?
+    compose_path = compose_stack.config_files.first
+    return compose_path if file == StackFile::ComposeYaml
+
+    env_path = File.join(File.dirname(compose_path), ".env")
+    File.exists?(env_path) ? env_path : nil
+  end
+
+  # Reads an editable file, enforcing the size cap. "" for a missing
+  # .env (creating one by applying an empty-file edit is legitimate).
+  def self.read_stack_file(path : String) : String?
+    return if file_param_size(path) > MAX_EDIT_FILE_BYTES
+    File.read(path)
+  rescue File::NotFoundError
+    ""
+  rescue ex
+    Log.warn(exception: ex) { "Failed to read #{path}" }
+    nil
+  end
+
+  # Shared gate for the editor routes: compose view enabled, actions
+  # allowed, stack resolvable and editable. Returns a GateError for
+  # the route to halt on, or the stack and requested file on success.
+  # Kemal's halt macro only works inside route blocks, hence the
+  # error-carrying return.
+  record GateError, status : Int32, message : String
+
+  def self.file_edit_gate(env) : {ComposeStatus::Stack, StackFile} | GateError
+    unless Grafito.compose_enabled?
+      return GateError.new(404, "Compose view is disabled.")
+    end
+    unless compose_actions_allowed?
+      return GateError.new(403, "Editing stack files requires compose actions: start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS).")
+    end
+
+    stack_name = optional_query_param(env, "stack")
+    file = StackFile.from_param(optional_query_param(env, "file"))
+    unless valid_compose_name?(stack_name) && file
+      return GateError.new(400, "Missing or invalid stack name or file parameter.")
+    end
+
+    compose_stack = ComposeStatus.find_stack(stack_name.to_s)
+    unless compose_stack
+      return GateError.new(404, "Stack '#{HTML.escape(stack_name.to_s)}' not found.")
+    end
+    unless compose_stack.actionable?
+      return GateError.new(409, "The compose file for stack '#{HTML.escape(stack_name.to_s)}' is not known; cannot edit it.")
+    end
+    {compose_stack, file}
+  end
+
+  # Validates a draft compose file exactly like a real `up` would:
+  # the draft is written to a temp file in the stack's own directory
+  # (so relative paths and .env interpolation resolve the same way)
+  # and run through `docker compose config`. Returns nil when valid,
+  # else the complaint. Demo builds always validate.
+  def self.validate_compose_file_draft(compose_stack : ComposeStatus::Stack, content : String) : String?
+    {% if flag?(:demo_mode) %}
+      nil
+    {% else %}
+      tmp = File.join(File.dirname(compose_stack.config_files.first), ".grafito-validate-tmp")
+      begin
+        File.write(tmp, content)
+        stdout = IO::Memory.new
+        stderr = IO::Memory.new
+        result = Process.run("docker", args: ["compose", "-f", tmp, "config", "--quiet"],
+          output: stdout, error: stderr)
+        return nil if result.success?
+        message = stderr.to_s.strip
+        message = "docker compose config rejected the file." if message.empty?
+        message.size > 200 ? "#{message[0, 200]}…" : message
+      ensure
+        File.delete?(tmp)
+      end
+    {% end %}
+  end
+
+  private def self.file_param_size(path : String) : Int64
+    File.size(path)
+  rescue
+    0i64
+  end
+
+  # Writes the new content atomically: the previous file is kept as a
+  # single rolling backup next to it, and the new content lands via a
+  # temp file + rename so a crash mid-write can't truncate the file.
+  # Returns the diff that was applied (for the success fragment).
+  def self.apply_stack_file(path : String, content : String) : String
+    old_content = File.read(path)
+    diff = unified_diff(old_content, content)
+
+    dir = File.dirname(path)
+    backup = File.join(dir, File.basename(path) + ".grafito-bak")
+    tmp = File.join(dir, ".#{File.basename(path)}.grafito-tmp")
+    File.write(backup, old_content) if File.exists?(path)
+    File.write(tmp, content)
+    File.rename(tmp, path)
+    diff
+  end
+
+  # Unified diff of two texts, computed in memory (LCS over lines) so
+  # no external tool is needed. Context lines around each hunk: 3.
+  # Returns "" for identical inputs; returns a one-line placeholder
+  # when the files are too large for the O(n·m) table (the review
+  # step then shows both versions instead).
+  def self.unified_diff(old_content : String, new_content : String) : String
+    return "" if old_content == new_content
+
+    old_lines = old_content.lines
+    new_lines = new_content.lines
+    # LCS table cell cap: beyond this the diff is computed without
+    # common-line detection (every old line removed, every new added),
+    # which is correct but unhelpful — and only for pathologically
+    # large files.
+    too_large = old_lines.size * new_lines.size > 4_000_000
+    return "--- current\n+++ draft\n-old file\n+new file\n" if too_large
+
+    ops = diff_ops(old_lines, new_lines)
+
+    # Keep changed ops plus up to 3 context lines around each, then
+    # split the kept stream into hunks at gaps longer than twice the
+    # context.
+    keep = Array(Bool).new(ops.size, false)
+    ops.each_with_index do |(kind, _), index|
+      next if kind == ' '
+      ([index - 3, 0].max..[index + 3, ops.size - 1].min).each { |k| keep[k] = true }
+    end
+
+    out = IO::Memory.new
+    old_no = 1
+    new_no = 1
+    index = 0
+    while index < ops.size
+      unless keep[index]
+        index += 1
+        next
+      end
+      hunk_end = index
+      while hunk_end + 1 < ops.size && keep[hunk_end + 1]
+        hunk_end += 1
+      end
+      slice = ops[index..hunk_end]
+      old_count = slice.count { |op| op[0] != '+' }
+      new_count = slice.count { |op| op[0] != '-' }
+      out << "@@ -#{old_no},#{old_count} +#{new_no},#{new_count} @@\n"
+      slice.each do |(kind, line)|
+        out << kind << line << '\n'
+        case kind
+        when '+' then new_no += 1
+        when '-' then old_no += 1
+        else          old_no += 1
+        new_no += 1
+        end
+      end
+      index = hunk_end + 1
+    end
+    out.to_s
+  end
+
+  # The edit script as (kind, line) operations — ' ' common, '-'
+  # removed from the old text, '+' added in the new — computed with a
+  # classic LCS dynamic program over whole lines.
+  private def self.diff_ops(old_lines : Array(String), new_lines : Array(String)) : Array(Tuple(Char, String))
+    lcs = Array.new(old_lines.size + 1) { Array(Int32).new(new_lines.size + 1, 0) }
+    (old_lines.size - 1).downto(0) do |i|
+      (new_lines.size - 1).downto(0) do |j|
+        lcs[i][j] = old_lines[i] == new_lines[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1])
+      end
+    end
+
+    ops = [] of Tuple(Char, String)
+    i = 0
+    j = 0
+    while i < old_lines.size && j < new_lines.size
+      if old_lines[i] == new_lines[j]
+        ops << {' ', old_lines[i]}
+        i += 1
+        j += 1
+      elsif lcs[i + 1][j] >= lcs[i][j + 1]
+        ops << {'-', old_lines[i]}
+        i += 1
+      else
+        ops << {'+', new_lines[j]}
+        j += 1
+      end
+    end
+    while i < old_lines.size
+      ops << {'-', old_lines[i]}
+      i += 1
+    end
+    while j < new_lines.size
+      ops << {'+', new_lines[j]}
+      j += 1
+    end
+    ops
   end
 
   # True when compose action endpoints may touch docker: the compose
