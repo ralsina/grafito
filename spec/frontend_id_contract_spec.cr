@@ -46,7 +46,7 @@ describe "frontend id contract" do
       content.scan(/setAttribute\(\s*["']id["']\s*,\s*["']([a-zA-Z0-9_-]+)["']\s*\)/) { |match| defined_ids << match[1] }
     end
 
-    missing = referenced_ids.to_a.reject { |id| defined_ids.includes?(id) }.sort
+    missing = referenced_ids.to_a.reject { |id| defined_ids.includes?(id) }.sort!
     missing.should eq([] of String)
   end
 end
