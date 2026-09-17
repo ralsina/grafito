@@ -203,13 +203,41 @@ body[data-view] #stats-strip {
 }
 .service-panel-info {
   display: flex;
-  gap: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.5rem;
   margin-bottom: 0.8rem;
 }
 .service-panel-info > div {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  flex: 1 1 40%;
+}
+/* Port mappings get their own full-width row: chips wrap instead of
+   the squeezed mid-token wrapping the old text column produced. */
+.service-panel-ports {
+  flex: 1 1 100%;
+}
+.service-panel-ports .port-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.port-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--muted) 8%, transparent);
+  white-space: nowrap;
+}
+.port-chip .port-arrow,
+.port-chip .port-proto {
+  color: var(--faint);
 }
 .service-panel-info .stat-label {
   font-size: 0.62rem;

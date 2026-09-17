@@ -219,7 +219,7 @@ module ComposeDashboard
           text compose_service.image
         end
         td do
-          text compose_service.ports
+          text compose_service.ports.empty? ? "—" : compact_ports(compose_service.ports)
         end
         if enable_actions
           td(class: "dashboard-action-cell") do
@@ -412,6 +412,39 @@ module ComposeDashboard
     end
   end
 
+  # One entry of docker's Ports string, with the listen address
+  # ("0.0.0.0:", "[::]:") stripped: host is the published host-side
+  # port or range, nil when the port is only exposed inside the
+  # container network.
+  record PortMapping, host : String?, container : String, protocol : String
+
+  # Parses docker's raw Ports string ("0.0.0.0:8887-8888->8887-8888/tcp,
+  # [::]:8887-8888->8887-8888/tcp, 53/udp") into structured mappings,
+  # dropping the listen addresses and the duplicated IPv4/IPv6 entries.
+  # Parts that don't look like port mappings are skipped.
+  def self.parse_ports(raw : String) : Array(PortMapping)
+    mappings = [] of PortMapping
+    raw.split(", ").each do |part|
+      mapping = parse_port_mapping(part)
+      next if mapping.nil?
+      mappings << mapping unless mappings.includes?(mapping)
+    end
+    mappings
+  end
+
+  private def self.parse_port_mapping(part : String) : PortMapping?
+    if idx = part.index("->")
+      host = part[0...idx].sub(/^.*:/, "")
+      container_side = part[(idx + 2)..]
+    else
+      host = nil
+      container_side = part
+    end
+    pieces = container_side.split("/", 2)
+    return unless pieces.size == 2
+    PortMapping.new(host, pieces[0], pieces[1])
+  end
+
   # The sidebar Detail-tab fragment for one service: pills, identity
   # info, actions, a pollable log tail, and the stack's YAML.
   # Compacts docker's Ports string ("0.0.0.0:8887-8888->8887-8888/tcp,
@@ -455,9 +488,25 @@ module ComposeDashboard
             span(class: "stat-label") { text "Image" }
             span { text compose_service.image }
           end
-          div do
+          div(class: "service-panel-ports") do
             span(class: "stat-label") { text "Ports" }
-            span { text compose_service.ports.empty? ? "—" : compact_ports(compose_service.ports) }
+            port_mappings = parse_ports(compose_service.ports)
+            if port_mappings.empty?
+              span { text "—" }
+            else
+              span(class: "port-chips") do
+                port_mappings.each do |port_mapping|
+                  span(class: "port-chip") do
+                    if host = port_mapping.host
+                      span(class: "port-host") { text host }
+                      span(class: "port-arrow") { text "→" }
+                    end
+                    span(class: "port-container") { text port_mapping.container }
+                    span(class: "port-proto") { text "/#{port_mapping.protocol}" }
+                  end
+                end
+              end
+            end
           end
           div do
             span(class: "stat-label") { text "Status" }
