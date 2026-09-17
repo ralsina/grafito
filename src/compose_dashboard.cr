@@ -19,6 +19,7 @@ require "log"
 require "./app_store"
 require "./compose_status"
 require "./compose_updates"
+require "./access"
 require "./compose_jobs"
 require "./process_status"
 
@@ -37,6 +38,7 @@ module ComposeDashboard
   def render_html(
     stacks : Array(ComposeStatus::Stack),
     enable_actions : Bool = false,
+    hostname : String? = nil,
   ) : String
     installed_by_project = installed_apps_by_project
     HTML.build do
@@ -58,7 +60,7 @@ module ComposeDashboard
         # wide viewports.
         div(class: "compose-stacks") do
           stacks.each do |compose_stack|
-            html stack_section(compose_stack, enable_actions, installed_by_project[compose_stack.name]?)
+            html stack_section(compose_stack, enable_actions, installed_by_project[compose_stack.name]?, hostname)
           end
         end
       end
@@ -121,10 +123,14 @@ module ComposeDashboard
     compose_stack : ComposeStatus::Stack,
     enable_actions : Bool,
     installed : AppStore::InstalledApp? = nil,
+    hostname : String? = nil,
   ) : String
     update_version = update_available_version(installed)
     badge = installed ? app_badge(installed, update_version) : ""
     store_buttons = (enable_actions && installed) ? store_action_buttons(compose_stack, installed, update_version) : ""
+    # Host:port is the baseline way in; the domain form (https://…)
+    # appears instead once the user routed the app by domain.
+    open_url = installed ? Access.urls(installed, hostname).preferred : nil
     HTML.build do
       div(class: "compose-stack") do
         div(class: "compose-stack-header") do
@@ -153,6 +159,19 @@ module ComposeDashboard
               end
             end
             html store_buttons
+            if open_url
+              a(
+                class: "round-button",
+                href: open_url,
+                target: "_blank",
+                rel: "noopener",
+                title: "Open #{compose_stack.name} (#{open_url})",
+              ) do
+                span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+                  text "open_in_new"
+                end
+              end
+            end
             if compose_stack.actionable?
               button(
                 class: "round-button",
@@ -1106,7 +1125,7 @@ module ComposeDashboard
         next "Compose view is disabled."
       end
       env.response.content_type = "text/html"
-      ComposeDashboard.render_html(ComposeStatus.stacks, Grafito.enable_actions?)
+      ComposeDashboard.render_html(ComposeStatus.stacks, Grafito.enable_actions?, hostname: hostname_from(env))
     end
 
     # Sidebar Detail-tab fragment for one service of one stack.
@@ -1764,6 +1783,15 @@ module ComposeDashboard
   # authentication or simulated on a demo build.
   private def self.compose_actions_allowed? : Bool
     Grafito.compose_enabled? && Grafito.actions_available?
+  end
+
+  # The host part of the request's Host header (no :port): apps live
+  # on the same machine as grafito, so their baseline URL reuses it.
+  private def self.hostname_from(env : HTTP::Server::Context) : String?
+    value = env.request.headers["Host"]?
+    return unless value
+    host = value.split(":").first?
+    host.presence
   end
 
   # Whitelist for stack and service names coming from URLs: docker

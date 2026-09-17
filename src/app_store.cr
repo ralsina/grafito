@@ -162,6 +162,12 @@ module AppStore
     property project_name : String = ""
     property installed_at : String = ""
 
+    # The domain the app is reachable at when the user routed it
+    # ("atuin.home.example.com"), or "" when it is only reachable on
+    # its host port. Empty for apps installed without a domain — the
+    # host:port baseline never requires one.
+    property domain : String = ""
+
     # When true, the update job runs automatically for this app after
     # a store sync that ships a newer package (#98). Off by default.
     property? auto_update : Bool = false
@@ -180,6 +186,7 @@ module AppStore
       project_name : String = "",
       installed_at : String = "",
       auto_update : Bool = false,
+      domain : String = "",
     )
       @store = store
       @store_url = store_url
@@ -191,6 +198,7 @@ module AppStore
       @project_name = project_name
       @installed_at = installed_at
       @auto_update = auto_update
+      @domain = domain
     end
 
     def install_dir(root : String) : String
@@ -754,6 +762,7 @@ module AppStore
       port: input.port,
       project_name: app.id,
       installed_at: Time.utc.to_rfc3339,
+      domain: input.env["APP_EXPOSED"]? == "true" ? input.env["APP_DOMAIN"]? || "" : "",
     )
 
     dir = install_dir(root, store.slug, app.id)
@@ -809,6 +818,7 @@ module AppStore
     installed.tipi_version = app.tipi_version
     installed.version = app.version
     installed.port = input.port
+    installed.domain = merged["APP_EXPOSED"]? == "true" ? (merged["APP_DOMAIN"]? || "") : ""
     dir = install_dir(root, installed.store, installed.id)
     Dir.mkdir_p(dir)
     File.chmod(dir, 0o700)

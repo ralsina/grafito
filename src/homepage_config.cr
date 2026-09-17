@@ -47,6 +47,16 @@ module HomepageConfig
     property description : String = ""
     property icon : String = ""
     property? check : Bool = false
+
+    # Explicit constructor so code can synthesize services at runtime
+    # (the homepage's auto-generated "Installed apps" group).
+    def initialize(name : String, url : String, description : String = "", icon : String = "", check : Bool = false)
+      @name = name
+      @url = url
+      @description = description
+      @icon = icon
+      @check = check
+    end
   end
 
   # A titled column of services, rendered as one card.
@@ -55,6 +65,13 @@ module HomepageConfig
 
     property name : String
     property services : Array(Service) = [] of Service
+
+    # Explicit constructor for runtime-synthesized groups (the
+    # homepage's auto-generated "Installed apps" group).
+    def initialize(name : String, services : Array(Service) = [] of Service)
+      @name = name
+      @services = services
+    end
   end
 
   # Optional weather widget settings. Coordinates are required (they
