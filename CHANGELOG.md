@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2026-09-17
+
+### 🚀 Features
+
+- *(deploy)* Make the rocky stack fully functional
+
+### 🐛 Bug Fixes
+
+- *(deploy)* Mount /run/dbus directory for container systemctl
+- *(deploy)* Mount the host systemd private socket
+- *(deploy)* Tmpfs marker dir so systemctl runs in the container
+- *(compose)* Readable ports and a working Service logs button
+
 ## [1.4.0] - 2026-09-16
 
 ### 🚀 Features
@@ -10,6 +23,10 @@ All notable changes to this project will be documented in this file.
 - *(compose,processes)* Cross-jumps and member processes (#92, #93)
 - *(dashboard)* Per-unit cgroup CPU/mem and recovery alerts (#87, #89)
 - Homepage health card and latency dots, AI token usage, resource column styles
+
+### 💼 Other
+
+- Release v1.4.0
 
 ### 📚 Documentation
 

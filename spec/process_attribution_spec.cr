@@ -141,3 +141,19 @@ describe "Process detail compose jump (#92)" do
     fragment.should_not contain("openComposeService")
   end
 end
+
+describe "ComposeDashboard.compact_ports" do
+  it "dedupes IPv4/IPv6 duplicates into the unique host mappings" do
+    raw = "0.0.0.0:8887-8888->8887-8888/tcp, [::]:8887-8888->8887-8888/tcp"
+    ComposeDashboard.compact_ports(raw).should eq("8887-8888->8887-8888/tcp")
+  end
+
+  it "keeps distinct mappings" do
+    raw = "0.0.0.0:8080->80/tcp, 0.0.0.0:9090->90/tcp"
+    ComposeDashboard.compact_ports(raw).should eq("8080->80/tcp, 9090->90/tcp")
+  end
+
+  it "leaves ports without mappings alone" do
+    ComposeDashboard.compact_ports("8888/tcp").should eq("8888/tcp")
+  end
+end
