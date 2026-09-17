@@ -32,6 +32,11 @@ body[data-view] #stats-strip {
   position: relative;
   margin: 1em 0;
 }
+/* The network chart stacks below the combined one inside the same
+   container; give it breathing room from the chart above. */
+.dashboard-history svg + .dashboard-legend {
+  margin-top: 0.9rem;
+}
 .dashboard-legend {
   display: flex;
   flex-wrap: wrap;

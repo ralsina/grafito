@@ -25,6 +25,67 @@ def point_at(seconds_ago : Int32) : Grafito::MetricsStore::MetricPoint
 end
 
 describe Grafito::MetricsStore do
+  it "parses history lines written before the network field existed" do
+    with_store do |store|
+      # The exact 6-key line shape of the original format.
+      legacy_line = {
+        ts: Time.utc, load1: 0.4, mem_used_pct: 31.0,
+        disk_used_pct: 48.0, units_total: 9, units_failed: 0,
+      }.to_json
+      path = File.join(store.data_dir, "metrics-#{Time.utc.to_s("%F")}.jsonl")
+      File.write(path, legacy_line + "\n")
+
+      reopened = Grafito::MetricsStore.new(store.data_dir)
+      points = reopened.history(Time.utc - 1.minute)
+      points.size.should eq(1)
+      points.first.net_rx_bps.should be_nil
+      points.first.net_tx_bps.should be_nil
+      points.first.net.should be_nil
+    end
+  end
+
+  it "roundtrips network data through the JSONL file" do
+    with_store do |store|
+      net = {
+        "eth0" => SystemStatus::NetRate.new(rx_bps: 1200.5, tx_bps: 300.0),
+        "wg0"  => SystemStatus::NetRate.new(rx_bps: 80.0, tx_bps: 90.0),
+      }
+      point = Grafito::MetricsStore::MetricPoint.new(
+        ts: Time.utc - 30.seconds,
+        load1: 1.5,
+        mem_used_pct: 42.0,
+        disk_used_pct: 55.0,
+        units_total: 10,
+        units_failed: 1,
+        net_rx_bps: 1280.5,
+        net_tx_bps: 390.0,
+        net: net,
+      )
+      store.record(point)
+
+      reopened = Grafito::MetricsStore.new(store.data_dir)
+      loaded = reopened.history(Time.utc - 1.minute).first
+      loaded.net_rx_bps.should eq(1280.5)
+      loaded.net_tx_bps.should eq(390.0)
+      loaded.net.should_not be_nil
+      loaded.net.try(&.["eth0"].rx_bps).should eq(1200.5)
+    end
+  end
+
+  it "sums per-interface rates into aggregate chart values" do
+    net = {
+      "eth0"  => SystemStatus::NetRate.new(rx_bps: 1000.0, tx_bps: 100.0),
+      "wlan0" => SystemStatus::NetRate.new(rx_bps: 250.0, tx_bps: 25.0),
+    }
+    rx, tx = Grafito::MetricsStore.net_aggregates(net)
+    rx.should eq(1250.0)
+    tx.should eq(125.0)
+
+    rx, tx = Grafito::MetricsStore.net_aggregates(nil)
+    rx.should be_nil
+    tx.should be_nil
+  end
+
   it "records points and serves them from history" do
     with_store do |store|
       store.record(point_at(60))

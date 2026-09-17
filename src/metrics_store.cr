@@ -27,14 +27,31 @@ module Grafito
 
     # One sampled point in time. Kept as a small flat record so it maps
     # 1:1 to a JSONL line.
+    #
+    # Fields added after the initial format MUST be nilable with a nil
+    # default: from_json fills missing keys with the default, so lines
+    # written by older builds keep parsing (non-nilable fields would
+    # make every pre-existing history line fail to load).
     record MetricPoint,
       ts : Time,
       load1 : Float64,
       mem_used_pct : Float64,
       disk_used_pct : Float64,
       units_total : Int32,
-      units_failed : Int32 do
+      units_failed : Int32,
+      net_rx_bps : Float64? = nil,
+      net_tx_bps : Float64? = nil,
+      net : Hash(String, SystemStatus::NetRate)? = nil do
       include JSON::Serializable
+    end
+
+    # Summed receive/transmit rates across interfaces, for the chart's
+    # aggregate lines. Nil when the snapshot carried no network data.
+    def self.net_aggregates(net : Hash(String, SystemStatus::NetRate)?) : {Float64?, Float64?}
+      return {nil, nil} unless net
+      rx = net.sum { |_, rate| rate.rx_bps }
+      tx = net.sum { |_, rate| rate.tx_bps }
+      {rx, tx}
     end
 
     # In-memory cap: 24h of samples at a 30s interval.
@@ -52,6 +69,7 @@ module Grafito
 
     # Converts a system snapshot into the flat point we persist.
     def self.point_from_snapshot(snapshot : SystemStatus::Snapshot) : MetricPoint
+      net_rx_bps, net_tx_bps = net_aggregates(snapshot.net)
       MetricPoint.new(
         ts: snapshot.timestamp,
         load1: snapshot.load1,
@@ -59,6 +77,9 @@ module Grafito
         disk_used_pct: snapshot.disk_used_pct,
         units_total: snapshot.units_total,
         units_failed: snapshot.units_failed,
+        net_rx_bps: net_rx_bps,
+        net_tx_bps: net_tx_bps,
+        net: snapshot.net,
       )
     end
 
@@ -149,6 +170,7 @@ module Grafito
       steps.downto(0) do |back|
         ts = now - (back * step.total_seconds).seconds
         metrics = SystemStatus.fake_metrics_at(ts)
+        net_rx_bps, net_tx_bps = net_aggregates(metrics[:net])
         store.record(MetricPoint.new(
           ts: ts,
           load1: metrics[:load1],
@@ -156,6 +178,9 @@ module Grafito
           disk_used_pct: metrics[:disk_used_pct],
           units_total: 5,
           units_failed: 1,
+          net_rx_bps: net_rx_bps,
+          net_tx_bps: net_tx_bps,
+          net: metrics[:net],
         ))
       end
     end
