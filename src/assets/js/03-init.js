@@ -164,12 +164,14 @@ document.addEventListener("DOMContentLoaded", function () {
     localStorage.setItem("theme", theme);
   }
 
-  // Apply initial theme: 1. saved choice, 2. Mission's default.
-  // (An explicit user choice beats the default; the OS preference
-  // is only honored through that default.)
+  // Apply initial theme: 1. saved choice, 2. the OS preference via
+  // prefers-color-scheme (declared in the meta color-scheme tag),
+  // 3. dark as the fallback default.
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme) {
     applyTheme(savedTheme);
+  } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+    applyTheme("light");
   } else {
     applyTheme("dark");
   }
@@ -660,4 +662,17 @@ document.addEventListener("DOMContentLoaded", function () {
   // --- END MINIMAP VIEWPORT WINDOW ---
   // --- END MINIMAP INTERACTION ---
   // --- END STATS STRIP + MINIMAP ---
+
+  // --- KEYBOARD ROW ACTIVATION ---
+  // Clickable rows (dashboard units, compose services, log entries)
+  // carry tabindex="0"; htmx only fires on click, so Enter and Space
+  // forward to one.
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const row = event.target.closest("tr[tabindex]");
+    if (!row || event.target !== row) return;
+    event.preventDefault();
+    row.click();
+  });
+  // --- END KEYBOARD ROW ACTIVATION ---
 });

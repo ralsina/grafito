@@ -26,7 +26,7 @@ html[data-theme="dark"] {
   --line: #29313c;
   --txt: #dfe6ee;
   --muted: #8b96a5;
-  --faint: #59636f;
+  --faint: #7d8794;
   --accent: #4cc2a9;
   --accent-ink: #0c1215;
   --err: #f0635a;
@@ -44,8 +44,8 @@ html[data-theme="light"] {
   --line: #d3dcda;
   --txt: #1d2530;
   --muted: #5d6a70;
-  --faint: #8a969c;
-  --accent: #178f77;
+  --faint: #5f6b70;
+  --accent: #0f7a66;
   --accent-ink: #ffffff;
   --err: #c73e34;
   --warn: #b07414;
@@ -54,6 +54,19 @@ html[data-theme="light"] {
   --debug: #8a969c;
   --mark-bg: rgba(23, 143, 119, 0.22);
   --shadow: rgba(30, 40, 40, 0.2);
+}
+
+/* Respect the OS reduce-motion preference: the row-flash, live pulse
+   and AI spinner animations all become effectively static. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 /* =====================================================================
    Icons — self-hosted Material Icons font
@@ -1115,7 +1128,8 @@ tr.priority-7 {
   opacity: 0;
   transition: opacity 0.15s ease-in-out;
 }
-.log-row-hover-actions:hover .hover-action-cell {
+.log-row-hover-actions:hover .hover-action-cell,
+.log-row-hover-actions:focus-within .hover-action-cell {
   opacity: 1;
 }
 .hover-action-cell .round-button,

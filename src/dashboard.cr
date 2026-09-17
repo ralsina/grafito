@@ -400,6 +400,7 @@ module Dashboard
       # inspector.
       row_attributes = {
         "class"                     => row_class,
+        "tabindex"                  => "0",
         "title"                     => "Show details for #{unit_state.unit}",
         "hx-get"                    => unit_details_url(unit_state.unit),
         "hx-target"                 => "#panel-detail-content",

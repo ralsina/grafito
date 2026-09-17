@@ -443,7 +443,7 @@ module Grafito
     end
     # The cursor rides on the row so a plain click can open the
     # detail tab in the sidebar.
-    row_attributes = {"class" => row_classes.join(" ")}
+    row_attributes = {"class" => row_classes.join(" "), "tabindex" => "0"}
     row_attributes["data-cursor"] = entry_cursor if entry_cursor
     row_attributes["data-epoch"] = entry.timestamp.to_unix.to_s
     HTML.build do
