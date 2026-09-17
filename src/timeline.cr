@@ -335,6 +335,10 @@ module Timeline
           text "memory"
         end
         span(class: "legend-item") do
+          span(class: "legend-line", style: "border-color: var(--ok)") { }
+          text "swap"
+        end
+        span(class: "legend-item") do
           span(class: "legend-line", style: "border-color: var(--err)") { }
           text "disk"
         end
@@ -376,12 +380,13 @@ module Timeline
 
     svg << %(<svg width="100%" height="#{height.to_i}" viewBox="0 0 #{width.to_i} #{height.to_i}" )
     svg << %(preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" role="img" class="dashboard-history-svg" )
-    svg << %(aria-label="Journal severity and memory, disk usage over the selected time window">)
+    svg << %(aria-label="Journal severity and memory, swap and disk usage over the selected time window">)
     has_bars = buckets.any? { |bucket| (bucket[:err] + bucket[:warn] + bucket[:info]) > 0 }
     if has_bars
       svg << severity_bars(buckets, oldest, span_sec, width, height)
     end
     svg << %(  <polyline fill="none" stroke="var(--info, steelblue)" stroke-width="2" points="#{polyline_points(points, oldest, span_sec, width, height, &.mem_used_pct)}" />)
+    svg << %(  <polyline fill="none" stroke="var(--ok, limegreen)" stroke-width="2" points="#{polyline_points(points, oldest, span_sec, width, height, &.swap_used_pct)}" />)
     svg << %(  <polyline fill="none" stroke="var(--err, darkorange)" stroke-width="2" stroke-dasharray="4 3" points="#{polyline_points(points, oldest, span_sec, width, height, &.disk_used_pct)}" />)
     svg << %(  <text x="8" y="#{(height - 8).to_i}" class="tl-label">#{oldest.to_s("%m-%d %H:%M")}</text>)
     svg << %(  <text x="#{(width - 8).to_i}" y="#{(height - 8).to_i}" text-anchor="end" class="tl-label">#{newest.to_s("%m-%d %H:%M")}</text>)

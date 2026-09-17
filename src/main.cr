@@ -415,16 +415,20 @@ end
 def evaluate_alerts(snapshot : SystemStatus::Snapshot) : Nil
   return unless Grafito::Gotify::Config.enabled?
 
-  # The error rate needs a journal query; skip the cost when there is
-  # no Gotify server configured.
+  # The error rate and OOM kills need journal queries; skip the cost
+  # when there is no Gotify server configured.
   error_count = Journalctl.query(since: "-1m", priority: "3", lines: 1000)
   errors_per_min = error_count ? error_count.size.to_f : 0.0
+  oom_entries = Journalctl.query(since: "-1m", query: Dashboard::OOM_GREP, lines: 200)
+  oom_kills = oom_entries ? oom_entries.size : 0
 
   client = Grafito::Gotify::Client.new
   alerts = ALERT_RULES.evaluate(
     disk_used_pct: snapshot.disk_used_pct,
     failed_units: snapshot.units.select(&.failed?).map(&.unit),
     errors_per_min: errors_per_min,
+    swap_used_pct: snapshot.swap_used_pct,
+    oom_kills: oom_kills,
   )
   alerts.each do |alert|
     Grafito::Gotify::Config::Log.info { "Sending alert '#{alert.rule}': #{alert.title}" }

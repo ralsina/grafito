@@ -108,7 +108,9 @@ describe Dashboard do
     # Busy bucket: info + warn + err segments; quiet bucket: info only.
     svg.scan(/<rect/).size.should eq(4)
     svg.should contain("<polyline")
-    svg.scan(/<polyline/).size.should eq(2)
+    # memory + swap + disk. Points without swap data (pre-swap history)
+    # contribute an empty points list, which renders nothing.
+    svg.scan(/<polyline/).size.should eq(3)
     svg.should contain("<title>")
     # All-zero buckets render no bars at all.
     zero_buckets = buckets.map { |bucket| {start_time: bucket[:start_time], count: 0, err: 0, warn: 0, info: 0} }
@@ -152,6 +154,32 @@ describe Dashboard do
     # The unit count is a card in the stats strip, not a heading.
     html.should contain(">Services</span>")
     html.should contain("<span class=\"stat-value\">#{snapshot.units_total}</span>")
+  end
+
+  it "renders swap and OOM cards, tolerant of swapless machines" do
+    # A swapless snapshot renders an em-dash, not a fake 0%.
+    snapshot = filter_spec_snapshot
+    html = Dashboard.render_html(snapshot, [] of Grafito::MetricsStore::MetricPoint, 0, oom_kills: 3)
+    html.should contain(">Swap</span>")
+    html.should contain(">—</span>")
+    html.should contain(">OOM (6h)</span>")
+    html.should contain(">3</span>")
+
+    swapped = SystemStatus::Snapshot.new(
+      timestamp: snapshot.timestamp,
+      load1: snapshot.load1,
+      mem_used_pct: snapshot.mem_used_pct,
+      disk_used_pct: snapshot.disk_used_pct,
+      uptime_sec: snapshot.uptime_sec,
+      units_total: snapshot.units_total,
+      units_failed: snapshot.units_failed,
+      units: snapshot.units,
+      swap_used_pct: 95.0,
+    )
+    html = Dashboard.render_html(swapped, [] of Grafito::MetricsStore::MetricPoint, 0)
+    html.should contain(">95.0%</span>")
+    # Over the 90% default threshold the card carries the warning class.
+    html.should contain("stat-value stat-error")
   end
 
   it "renders action buttons when actions are enabled" do

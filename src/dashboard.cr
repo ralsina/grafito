@@ -36,6 +36,7 @@ module Dashboard
     snapshot : SystemStatus::Snapshot,
     history : Array(Grafito::MetricsStore::MetricPoint),
     errors_last_hour : Int32,
+    oom_kills : Int32 = 0,
     enable_actions : Bool = false,
     sort_by : String? = nil,
     sort_order : String? = nil,
@@ -60,10 +61,12 @@ module Dashboard
           html card("Uptime", format_uptime(snapshot.uptime_sec))
           html card("Load (1m)", snapshot.load1.round(2).to_s)
           html card("Memory", "#{snapshot.mem_used_pct.round(1)}%", warn: snapshot.mem_used_pct >= 90.0)
+          html swap_card(snapshot)
           html card("Disk", "#{snapshot.disk_used_pct.round(1)}%", warn: snapshot.disk_used_pct >= 90.0)
           html card("Failed units", snapshot.units_failed.to_s, warn: snapshot.units_failed > 0)
           html card("Services", units.size.to_s)
           html card("Errors (#{window_label(since_text)})", errors_last_hour.to_s, warn: errors_last_hour > 20)
+          html card("OOM (#{window_label(since_text)})", oom_kills.to_s, warn: oom_kills > 0)
         end
 
         div(class: "dashboard-history") do
@@ -255,6 +258,13 @@ module Dashboard
         end
       end
     end
+  end
+
+  # Swap usage card. Machines without swap render an em-dash — that is
+  # a legitimate setup, not a zero-percent-full disk.
+  private def swap_card(snapshot : SystemStatus::Snapshot) : String
+    swap = snapshot.swap_used_pct
+    card("Swap", swap ? "#{swap.round(1)}%" : "—", warn: swap ? swap >= 90.0 : false)
   end
 
   # Renders the service detail fragment for the right sidebar's Detail
@@ -956,10 +966,12 @@ module Dashboard
     entries = dashboard_journal_entries(since_text.presence || "-6h")
     buckets = severity_buckets(entries, history)
     errors = entries.count { |entry| (entry.priority.to_i? || 7) <= 3 }
+    oom_kills = recent_oom_count(since_text.presence || "-6h")
     Dashboard.render_html(
       snapshot,
       history,
       errors,
+      oom_kills,
       Grafito.enable_actions?,
       sort_by,
       sort_order,
@@ -1025,6 +1037,19 @@ module Dashboard
   private def self.recent_error_count(since : String) : Int32
     return 0 unless Grafito.dashboard_enabled?
     logs = Journalctl.query(since: since, priority: "3", lines: 500)
+    logs ? logs.size : 0
+  end
+
+  # Journal message patterns the kernel emits on an OOM kill ("Out of
+  # memory: Killed process …" and the newer "oom-kill" accounting
+  # lines). Matched with journalctl's grep (-g).
+  OOM_GREP = "Out of memory|oom-kill|oom_kill"
+
+  # Counts kernel OOM-kill events since the given relative time, for
+  # the dashboard card. Bounded like the error count.
+  private def self.recent_oom_count(since : String) : Int32
+    return 0 unless Grafito.dashboard_enabled?
+    logs = Journalctl.query(since: since, query: OOM_GREP, lines: 500)
     logs ? logs.size : 0
   end
 

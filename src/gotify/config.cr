@@ -10,6 +10,7 @@
 # - GRAFITO_GOTIFY_TOKEN: Application token
 # - GRAFITO_GOTIFY_PRIORITY: Default message priority [default: 5]
 # - GRAFITO_ALERT_DISK_PCT: Disk usage alert threshold [default: 90]
+# - GRAFITO_ALERT_SWAP_PCT: Swap usage alert threshold [default: 90]
 # - GRAFITO_ALERT_ERRORS_PER_MIN: Error-rate alert threshold [default: 10]
 
 module Grafito::Gotify
@@ -40,6 +41,10 @@ module Grafito::Gotify
 
     def disk_threshold_pct : Float64
       ENV["GRAFITO_ALERT_DISK_PCT"]?.try(&.to_f?) || 90.0
+    end
+
+    def swap_threshold_pct : Float64
+      ENV["GRAFITO_ALERT_SWAP_PCT"]?.try(&.to_f?) || 90.0
     end
 
     def errors_per_min_threshold : Float64
