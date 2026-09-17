@@ -370,6 +370,71 @@ If you don't need actions remotely, bind to `127.0.0.1` and skip
 `--enable-actions` entirely — everything else (logs, dashboard,
 compose, processes) works read-only.
 
+### App Access: names, certificates and domains
+
+Installed apps are **always** reachable at `http://<host>:<port>` —
+grafito links them from the compose view, the app store and the
+homepage's "Installed apps" group. Nothing below is required; it adds
+the option to route apps by domain with automatic HTTPS.
+
+The **Access** panel (the key button in the compose toolbar) covers
+the whole setup:
+
+1. **A domain you own.** The one hard prerequisite for HTTPS. Any
+   registrar works; you need DNS hosted somewhere with an API
+   (Cloudflare, DigitalOcean, DuckDNS, Route53, Gandi).
+2. **One wildcard record.** `*.home.example.com → your server's IP`
+   (or, for LAN-only setups, `→ 192.168.x.x`). One record covers
+   every app forever — new apps become `app.home.example.com`
+   automatically.
+3. **One wildcard certificate.** Grafito obtains and renews it with
+   the [lego](https://go-acme.github.io/lego/) binary using the
+   **DNS-01 challenge** — ownership is proven through your DNS
+   provider's API, so **no ports need to face the internet** and
+   names that only resolve on your LAN still get valid certificates.
+   Install lego (e.g. `pacman -S lego`, `apt install lego` or
+   [download a release](https://github.com/go-acme/lego/releases))
+   and set its path in the panel. Renewal is checked daily and runs
+   automatically when the certificate has less than 30 days left.
+4. **The managed proxy.** Grafito runs a small managed
+   [caddy](https://caddy.dev) container (host network, ports 80/443)
+   that terminates TLS with the wildcard certificate and routes each
+   domain to the app's local port. Start and stop it from the Access
+   panel; the route table shows which domain goes to which app.
+
+To route an app, give it a domain in the install form
+(`atuin.home.example.com`). Routed apps show `https://` links
+everywhere; everyone else stays on host:port.
+
+#### Resolving the names on your LAN
+
+With public DNS only, the names resolve everywhere but traffic
+crosses the internet (port-forward 80/443 if you want that). For a
+**LAN-only** setup, point the wildcard at the server's LAN IP and add
+a local rewrite in whichever resolver your devices use:
+
+* **AdGuard Home / Pi-hole**: DNS rewrite `*.home.example.com` →
+  `192.168.x.x`.
+* **Most routers**: a local DNS / hosts entry (some support
+  wildcards, some need one entry per app).
+* **Single machine**: `/etc/hosts` entries.
+
+Certificates keep renewing through DNS-01 regardless — the challenge
+never needs the names to resolve publicly.
+
+#### Safe remote access without opening ports
+
+Install [Tailscale](https://tailscale.com) (it is in the app store)
+on the server and your devices: every app is reachable on its
+`host:port` or domain over your tailnet, with no port forwarding at
+all.
+
+#### Degrading
+
+Everything here is additive. Stop the proxy, disable it in settings,
+let a certificate lapse, or never configure it at all — apps remain
+reachable at `http://<host>:<port>`.
+
 ### Timezone Configuration
 
 Grafito displays timestamps in your local timezone by default, but you can configure it to use any timezone you prefer. This solves the issue of having to mentally convert UTC timestamps to your local time.
