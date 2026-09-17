@@ -5,6 +5,7 @@ LABEL org.opencontainers.image.source="https://github.com/ralsina/grafito"
 LABEL org.opencontainers.image.version="${VERSION}"
 
 RUN apt update && apt -y upgrade && apt install -y --no-install-recommends \
+    ca-certificates \
     systemd \
     docker.io \
     docker-compose-v2 \
