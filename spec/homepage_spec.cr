@@ -1,9 +1,17 @@
 require "./spec_helper"
 
 # A minimal valid config object; specs tweak it via YAML below.
-def render_config(yaml : String, weather : Weather::Snapshot? = nil, statuses = {} of String => HomepageDashboard::ReachResult, metrics : Grafito::MetricsStore::MetricPoint? = nil) : String
+def render_config(yaml : String, weather : Weather::Snapshot? = nil, statuses = {} of String => HomepageDashboard::ReachResult, metrics : Grafito::MetricsStore::MetricPoint? = nil, installed_apps : Array(AppStore::InstalledApp) = [] of AppStore::InstalledApp, hostname : String? = nil) : String
   config = HomepageConfig::Config.from_yaml(yaml)
-  HomepageDashboard.render_html(config, weather, statuses, metrics: metrics)
+  HomepageDashboard.render_html(config, weather, statuses, metrics: metrics, installed_apps: installed_apps, hostname: hostname)
+end
+
+def installed_app_fixture(port : Int32 = 8082, domain : String = "") : AppStore::InstalledApp
+  AppStore::InstalledApp.new(
+    store: "official", id: "whoami", name: "Whoami", version: "1.12.0",
+    tipi_version: 3, port: port, project_name: "whoami",
+    installed_at: Time.utc.to_rfc3339, auto_update: false, domain: domain,
+  )
 end
 
 SAMPLE_YAML = <<-YAML
@@ -73,6 +81,26 @@ describe HomepageDashboard do
 
     it "omits the machine stats strip without sampler data" do
       render_config(SAMPLE_YAML).should_not contain("homepage-stats")
+    end
+
+    it "lists installed store apps for discovery" do
+      statuses = {"http://localhost:8082" => HomepageDashboard::ReachResult.new(up: true, latency_ms: 3)}
+      html = render_config(SAMPLE_YAML, statuses: statuses, installed_apps: [installed_app_fixture(port: 8082)])
+
+      html.should contain("Installed apps")
+      html.should contain(">Whoami</")
+      html.should contain("http://localhost:8082")
+      html.should contain("homepage-dot-up")
+    end
+
+    it "prefers the routed domain over host:port for installed apps" do
+      html = render_config(SAMPLE_YAML, installed_apps: [installed_app_fixture(domain: "whoami.home.example.com")])
+      html.should contain("https://whoami.home.example.com")
+      html.should_not contain("http://127.0.0.1:8082")
+    end
+
+    it "omits the installed apps group when nothing is installed" do
+      render_config(SAMPLE_YAML).should_not contain("Installed apps")
     end
 
     it "renders material, emoji and image icons" do

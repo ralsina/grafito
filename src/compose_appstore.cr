@@ -33,6 +33,7 @@ require "json"
 require "log"
 
 require "./app_store"
+require "./access"
 require "./compose_dashboard"
 require "./compose_jobs"
 
@@ -92,7 +93,7 @@ module ComposeAppStore
       end
       env.response.content_type = "text/html"
       app_form_html(store, app, description: app_description_markdown(store, app),
-        installed: AppStore.find_installed(Grafito.data_dir, app.id))
+        installed: AppStore.find_installed(Grafito.data_dir, app.id), hostname: Access.hostname_from(env.request.headers["Host"]?))
     end
 
     # One app's logo straight from the store cache.
@@ -822,12 +823,20 @@ module ComposeAppStore
   private def self.installed_app_section(
     store : AppStore::Store,
     installed : AppStore::InstalledApp,
+    hostname : String? = nil,
   ) : String
     backups = AppStore.app_data_backups(Grafito.data_dir, installed)
+    urls = Access.urls(installed, hostname)
     HTML.build do
       div(class: "appstore-installed") do
         span(class: "stat-label") { text "Installed" }
         span(class: "tag tag-ok") { text "v#{installed.version}" }
+        a(href: urls.preferred, target: "_blank", rel: "noopener", class: "round-button",
+          title: "Open #{installed.name} (#{urls.preferred})") do
+          span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+            text "open_in_new"
+          end
+        end
 
         form(class: "appstore-auto-update", style: "display: inline") do
           input(type: "hidden", name: "stack", value: installed.project_name)
@@ -891,6 +900,7 @@ module ComposeAppStore
     input : AppStore::InputResult? = nil,
     installed : AppStore::InstalledApp? = nil,
     description : String? = nil,
+    hostname : String? = nil,
   ) : String
     port_value = input ? (input.port > 0 ? input.port.to_s : "") : app.port.try(&.to_s) || ""
     domain_value = input ? input.env["APP_DOMAIN"]? || "" : ""
@@ -951,7 +961,7 @@ module ComposeAppStore
         end
 
         if installed
-          html installed_app_section(store, installed)
+          html installed_app_section(store, installed, hostname)
         end
 
         form(class: "appstore-install-form", id: "appstore-install-form") do

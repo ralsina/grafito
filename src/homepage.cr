@@ -24,6 +24,7 @@ require "mutex"
 require "./homepage_config"
 require "./weather"
 require "./timeline"
+require "./access"
 
 module HomepageDashboard
   extend self
@@ -60,6 +61,8 @@ module HomepageDashboard
     failed_units : Array(String) = [] of String,
     errors_last_hour : Int32 = 0,
     metrics : Grafito::MetricsStore::MetricPoint? = nil,
+    installed_apps : Array(AppStore::InstalledApp) = [] of AppStore::InstalledApp,
+    hostname : String? = nil,
   ) : String
     HTML.build do
       div(class: "homepage-top") do
@@ -83,7 +86,37 @@ module HomepageDashboard
           end
         end
       end
+
+      # Discovery: installed store apps show up automatically, each
+      # linking to its access URL (https://domain when routed,
+      # http://host:port as the baseline), with live reachability dots.
+      unless installed_apps.empty?
+        div(class: "homepage-grid") do
+          html group_fragment(installed_apps_group(installed_apps, hostname), statuses)
+        end
+      end
     end
+  end
+
+  # Builds the "Installed apps" group from the app store's installed
+  # records: one card per app, linking to its access URL (the routed
+  # domain when set, host:port as the baseline) and probed like any
+  # config-driven service.
+  private def self.installed_apps_group(
+    installed_apps : Array(AppStore::InstalledApp),
+    hostname : String?,
+  ) : HomepageConfig::Group
+    services = installed_apps.map do |installed|
+      urls = Access.urls(installed, hostname)
+      HomepageConfig::Service.new(
+        name: installed.name,
+        url: urls.preferred,
+        description: "v#{installed.version} · store app",
+        icon: "/compose-appstore-logo?store=#{URI.encode_path(installed.store)}&app=#{URI.encode_path(installed.id)}",
+        check: true,
+      )
+    end
+    HomepageConfig::Group.new(name: "Installed apps", services: services)
   end
 
   # The machine's own health card: failed systemd units and the last
@@ -313,6 +346,8 @@ module HomepageDashboard
 
   # True for absolute http(s) URLs, the only image sources accepted.
   private def image_url?(icon : String) : Bool
+    # Site-relative paths (e.g. the store logo endpoint) are images.
+    return true if icon.starts_with?("/")
     uri = URI.parse(icon)
     uri.host ? {"http", "https"}.includes?(uri.scheme) : false
   rescue URI::Error
@@ -492,8 +527,19 @@ module HomepageDashboard
         next "Homepage view is disabled."
       end
       env.response.content_type = "text/html"
-      render_config_fragment
+      render_config_fragment(Access.hostname_from(env.request.headers["Host"]?))
     end
+  end
+
+  # The installed store apps for the homepage's discovery group.
+  # Empty when the app store is disabled.
+  private def self.installed_apps_for_homepage : Array(AppStore::InstalledApp)
+    return [] of AppStore::InstalledApp unless Grafito.apps_enabled?
+    {% if flag?(:demo_mode) %}
+      FakeAppStore.installed
+    {% else %}
+      AppStore.installed(Grafito.data_dir)
+    {% end %}
   end
 
   # The system health data for the homepage card: failed systemd
@@ -507,7 +553,7 @@ module HomepageDashboard
 
   # Loads, renders, and degrades: a missing or empty config renders
   # setup instructions, a broken one renders the parser's complaint.
-  private def self.render_config_fragment : String
+  private def self.render_config_fragment(hostname : String? = nil) : String
     path = Grafito.homepage_config_path
 
     {% if flag?(:demo_mode) %}
@@ -521,7 +567,9 @@ module HomepageDashboard
         Weather.snapshot(weather_config.latitude, weather_config.longitude)
       end
       failed_units, errors_last_hour = system_health_data
-      return render_html(config, weather_snapshot, statuses, failed_units, errors_last_hour, metrics: Grafito.metrics_store.try(&.latest))
+      installed_apps = installed_apps_for_homepage
+      return render_html(config, weather_snapshot, statuses, failed_units, errors_last_hour,
+        metrics: Grafito.metrics_store.try(&.latest), installed_apps: installed_apps, hostname: hostname)
     {% end %}
 
     unless File.exists?(path)
@@ -536,7 +584,9 @@ module HomepageDashboard
     end
     statuses = service_statuses(config.groups.flat_map(&.services))
     failed_units, errors_last_hour = system_health_data
-    render_html(config, weather_snapshot, statuses, failed_units, errors_last_hour, metrics: Grafito.metrics_store.try(&.latest))
+    installed_apps = installed_apps_for_homepage
+    render_html(config, weather_snapshot, statuses, failed_units, errors_last_hour,
+      metrics: Grafito.metrics_store.try(&.latest), installed_apps: installed_apps, hostname: hostname)
   rescue ex
     # Body locals are nilable in rescue, so the path is read again.
     message = ex.message || ex.class.name
