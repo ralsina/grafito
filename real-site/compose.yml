@@ -12,10 +12,12 @@
 #   container's PID namespace. Note: with --enable-actions this also
 #   means signal buttons act on real host processes. That is the point,
 #   and it is why authentication is not optional here.
-# - /run/dbus — lets systemctl inside the container talk to the host
-#   systemd (unit states, resource usage); the directory is mounted
-#   because dbus may recreate its socket file, which would break a
-#   bind-mounted socket file.
+# - /run/dbus + /run/systemd/private — let systemctl inside the
+#   container talk to the host systemd (unit states, resource usage);
+#   the directory is mounted because dbus may recreate its socket
+#   file, which would break a bind-mounted socket file. Caveat: the
+#   private socket means the container talks to systemd as host root,
+#   so unit actions from grafito run with full authority.
 # - /var/run/docker.sock — lets the Compose view and app store talk to
 #   the host docker daemon.
 # - ./data — persistent state: metrics history, app store caches and
@@ -39,6 +41,7 @@ services:
       - /etc/machine-id:/etc/machine-id:ro
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus
+      - /run/systemd/private:/run/systemd/private
       - /var/run/docker.sock:/var/run/docker.sock
       - ./:/var/lib/grafito
     env_file:
