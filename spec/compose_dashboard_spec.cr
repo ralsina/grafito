@@ -1,4 +1,5 @@
 require "./spec_helper"
+require "file_utils"
 
 # ComposeDashboard fragment specs, using fixture data shaped like the
 # ComposeStatus output.
@@ -85,6 +86,106 @@ describe ComposeDashboard do
     fragment.should contain("port-arrow")
     fragment.should contain("port-container")
     fragment.should contain("port-proto")
+  end
+
+  describe "unified_diff" do
+    it "returns nothing for identical content" do
+      ComposeDashboard.unified_diff("a\nb\n", "a\nb\n").should be_empty
+    end
+
+    it "produces a unified hunk with context for a small change" do
+      diff = ComposeDashboard.unified_diff("a\nb\nc\nd\ne\n", "a\nb\nC\nd\ne\n")
+      # Context 3 over a 5-line file: one hunk covering everything.
+      diff.should contain("@@ -1,5 +1,5 @@")
+      diff.should_not contain("\n-b\n")
+      diff.should contain("-c")
+      diff.should contain("+C")
+      diff.should contain(" d")
+    end
+
+    it "emits separate hunks for distant changes" do
+      lines_old = (1..20).map(&.to_s)
+      content_old = lines_old.join("\n") + "\n"
+      content_new = lines_old.map { |l| l == "2" ? "TWO" : (l == "17" ? "SEVENTEEN" : l) }.join("\n") + "\n"
+      diff = ComposeDashboard.unified_diff(content_old, content_new)
+      diff.scan(/^@@/m).size.should eq(2)
+      diff.should contain("-2")
+      diff.should contain("+TWO")
+      diff.should contain("-17")
+      diff.should contain("+SEVENTEEN")
+    end
+  end
+
+  describe "stack file editors" do
+    it "resolves the .env path from the compose file's directory and requires it to exist" do
+      dir = File.join(Dir.tempdir, "grafito-editor-spec-#{Random::Secure.hex(4)}")
+      Dir.mkdir_p(dir)
+      compose_path = File.join(dir, "docker-compose.yml")
+      File.write(compose_path, "services: {}\n")
+
+      stack = ComposeStatus::Stack.new(
+        name: "editor", status: "running(1)",
+        config_files: [compose_path],
+        services: [] of ComposeStatus::Service,
+      )
+      # No .env yet: nil.
+      ComposeDashboard.stack_file_path(stack, ComposeDashboard::StackFile::Env).should be_nil
+      # The compose file always resolves.
+      ComposeDashboard.stack_file_path(stack, ComposeDashboard::StackFile::ComposeYaml).should eq(compose_path)
+
+      File.write(File.join(dir, ".env"), "KEY=value\n")
+      ComposeDashboard.stack_file_path(stack, ComposeDashboard::StackFile::Env).should eq(File.join(dir, ".env"))
+      FileUtils.rm_rf(dir)
+    end
+
+    it "applies a draft atomically, keeping a rolling backup and returning the diff" do
+      dir = File.join(Dir.tempdir, "grafito-editor-spec-#{Random::Secure.hex(4)}")
+      Dir.mkdir_p(dir)
+      path = File.join(dir, ".env")
+      File.write(path, "KEY=old\n")
+
+      diff = ComposeDashboard.apply_stack_file(path, "KEY=new\nEXTRA=1\n")
+      diff.should contain("-KEY=old")
+      diff.should contain("+KEY=new")
+      diff.should contain("+EXTRA=1")
+      File.read(path).should eq("KEY=new\nEXTRA=1\n")
+      File.read(path + ".grafito-bak").should eq("KEY=old\n")
+      FileUtils.rm_rf(dir)
+    end
+  end
+
+  it "renders the editor fragment with escaped content and review controls" do
+    fragment = ComposeDashboard.file_editor_fragment(
+      "webapp", ComposeDashboard::StackFile::ComposeYaml, "/opt/stacks/webapp/compose.yaml",
+      "services:\n  web:\n    <image>: nginx\n",
+    )
+    fragment.should contain("compose-editor-textarea")
+    fragment.should contain("Review changes")
+    fragment.should contain("Cancel")
+    # text() escapes, so the raw <image> never reaches the HTML.
+    fragment.should contain("&lt;image&gt;")
+    fragment.should_not contain("<image>")
+  end
+
+  it "renders the review fragment with a colored diff and an apply button" do
+    fragment = ComposeDashboard.file_diff_fragment(
+      "webapp", ComposeDashboard::StackFile::Env, "/opt/stacks/webapp/.env",
+      "KEY=new\n", "@@ -1 +1 @@\n-KEY=old\n+KEY=new\n",
+    )
+    fragment.should contain("compose-file-diff")
+    fragment.should contain("diff-del")
+    fragment.should contain("diff-add")
+    fragment.should contain("Apply")
+    fragment.should contain("hx-confirm")
+  end
+
+  it "renders the applied fragment with an up -d shortcut when actions are on" do
+    fragment = ComposeDashboard.file_applied_fragment(
+      "webapp", ComposeDashboard::StackFile::ComposeYaml, "/opt/stacks/webapp/compose.yaml",
+      "@@ -1 +1 @@\n", true,
+    )
+    fragment.should contain("compose.yaml written")
+    fragment.should contain("compose-stack/webapp/up?from=panel")
   end
 
   it "renders a dash instead of chips when there are no ports" do

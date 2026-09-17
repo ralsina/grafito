@@ -265,6 +265,46 @@ body[data-view] #stats-strip {
 .service-panel-ai {
   margin: 0.8rem 0;
 }
+/* Stack file editor: full-width monospace textarea plus the review
+   diff. Diff colors mirror the classic +/- convention. */
+.compose-editor-textarea {
+  width: 100%;
+  min-height: 20rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  white-space: pre;
+  overflow: auto;
+  resize: vertical;
+}
+.compose-file-diff {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  white-space: pre;
+  overflow-x: auto;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 6px);
+  background: var(--panel-2);
+}
+.compose-file-diff .diff-add {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+  display: block;
+}
+.compose-file-diff .diff-del {
+  color: var(--err);
+  background: color-mix(in srgb, var(--err) 12%, transparent);
+  display: block;
+}
+.compose-file-diff .diff-ctx {
+  color: var(--muted);
+  display: block;
+}
+.hidden-input {
+  display: none;
+}
 .service-panel-explain {
   width: 100%;
   display: flex;
