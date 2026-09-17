@@ -254,6 +254,65 @@ module Timeline
     svg.to_s
   end
 
+  # Legend for the network chart: receive and transmit aggregate
+  # rates, colored exactly as they render in the SVG.
+  def network_legend : String
+    HTML.build do
+      div(class: "dashboard-legend") do
+        span(class: "legend-item") do
+          span(class: "legend-line", style: "border-color: var(--accent)") { }
+          text "rx"
+        end
+        span(class: "legend-item") do
+          span(class: "legend-line", style: "border-color: var(--warn)") { }
+          text "tx"
+        end
+      end
+    end
+  end
+
+  # Renders a byte count the way humans read it: 384 B, 1.2 MiB.
+  # Used for the network chart's scale label.
+  def self.humanize_bytes(bytes : Float64) : String
+    units = {"B", "KiB", "MiB", "GiB", "TiB"}
+    value = bytes
+    unit_index = 0
+    while value >= 1024.0 && unit_index < units.size - 1
+      value /= 1024.0
+      unit_index += 1
+    end
+    "#{value.round(1)} #{units[unit_index]}"
+  end
+
+  # The network chart: per-sample receive/transmit rates (bytes/s,
+  # summed across interfaces) on their own auto-scaled y-axis — rates
+  # don't fit the combined chart's fixed 0-100% scale. Renders empty
+  # when fewer than two points carry network data (older history
+  # files predate the field).
+  def self.generate_network_svg(points : Array(Grafito::MetricsStore::MetricPoint)) : String
+    samples = points.select { |point| point.net_rx_bps || point.net_tx_bps }
+    return "" if samples.size < 2
+
+    width = 800.0
+    height = 90.0
+    oldest = samples.first.ts
+    newest = samples.last.ts
+    span_sec = [(newest - oldest).total_seconds, 1.0].max
+    scale_max = samples.max_of { |point| {point.net_rx_bps || 0.0, point.net_tx_bps || 0.0}.max } * 1.1
+
+    svg = IO::Memory.new
+    svg << %(<svg width="100%" height="#{height.to_i}" viewBox="0 0 #{width.to_i} #{height.to_i}" )
+    svg << %(preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" role="img" class="dashboard-history-svg" )
+    svg << %(aria-label="Network receive and transmit rates over the selected time window">)
+    svg << %(  <polyline fill="none" stroke="var(--accent, teal)" stroke-width="2" points="#{polyline_points(samples, oldest, span_sec, width, height, scale_max, &.net_rx_bps)}" />)
+    svg << %(  <polyline fill="none" stroke="var(--warn, darkorange)" stroke-width="2" points="#{polyline_points(samples, oldest, span_sec, width, height, scale_max, &.net_tx_bps)}" />)
+    svg << %(  <text x="8" y="#{(height - 8).to_i}" class="tl-label">#{oldest.to_s("%m-%d %H:%M")}</text>)
+    svg << %(  <text x="#{(width - 8).to_i}" y="#{(height - 8).to_i}" text-anchor="end" class="tl-label">#{newest.to_s("%m-%d %H:%M")}</text>)
+    svg << %(  <text x="8" y="14" class="tl-label">max #{Timeline.humanize_bytes(scale_max)}/s</text>)
+    svg << %(</svg>)
+    svg.to_s
+  end
+
   # Legend for the combined chart: severity bars plus the two metric
   # lines, colored exactly as they render in the SVG.
   def combined_legend : String
@@ -370,20 +429,27 @@ module Timeline
   end
 
   # Builds the x/y point list for one series: x spans the time range,
-  # y is the percentage value mapped to the SVG height (inverted).
+  # y is the value mapped to the SVG height (inverted). scale_max is
+  # the value that maps to the top of the chart — 100 for the
+  # percentage series, the auto-scaled maximum for the network chart.
+  # Nil values (points from before a field existed) are skipped so a
+  # polyline only spans the samples that carry data.
   private def polyline_points(
     points : Array(Grafito::MetricsStore::MetricPoint),
     oldest : Time,
     span_sec : Float64,
     width : Float64,
     height : Float64,
-    &value : Grafito::MetricsStore::MetricPoint -> Float64
+    scale_max : Float64 = 100.0,
+    &value : Grafito::MetricsStore::MetricPoint -> Float64?
   ) : String
     padding = 8.0
     usable = height - 2 * padding
-    points.map do |point|
+    points.compact_map do |point|
+      raw = value.call(point)
+      next unless raw
       x = padding + ((point.ts - oldest).total_seconds / span_sec) * (width - 2 * padding)
-      y = padding + (1.0 - value.call(point).clamp(0.0, 100.0) / 100.0) * usable
+      y = padding + (1.0 - raw.clamp(0.0, scale_max) / scale_max) * usable
       "#{x.round(1)},#{y.round(1)}"
     end.join(" ")
   end

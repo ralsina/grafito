@@ -49,7 +49,16 @@ module SystemStatus
     uptime_sec : Int64,
     units_total : Int32,
     units_failed : Int32,
-    units : Array(UnitState) do
+    units : Array(UnitState),
+    # Per-interface receive/transmit rates in bytes/s, loopback
+    # excluded, zero-rate interfaces omitted. Nil on the first sample
+    # (rates need two readings) or when /proc/net/dev is unreadable.
+    net : Hash(String, NetRate)? = nil do
+    include JSON::Serializable
+  end
+
+  # One interface's network throughput in bytes per second.
+  record NetRate, rx_bps : Float64, tx_bps : Float64 do
     include JSON::Serializable
   end
 
@@ -82,6 +91,14 @@ module SystemStatus
   @@unit_cpu_prev = {} of String => Int64
   @@unit_cpu_prev_at : Time::Span? = nil
   @@unit_mutex = Mutex.new(protection: :checked)
+
+  # Previous /proc/net/dev byte counters and reading time, for the
+  # per-interface rates. Same singleton-state pattern as the unit CPU
+  # deltas: only the sampler fiber touches these in production.
+  @@net_prev_rx = {} of String => UInt64
+  @@net_prev_tx = {} of String => UInt64
+  @@net_prev_at : Time? = nil
+  @@net_mutex = Mutex.new(protection: :checked)
 
   # Parses `systemctl show <units...> -p Id -p CPUUsageNSec -p MemoryCurrent`
   # output: property blocks separated by blank lines, grouped by Id=.
@@ -172,6 +189,84 @@ module SystemStatus
   rescue ex
     Log.warn { "systemctl show failed: #{ex.message}" }
     ""
+  end
+
+  # Parses /proc/net/dev content into per-interface byte counters,
+  # loopback excluded. Receive bytes are field 1 and transmit bytes
+  # field 9 of each interface row.
+  def self.parse_net_dev(content : String) : Hash(String, {rx: UInt64, tx: UInt64})
+    counters = {} of String => {rx: UInt64, tx: UInt64}
+    content.each_line do |line|
+      name, sep, rest = line.partition(":")
+      next if sep.empty?
+      name = name.strip
+      next if name.empty? || name == "lo"
+      fields = rest.split
+      next unless fields.size >= 9
+      rx = fields[0].to_u64?
+      tx = fields[8].to_u64?
+      counters[name] = {rx: rx, tx: tx} if rx && tx
+    end
+    counters
+  end
+
+  # Per-interface throughput from two consecutive counter readings.
+  # Nil rates mean "no number for this sample": the interface is new
+  # (no previous reading) or its counter went backwards (reset), in
+  # which case the interface is simply left out of the hash rather
+  # than charted as a spike.
+  def self.net_rates_from(
+    current : Hash(String, {rx: UInt64, tx: UInt64}),
+    previous_rx : Hash(String, UInt64),
+    previous_tx : Hash(String, UInt64),
+    elapsed_sec : Float64,
+  ) : Hash(String, NetRate)
+    rates = {} of String => NetRate
+    return rates unless elapsed_sec > 0
+    current.each do |name, counters|
+      prev_rx = previous_rx[name]?
+      prev_tx = previous_tx[name]?
+      next unless prev_rx && prev_tx
+      rx_delta = counters[:rx].to_f - prev_rx
+      tx_delta = counters[:tx].to_f - prev_tx
+      next if rx_delta < 0 || tx_delta < 0
+      rx_bps = rx_delta / elapsed_sec
+      tx_bps = tx_delta / elapsed_sec
+      # Zero-rate interfaces stay out of the stored hash: a quiescent
+      # box would otherwise persist the same idle interfaces 2880
+      # times a day for no chart value.
+      next if rx_bps.zero? && tx_bps.zero?
+      rates[name] = NetRate.new(rx_bps: rx_bps, tx_bps: tx_bps)
+    end
+    rates
+  end
+
+  # Reads /proc/net/dev and returns per-interface rates relative to
+  # the previous call, or nil on the first call (no previous reading)
+  # and when the file cannot be read. Also forgets counters of
+  # interfaces that disappeared.
+  def self.read_net_rates : Hash(String, NetRate)?
+    @@net_mutex.synchronize do
+      now = Time.local
+      counters = begin
+        parse_net_dev(File.read("/proc/net/dev"))
+      rescue ex
+        Log.warn(exception: ex) { "Failed to read /proc/net/dev" }
+        nil
+      end
+      return unless counters
+
+      elapsed = @@net_prev_at.try { |at| (now - at).total_seconds }
+      rates = elapsed ? net_rates_from(counters, @@net_prev_rx, @@net_prev_tx, elapsed) : nil
+      @@net_prev_rx.clear
+      @@net_prev_tx.clear
+      counters.each do |name, counter|
+        @@net_prev_rx[name] = counter[:rx]
+        @@net_prev_tx[name] = counter[:tx]
+      end
+      @@net_prev_at = now
+      rates
+    end
   end
 
   # Raw `systemctl status` output for one unit, for the AI explanation
@@ -376,12 +471,21 @@ module SystemStatus
   # average that bounces around, and a nearly-stable disk. Used by both
   # the live fake snapshot and the demo history pre-seeding, so the
   # chart has no visible seam between seeded and live samples.
-  def self.fake_metrics_at(ts : Time) : NamedTuple(load1: Float64, mem_used_pct: Float64, disk_used_pct: Float64)
+  def self.fake_metrics_at(ts : Time) : NamedTuple(load1: Float64, mem_used_pct: Float64, disk_used_pct: Float64, net: Hash(String, NetRate))
     angle = (ts - Time.local.at_beginning_of_day).total_minutes / 45.0
+    # Two fake interfaces with wave-shaped traffic so the network
+    # chart has something to show and the seeded history matches the
+    # live fake snapshot.
+    rx = 1.5e6 * (1.0 + Math.sin(angle / 3.0)) + rand(0.0..2e5)
+    tx = 4.0e5 * (1.0 + Math.cos(angle / 4.0)) + rand(0.0..5e4)
     {
       load1:         (1.1 + 0.6 * Math.sin(angle / 2.5 + 1.0) + rand(-0.3..0.6)).clamp(0.05, 9.0),
       mem_used_pct:  (55.0 + 9.0 * Math.sin(angle) + rand(-1.5..1.5)).clamp(5.0, 95.0),
       disk_used_pct: (47.5 + 0.4 * Math.sin(angle / 8.0) + rand(0.0..0.15)).clamp(0.0, 100.0),
+      net:           {
+        "eth0"  => NetRate.new(rx_bps: rx * 0.8, tx_bps: tx),
+        "wlan0" => NetRate.new(rx_bps: rx * 0.2, tx_bps: rx * 0.05),
+      },
     }
   end
 
@@ -400,6 +504,7 @@ module SystemStatus
       units_total: units.size,
       units_failed: units.count(&.failed?),
       units: units,
+      net: metrics[:net],
     )
   end
 
@@ -414,6 +519,7 @@ module SystemStatus
       units_total: units.size,
       units_failed: units.count(&.failed?),
       units: units,
+      net: read_net_rates,
     )
   end
 

@@ -39,6 +39,48 @@ describe SystemStatus do
       output.should be_nil
     end
   end
+
+  it "parses /proc/net/dev rows, dropping loopback" do
+    content = <<-TEXT
+      Inter-|   Receive                                                |  Transmit
+       face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+          lo: 1234567    9876    0    0    0     0          0         0  1234567    9876    0    0    0     0       0          0
+        eth0: 51516553  418133    0    0    0     0          0         0 77118062  512104    0    0    0     0       0          0
+         wg0: 4096      64    0    0    0     0          0         0     8192     128    0    0    0     0       0          0
+      TEXT
+    counters = SystemStatus.parse_net_dev(content)
+    counters.size.should eq(2)
+    counters["eth0"]?.should eq({rx: 51516553u64, tx: 77118062u64})
+    counters["wg0"]?.should eq({rx: 4096u64, tx: 8192u64})
+    counters["lo"]?.should be_nil
+  end
+
+  it "computes per-interface rates from consecutive readings" do
+    current = {
+      "eth0" => {rx: 115_000u64, tx: 21_000u64},
+      "wg0"  => {rx: 5_000u64, tx: 5_000u64},
+    }
+    previous_rx = {"eth0" => 85_000u64, "wg0" => 5_000u64}
+    previous_tx = {"eth0" => 20_000u64, "wg0" => 5_000u64}
+
+    rates = SystemStatus.net_rates_from(current, previous_rx, previous_tx, 30.0)
+    rates["eth0"].rx_bps.should eq(1000.0)
+    rates["eth0"].tx_bps.should eq(1000.0 / 30.0)
+    # wg0 moved zero bytes: omitted instead of stored as a zero rate.
+    rates["wg0"]?.should be_nil
+  end
+
+  it "drops interfaces whose counters went backwards" do
+    current = {"eth0" => {rx: 100u64, tx: 100u64}}
+    rates = SystemStatus.net_rates_from(current, {"eth0" => 200u64}, {"eth0" => 200u64}, 30.0)
+    rates.should be_empty
+  end
+
+  it "skips the rate hash entirely on the first reading" do
+    current = {"eth0" => {rx: 100u64, tx: 100u64}}
+    rates = SystemStatus.net_rates_from(current, {} of String => UInt64, {} of String => UInt64, 30.0)
+    rates.should be_empty
+  end
 end
 
 describe Dashboard do
@@ -79,6 +121,28 @@ describe Dashboard do
     legend.should contain("errors")
     legend.should contain("memory")
     legend.should contain("disk")
+  end
+
+  it "renders a network chart when history carries network samples" do
+    points = [
+      point_at(60, mem: 10.0, disk: 20.0, rx: 1000.0, tx: 100.0),
+      point_at(30, mem: 50.0, disk: 20.0, rx: 2000.0, tx: 200.0),
+      point_at(0, mem: 90.0, disk: 20.0, rx: 3000.0, tx: 300.0),
+    ]
+    svg = Timeline.generate_network_svg(points)
+    svg.should contain("<svg")
+    svg.scan(/<polyline/).size.should eq(2)
+    # Auto-scaled: the scale label reflects the busiest sample (3300 * 1.1).
+    svg.should contain("max 3.2 KiB/s")
+
+    legend = Timeline.network_legend
+    legend.should contain("rx")
+    legend.should contain("tx")
+  end
+
+  it "renders no network chart when history predates network data" do
+    points = [point_at(30, mem: 10.0, disk: 20.0), point_at(0, mem: 50.0, disk: 20.0)]
+    Timeline.generate_network_svg(points).should be_empty
   end
 
   it "renders the dashboard fragment with cards and services" do
@@ -197,6 +261,21 @@ describe Dashboard do
     # Compact labels for the overlay selector; 6h is the default.
     html.should contain(">6h</option>")
     html.should contain(">15m</option>")
+  end
+
+  it "shows the network chart only when history carries network data" do
+    snapshot = SystemStatus.snapshot
+    with_net = [
+      point_at(60, mem: 10.0, disk: 20.0, rx: 1000.0, tx: 100.0),
+      point_at(0, mem: 50.0, disk: 20.0, rx: 1500.0, tx: 150.0),
+    ]
+    html = Dashboard.render_html(snapshot, with_net, 0)
+    html.should contain("Network receive and transmit rates")
+    html.scan(/dashboard-legend/).size.should eq(2)
+
+    without_net = [point_at(60, mem: 10.0, disk: 20.0), point_at(0, mem: 50.0, disk: 20.0)]
+    html = Dashboard.render_html(snapshot, without_net, 0)
+    html.should_not contain("Network receive and transmit rates")
   end
 
   it "marks the selected time window and labels the errors card" do
@@ -417,8 +496,10 @@ private def dashboard_unit_names(html : String) : Array(String)
   html.scan(/setUnitFilterAndTrigger\(&quot;([^&]+)&quot;\)/).map(&.[1])
 end
 
-# Helper to build metric points relative to now.
-private def point_at(seconds_ago : Int32, mem : Float64, disk : Float64) : Grafito::MetricsStore::MetricPoint
+# Helper to build metric points relative to now. Optional network
+# rates, so specs can exercise both pre-network and post-network
+# history shapes.
+private def point_at(seconds_ago : Int32, mem : Float64, disk : Float64, rx : Float64? = nil, tx : Float64? = nil) : Grafito::MetricsStore::MetricPoint
   Grafito::MetricsStore::MetricPoint.new(
     ts: Time.utc - seconds_ago.seconds,
     load1: 1.0,
@@ -426,6 +507,8 @@ private def point_at(seconds_ago : Int32, mem : Float64, disk : Float64) : Grafi
     disk_used_pct: disk,
     units_total: 5,
     units_failed: 0,
+    net_rx_bps: rx,
+    net_tx_bps: tx,
   )
 end
 

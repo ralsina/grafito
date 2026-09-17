@@ -71,6 +71,13 @@ module Dashboard
             html Timeline.combined_legend
             html Timeline.generate_combined_svg(history, severity_buckets)
           end
+          # Points from before the network field existed parse as nil,
+          # so only draw the chart when the window actually carries
+          # network samples.
+          if history.count { |point| point.net_rx_bps || point.net_tx_bps } >= 2
+            html Timeline.network_legend
+            html Timeline.generate_network_svg(history)
+          end
           html window_select(since_text)
         end
 
