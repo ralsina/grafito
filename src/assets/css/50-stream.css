@@ -200,7 +200,8 @@ tr.priority-7 {
   opacity: 0;
   transition: opacity 0.15s ease-in-out;
 }
-.log-row-hover-actions:hover .hover-action-cell {
+.log-row-hover-actions:hover .hover-action-cell,
+.log-row-hover-actions:focus-within .hover-action-cell {
   opacity: 1;
 }
 .hover-action-cell .round-button,

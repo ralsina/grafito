@@ -11,9 +11,17 @@ let currentPanelCursor = null;
 let loadedContextCursor = null;
 let loadedAICursor = null;
 
+let lastPanelOpener = null;
+
 window.showLogPanel = function (tab) {
   const panel = document.getElementById("side-panel");
   if (!panel) return;
+  // Remember what had focus, so closing the panel returns the user
+  // to the row/button they came from.
+  const justOpened = !panel.classList.contains("open");
+  if (justOpened) {
+    lastPanelOpener = document.activeElement;
+  }
   // The service panel (dashboard) only has a Detail view — hide
   // the log-entry tabs while it is showing.
   const serviceMode = !!document.querySelector(
@@ -32,6 +40,15 @@ window.showLogPanel = function (tab) {
   document.querySelectorAll("#side-panel .insp-pane").forEach(function (pane) {
     pane.classList.toggle("active", pane.dataset.pane === tab);
   });
+  if (justOpened) {
+    // Move focus into the panel for keyboard users; the close button
+    // is the panel's first interactive element. Pointer users keep
+    // their focus untouched.
+    if (document.body.dataset.focusViaKeyboard === "true") {
+      const close = document.getElementById("side-panel-close");
+      if (close) close.focus();
+    }
+  }
   if (tab === "context" && currentPanelCursor) {
     loadPanelContext(currentPanelCursor);
   }
@@ -196,14 +213,45 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
-      closeLogPanel();
+      const panel = document.getElementById("side-panel");
+      if (panel && panel.classList.contains("open")) {
+        closeLogPanel();
+        // Return focus to the element that opened the panel.
+        if (lastPanelOpener && document.contains(lastPanelOpener)) {
+          lastPanelOpener.focus();
+        }
+      }
+    }
+    // Track input modality: focus is only moved programmatically for
+    // keyboard users, never for pointer clicks.
+    if (event.key === "Tab" || event.key === "Enter") {
+      document.body.dataset.focusViaKeyboard = "true";
     }
   });
-  document
-    .querySelectorAll("#side-panel-tabs .insp-tab")
-    .forEach(function (tabButton) {
-      tabButton.addEventListener("click", function () {
-        showLogPanel(tabButton.dataset.tab);
-      });
+  document.addEventListener(
+    "mousedown",
+    function () {
+      document.body.dataset.focusViaKeyboard = "false";
+    },
+    true,
+  );
+  const tabButtons = document.querySelectorAll("#side-panel-tabs .insp-tab");
+  tabButtons.forEach(function (tabButton) {
+    tabButton.addEventListener("click", function () {
+      showLogPanel(tabButton.dataset.tab);
     });
+    // Roving focus + arrow keys on the tablist, per the ARIA tabs
+    // pattern.
+    tabButton.addEventListener("keydown", function (event) {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      const tabs = Array.from(tabButtons);
+      const index = tabs.indexOf(tabButton);
+      const nextTab =
+        tabs[(index + (event.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+      if (nextTab) {
+        nextTab.focus();
+        nextTab.click();
+      }
+    });
+  });
 });
