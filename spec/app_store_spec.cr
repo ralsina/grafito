@@ -312,6 +312,54 @@ describe AppStore do
       updated.tipi_version.should eq(4)
     end
 
+    it "persists the per-app auto-update toggle" do
+      installed = AppStore.find_installed(root, "whoami")
+      fail "install record missing" if installed.nil?
+
+      AppStore.set_auto_update(root, "whoami", true)
+      AppStore.find_installed(root, "whoami").try(&.auto_update?).should be_true
+
+      AppStore.set_auto_update(root, "whoami", false)
+      AppStore.find_installed(root, "whoami").try(&.auto_update?).should be_false
+    end
+
+    it "backs up, prunes and restores app data" do
+      installed = AppStore.find_installed(root, "whoami")
+      fail "install record missing" if installed.nil?
+      backups_dir = AppStore.app_data_backups_dir(root, "test-store", "whoami")
+
+      # No data yet: nothing to back up.
+      AppStore.backup_app_data(root, installed).should be_nil
+
+      # Seed older backups with distinct, aging mtimes so the prune
+      # order is deterministic.
+      Dir.mkdir_p(backups_dir)
+      4.times do |seed|
+        path = File.join(backups_dir, "app-data-2020010#{seed + 1}T000000.tar.gz")
+        File.write(path, "fake #{seed}")
+        File.touch(path, Time.utc(2020, 1, seed + 1, 12, 0, 0))
+      end
+
+      # Real data now: the next backup prunes the seeds down to the
+      # newest APP_DATA_BACKUPS_TO_KEEP.
+      Dir.mkdir_p(installed.data_dir(root))
+      File.write(File.join(installed.data_dir(root), "db.txt"), "precious")
+      backup = AppStore.backup_app_data(root, installed)
+      fail "backup missing" if backup.nil?
+
+      backups = AppStore.app_data_backups(root, installed)
+      backups.size.should eq(3)
+      backups.first[:name].should eq(File.basename(backup))
+
+      # Restore the fresh backup: the deleted file comes back.
+      File.delete(File.join(installed.data_dir(root), "db.txt"))
+      AppStore.restore_app_data_backup(root, installed, backups.first[:name]).should be_true
+      File.read(File.join(installed.data_dir(root), "db.txt")).should eq("precious")
+
+      # Traversal-style names are rejected outright.
+      AppStore.restore_app_data_backup(root, installed, "../evil.tar.gz").should be_false
+    end
+
     it "removes installs (keeping data unless asked)" do
       installed = AppStore.find_installed(root, "whoami")
       fail "install record missing" if installed.nil?

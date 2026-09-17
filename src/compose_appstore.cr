@@ -91,7 +91,7 @@ module ComposeAppStore
         next "App '#{HTML.escape(app_id)}' not found in store."
       end
       env.response.content_type = "text/html"
-      app_form_html(store, app)
+      app_form_html(store, app, installed: AppStore.find_installed(Grafito.data_dir, app.id))
     end
 
     # One app's logo straight from the store cache.
@@ -152,6 +152,26 @@ module ComposeAppStore
         job.append("Downloading #{store.url} …")
         count = AppStore.sync(store, Grafito.data_dir, force: true)
         job.append("Store synced: #{count} apps available.")
+        # #98: apps with the auto-update toggle get their update job
+        # run right here, when the sync ships a newer package.
+        {% unless flag?(:demo_mode) %}
+          AppStore.installed(Grafito.data_dir).each do |installed|
+            next unless installed.store == store.slug && installed.auto_update?
+            store_app = AppStore.store_app_for(Grafito.data_dir, installed)
+            next unless store_app && store_app.tipi_version > installed.tipi_version
+
+            job.append("Auto-updating #{installed.project_name} (#{installed.version} → #{store_app.version}) …")
+            if backup = AppStore.backup_app_data(Grafito.data_dir, installed)
+              job.append("Backed up app data to #{backup}")
+            end
+            AppStore.prepare_update(Grafito.data_dir, installed).each do |message|
+              job.append(message)
+            end
+            code = ComposeJobs.run_command(job, AppStore.compose_command(Grafito.data_dir, installed, "pull"))
+            code = ComposeJobs.run_command(job, AppStore.compose_command(Grafito.data_dir, installed, "up", "-d")) if code == 0
+            job.append(code == 0 ? "Auto-update of #{installed.project_name} finished." : "Auto-update of #{installed.project_name} failed (exit #{code}).")
+          end
+        {% end %}
       end
       env.response.content_type = "text/html"
       job_fragment(job_id, "appstore-sync")
@@ -272,6 +292,11 @@ module ComposeAppStore
           job.append("Refreshing the app store cache …")
           count = AppStore.sync(update_store(installed), Grafito.data_dir)
           job.append("Store cache holds #{count} apps.")
+          # #97: snapshot the app's data before anything is re-rendered
+          # or pulled, so an update can always be rolled back.
+          if backup = AppStore.backup_app_data(Grafito.data_dir, installed)
+            job.append("Backed up app data to #{backup}")
+          end
           AppStore.prepare_update(Grafito.data_dir, installed).each do |message|
             job.append(message)
           end
@@ -326,6 +351,93 @@ module ComposeAppStore
       {% end %}
       env.response.content_type = "text/html"
       job_fragment(job_id, "appstore-uninstall-#{installed.project_name}")
+    end
+
+    # #97: restores a named app-data backup (the current data
+    # directory is replaced by the tarball's contents).
+    post route_path("compose-appstore-restore-backup") do |env|
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
+      unless actions_allowed?
+        env.response.status_code = 403
+        next actions_rejected_message
+      end
+      installed = installed_app(body_param(env, "stack"))
+      if installed.nil?
+        env.response.status_code = 404
+        next "This stack is not an installed app."
+      end
+      backup = body_param(env, "backup") || ""
+
+      restored = {% if flag?(:demo_mode) %}
+                   # Demo: nothing on disk to restore; report success for the flow.
+                   backup.matches?(/^app-data-\d{8}T\d{6}\.tar\.gz$/)
+                 {% else %}
+                   AppStore.restore_app_data_backup(Grafito.data_dir, installed, backup)
+                 {% end %}
+
+      env.response.content_type = "text/html"
+      HTML.build do
+        div(class: "service-panel") do
+          tag("h4") { text restored ? "Backup restored: #{installed.name}" : "Restore failed: #{installed.name}" }
+          tag("p") do
+            if restored
+              text "The app data directory was replaced with #{backup}. Restart the app (stop + up) so it picks the data up."
+            else
+              text "The backup could not be restored (missing or failed)."
+            end
+          end
+        end
+      end
+    end
+
+    # #98: flips the per-app auto-update toggle (persisted in the
+    # app's app.json). Enabled apps update themselves during store
+    # syncs when a newer package ships.
+    post route_path("compose-appstore-auto-update") do |env|
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
+      unless actions_allowed?
+        env.response.status_code = 403
+        next actions_rejected_message
+      end
+      project_name = body_param(env, "stack")
+      if project_name.nil? || !project_name.matches?(AppStore::VALID_ID)
+        env.response.status_code = 400
+        next "Missing or invalid app id."
+      end
+      enabled = body_param(env, "enabled") == "true"
+
+      {% if flag?(:demo_mode) %}
+        env.response.content_type = "text/html"
+        next HTML.build do
+          div(class: "service-panel") do
+            tag("h4") { text "Auto-update #{enabled ? "enabled" : "disabled"}: #{project_name}" }
+            tag("p") { text "Demo mode: the toggle is simulated and not persisted." }
+          end
+        end
+      {% else %}
+        installed = AppStore.set_auto_update(Grafito.data_dir, project_name, enabled)
+        unless installed
+          env.response.status_code = 404
+          next "This stack is not an installed app."
+        end
+        store = find_store(installed.store)
+        app = store.nil? ? nil : store_app(store, installed.id)
+        if store.nil? || app.nil?
+          env.response.content_type = "text/html"
+          next HTML.build do
+            div(class: "service-panel") do
+              tag("h4") { text "Auto-update #{enabled ? "enabled" : "disabled"}: #{installed.name}" }
+              tag("p") { text "The setting is saved, but the store is not configured anymore, so the app view is unavailable." }
+            end
+          end
+        end
+        env.response.content_type = "text/html"
+        app_form_html(store, app, installed: installed)
+      {% end %}
     end
   end
 
@@ -691,6 +803,71 @@ module ComposeAppStore
     end
   end
 
+  # The #97/#98 section of an installed app's store view: the
+  # auto-update toggle and the app-data backup list with restore
+  # buttons.
+  private def self.installed_app_section(
+    store : AppStore::Store,
+    installed : AppStore::InstalledApp,
+  ) : String
+    backups = AppStore.app_data_backups(Grafito.data_dir, installed)
+    HTML.build do
+      div(class: "appstore-installed") do
+        span(class: "stat-label") { text "Installed" }
+        span(class: "tag tag-ok") { text "v#{installed.version}" }
+
+        form(class: "appstore-auto-update", style: "display: inline") do
+          input(type: "hidden", name: "stack", value: installed.project_name)
+          input(type: "hidden", name: "enabled", value: installed.auto_update? ? "false" : "true")
+          button(
+            class: "round-button",
+            title: installed.auto_update? ? "Auto-update is on: a store sync will update this app automatically. Click to turn it off." : "Turn on auto-update: a store sync will update this app automatically.",
+            "hx-post": "#{base}/compose-appstore-auto-update",
+            "hx-include": "closest form",
+            "hx-target": "#panel-detail-content",
+            "hx-swap": "innerHTML",
+            "hx-indicator": "#loading-spinner",
+          ) do
+            text installed.auto_update? ? "auto-update: on" : "auto-update: off"
+          end
+        end
+      end
+
+      div(class: "appstore-backups") do
+        span(class: "stat-label") { text "App data backups" }
+        if backups.empty?
+          span(class: "service-panel-hint") do
+            text "None yet — one is taken automatically before each update."
+          end
+        else
+          backups.each do |backup|
+            div(class: "appstore-backup-row") do
+              span(class: "compose-update-service") do
+                text "#{backup[:name]} (#{backup[:bytes] / 1024} KiB)"
+              end
+              form(style: "display: inline") do
+                input(type: "hidden", name: "stack", value: installed.project_name)
+                input(type: "hidden", name: "backup", value: backup[:name])
+                button(
+                  class: "round-button",
+                  title: "Replace the app's data directory with this backup",
+                  "hx-post": "#{base}/compose-appstore-restore-backup",
+                  "hx-include": "closest form",
+                  "hx-target": "#panel-detail-content",
+                  "hx-swap": "innerHTML",
+                  "hx-indicator": "#loading-spinner",
+                  "hx-confirm": "Restore #{backup[:name]}? The current app data directory is replaced.",
+                ) do
+                  text "restore"
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
   # The install form: port, optional domain, the app's form fields,
   # and the (sanitized) markdown description. `input` carries the
   # previously submitted values when re-rendered with errors.
@@ -699,6 +876,7 @@ module ComposeAppStore
     store : AppStore::Store,
     app : AppStore::AppInfo,
     input : AppStore::InputResult? = nil,
+    installed : AppStore::InstalledApp? = nil,
   ) : String
     port_value = input ? (input.port > 0 ? input.port.to_s : "") : app.port.try(&.to_s) || ""
     domain_value = input ? input.env["APP_DOMAIN"]? || "" : ""
@@ -754,6 +932,10 @@ module ComposeAppStore
               end
             end
           end
+        end
+
+        if installed
+          html installed_app_section(store, installed)
         end
 
         form(class: "appstore-install-form", id: "appstore-install-form") do
