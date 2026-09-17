@@ -320,6 +320,12 @@ module SystemStatus
   # Units with no unit file state (e.g. generated ones) are omitted,
   # and the dashboard hides enable/disable for them.
   def self.unit_flags_map : Hash(String, UnitFileFlags)
+    unit_flags_map(snapshot)
+  end
+
+  # Same, but reusing an already-computed snapshot: a dashboard poll
+  # needs the snapshot anyway, and systemctl runs once, not twice.
+  def self.unit_flags_map(snapshot : Snapshot) : Hash(String, UnitFileFlags)
     {% if flag?(:demo_mode) %}
       fake_unit_flags_map
     {% else %}

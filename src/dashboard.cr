@@ -722,9 +722,12 @@ module Dashboard
       sort_order = optional_query_param(env, "sort_order")
       unit_filter = optional_query_param(env, "unit")
       since_text = optional_query_param(env, "since")
-      unit_flags = Grafito.enable_actions? ? SystemStatus.unit_flags_map : {} of String => SystemStatus::UnitFileFlags
+      # One snapshot per poll: it feeds both the flags query and the
+      # fragment, instead of systemctl list-units running twice.
+      snapshot = SystemStatus.snapshot
+      unit_flags = Grafito.enable_actions? ? SystemStatus.unit_flags_map(snapshot) : {} of String => SystemStatus::UnitFileFlags
       env.response.content_type = "text/html"
-      render_dashboard_fragment(sort_by, sort_order, unit_filter, since_text, unit_flags)
+      render_dashboard_fragment(sort_by, sort_order, unit_filter, since_text, unit_flags, snapshot)
     end
 
     # ## The `/unit-details` endpoint
@@ -999,8 +1002,12 @@ module Dashboard
     unit_filter : String? = nil,
     since_text : String? = nil,
     unit_flags : Hash(String, SystemStatus::UnitFileFlags) = {} of String => SystemStatus::UnitFileFlags,
+    snapshot : SystemStatus::Snapshot? = nil,
   ) : String
-    snapshot = SystemStatus.snapshot
+    # Callers that already hold a fresh snapshot (the /dashboard poll)
+    # pass it in; action responses leave it nil so the post-action
+    # state is sampled fresh.
+    snapshot = snapshot || SystemStatus.snapshot
     since_time = parse_since(since_text.to_s) || default_dashboard_since
     # Downsampled to a chart-friendly point count: a 7-day window is
     # ~20000 raw samples, which the SVG would serialize coordinate by
