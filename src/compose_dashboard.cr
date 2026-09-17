@@ -18,6 +18,7 @@ require "log"
 
 require "./app_store"
 require "./compose_status"
+require "./compose_updates"
 require "./compose_jobs"
 require "./process_status"
 
@@ -138,6 +139,18 @@ module ComposeDashboard
               html stack_action_button(compose_stack, "stop", "stop", "Stop stack")
               html stack_action_button(compose_stack, "restart", "restart_alt", "Restart stack")
               html stack_action_button(compose_stack, "update", "update", "Pull images and up -d")
+              button(
+                class: "round-button",
+                title: "Check the registry for newer images",
+                "hx-post": "#{base}/compose-updates/#{URI.encode_path(compose_stack.name)}/check",
+                "hx-target": "##{updates_area_id(compose_stack.name)}",
+                "hx-swap": "innerHTML",
+                "hx-indicator": "#loading-spinner",
+              ) do
+                span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+                  text "sync"
+                end
+              end
             end
             html store_buttons
             if compose_stack.actionable?
@@ -158,6 +171,9 @@ module ComposeDashboard
         end
 
         div(id: "compose-output-area-#{compose_stack.name}") { }
+        div(id: updates_area_id(compose_stack.name)) do
+          html updates_status_fragment(compose_stack.name)
+        end
 
         table(class: "striped dashboard-units") do
           thead do
@@ -180,8 +196,9 @@ module ComposeDashboard
                 end
               end
             else
+              update_results = ComposeUpdates.results_for(compose_stack.name)
               compose_stack.services.each do |compose_service|
-                html service_row(compose_service, enable_actions)
+                html service_row(compose_service, enable_actions, update_results)
               end
             end
           end
@@ -193,7 +210,11 @@ module ComposeDashboard
   # One service row. Clicking it opens the sidebar Detail tab; the
   # action buttons stop propagation so they don't also trigger the
   # row's htmx request.
-  private def service_row(compose_service : ComposeStatus::Service, enable_actions : Bool) : String
+  private def service_row(
+    compose_service : ComposeStatus::Service,
+    enable_actions : Bool,
+    update_results : Hash(String, ComposeUpdates::Result)? = nil,
+  ) : String
     row_class = "du-state-#{compose_service.state}"
     row_class = "#{row_class} dashboard-unit-failed" if compose_service.unhealthy?
     HTML.build do
@@ -214,6 +235,11 @@ module ComposeDashboard
         end
         td(title: compose_service.container) do
           text compose_service.service
+          if (result = update_results.try(&.[compose_service.service]?)) && result.update_available?
+            span(class: "tag tag-warn", title: "A newer image is available in the registry") do
+              text "update"
+            end
+          end
         end
         td(title: compose_service.image) do
           text compose_service.image
@@ -975,6 +1001,63 @@ module ComposeDashboard
     "#{base}/compose-file-apply?stack=#{URI.encode_path(stack_name)}&file=#{file.param}"
   end
 
+  private def updates_area_id(stack_name : String) : String
+    "compose-updates-#{stack_name}"
+  end
+
+  private def compose_updates_url(stack_name : String) : String
+    "#{base}/compose-updates?stack=#{URI.encode_path(stack_name)}"
+  end
+
+  # Per-stack update-check status: "checking…" while the background
+  # fiber runs (self-polling), the per-service badges when done,
+  # nothing when no check has run yet.
+  def updates_status_fragment(stack_name : String) : String
+    HTML.build do
+      if ComposeUpdates.running?(stack_name)
+        div(class: "compose-updates", id: updates_area_id(stack_name),
+          "hx-get": compose_updates_url(stack_name),
+          "hx-trigger": "every 2s",
+          "hx-swap": "innerHTML") do
+          span(class: "service-panel-hint") { text "Checking the registry for newer images…" }
+        end
+      else
+        results = ComposeUpdates.results_for(stack_name)
+        if results.nil? || results.empty?
+          div(class: "compose-updates", id: updates_area_id(stack_name)) { }
+        else
+          updates = results.values
+          available = updates.count(&.update_available?)
+          div(class: "compose-updates", id: updates_area_id(stack_name)) do
+            span(class: "stat-label") do
+              text "#{available} of #{updates.size} images have updates"
+            end
+            results.each do |service, result|
+              div(class: "compose-update-row") do
+                span(class: "compose-update-service") { text service }
+                if result.update_available?
+                  span(class: "tag tag-warn", title: HTML.escape("local #{result.local_digests.first? || "?"}, registry #{result.remote_digest}")) do
+                    text "update available"
+                  end
+                elsif error = result.error
+                  span(class: "tag tag-muted", title: HTML.escape(error)) { text "unknown" }
+                else
+                  span(class: "tag tag-ok") { text "up to date" }
+                end
+                span(class: "compose-update-image", title: HTML.escape(result.image)) do
+                  text result.image
+                end
+              end
+            end
+            if checked_at = ComposeUpdates.check_age(stack_name)
+              span(class: "service-panel-hint") { text "checked #{checked_at.to_local.to_s("%H:%M")}" }
+            end
+          end
+        end
+      end
+    end
+  end
+
   private def stack_action_url(stack_name : String, action : String) : String
     "#{base}/compose-stack/#{URI.encode_path(stack_name)}/#{action}"
   end
@@ -1192,6 +1275,51 @@ module ComposeDashboard
 
       env.response.content_type = "text/html"
       ComposeDashboard.file_applied_fragment(compose_stack.name, file, path, diff, Grafito.enable_actions?)
+    end
+
+    # ## Image update checks for non-store stacks
+    #
+    # The POST spawns a background registry check (on demand only) and
+    # answers with a self-polling status fragment; the GET renders the
+    # current status (checking… / per-service badges).
+    post route_path("compose-updates/:stack/check") do |env|
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
+      unless Grafito.compose_enabled? && compose_actions_allowed?
+        env.response.status_code = 403
+        next "Compose actions are disabled."
+      end
+      stack_name = env.params.url["stack"]
+      unless valid_compose_name?(stack_name)
+        halt env, status_code: 400, response: "Invalid stack name."
+      end
+      compose_stack = ComposeStatus.find_stack(stack_name)
+      unless compose_stack
+        env.response.status_code = 404
+        next "Stack '#{HTML.escape(stack_name)}' not found."
+      end
+
+      ComposeUpdates.check_stack(compose_stack)
+      env.response.content_type = "text/html"
+      ComposeDashboard.updates_status_fragment(compose_stack.name)
+    end
+
+    get route_path("compose-updates") do |env|
+      unless Grafito.compose_enabled?
+        env.response.status_code = 404
+        next "Compose view is disabled."
+      end
+      stack_name = optional_query_param(env, "stack")
+      unless valid_compose_name?(stack_name)
+        halt env, status_code: 400, response: "Missing or invalid stack name."
+      end
+      unless ComposeStatus.find_stack(stack_name.to_s)
+        env.response.status_code = 404
+        next "Stack '#{HTML.escape(stack_name.to_s)}' not found."
+      end
+      env.response.content_type = "text/html"
+      ComposeDashboard.updates_status_fragment(stack_name.to_s)
     end
 
     # Recent log tail for one service, merging `docker compose logs`
