@@ -74,6 +74,66 @@ module AccessPanel
       panel_fragment(settings, saved: true)
     end
 
+    # ## The managed caddy proxy stack
+    #
+    # grafito renders its compose file + Caddyfile from the routed
+    # apps and starts/stops it as a streaming job. Stopped or broken
+    # caddy only costs the domain forms: host:port keeps working.
+
+    post route_path("proxy/start") do |env|
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
+      unless access_allowed?
+        env.response.status_code = 403
+        next access_rejected_message
+      end
+      settings = ProxySettings.load(Grafito.data_dir)
+      if settings.nil? || settings.base_domain.empty?
+        env.response.status_code = 400
+        next "Save the proxy settings (base domain) first."
+      end
+
+      sync_proxy_files(Grafito.data_dir, settings)
+      routes = routes_for_base(settings)
+      job_id = ComposeJobs.start_custom("start reverse proxy (#{routes.size} routes)") do |job|
+        job.append("Starting caddy on ports 80/443 with #{routes.size} routed domains …")
+        compose_file = File.join(proxy_dir(Grafito.data_dir), "docker-compose.yml")
+        code = ComposeJobs.run_command(job, ["docker", "compose", "--project-name", "grafito-proxy",
+                                             "-f", compose_file, "up", "-d"])
+        job.finish(code)
+        nil
+      end
+      env.response.content_type = "text/html"
+      job_fragment(job_id, "proxy-status")
+    end
+
+    post route_path("proxy/stop") do |env|
+      if Grafito.reject_cross_site_post?(env)
+        halt env, status_code: 403, response: "Cross-site request rejected."
+      end
+      unless access_allowed?
+        env.response.status_code = 403
+        next access_rejected_message
+      end
+      settings = ProxySettings.load(Grafito.data_dir)
+      if settings.nil? || settings.base_domain.empty?
+        env.response.status_code = 400
+        next "Save the proxy settings (base domain) first."
+      end
+
+      job_id = ComposeJobs.start_custom("stop reverse proxy") do |job|
+        job.append("Stopping caddy … apps remain reachable on host:port.")
+        compose_file = File.join(proxy_dir(Grafito.data_dir), "docker-compose.yml")
+        code = ComposeJobs.run_command(job, ["docker", "compose", "--project-name", "grafito-proxy",
+                                             "-f", compose_file, "down"])
+        job.finish(code)
+        nil
+      end
+      env.response.content_type = "text/html"
+      job_fragment(job_id, "proxy-status")
+    end
+
     # Obtain (first time) or renew the wildcard certificate as a
     # streaming job.
     post route_path("access/cert/renew") do |env|
@@ -145,6 +205,128 @@ module AccessPanel
 
   # ## Fragments
 
+  # One routed app: domain → local port.
+  record ProxyRoute, domain : String, app_name : String, port : Int32
+
+  # Routed apps: installed apps the user gave a domain, sorted by it.
+  # Apps without a domain are not routed — they stay on host:port.
+  def self.routes(root : String) : Array(ProxyRoute)
+    AppStore.installed(root).compact_map do |installed|
+      next if installed.domain.empty?
+      ProxyRoute.new(domain: installed.domain, app_name: installed.name, port: installed.port)
+    end.sort_by!(&.domain)
+  end
+
+  # The managed proxy's files live under <data-dir>/proxy.
+  def self.proxy_dir(data_dir : String) : String
+    File.join(data_dir, "proxy")
+  end
+
+  # The Caddyfile: one site block per routed app, TLS terminating on
+  # the wildcard certificate files lego maintains. Apps whose domain
+  # is not under the proxy's base domain are skipped (the wildcard
+  # does not cover them).
+  def self.render_caddyfile(
+    routes : Array(ProxyRoute),
+    base_domain : String,
+    data_dir : String,
+  ) : String
+    crt = ProxySettings.cert_path(data_dir, base_domain)
+    key = ProxySettings.key_path(data_dir, base_domain)
+    String.build do |io|
+      routes.each do |route|
+        next unless route.domain.ends_with?(".#{base_domain}")
+        io << "#{route.domain} {\n"
+        io << "  tls #{crt} #{key}\n"
+        io << "  reverse_proxy 127.0.0.1:#{route.port}\n"
+        io << "}\n"
+      end
+    end
+  end
+
+  # The managed caddy stack: host network (upstreams are
+  # 127.0.0.1:APP_PORT of the published ports), certificates and
+  # Caddyfile mounted read-only.
+  def self.render_proxy_compose(data_dir : String) : String
+    <<-YAML
+      services:
+        grafito-proxy:
+          image: caddy:2
+          container_name: grafito-proxy
+          restart: unless-stopped
+          network_mode: host
+          volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
+            - ../lego:/certs:ro
+      YAML
+  end
+
+  # Writes the proxy files (Caddyfile + docker-compose.yml) from the
+  # current routed apps. Returns the routes actually routed under the
+  # proxy's base domain.
+  def self.write_proxy_files(data_dir : String, settings : ProxySettings::Settings) : Array(ProxyRoute)
+    routes = routes(data_dir).select do |route|
+      route.domain.ends_with?(".#{settings.base_domain}")
+    end
+    dir = proxy_dir(data_dir)
+    Dir.mkdir_p(dir)
+    File.write(File.join(dir, "Caddyfile"), render_caddyfile(routes, settings.base_domain, data_dir))
+    File.write(File.join(dir, "docker-compose.yml"), render_proxy_compose(data_dir))
+    routes
+  end
+
+  # Writes the proxy files only when their content changed. Returns
+  # true when something was rewritten.
+  def self.sync_proxy_files(data_dir : String, settings : ProxySettings::Settings) : Bool
+    routes = routes(data_dir).select do |route|
+      route.domain.ends_with?(".#{settings.base_domain}")
+    end
+    dir = proxy_dir(data_dir)
+    Dir.mkdir_p(dir)
+
+    caddyfile_path = File.join(dir, "Caddyfile")
+    compose_path = File.join(dir, "docker-compose.yml")
+    files = {
+      {caddyfile_path, render_caddyfile(routes, settings.base_domain, data_dir)},
+      {compose_path, render_proxy_compose(data_dir)},
+    }
+    changed = false
+    files.each do |path, content|
+      if !File.exists?(path) || File.read(path) != content
+        File.write(path, content)
+        changed = true
+      end
+    end
+    changed
+  end
+
+  # True when the managed proxy container is running.
+  def self.proxy_running? : Bool
+    stdout = IO::Memory.new
+    result = Process.run("docker", args: ["ps", "--filter", "name=grafito-proxy", "--format", "{{.Names}}"],
+      output: stdout, error: Process::Redirect::Close)
+    return false unless result.success?
+    stdout.to_s.includes?("grafito-proxy")
+  rescue ex
+    Log.warn(exception: ex) { "Could not check proxy container state" }
+    false
+  end
+
+  # Reloads the running proxy without dropping connections (caddy
+  # re-reads its config in-place). Best-effort: if it fails, the
+  # caller's restart path still applies.
+  def self.reload_proxy : Bool
+    stdout = IO::Memory.new
+    stderr = IO::Memory.new
+    result = Process.run("docker", args: ["exec", "grafito-proxy",
+                                          "caddy", "reload", "--config", "/etc/caddy/Caddyfile"],
+      output: stdout, error: stderr)
+    unless result.success?
+      Log.warn { "caddy reload failed: #{stderr.to_s.strip}" }
+    end
+    result.success?
+  end
+
   # The settings + certificate panel. `saved` adds a confirmation
   # banner.
   def self.panel_fragment(settings : ProxySettings::Settings, saved : Bool = false) : String
@@ -167,6 +349,71 @@ module AccessPanel
 
         html settings_form(settings)
         html certificate_section(settings)
+        html proxy_section(settings)
+      end
+    end
+  end
+
+  # Routed apps under the proxy's base domain.
+  private def self.routes_for_base(settings : ProxySettings::Settings) : Array(ProxyRoute)
+    return [] of ProxyRoute if settings.base_domain.empty?
+    routes(Grafito.data_dir).select do |route|
+      route.domain.ends_with?(".#{settings.base_domain}")
+    end
+  end
+
+  # The managed caddy stack: status, start/stop and the route table
+  # (domain → app). Stopped or broken caddy degrades to host:port
+  # access for every app — the panel says so.
+  private def self.proxy_section(settings : ProxySettings::Settings) : String
+    running = proxy_running?
+    routes = routes_for_base(settings)
+    HTML.build do
+      div(id: "proxy-section", class: "appstore-backups") do
+        span(class: "stat-label") { text "Reverse proxy — managed caddy" }
+        span(class: running ? "tag tag-ok" : "tag tag-muted") do
+          text running ? "running" : "stopped"
+        end
+        if routes.empty?
+          span(class: "service-panel-hint") do
+            text "No routed apps yet: set a domain on an installed app (install form) and it appears here."
+          end
+        else
+          routes.each do |route|
+            div(class: "compose-update-row") do
+              span(class: "compose-update-service") { text route.domain }
+              span(class: "tag tag-info") { text route.app_name }
+              span(class: "tag tag-muted") { text "127.0.0.1:#{route.port}" }
+            end
+          end
+        end
+        div(class: "service-panel-actions") do
+          unless settings.base_domain.empty?
+            if running
+              button(
+                class: "round-button",
+                title: "Stop the managed caddy. Apps remain reachable on host:port.",
+                "hx-post": "#{base}/proxy/stop",
+                "hx-target": "#proxy-section",
+                "hx-swap": "innerHTML",
+                "hx-confirm": "Stop the reverse proxy? Apps remain reachable on host:port.",
+              ) do
+                text "stop proxy"
+              end
+            else
+              button(
+                class: "round-button",
+                title: "Start the managed caddy and route the domains above",
+                "hx-post": "#{base}/proxy/start",
+                "hx-target": "#proxy-section",
+                "hx-swap": "innerHTML",
+                "hx-indicator": "#loading-spinner",
+              ) do
+                text "start proxy"
+              end
+            end
+          end
+        end
       end
     end
   end
