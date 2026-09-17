@@ -414,6 +414,23 @@ module ComposeDashboard
 
   # The sidebar Detail-tab fragment for one service: pills, identity
   # info, actions, a pollable log tail, and the stack's YAML.
+  # Compacts docker's Ports string ("0.0.0.0:8887-8888->8887-8888/tcp,
+  # [::]:8887-8888->8887-8888/tcp") into the unique host-side mappings
+  # ("8887-8888->8887-8888/tcp"), dropping the repeated IPv4/IPv6
+  # listen addresses.
+  def self.compact_ports(raw : String) : String
+    seen = [] of String
+    raw.split(", ").each do |part|
+      compacted = part
+      if idx = part.index("->")
+        host = part[0...idx]
+        compacted = "#{host.sub(/^.*:/, "")}#{part[idx..]}"
+      end
+      seen << compacted unless seen.includes?(compacted)
+    end
+    seen.join(", ")
+  end
+
   def service_details_fragment(
     compose_service : ComposeStatus::Service,
     enable_actions : Bool = false,
@@ -440,7 +457,7 @@ module ComposeDashboard
           end
           div do
             span(class: "stat-label") { text "Ports" }
-            span { text compose_service.ports.empty? ? "—" : compose_service.ports }
+            span { text compose_service.ports.empty? ? "—" : compact_ports(compose_service.ports) }
           end
           div do
             span(class: "stat-label") { text "Status" }
@@ -477,7 +494,7 @@ module ComposeDashboard
               "class":        "service-panel-explain",
               "title":        "Show the recent log tail for this service",
               "hx-get":       logs_url(compose_service.stack, compose_service.service),
-              "hx-target":    "#compose-logs-content",
+              "hx-target":    "#panel-detail-content",
               "hx-swap":      "innerHTML",
               "hx-indicator": "#loading-spinner",
             }
@@ -487,7 +504,6 @@ module ComposeDashboard
             end
             text " Service logs"
           end
-          div(id: "compose-logs-content") { }
         end
       end
     end
