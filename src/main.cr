@@ -56,7 +56,8 @@ require "socket"
 # user about how to start via the command line, using [docopt](https://docopt.org)
 # which lets us just write the help and then everything Just Works.
 #
-# Since one of the goals is easy setup and minimal config, there are exactly 4 configurable things:
+# Since one of the goals is easy setup and minimal config, the
+# essentials are just:
 #
 # * Address
 # * Port

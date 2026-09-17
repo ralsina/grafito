@@ -420,8 +420,6 @@ module Grafito
 
   # Renders one log entry as a table row (including hover action
   # buttons). Shared by html_log_output and the SSE live tail.
-  # (Moved verbatim out of html_log_output — one branch per optional
-  # cell is inherent to the markup.)
   # ameba:disable Metrics/CyclomaticComplexity
   def log_row(
     entry : Journalctl::LogEntry,

@@ -18,9 +18,8 @@ require "baked_file_system"
 # * robots.txt
 # * llms.txt
 #
-# We are not embedding fonts and icons because they are not strictly
-# needed for Grafito to run, so if you run it without Internet access
-# it will work fine but fonts will look different and icons may be missing.
+# Fonts and the material icons font are baked too, so the app works
+# fully offline.
 class Assets
   extend BakedFileSystem
   bake_folder "./assets"

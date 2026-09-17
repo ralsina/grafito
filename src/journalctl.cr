@@ -340,7 +340,6 @@ class Journalctl
   end
 
   # Builds the journalctl command array based on the provided filters.
-  # This is a private helper method.
   def self.build_query_command(
     since : String? = nil,
     unit : String? = nil,
@@ -386,16 +385,7 @@ class Journalctl
     sort_by : String? = nil,
     sort_order : String? = nil,
   ) : Array(LogEntry)?
-    Log.debug { "Executing Journalctl.query with arguments:" }
-    Log.debug { "  Since: #{since.inspect}" }
-    Log.debug { "  Unit: #{unit.inspect}" }
-    Log.debug { "  Tag: #{tag.inspect}" }
-    Log.debug { "  Query: #{query.inspect}" }
-    Log.debug { "  Priority: #{priority.inspect}" }
-    Log.debug { "  Hostname: #{hostname.inspect}" }
-    Log.debug { "  Lines: #{lines.inspect}" }
-    Log.debug { "  SortBy: #{sort_by.inspect}" }
-    Log.debug { "  SortOrder: #{sort_order.inspect}" }
+    Log.debug { "Journalctl.query(since: #{since.inspect}, unit: #{unit.inspect}, tag: #{tag.inspect}, query: #{query.inspect}, priority: #{priority.inspect}, lines: #{lines.inspect})" }
 
     # Treat empty string parameters for unit and tag as nil
     unit = nil if unit.is_a?(String) && unit.strip.empty?
@@ -463,10 +453,7 @@ class Journalctl
   # Returns:
   #   An Array(String) containing unique service unit names, sorted, or nil if an error occurs.
   def self.known_service_units : Array(String)?
-    {% if flag?(:no_systemctl) %}
-      Log.warn { "Journalctl.known_service_units: Systemctl is disabled by configuration." }
-      return nil
-    {% elsif flag?(:demo_mode) %}
+    {% if flag?(:demo_mode) %}
       Log.info { "Journalctl.known_service_units: Using FAKE service units." }
       fake_units = FakeJournalData::SAMPLE_UNIT_NAMES.compact.uniq.sort
       Log.debug { "Returning #{fake_units.size} fake service units." }
@@ -608,7 +595,7 @@ class Journalctl
     [] of LogEntry
   end
 
-  # Per-entry variant of filter_allowed_units for the streaming parser.
+  # Per-entry allowed-units check for the streaming parser.
   def self.allowed_unit?(entry : LogEntry) : Bool
     allowed_units = Grafito.allowed_units
     return true unless allowed_units

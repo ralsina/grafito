@@ -123,7 +123,6 @@ module Timeline
     padding : Int32 = 10,
     bar_color : String = "steelblue",
     font_family : String = "monospace",
-    metrics : Array(Grafito::MetricsStore::MetricPoint) = [] of Grafito::MetricsStore::MetricPoint,
   ) : String
     svg = IO::Memory.new
 
@@ -144,8 +143,7 @@ module Timeline
     chart_height = chart_bottom - chart_top
 
     # Determine max count for Y-axis scaling
-    max_val = timeline_data.max_of(&.[:count])
-    max_count = (max_val || 0).to_f
+    max_count = timeline_data.max_of(&.[:count]).to_f
     max_count = 1.0 if max_count == 0.0
 
     # Infer the bucket interval from the first two buckets (falls back to
@@ -160,40 +158,11 @@ module Timeline
     actual_bar_width = (slot_width * 0.8).clamp(1.0, 60.0)
     bar_margin = (slot_width - actual_bar_width) / 2
 
-    # Subtle system-metrics overlay (memory %, load) so the reader can
-    # correlate system load with log activity. Drawn behind the bars;
-    # points outside the bucket span are dropped.
-    window_start = timeline_data[0][:start_time]
-    window_end = timeline_data.last[:start_time] + interval.seconds
-    window_span = [(window_end - window_start).total_seconds, 1.0].max
-    in_window = metrics.select { |metric| metric.ts >= window_start && metric.ts <= window_end }
-    max_load = in_window.empty? ? 0.0 : in_window.max_of(&.load1)
-    metric_overlay = ""
-    if !in_window.empty? && max_load > 0
-      metric_x = ->(metric_ts : Time) {
-        padding + ((metric_ts - window_start).total_seconds / window_span) * chart_width
-      }
-      mem_coords = in_window.map do |metric|
-        y = chart_top + (1.0 - metric.mem_used_pct.clamp(0.0, 100.0) / 100.0) * chart_height
-        "#{metric_x.call(metric.ts).round(2)},#{y.round(2)}"
-      end
-      load_coords = in_window.map do |metric|
-        y = chart_bottom - (metric.load1 / max_load) * chart_height
-        "#{metric_x.call(metric.ts).round(2)},#{y.clamp(chart_top, chart_bottom).round(2)}"
-      end
-      metric_overlay = String.build do |str|
-        str << %(  <polyline class="tl-metric-line" stroke="var(--ok, #58a6ff)" points="#{mem_coords.join(" ")}" />)
-        str << %(  <polyline class="tl-metric-line" stroke="var(--muted, #999)" stroke-dasharray="3 3" points="#{load_coords.join(" ")}" />)
-      end
-    end
-
     svg << %(<svg width="100%" height="#{height}" viewBox="0 0 #{width} #{height}" xmlns="http://www.w3.org/2000/svg" role="img" data-interval="#{interval.to_i}">)
     svg << %(  <style>)
     svg << %(    .tl-bar rect { fill: #{bar_color}; })
     svg << %(    .tl-label { fill: #999; font-family: #{font_family}; font-size: 12px; })
-    svg << %(    .tl-metric-line { fill: none; stroke-width: 1.25; opacity: 0.55; })
     svg << %(  </style>)
-    svg << metric_overlay
 
     timeline_data.each_with_index do |point, index|
       scale = chart_height / max_count
@@ -245,11 +214,6 @@ module Timeline
     last_point = timeline_data.last
     last_end = last_point[:start_time] + interval_for_labels.seconds
     svg << %(  <text x="#{(width - padding).round(2)}" y="#{label_y}" class="tl-label" text-anchor="end">#{bucket_label(last_end, interval_for_labels)}</text>)
-    if !in_window.empty? && max_load > 0
-      legend_x = width / 2
-      svg << %(  <text x="#{legend_x}" y="#{label_y}" class="tl-label" text-anchor="middle" opacity="0.8">— memory %   - - load (scaled)</text>)
-    end
-
     svg << %(</svg>)
     svg.to_s
   end
@@ -346,15 +310,12 @@ module Timeline
     end
   end
 
-  # The combined dashboard chart: journal severity as stacked bars
-  # (errors red, warnings amber, info blue — the same encoding as the
-  # log view's timeline) with memory and disk usage as xy lines over
-  # the same time span, so events and resource usage can be correlated
-  # at a glance. Bars scale to their own maximum; both percentage
-  # series share the full 0-100% scale.
-  # Renders the combined chart: journal severity as stacked bars with
-  # memory and disk usage lines over the same time span. Window is
-  # derived from the union of both series, so either may be missing.
+  # Renders the combined dashboard chart: journal severity as stacked
+  # bars (errors red, warnings amber, info blue — the same encoding as
+  # the log view's timeline) with memory, swap and disk usage as lines
+  # over the same time span, so events and resource usage can be
+  # correlated at a glance. Percentage series share the 0-100% scale;
+  # the window is derived from the union of both series.
   def self.generate_combined_svg(
     points : Array(Grafito::MetricsStore::MetricPoint),
     buckets : Array(TimelinePoint),
