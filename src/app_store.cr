@@ -162,6 +162,10 @@ module AppStore
     property project_name : String = ""
     property installed_at : String = ""
 
+    # When true, the update job runs automatically for this app after
+    # a store sync that ships a newer package (#98). Off by default.
+    property? auto_update : Bool = false
+
     # JSON::Serializable only generates the pull-parser constructor
     # when every field has a default; the explicit one below is what
     # render_install and the demo fixtures use.
@@ -175,6 +179,7 @@ module AppStore
       port : Int32 = 0,
       project_name : String = "",
       installed_at : String = "",
+      auto_update : Bool = false,
     )
       @store = store
       @store_url = store_url
@@ -185,6 +190,7 @@ module AppStore
       @port = port
       @project_name = project_name
       @installed_at = installed_at
+      @auto_update = auto_update
     end
 
     def install_dir(root : String) : String
@@ -266,6 +272,117 @@ module AppStore
 
   def self.app_data_dir(root : String, store_slug : String, app_id : String) : String
     File.join(app_data_root(root), store_slug, app_id)
+  end
+
+  # Where #97's pre-update backups of one app's data live. Backups
+  # are plain tarballs named app-data-<timestamp>.tar.gz.
+  def self.app_data_backups_dir(root : String, store_slug : String, app_id : String) : String
+    File.join(root, "app-data-backups", store_slug, app_id)
+  end
+
+  # How many data backups to keep per app (newest wins, older pruned).
+  APP_DATA_BACKUPS_TO_KEEP = 3
+
+  # Tars the app's data directory (when it exists and is non-empty)
+  # into the backups dir, pruning all but the newest
+  # APP_DATA_BACKUPS_TO_KEEP. Returns the backup path, or nil when
+  # there was nothing to back up.
+  def self.backup_app_data(root : String, installed : InstalledApp) : String?
+    data_dir = installed.data_dir(root)
+    return unless Dir.exists?(data_dir)
+    has_content = Dir.glob(File.join(data_dir, "**", "*")).any? { |p| File.file?(p) }
+    return unless has_content
+
+    backups_dir = app_data_backups_dir(root, installed.store, installed.id)
+    Dir.mkdir_p(backups_dir)
+    stamp = Time.utc.to_s("%Y%m%dT%H%M%S")
+    backup_path = File.join(backups_dir, "app-data-#{stamp}.tar.gz")
+    parent = File.dirname(data_dir)
+    name = File.basename(data_dir)
+    result = Process.run("tar", args: ["-czf", backup_path, "-C", parent, name],
+      output: Process::Redirect::Close, error: Process::Redirect::Close)
+    unless result.success?
+      Log.error { "app-data backup failed for #{installed.project_name} (tar exit #{result.exit_code})" }
+      File.delete?(backup_path)
+      return
+    end
+
+    prune_app_data_backups(backups_dir)
+    backup_path
+  rescue ex
+    Log.error(exception: ex) { "app-data backup failed for #{installed.project_name}" }
+    nil
+  end
+
+  # One data backup for the UI: file name (within the app's backups
+  # dir), size and modification time. Newest first.
+  alias AppDataBackup = NamedTuple(name: String, bytes: Int64, created_at: Time)
+
+  # Lists one app's data backups, newest first.
+  def self.app_data_backups(root : String, installed : InstalledApp) : Array(AppDataBackup)
+    dir = app_data_backups_dir(root, installed.store, installed.id)
+    return [] of AppDataBackup unless Dir.exists?(dir)
+    Dir.glob(File.join(dir, "app-data-*.tar.gz")).compact_map do |path|
+      info = File.info?(path)
+      next unless info
+      {name: File.basename(path), bytes: info.size, created_at: info.modification_time}
+    end.sort_by!(&.[:created_at]).reverse!
+  rescue ex
+    Log.warn(exception: ex) { "Could not list app-data backups" }
+    [] of AppDataBackup
+  end
+
+  # Restores a named backup over the app's data directory: the
+  # current data is removed, the tarball extracted in its place.
+  # Only basenames of real backups in the app's own backups dir are
+  # accepted, so there is no path traversal surface.
+  def self.restore_app_data_backup(root : String, installed : InstalledApp, name : String) : Bool
+    return false unless name.matches?(/^app-data-\d{8}T\d{6}\.tar\.gz$/)
+    backup_path = File.join(app_data_backups_dir(root, installed.store, installed.id), name)
+    return false unless File.file?(backup_path)
+
+    data_dir = installed.data_dir(root)
+    FileUtils.rm_rf(data_dir)
+    parent = File.dirname(data_dir)
+    Dir.mkdir_p(parent)
+    result = Process.run("tar", args: ["-xzf", backup_path, "-C", parent],
+      output: Process::Redirect::Close, error: Process::Redirect::Close)
+    unless result.success?
+      Log.error { "app-data restore failed for #{installed.project_name} (tar exit #{result.exit_code})" }
+      return false
+    end
+    Log.info { "Restored app-data backup #{name} for #{installed.project_name}" }
+    true
+  rescue ex
+    Log.error(exception: ex) { "app-data restore failed for #{installed.project_name}" }
+    false
+  end
+
+  private def self.prune_app_data_backups(backups_dir : String) : Nil
+    backups = Dir.glob(File.join(backups_dir, "app-data-*.tar.gz")).compact_map do |path|
+      info = File.info?(path)
+      info ? {path: path, at: info.modification_time} : nil
+    end
+    backups.sort_by!(&.[:at])
+
+    backups.first(backups.size - APP_DATA_BACKUPS_TO_KEEP).each do |old_backup|
+      File.delete?(old_backup[:path])
+    end
+  rescue ex
+    Log.warn(exception: ex) { "Failed to prune app-data backups in #{backups_dir}" }
+  end
+
+  # Persists the #98 per-app auto-update toggle into the app's
+  # app.json. Returns the updated record, or nil when the app is not
+  # installed under this root.
+  def self.set_auto_update(root : String, project_name : String, enabled : Bool) : InstalledApp?
+    installed = find_installed(root, project_name)
+    return unless installed
+
+    installed.auto_update = enabled
+    File.write(File.join(installed.install_dir(root), "app.json"), "#{installed.to_pretty_json}\n")
+    Log.info { "Auto-update #{enabled ? "enabled" : "disabled"} for #{project_name}" }
+    installed
   end
 
   def self.app_compose_path(root : String, store_slug : String, app_id : String) : String
