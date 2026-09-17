@@ -33,6 +33,7 @@ require "json"
 require "log"
 
 require "./app_store"
+require "./view_helpers"
 require "./access"
 require "./compose_dashboard"
 require "./compose_jobs"
@@ -571,7 +572,7 @@ module ComposeAppStore
   end
 
   private def self.base : String
-    Grafito.base_path == "/" ? "" : Grafito.base_path
+    ViewHelpers.base_prefix
   end
 
   # ## Fragments

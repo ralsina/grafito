@@ -20,6 +20,7 @@ require "./app_store"
 require "./compose_status"
 require "./compose_updates"
 require "./access"
+require "./view_helpers"
 require "./compose_jobs"
 require "./process_status"
 
@@ -30,6 +31,7 @@ require "./process_status"
 
 module ComposeDashboard
   extend self
+  include ViewHelpers
 
   Log = ::Log.for(self)
 
@@ -932,30 +934,8 @@ module ComposeDashboard
 
   # Renders a failed action as an error block for the service panel,
   # like the dashboard does.
-  def action_error_fragment(action : String, target : String, message : String) : String
-    HTML.build do
-      div(class: "service-panel service-panel-error") do
-        tag("h4") do
-          text "#{action[0].upcase}#{action[1..]} failed: #{target}"
-        end
-        tag("pre", class: "service-panel-error-message") do
-          text message
-        end
-      end
-    end
-  end
 
   # One summary card, reusing the dashboard's `.stat` styling.
-  private def card(label : String, value : String, warn : Bool = false) : String
-    HTML.build do
-      div(class: "stat") do
-        span(class: "stat-label") { text label }
-        span(class: warn ? "stat-value stat-error" : "stat-value") do
-          text value
-        end
-      end
-    end
-  end
 
   # Container state pill, matching the dashboard's tag colors.
   private def state_pill(value : String) : String
@@ -966,11 +946,7 @@ module ComposeDashboard
             when "created"              then "info"
             else                             "debug" # exited
             end
-    HTML.build do
-      span(class: "tag tag-#{color}") do
-        text value
-      end
-    end
+    pill(value, color)
   end
 
   # Healthcheck verdict pill; an empty verdict means no healthcheck.
@@ -981,11 +957,7 @@ module ComposeDashboard
             when "starting" then "warn"
             else                 "err" # unhealthy
             end
-    HTML.build do
-      span(class: "tag tag-#{color}") do
-        text value
-      end
-    end
+    pill(value, color)
   end
 
   # Stack status text from `compose ls` (e.g. "running(3)", "exited(1)")
@@ -1000,11 +972,7 @@ module ComposeDashboard
             else
               "warn"
             end
-    HTML.build do
-      span(class: "tag tag-#{color}") do
-        text value
-      end
-    end
+    pill(value, color)
   end
 
   private def details_url(stack_name : String, service_name : String) : String
@@ -1108,7 +1076,7 @@ module ComposeDashboard
 
   # Base path prefix, empty for the common "/" deployment.
   private def base : String
-    Grafito.base_path == "/" ? "" : Grafito.base_path
+    base_prefix
   end
 
   # Route helpers of the enclosing Grafito module, re-exposed here so

@@ -15,12 +15,14 @@
 require "html_builder"
 
 require "./process_status"
+require "./view_helpers"
 require "./ai/config"
 require "./ai/request"
 require "./journalctl"
 
 module ProcessDashboard
   extend self
+  include ViewHelpers
 
   Log = ::Log.for(self)
 
@@ -322,17 +324,6 @@ module ProcessDashboard
         class: "proc-square #{fill_class}",
         title: "Core #{core_index}: #{pct.round(1)}%",
       ) { }
-    end
-  end
-
-  private def card(label : String, value : String, warn : Bool = false) : String
-    HTML.build do
-      div(class: "stat") do
-        span(class: "stat-label") { text label }
-        span(class: warn ? "stat-value stat-error" : "stat-value") do
-          text value
-        end
-      end
     end
   end
 

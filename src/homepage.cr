@@ -22,6 +22,7 @@ require "log"
 require "mutex"
 
 require "./homepage_config"
+require "./view_helpers"
 require "./weather"
 require "./timeline"
 require "./access"
@@ -157,7 +158,7 @@ module HomepageDashboard
   private def self.machine_stats_fragment(metrics : Grafito::MetricsStore::MetricPoint?) : String
     return "" unless metrics
 
-    base = Grafito.base_path == "/" ? "" : Grafito.base_path
+    base = ViewHelpers.base_prefix
     swap = metrics.swap_used_pct
     HTML.build do
       a(href: "#{base}/dashboard", class: "homepage-stats", title: "Open the dashboard for charts and details") do
