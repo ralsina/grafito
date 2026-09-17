@@ -236,6 +236,27 @@ describe AppStore do
         AppStore.transform_compose("- just\n- a\n- list\n", "x")
       end
     end
+
+    it "falls back to the config port for single-service apps without x-runtipi ports" do
+      compose = <<-YAML
+        services:
+          homebridge:
+            image: homebridge/homebridge
+        YAML
+      rendered = AppStore.transform_compose(compose, "homebridge", fallback_port: 8581)
+      rendered.should contain(%(${APP_PORT}:8581))
+
+      # Multi-service apps stay as authored: the target is ambiguous.
+      multi = <<-YAML
+        services:
+          server:
+            image: a
+          helper:
+            image: b
+        YAML
+      rendered = AppStore.transform_compose(multi, "conduit", fallback_port: 6167)
+      rendered.should_not contain("APP_PORT")
+    end
   end
 
   describe "the sync + install + update lifecycle" do

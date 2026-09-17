@@ -743,7 +743,7 @@ module AppStore
       raise RenderError.new("App '#{app.id}' is not in the store cache; sync the store first.")
     end
 
-    rendered = transform_compose(File.read(compose_source), app.id)
+    rendered = transform_compose(File.read(compose_source), app.id, fallback_port: app.port)
     installed = InstalledApp.new(
       store: store.slug,
       store_url: store.url,
@@ -812,7 +812,7 @@ module AppStore
     dir = install_dir(root, installed.store, installed.id)
     Dir.mkdir_p(dir)
     File.chmod(dir, 0o700)
-    File.write(installed.compose_file(root), transform_compose(File.read(app_compose_path(root, installed.store, app.id)), app.id))
+    File.write(installed.compose_file(root), transform_compose(File.read(app_compose_path(root, installed.store, app.id)), app.id, fallback_port: app.port))
     File.write(installed.env_file(root), env_file_content(merged), perm: 0o600)
     File.write(File.join(dir, "app.json"), "#{installed.to_pretty_json}\n")
 
@@ -889,7 +889,7 @@ module AppStore
   # restart policy, substitutes the {{RUNTIPI_APP_ID}} label
   # placeholder, and re-dumps the YAML.
   # ameba:disable Metrics/CyclomaticComplexity
-  def self.transform_compose(compose_source : String, app_id : String) : String
+  def self.transform_compose(compose_source : String, app_id : String, fallback_port : Int32? = nil) : String
     doc = YAML.parse(compose_source)
     root = doc.as_h?
     raise RenderError.new("compose file is not a YAML mapping") unless root
@@ -934,6 +934,19 @@ module AppStore
     if chosen_port.nil? && other_ports.uniq.size == 1
       chosen_port = other_ports[0]
       chosen_service = other_mains[0]
+    end
+    # Last resort: a single-service app with no x-runtipi metadata but
+    # a UI port in its config.json (18 store apps publish nothing
+    # without this — they assume Runtipi's traefik routes them by
+    # domain). With more than one service the target is ambiguous and
+    # the app stays as authored.
+    if chosen_port.nil? && (fallback = fallback_port).try(&.>(0))
+      if services = root["services"]?.try(&.as_h?)
+        if services.size == 1 && (service = services.first_value.as_h?)
+          chosen_port = fallback
+          chosen_service = service
+        end
+      end
     end
     if (port = chosen_port) && (service = chosen_service)
       service[YAML::Any.new("ports")] = YAML.parse(%(["${APP_PORT}:#{port}"]))
