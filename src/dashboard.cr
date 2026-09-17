@@ -17,6 +17,7 @@
 
 require "html_builder"
 require "log"
+require "csv"
 
 require "./system_status"
 require "./metrics_store"
@@ -80,6 +81,9 @@ module Dashboard
           if history.count { |point| point.net_rx_bps || point.net_tx_bps } >= 2
             html Timeline.network_legend
             html Timeline.generate_network_svg(history)
+          end
+          a(href: export_csv_url(since_text), title: "Download the raw samples for this window as CSV", class: "muted-note") do
+            text "Export CSV"
           end
           html window_select(since_text)
         end
@@ -373,6 +377,12 @@ module Dashboard
     "#{base}/unit-explain?name=#{URI.encode_path(unit_name)}"
   end
 
+  # CSV download link for the selected history window.
+  private def export_csv_url(since_text : String?) : String
+    base = Grafito.base_path == "/" ? "" : Grafito.base_path
+    "#{base}/status/history/export?since=#{URI.encode_path(since_text.presence || "-6h")}"
+  end
+
   private def unit_row(
     unit_state : SystemStatus::UnitState,
     enable_actions : Bool,
@@ -658,9 +668,39 @@ module Dashboard
         next {error: "Invalid 'since' parameter: #{since_text}"}.to_json
       end
 
-      points = Grafito.metrics_store.try(&.history(since)) || [] of Grafito::MetricsStore::MetricPoint
+      store = Grafito.metrics_store
+      points = if max_points = optional_query_param(env, "max_points").try(&.to_i?)
+                 store ? store.history_downsampled(since, max_points.clamp(10, 5000)) : [] of Grafito::MetricsStore::MetricPoint
+               else
+                 store ? store.history(since) : [] of Grafito::MetricsStore::MetricPoint
+               end
       env.response.content_type = "application/json"
       {points: points}.to_json
+    end
+
+    # ## The `/status/history/export` endpoint
+    #
+    # Downloads the sampled metrics history since the given relative
+    # time as a CSV attachment — full fidelity (no downsampling), the
+    # machine-readable counterpart of the dashboard charts.
+    get route_path("status/history/export") do |env|
+      unless Grafito.dashboard_enabled?
+        env.response.status_code = 404
+        next "Dashboard is disabled."
+      end
+
+      since_text = optional_query_param(env, "since") || "-1h"
+      since = parse_since(since_text)
+      if since.nil?
+        env.response.content_type = "text/plain"
+        env.response.status_code = 400
+        next "Invalid 'since' parameter: #{since_text}"
+      end
+
+      points = Grafito.metrics_store.try(&.history(since)) || [] of Grafito::MetricsStore::MetricPoint
+      env.response.content_type = "text/csv"
+      env.response.headers["Content-Disposition"] = "attachment; filename=\"grafito-metrics-#{since_text.delete("-")}.csv\""
+      metrics_csv(points)
     end
 
     # ## The `/dashboard` endpoint
@@ -962,7 +1002,10 @@ module Dashboard
   ) : String
     snapshot = SystemStatus.snapshot
     since_time = parse_since(since_text.to_s) || default_dashboard_since
-    history = Grafito.metrics_store.try(&.history(since_time)) || [] of Grafito::MetricsStore::MetricPoint
+    # Downsampled to a chart-friendly point count: a 7-day window is
+    # ~20000 raw samples, which the SVG would serialize coordinate by
+    # coordinate. Use ?max_points= on /status/history for raw data.
+    history = Grafito.metrics_store.try(&.history_downsampled(since_time)) || [] of Grafito::MetricsStore::MetricPoint
     entries = dashboard_journal_entries(since_text.presence || "-6h")
     buckets = severity_buckets(entries, history)
     errors = entries.count { |entry| (entry.priority.to_i? || 7) <= 3 }
@@ -1051,6 +1094,23 @@ module Dashboard
     return 0 unless Grafito.dashboard_enabled?
     logs = Journalctl.query(since: since, query: OOM_GREP, lines: 500)
     logs ? logs.size : 0
+  end
+
+  # Serializes metric points as CSV: one header row, then one row per
+  # sample. Optional fields render as empty cells on pre-network /
+  # swapless history; the per-interface breakdown becomes a compact
+  # `iface:rx/tx;…` column so exports stay single-row-per-sample.
+  def self.metrics_csv(points : Array(Grafito::MetricsStore::MetricPoint)) : String
+    CSV.build do |csv|
+      csv.row "ts", "load1", "mem_used_pct", "disk_used_pct", "swap_used_pct",
+        "units_total", "units_failed", "net_rx_bps", "net_tx_bps", "net"
+      points.each do |point|
+        net = point.net.try(&.map { |name, rate| "#{name}:#{rate.rx_bps.round(1)}/#{rate.tx_bps.round(1)}" }.join(";"))
+        csv.row point.ts.to_s("%FT%T%:z"), point.load1, point.mem_used_pct, point.disk_used_pct,
+          point.swap_used_pct, point.units_total, point.units_failed,
+          point.net_rx_bps, point.net_tx_bps, net
+      end
+    end
   end
 
   # Parses the same relative time vocabulary the logs endpoint uses

@@ -19,15 +19,22 @@ def dispatch_request(method : String, path : String, body : String? = nil, heade
   response.close
 
   # Depending on how the route writes its response, the raw IO may
-  # contain the full HTTP head. Strip it so specs see just the body.
+  # contain the full HTTP head. Strip it so specs see just the body;
+  # keep the headers either way (e.g. for content-type assertions).
   raw_body = response_io.to_s
-  body_text = if raw_body.starts_with?("HTTP/")
-                raw_body.split("\r\n\r\n", 2).last? || ""
-              else
-                raw_body
-              end
+  body_text, response_headers = if raw_body.starts_with?("HTTP/")
+                                  head, _, rest = raw_body.partition("\r\n\r\n")
+                                  parsed = HTTP::Headers.new
+                                  head.each_line.skip(1).each do |line|
+                                    name, _, value = line.partition(":")
+                                    parsed.add(name.strip, value.strip)
+                                  end
+                                  {rest || "", parsed}
+                                else
+                                  {raw_body, response.headers}
+                                end
 
-  {status: response.status_code, body: body_text}
+  {status: response.status_code, body: body_text, headers: response_headers}
 end
 
 # Minimal AI provider used to enable AI-dependent UI in specs.

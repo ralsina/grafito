@@ -105,6 +105,60 @@ module Grafito
       history_from_memory(since)
     end
 
+    # The history since the given time, downsampled to at most
+    # `max_points` points by averaging consecutive time buckets, so a
+    # 7-day window renders as ~600 points instead of ~20000 (raw
+    # samples at a 30s interval). Gauges and rates average; failure
+    # counts take the bucket maximum so a blip stays visible. The
+    # per-interface breakdown is dropped from downsampled points — the
+    # rx/tx aggregates carry the chart; use `history` for full
+    # fidelity.
+    def history_downsampled(since : Time, max_points : Int32 = 600) : Array(MetricPoint)
+      raw = history(since)
+      return raw if raw.size <= max_points
+      span = (raw.last.ts - raw.first.ts).total_seconds
+      return raw if span <= 0
+      bucket_span = span / max_points
+
+      buckets = Array(Array(MetricPoint)).new
+      bucket_index = -1
+      raw.each do |point|
+        index = ((point.ts - raw.first.ts).total_seconds / bucket_span).to_i
+        # Rounding can push the last point into an extra bucket; fold
+        # it back so the result never exceeds max_points.
+        index = max_points - 1 if index >= max_points
+        if index != bucket_index
+          buckets << [] of MetricPoint
+          bucket_index = index
+        end
+        buckets.last << point
+      end
+      buckets.map { |bucket| average_bucket(bucket) }
+    end
+
+    # Averages one bucket of raw points into a single point (ts of the
+    # bucket's last sample).
+    private def average_bucket(bucket : Array(MetricPoint)) : MetricPoint
+      count = bucket.size.to_f
+      MetricPoint.new(
+        ts: bucket.last.ts,
+        load1: bucket.sum(&.load1) / count,
+        mem_used_pct: bucket.sum(&.mem_used_pct) / count,
+        disk_used_pct: bucket.sum(&.disk_used_pct) / count,
+        units_total: bucket.max_of(&.units_total),
+        units_failed: bucket.max_of(&.units_failed),
+        swap_used_pct: average_optional(bucket, &.swap_used_pct),
+        net_rx_bps: average_optional(bucket, &.net_rx_bps),
+        net_tx_bps: average_optional(bucket, &.net_tx_bps),
+        net: nil,
+      )
+    end
+
+    private def average_optional(bucket : Array(MetricPoint), &value : MetricPoint -> Float64?) : Float64?
+      values = bucket.compact_map(&value)
+      values.empty? ? nil : values.sum / values.size
+    end
+
     # The most recent point, or nil when nothing has been sampled yet.
     def latest : MetricPoint?
       @mutex.synchronize { @recent.last? }
