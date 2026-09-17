@@ -820,6 +820,26 @@ body[data-view] #stats-strip {
   justify-content: center;
   gap: 0.3rem;
 }
+
+/* Member process rows inside the compose service detail panel. */
+.service-member-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.15rem 0;
+}
+.service-member-pid {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.service-member-cmd {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 /* =====================================================================
    Stream (results)
    ===================================================================== */
