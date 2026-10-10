@@ -487,6 +487,10 @@ module HomepageDashboard
   EXAMPLE_CONFIG = <<-YAML
     title: Homelab
 
+    # Services declared with only a port are reached at
+    # http://<hostname>:<port>.
+    hostname: rocky
+
     weather:
       latitude: -34.9
       longitude: -56.16
@@ -496,7 +500,7 @@ module HomepageDashboard
       - name: Media
         services:
           - name: Jellyfin
-            url: https://jellyfin.example.com
+            port: 8096
             description: Movies and series
             icon: play_circle
             check: true

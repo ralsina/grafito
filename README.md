@@ -261,6 +261,11 @@ setup instructions with an example, so enabling it costs nothing:
 ```yaml
 title: Homelab
 
+# Services declared with only a port are reached at
+# http://<hostname>:<port> — the name keeps working from wherever
+# you browse (Tailscale MagicDNS, for example), unlike an IP.
+hostname: rocky
+
 # Optional weather widget, powered by Open-Meteo (no API key).
 weather:
   latitude: -34.9
@@ -272,7 +277,7 @@ groups:
   - name: Media
     services:
       - name: Jellyfin
-        url: https://jellyfin.example.com
+        port: 8096 # same as url: http://rocky:8096
         description: Movies and series
         icon: play_circle # Material icon, emoji or image URL
         check: true # show an up/down dot for this service
@@ -284,6 +289,9 @@ groups:
 
 * **Icons**: a Material Icons name (`play_circle`), an emoji, or an
   image URL; unset icons get a generic glyph.
+* **Locations**: each service needs a `url` or a `port`; a port is
+  combined with the top-level `hostname` into `http://<hostname>:<port>`
+  when the file is parsed. An explicit `url` always wins.
 * **Reachability dots**: services with `check: true` get a colored
   dot — anything answering below HTTP 500 (redirects and login pages
   included) counts as up. Checks run concurrently with a 2.5s timeout

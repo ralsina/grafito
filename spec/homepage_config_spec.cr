@@ -60,6 +60,38 @@ describe HomepageConfig::Config do
       end
     end
 
+    it "builds urls for port-only services from the hostname" do
+      path = File.tempname("grafito-homepage", ".yml")
+      begin
+        File.write(path, <<-YAML)
+          hostname: rocky
+          groups:
+            - name: Development
+              services:
+                - name: Gitea
+                  port: 3000
+                  check: true
+                - name: Snips
+                  port: 8091
+                - name: Chat
+                  url: https://chat.example.com
+                  port: 9999
+          YAML
+
+        config = HomepageConfig::Config.load(path)
+
+        config.hostname.should eq("rocky")
+        services = config.groups[0].services
+        services[0].url.should eq("http://rocky:3000")
+        services[0].check?.should be_true
+        services[1].url.should eq("http://rocky:8091")
+        # An explicit url is never rewritten, even when a port is present.
+        services[2].url.should eq("https://chat.example.com")
+      ensure
+        File.delete(path) if File.exists?(path)
+      end
+    end
+
     it "applies defaults for a minimal config" do
       path = File.tempname("grafito-homepage", ".yml")
       begin
@@ -94,7 +126,7 @@ describe HomepageConfig::Config do
       end
     end
 
-    it "raises on a service without a URL" do
+    it "raises on a service with neither url nor port" do
       path = File.tempname("grafito-homepage", ".yml")
       begin
         File.write(path, <<-YAML)
@@ -104,9 +136,34 @@ describe HomepageConfig::Config do
                 - name: No URL
           YAML
 
-        expect_raises(YAML::ParseException) do
+        error = expect_raises(ArgumentError, "needs a url or a port") do
           HomepageConfig::Config.load(path)
         end
+        message = error.message
+        fail("error should have had a message") unless message
+        message.should contain("No URL")
+      ensure
+        File.delete(path) if File.exists?(path)
+      end
+    end
+
+    it "raises on a port with no hostname" do
+      path = File.tempname("grafito-homepage", ".yml")
+      begin
+        File.write(path, <<-YAML)
+          groups:
+            - name: Broken
+              services:
+                - name: Gitea
+                  port: 3000
+          YAML
+
+        error = expect_raises(ArgumentError, "sets no hostname") do
+          HomepageConfig::Config.load(path)
+        end
+        message = error.message
+        fail("error should have had a message") unless message
+        message.should contain("Gitea")
       ensure
         File.delete(path) if File.exists?(path)
       end

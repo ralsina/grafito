@@ -8,6 +8,12 @@
 # ```yaml
 # title: Homelab
 #
+# # Hostname services declared with only a port are reached at
+# # (here "port: 3000" means http://rocky:3000). Useful when the
+# # machine is reachable by name — over Tailscale, say — because the
+# # name keeps working from wherever you browse, unlike an IP.
+# hostname: rocky
+#
 # weather:
 #   latitude: -34.9
 #   longitude: -56.16
@@ -18,7 +24,7 @@
 #   - name: Media
 #     services:
 #       - name: Jellyfin
-#         url: https://jellyfin.example.com
+#         port: 8096 # same as url: http://rocky:8096
 #         description: Movies and series
 #         icon: play_circle # Material icon, emoji or image URL
 #         check: true # show an up/down dot for this service
@@ -28,9 +34,10 @@
 #         url: https://ha.example.com
 # ```
 #
-# Everything except a service's name and URL is optional. When the
-# file does not exist the view renders setup instructions instead, so
-# enabling the view costs nothing until it is configured.
+# Everything except a service's name and one of `url` or `port` is
+# optional. When the file does not exist the view renders setup
+# instructions instead, so enabling the view costs nothing until it is
+# configured.
 
 require "yaml"
 
@@ -39,11 +46,16 @@ module HomepageConfig
   # ("jellyfin" does not exist, but "play_circle" does), an emoji, or
   # an image URL for the dashboard-icons crowd. `check` opts the
   # service into reachability monitoring (a colored dot).
+  #
+  # A service is located either by a full `url` or by a bare `port`
+  # (resolved against the config's `hostname` once the whole file has
+  # been parsed, so `url` always holds the final address afterwards).
   class Service
     include YAML::Serializable
 
     property name : String
-    property url : String
+    property url : String = ""
+    property port : Int32? = nil
     property description : String = ""
     property icon : String = ""
     property? check : Bool = false
@@ -93,6 +105,7 @@ module HomepageConfig
     include YAML::Serializable
 
     property title : String = "Home"
+    property hostname : String = ""
     property weather : Weather? = nil
     property groups : Array(Group) = [] of Group
 
@@ -100,6 +113,25 @@ module HomepageConfig
     # renders its setup hint, like a missing file would.
     def empty? : Bool
       groups.empty? && weather.nil?
+    end
+
+    # Services declared with only a port get their url built from the
+    # config's hostname. Runs after the whole file is parsed so the
+    # error messages can name the service and say what is missing.
+    def after_initialize
+      groups.each do |group|
+        group.services.each do |service|
+          next unless service.url.empty?
+          if port = service.port
+            if hostname.empty?
+              raise ArgumentError.new("Service '#{service.name}' uses port #{port}, but the config sets no hostname")
+            end
+            service.url = "http://#{hostname}:#{port}"
+          else
+            raise ArgumentError.new("Service '#{service.name}' needs a url or a port")
+          end
+        end
+      end
     end
 
     # Reads and parses the config file. Raises on unreadable files and
