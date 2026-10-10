@@ -22,7 +22,7 @@ require "./spec_helper"
 
     it "action endpoints simulate without enable-actions or auth" do
       Grafito.enable_actions = false
-      Grafito.auth_configured = false
+      Grafito.auth_configured_override = false
 
       stack_response = dispatch_request("POST", "/compose-stack/webapp/stop")
       stack_response[:status].should eq(200)
@@ -38,7 +38,7 @@ require "./spec_helper"
 
     it "action endpoints reject unknown actions and names" do
       Grafito.enable_actions = true
-      Grafito.auth_configured = true
+      Grafito.auth_configured_override = true
 
       dispatch_request("POST", "/compose-stack/webapp/destroy")[:status].should eq(400)
       dispatch_request("POST", "/compose-stack/-evil/up")[:status].should eq(400)
@@ -51,7 +51,7 @@ require "./spec_helper"
 
     it "stack actions start a job and return its polling fragment" do
       Grafito.enable_actions = true
-      Grafito.auth_configured = true
+      Grafito.auth_configured_override = true
 
       response = dispatch_request("POST", "/compose-stack/webapp/update")
       response[:status].should eq(200)

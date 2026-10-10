@@ -303,6 +303,34 @@ groups:
 Set `GRAFITO_HOMEPAGE=false` (or `--homepage=false`) to disable the
 homepage view and its endpoint completely.
 
+### Settings and Onboarding
+
+The gear button in the top bar opens the **settings view**
+(`?view=settings`): basic-auth credentials, the display timezone,
+the AI provider (with API key and model) and the homepage basics
+(title, hostname, weather location). Everything applies live — no
+restarts — and is stored in `settings.json` under the data dir
+(`0600`, secrets in plaintext exactly like the DNS provider token;
+disable the view with `--settings=false`).
+
+Configuration precedence is **boot wins**: values set via CLI flags,
+environment variables or `GRAFITO_CONFIG` are never overridden by the
+settings view, and fields owned by the environment render as notices
+instead of inputs. So a deployment like
+`GRAFITO_AUTH_USER=... GRAFITO_AUTH_PASS=...` keeps managing
+authentication itself, while everything else becomes editable at
+runtime.
+
+On a fresh instance — no credentials anywhere — the settings view
+renders as the **onboarding wizard**: create a login (required),
+pick a timezone and homepage basics (optional), optionally paste an
+AI key. The browser lands on it automatically, and the wizard's
+save endpoint is the one state-changing endpoint that works while
+unauthenticated. The moment credentials exist it closes forever and
+everything else requires login, with credentials checked on every
+request (so changing your password in the view takes effect
+immediately).
+
 ### Adding a View
 
 The auxiliary views (dashboard, compose, processes, homepage) are

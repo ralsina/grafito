@@ -140,6 +140,14 @@
           >
             <span class="material-icons" aria-hidden="true">home</span>
           </button>
+          <button
+            data-view-mode="settings"
+            aria-pressed="false"
+            aria-label="Settings (credentials, timezone, AI, homepage)"
+            title="Settings (credentials, timezone, AI, homepage)"
+          >
+            <span class="material-icons" aria-hidden="true">settings</span>
+          </button>
         </div>
 
         <!-- Service filter for the dashboard view, styled like the log
@@ -597,6 +605,13 @@
           hx-target="this"
           hx-swap="innerHTML"
         ></div>
+
+        <!-- Settings (toggled by the gear button): credentials,
+             timezone, AI provider and homepage basics, plus the
+             onboarding wizard on a fresh instance. Fetched on demand
+             by the VIEWS registry — no polling, it only changes when
+             you change it. -->
+        <div id="settings-view" hidden></div>
       </main>
 
       <aside id="minimap">

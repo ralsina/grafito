@@ -117,20 +117,20 @@ describe "Process routes" do
     # Force the action gate open: auth flags are not set in specs, so
     # poke the gate conditions directly.
     Grafito.enable_actions = true
-    Grafito.auth_configured = true
+    Grafito.auth_configured_override = true
     response = dispatch_request("POST", "/process/1/nuke")
     response[:status].should eq 400
     Grafito.enable_actions = false
-    Grafito.auth_configured = false
+    Grafito.auth_configured_override = false
   end
 
   it "POST /process/:pid/:action 404s for unknown pids" do
     Grafito.enable_actions = true
-    Grafito.auth_configured = true
+    Grafito.auth_configured_override = true
     response = dispatch_request("POST", "/process/999999/term")
     response[:status].should eq 404
     Grafito.enable_actions = false
-    Grafito.auth_configured = false
+    Grafito.auth_configured_override = false
   end
 
   it "POST /process-explain is 503 without an AI provider" do

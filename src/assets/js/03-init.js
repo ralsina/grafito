@@ -405,10 +405,22 @@ document.addEventListener("DOMContentLoaded", function () {
   } else {
     serverInfoPromise.then((info) => {
       const views = info && info.views;
+      if (info && info.onboarding_needed) return; // the wizard lands instead
       if (views && views.homepage === false) return; // stay on logs
       setViewMode("homepage");
     });
   }
+
+  // --- Onboarding Landing ---
+  // A fresh instance with no login jumps straight to the settings
+  // view, which renders as the onboarding wizard. Explicitly chosen
+  // views are overridden too: until credentials exist, creating them
+  // is the only thing that matters.
+  serverInfoPromise.then((info) => {
+    if (info && info.onboarding_needed && VIEWS.settings) {
+      setViewMode("settings");
+    }
+  });
 
   updateViewSwitcher();
 

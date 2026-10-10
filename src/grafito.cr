@@ -26,10 +26,14 @@ require "./process_status"
 require "./process_dashboard"
 require "./homepage_config"
 require "./homepage"
+require "./settings_store"
+require "./auth_handler"
+require "./settings_dashboard"
 
 {% if flag?(:demo_mode) %}
   require "./fake_compose_data"
   require "./fake_homepage_data"
+  require "./fake_settings_data"
 {% end %}
 
 require "./gotify/config"
@@ -97,10 +101,23 @@ module Grafito
   # User systemd mode - when enabled, use --user flag for journalctl/systemctl
   class_property? user_mode : Bool = false
 
-  # Whether basic-auth credentials are configured. Unit actions require
-  # them: there is no reason to expose state-changing endpoints on an
-  # unauthenticated server.
-  class_property? auth_configured : Bool = false
+  # Spec-only override for the computed auth_configured?; nil in
+  # production. Specs that exercise the action gates need to flip
+  # authentication without touching the environment the computed
+  # value reads.
+  class_property auth_configured_override : Bool? = nil
+
+  # Whether basic-auth credentials are configured, resolved live: the
+  # boot environment's when set, otherwise the settings store's (the
+  # settings view and onboarding wizard can change them at runtime).
+  # Unit actions require them: there is no reason to expose
+  # state-changing endpoints on an unauthenticated server.
+  def self.auth_configured? : Bool
+    if override = auth_configured_override
+      return override
+    end
+    !SettingsStore.effective_auth.nil?
+  end
 
   # Server dashboard - when enabled, /status, /status/history and
   # /dashboard are served and the metrics sampler runs.
@@ -128,6 +145,10 @@ module Grafito
 
   # Where the homepage view reads its service list from.
   class_property homepage_config_path : String = "/etc/grafito/homepage.yml"
+
+  # Settings view - when enabled, the /settings routes are served and
+  # the settings toggle appears in the frontend.
+  class_property? settings_enabled : Bool = true
 
   # Base directory for on-disk state: dashboard metrics, the app store
   # caches (appstores/), installed apps (apps/) and their data
@@ -628,6 +649,10 @@ module Grafito
           homepage:  Grafito.homepage_enabled?,
           processes: Grafito.processes_enabled?,
         },
+        settings:          Grafito.settings_enabled?,
+        onboarding_needed: Grafito.settings_enabled? &&
+          !Grafito.auth_configured? &&
+          !SettingsStore.load(Grafito.data_dir).onboarded?,
       }.to_json
     end
 
@@ -877,5 +902,6 @@ module Grafito
     ComposeAppStore.register_routes
     ProcessDashboard.register_routes
     HomepageDashboard.register_routes
+    SettingsDashboard.register_routes
   end # register_routes
 end

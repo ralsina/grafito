@@ -60,6 +60,13 @@ module HomepageConfig
     property icon : String = ""
     property? check : Bool = false
 
+    # The url as written in the YAML (nil for port-form services), so
+    # `Config#resolve_urls!` can tell an explicit url (which always
+    # wins) from one it built itself and may rebuild when the hostname
+    # changes. Never serialized: it is parse bookkeeping.
+    @[YAML::Field(ignore: true)]
+    property explicit_url : String? = nil
+
     # Explicit constructor so code can synthesize services at runtime
     # (the homepage's auto-generated "Installed apps" group).
     def initialize(name : String, url : String, description : String = "", icon : String = "", check : Bool = false)
@@ -96,6 +103,12 @@ module HomepageConfig
     property location : String = ""
     property units : String = "metric"
 
+    # Explicit constructor so the settings overlay can build a weather
+    # config at runtime (YAML::Serializable alone has none).
+    def initialize(@latitude : Float64, @longitude : Float64,
+                   @location : String = "", @units : String = "metric")
+    end
+
     def imperial? : Bool
       units.strip.downcase == "imperial"
     end
@@ -121,7 +134,20 @@ module HomepageConfig
     def after_initialize
       groups.each do |group|
         group.services.each do |service|
-          next unless service.url.empty?
+          service.explicit_url = service.url unless service.url.empty?
+        end
+      end
+      resolve_urls!
+    end
+
+    # (Re)builds the url of every port-form service against the
+    # current hostname — idempotent, so the settings overlay can
+    # change the hostname and call this again. Services with an
+    # explicit url are never touched.
+    def resolve_urls! : Nil
+      groups.each do |group|
+        group.services.each do |service|
+          next if service.explicit_url
           if port = service.port
             if hostname.empty?
               raise ArgumentError.new("Service '#{service.name}' uses port #{port}, but the config sets no hostname")
@@ -132,6 +158,36 @@ module HomepageConfig
           end
         end
       end
+    end
+
+    # Applies the settings store's homepage overrides on top of the
+    # parsed file: title, hostname and weather win over the file's
+    # values; groups and services always come from the file. Weather
+    # coordinates only apply as a pair, and unset weather cosmetics
+    # (location, units) fall back to the file's.
+    # ameba:disable Metrics/CyclomaticComplexity
+    def apply_overlay(overlay : SettingsStore::HomepageSettings?) : Nil
+      return unless overlay
+      if title = overlay.title
+        @title = title
+      end
+      if overlay_hostname = overlay.hostname
+        @hostname = overlay_hostname
+      end
+      if weather = overlay.weather
+        if latitude = weather.latitude
+          if longitude = weather.longitude
+            existing = @weather
+            @weather = Weather.new(
+              latitude: latitude,
+              longitude: longitude,
+              location: weather.location || existing.try(&.location) || "",
+              units: weather.units || existing.try(&.units) || "metric",
+            )
+          end
+        end
+      end
+      resolve_urls!
     end
 
     # Reads and parses the config file. Raises on unreadable files and

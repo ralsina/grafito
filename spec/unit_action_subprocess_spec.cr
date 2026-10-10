@@ -12,13 +12,13 @@ require "./spec_helper"
     around_each do |example|
       ENV["PATH"] = "#{fixture_dir}:#{original_path}"
       Grafito.enable_actions = true
-      Grafito.auth_configured = true
+      Grafito.auth_configured_override = true
       example.run
     ensure
       ENV.delete("FAKE_SYSTEMCTL_FAIL")
       ENV["PATH"] = original_path
       Grafito.enable_actions = false
-      Grafito.auth_configured = false
+      Grafito.auth_configured_override = false
     end
 
     it "surfaces systemctl failures instead of rendering success" do
@@ -35,7 +35,7 @@ require "./spec_helper"
 
     it "refuses actions without enable-actions + auth" do
       Grafito.enable_actions = false
-      Grafito.auth_configured = false
+      Grafito.auth_configured_override = false
       response = dispatch_request("POST", "/unit/spec.service/stop")
       response[:status].should eq(403)
       response[:body].should contain("Unit actions are disabled")

@@ -129,6 +129,11 @@ const VIEWS = {
     endpoint: "homepage",
     minimap: null,
   },
+  settings: {
+    element: "settings-view",
+    endpoint: "settings",
+    minimap: null,
+  },
   processes: {
     element: "processes-view",
     endpoint: "processes",

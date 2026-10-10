@@ -43,7 +43,7 @@ require "./spec_helper"
 
     it "POST endpoints simulate without enable-actions or auth" do
       Grafito.enable_actions = false
-      Grafito.auth_configured = false
+      Grafito.auth_configured_override = false
 
       response = dispatch_request("POST", "/compose-appstore-sync", "store=demo", FORM_HEADERS)
       response[:status].should eq(200)
@@ -55,7 +55,7 @@ require "./spec_helper"
 
     it "the install form validates ids and unknown apps" do
       Grafito.enable_actions = true
-      Grafito.auth_configured = true
+      Grafito.auth_configured_override = true
 
       dispatch_request("GET", "/compose-appstore-app?store=-evil&app=whoami")[:status].should eq(400)
       dispatch_request("GET", "/compose-appstore-app?store=demo&app=no-such-app")[:status].should eq(404)
@@ -67,7 +67,7 @@ require "./spec_helper"
 
     it "installing starts a job, adds the app and its stack, and answers with the polling fragment" do
       Grafito.enable_actions = true
-      Grafito.auth_configured = true
+      Grafito.auth_configured_override = true
 
       response = dispatch_request("POST", "/compose-appstore-install", "store=demo&app=jellyfin&port=8097", FORM_HEADERS)
       response[:status].should eq(200)
@@ -89,7 +89,7 @@ require "./spec_helper"
 
     it "uninstall and update operate on the installed list" do
       Grafito.enable_actions = true
-      Grafito.auth_configured = true
+      Grafito.auth_configured_override = true
 
       dispatch_request("POST", "/compose-appstore-uninstall", "stack=no-such-stack", FORM_HEADERS)[:status].should eq(404)
       dispatch_request("POST", "/compose-appstore-update", "stack=no-such-stack", FORM_HEADERS)[:status].should eq(404)
@@ -119,7 +119,7 @@ require "./spec_helper"
 
     it "uninstalling the fixture app keeps the fixture stack scenery" do
       Grafito.enable_actions = true
-      Grafito.auth_configured = true
+      Grafito.auth_configured_override = true
 
       response = dispatch_request("POST", "/compose-appstore-uninstall", "stack=webapp", FORM_HEADERS)
       response[:status].should eq(200)
@@ -136,7 +136,7 @@ require "./spec_helper"
 
     it "sync starts a job and the logo endpoint serves generated svgs" do
       Grafito.enable_actions = true
-      Grafito.auth_configured = true
+      Grafito.auth_configured_override = true
 
       response = dispatch_request("POST", "/compose-appstore-sync", "store=demo", FORM_HEADERS)
       response[:status].should eq(200)

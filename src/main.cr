@@ -47,7 +47,6 @@ require "./metrics_store"
 require "baked_file_handler"
 require "baked_file_system"
 require "docopt-config"
-require "kemal-basic-auth"
 require "kemal"
 require "log"
 require "socket"
@@ -90,6 +89,7 @@ DOC = <<-DOCOPT
     --processes=BOOL             Enable the process monitor view (true/false) [default: true].
     --homepage=BOOL              Enable the homepage view (true/false) [default: true].
     --homepage-config=PATH       Homepage view config file (YAML) [default: /etc/grafito/homepage.yml].
+    --settings=BOOL              Enable the settings view and onboarding (true/false) [default: true].
     --data-dir=PATH              Directory for metrics history, app store caches and installed apps [default: /var/lib/grafito].
     --sample-interval-sec=N      Dashboard metrics sampling interval in seconds [default: 30].
     --retention-days=N           Days of dashboard metrics history to keep [default: 7].
@@ -154,9 +154,22 @@ def main
 
   parse_idle_timeout(args)
 
+  # Resolve the data dir early: the settings store lives there, and
+  # both authentication and the timezone may come from it.
+  Grafito.data_dir = Grafito::MetricsStore.resolve_data_dir(args["--data-dir"].to_s)
+  boot_settings = SettingsStore.load(Grafito.data_dir)
+
   # Parse timezone configuration
   # docopt-config handles the fallback automatically: CLI > env var > config > default
+  # The boot value wins over settings.json only when it was set
+  # explicitly; docopt returns the merged default otherwise, so
+  # explicitness is detected via the env var or the raw argv.
   timezone = args["--timezone"].to_s
+  boot_timezone_explicit = !ENV["GRAFITO_TIMEZONE"]?.nil? ||
+                           ARGV.any? { |arg| arg.starts_with?("--timezone") || arg.starts_with?("-t") }
+  if !boot_timezone_explicit && (settings_timezone = boot_settings.timezone)
+    timezone = settings_timezone
+  end
   Grafito.timezone = timezone
   Grafito::Log.info { "Using timezone: #{timezone}" }
 
@@ -172,11 +185,11 @@ def main
   Grafito.user_mode = (user_mode_str == "true")
   Grafito::Log.info { "User mode: #{Grafito.user_mode? ? "enabled" : "disabled"}" }
 
-  # Read credentials and configure authentication first: the dashboard
-  # setup needs to know whether actions may be enabled.
-  auth_user = ENV["GRAFITO_AUTH_USER"]?
-  auth_pass = ENV["GRAFITO_AUTH_PASS"]?
-  setup_basic_auth(auth_user, auth_pass)
+  # Configure authentication first: the dashboard setup needs to know
+  # whether actions may be enabled. Credentials resolve per request
+  # (boot environment first, then the settings store), so the handler
+  # picks up wizard-created or settings-changed credentials live.
+  setup_basic_auth
 
   # Parse dashboard configuration. The dashboard itself, the metrics
   # sampler and (optionally) Gotify alerts all hang off this switch.
@@ -228,8 +241,18 @@ def main
   Grafito.homepage_config_path = args["--homepage-config"].to_s
   Grafito::Log.info { "Homepage view: #{Grafito.homepage_enabled? ? "enabled" : "disabled"} (config: #{Grafito.homepage_config_path})" }
 
+  # Parse settings view configuration (the settings page and the
+  # onboarding wizard).
+  Grafito.settings_enabled = args["--settings"].to_s != "false"
+  Grafito::Log.info { "Settings view: #{Grafito.settings_enabled? ? "enabled" : "disabled"}" }
+
   # Register all Kemal routes (must be done after base_path is set)
   Grafito.register_routes
+
+  # The settings store may configure the AI provider; bridge it into
+  # the environment before the provider is built. Values the operator
+  # set at boot are never overwritten.
+  SettingsStore.apply_ai_to_env(boot_settings)
 
   # Initialize AI provider using the abstraction layer
   setup_ai_provider
@@ -365,22 +388,33 @@ def setup_ai_provider
   end
 end
 
-# Enables basic authentication when both credentials are configured,
-# refuses to run half-configured, and warns when running unprotected.
-def setup_basic_auth(auth_user : String?, auth_pass : String?)
+# Installs the authentication handler. Credentials are resolved per
+# request: the boot environment's when both are set, otherwise the
+# settings store's (live: the onboarding wizard and the settings view
+# can create or change them without a restart). Refuses to run
+# half-configured and warns when running unprotected, as ever.
+def setup_basic_auth
+  auth_user = ENV["GRAFITO_AUTH_USER"]?
+  auth_pass = ENV["GRAFITO_AUTH_PASS"]?
   if auth_user && auth_pass
-    Grafito::Log.info { "Basic Authentication enabled. User: #{auth_user}" }
-    basic_auth auth_user, auth_pass
-    Grafito.auth_configured = true
+    Grafito::Log.info { "Basic Authentication enabled (from environment). User: #{auth_user}" }
   elsif auth_user || auth_pass
     # Only one of the credentials was set - this is a misconfiguration.
     # Exit with an error code to prevent running in an insecure state.
     Grafito::Log.fatal { "Basic Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended." }
     exit 1
+  elsif credentials = SettingsStore.effective_auth
+    Grafito::Log.info { "Basic Authentication enabled (from settings). User: #{credentials[0]}" }
   else
-    # Neither username nor password are set, run without authentication.
-    Grafito::Log.warn { "Basic Authentication is DISABLED. To enable, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS environment variables." }
+    # Neither source has credentials, run without authentication.
+    Grafito::Log.warn { "Basic Authentication is DISABLED. To enable it, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS, or open the settings view (?view=settings) to run the onboarding wizard." }
+    {% unless flag?(:demo_mode) %}
+      unless SettingsStore.load(Grafito.data_dir).onboarded?
+        Grafito::Log.info { "First run detected: the onboarding wizard is available at the settings view." }
+      end
+    {% end %}
   end
+  use AuthHandler.new
 end
 
 # Applies the dashboard options and starts the metrics sampler (with

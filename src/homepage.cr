@@ -577,11 +577,16 @@ module HomepageDashboard
         metrics: Grafito.metrics_store.try(&.latest), installed_apps: installed_apps, hostname: hostname)
     {% end %}
 
-    unless File.exists?(path)
-      return setup_hint_fragment(path)
-    end
-
-    config = HomepageConfig::Config.load(path)
+    # The file supplies the groups and services; the settings store
+    # can override title, hostname and weather on top of it (and can
+    # carry the whole page when there is no file at all).
+    config =
+      if File.exists?(path)
+        HomepageConfig::Config.load(path)
+      else
+        HomepageConfig::Config.from_yaml("{}")
+      end
+    config.apply_overlay(SettingsStore.load(Grafito.data_dir).homepage)
     return setup_hint_fragment(path) if config.empty?
 
     weather_snapshot = config.weather.try do |weather_config|
