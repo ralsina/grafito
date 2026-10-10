@@ -47,6 +47,10 @@ services:
       - /run/dbus:/run/dbus
       - /run/systemd/private:/run/systemd/private
       - /var/run/docker.sock:/var/run/docker.sock
+      # The stacks root (the stacks-dir setting): the compose view
+      # reads stack files docker doesn't know about from here, and
+      # stack actions run docker compose against these paths.
+      - /data/stacks:/data/stacks
       - ./:/var/lib/grafito
       # The homepage launcher's config, in the ./homepage directory
       # (mounted as a directory, not the single file, so editing the

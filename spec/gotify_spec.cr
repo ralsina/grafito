@@ -22,6 +22,41 @@ describe Grafito::Gotify do
   end
 
   describe Grafito::Gotify::Config do
+    {% unless flag?(:demo_mode) %}
+      # Reads the real settings file; demo builds keep the store in memory.
+      it "reads url, token and thresholds from the settings store when the env is unset" do
+        data_dir = File.tempname("grafito-gotify-settings", "")
+        Dir.mkdir(data_dir)
+        begin
+          SettingsStore.save(data_dir, SettingsStore::Settings.new(
+            gotify: SettingsStore::GotifySettings.new(
+              url: "https://push.example.com/", token: "stoken",
+              priority: 7, disk_pct: 80.0, swap_pct: 70.0, errors_per_min: 3.0)))
+          old_data_dir = Grafito.data_dir
+          Grafito.data_dir = data_dir
+          begin
+            Grafito::Gotify::Config.enabled?.should be_true
+            # Trailing slashes are trimmed like the env-based value.
+            Grafito::Gotify::Config.url.should eq("https://push.example.com")
+            Grafito::Gotify::Config.token.should eq("stoken")
+            Grafito::Gotify::Config.priority.should eq(7)
+            Grafito::Gotify::Config.disk_threshold_pct.should eq(80.0)
+            Grafito::Gotify::Config.swap_threshold_pct.should eq(70.0)
+            Grafito::Gotify::Config.errors_per_min_threshold.should eq(3.0)
+
+            # The environment still wins over the settings store.
+            ENV["GRAFITO_GOTIFY_URL"] = "https://env.example.com"
+            Grafito::Gotify::Config.url.should eq("https://env.example.com")
+            ENV.delete("GRAFITO_GOTIFY_URL")
+          ensure
+            Grafito.data_dir = old_data_dir
+          end
+        ensure
+          FileUtils.rm_rf(data_dir)
+        end
+      end
+    {% end %}
+
     it "is disabled without configuration" do
       ENV.delete("GRAFITO_GOTIFY_URL")
       ENV.delete("GRAFITO_GOTIFY_TOKEN")

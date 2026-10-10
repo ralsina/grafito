@@ -202,6 +202,35 @@ module SettingsDashboard
           html field("Weather location name", "hp_location", input["hp_location"]? || weather_value(settings, file_config, "location"))
           html units_select(input["hp_units"]? || weather_value(settings, file_config, "units"))
         end
+        div(class: "settings-section") do
+          div(class: "settings-section-title") { text "Compose stacks" }
+          html field("Stacks directory", "stacks_dir", input["stacks_dir"]? || settings.stacks_dir.to_s,
+            hint: "Stacks on disk that docker doesn't know about (never started, or fully removed) are listed as stopped and can be started from the Compose view")
+        end
+        div(class: "settings-section") do
+          div(class: "settings-section-title") { text "App stores" }
+          div(class: "appstore-field") do
+            label(for: "settings-appstores") { text "Store sources" }
+            textarea({
+              "id"   => "settings-appstores",
+              "name" => "appstores",
+              "rows" => "3",
+            }) { text appstores_display(settings, input) }
+            tag("small", class: "settings-field-hint") { text "One name=url per line; blank uses the boot configuration" }
+          end
+        end
+        div(class: "settings-section") do
+          div(class: "settings-section-title") { text "Notifications (Gotify)" }
+          html field("Gotify URL", "gotify_url", input["gotify_url"]? || settings.gotify.try(&.url).to_s,
+            hint: "URL and token together enable alerts (disk, swap, error rate)")
+          html field("Gotify application token", "gotify_token", "", type: "password",
+            hint: "Leave blank to keep the saved one")
+          html field("Message priority", "gotify_priority", input["gotify_priority"]? || settings.gotify.try(&.priority).to_s,
+            hint: "1 to 10, 5 is normal")
+          html field("Disk alert %", "gotify_disk_pct", input["gotify_disk_pct"]? || settings.gotify.try(&.disk_pct).to_s)
+          html field("Swap alert %", "gotify_swap_pct", input["gotify_swap_pct"]? || settings.gotify.try(&.swap_pct).to_s)
+          html field("Errors per minute alert", "gotify_errors_per_min", input["gotify_errors_per_min"]? || settings.gotify.try(&.errors_per_min).to_s)
+        end
         button(class: "service-panel-explain appstore-install-button", type: "button",
           "hx-post": "#{ViewHelpers.base_prefix}/settings/save",
           "hx-include": "closest form",
@@ -301,6 +330,15 @@ module SettingsDashboard
     else
       ""
     end
+  end
+
+  # The textarea shows the effective store list (settings override or
+  # boot spec), one name=url per line; on a failed save the submitted
+  # text is echoed back instead.
+  private def appstores_display(settings : SettingsStore::Settings, input : Hash(String, String)) : String
+    return input["appstores"] if input["appstores"]?
+    spec = settings.appstores || Grafito.appstores_spec
+    spec.split(",").map(&.strip).reject(&.empty?).join("\n")
   end
 
   # ameba:disable Metrics/CyclomaticComplexity
@@ -420,13 +458,25 @@ module SettingsDashboard
     weather_longitude = body_param(env, "hp_longitude")
     weather_location = body_param(env, "hp_location")
     weather_units = body_param(env, "hp_units")
+    stacks_dir_param = body_param(env, "stacks_dir")
+    appstores_param = body_param(env, "appstores")
+    gotify_url = body_param(env, "gotify_url")
+    gotify_token = body_param(env, "gotify_token")
+    gotify_priority = body_param(env, "gotify_priority")
+    gotify_disk = body_param(env, "gotify_disk_pct")
+    gotify_swap = body_param(env, "gotify_swap_pct")
+    gotify_errors = body_param(env, "gotify_errors_per_min")
 
     # Echo non-secret fields back on error.
     {"auth_user" => auth_user, "timezone" => timezone_param,
      "ai_provider" => ai_provider, "ai_model" => ai_model,
      "hp_title" => homepage_title, "hp_hostname" => homepage_hostname,
      "hp_latitude" => weather_latitude, "hp_longitude" => weather_longitude,
-     "hp_location" => weather_location}.each do |name, value|
+     "hp_location" => weather_location, "stacks_dir" => stacks_dir_param,
+     "appstores" => appstores_param, "gotify_url" => gotify_url,
+     "gotify_priority" => gotify_priority, "gotify_disk_pct" => gotify_disk,
+     "gotify_swap_pct" => gotify_swap,
+     "gotify_errors_per_min" => gotify_errors}.each do |name, value|
       input[name] = value
     end
 
@@ -486,8 +536,8 @@ module SettingsDashboard
     if weather_latitude.empty? && weather_longitude.empty?
       overlay_weather = nil
     else
-      latitude = parse_number(weather_latitude, "latitude", errors)
-      longitude = parse_number(weather_longitude, "longitude", errors)
+      latitude = parse_number(weather_latitude, "Weather latitude", errors)
+      longitude = parse_number(weather_longitude, "Weather longitude", errors)
       if latitude && longitude
         overlay_weather = SettingsStore::WeatherSettings.new(
           latitude: latitude, longitude: longitude,
@@ -503,6 +553,46 @@ module SettingsDashboard
         title: overlay_title, hostname: overlay_hostname, weather: overlay_weather)
     else
       settings.homepage = nil
+    end
+
+    # --- Stacks directory ---
+    settings.stacks_dir = stacks_dir_param.empty? ? nil : stacks_dir_param
+
+    # --- App stores ---
+    if appstores_param.empty?
+      settings.appstores = nil
+    else
+      entries = appstores_param.each_line.map(&.strip).reject(&.empty?).to_a
+      entries.each do |entry|
+        name, separator, url = entry.partition("=")
+        if separator.empty? || name.empty? || url.empty?
+          errors << "App store entries must be name=url (bad line: '#{entry}')."
+        end
+      end
+      settings.appstores = entries.join(",") if errors.empty?
+    end
+
+    # --- Gotify ---
+    gotify_priority_number = parse_whole(gotify_priority, "Message priority", errors)
+    gotify_disk_number = parse_number(gotify_disk, "Disk alert %", errors)
+    gotify_swap_number = parse_number(gotify_swap, "Swap alert %", errors)
+    gotify_errors_number = parse_number(gotify_errors, "Errors per minute alert", errors)
+    existing_gotify = settings.gotify
+    gotify_any = !gotify_url.empty? || !gotify_token.empty? ||
+                 gotify_priority_number || gotify_disk_number || gotify_swap_number || gotify_errors_number ||
+                 existing_gotify.try(&.set?) || false
+    if gotify_any && errors.empty?
+      settings.gotify = SettingsStore::GotifySettings.new(
+        url: gotify_url.empty? ? existing_gotify.try(&.url) : gotify_url.rstrip('/'),
+        # Blank token keeps the saved one (the field never echoes it).
+        token: gotify_token.empty? ? existing_gotify.try(&.token) : gotify_token,
+        priority: gotify_priority_number || existing_gotify.try(&.priority),
+        disk_pct: gotify_disk_number || existing_gotify.try(&.disk_pct),
+        swap_pct: gotify_swap_number || existing_gotify.try(&.swap_pct),
+        errors_per_min: gotify_errors_number || existing_gotify.try(&.errors_per_min),
+      )
+    elsif !gotify_any
+      settings.gotify = nil
     end
 
     env.response.content_type = "text/html"
@@ -541,14 +631,18 @@ module SettingsDashboard
     end
   end
 
-  # Applies what the settings own: the timezone immediately, and the
+  # Applies what the settings own: the timezone immediately, the
+  # stacks directory and store list on their class properties, and the
   # AI provider rebuilt after its configuration is bridged into the
   # environment the providers read. Credentials need no application:
-  # the auth handler resolves them per request.
+  # the auth handler resolves them per request; Gotify reads the
+  # settings store per evaluation.
   private def self.apply_live(settings : SettingsStore::Settings) : Nil
     if timezone = settings.timezone
       Grafito.timezone = timezone
     end
+    Grafito.stacks_dir = settings.stacks_dir
+    Grafito.appstores_spec = settings.appstores || Grafito.appstores_boot_spec
     SettingsStore.apply_ai_to_env(settings)
     Grafito.ai_provider = Grafito::AI::Config.provider
   end
@@ -565,7 +659,14 @@ module SettingsDashboard
   private def self.parse_number(value : String, what : String, errors : Array(String)) : Float64?
     return if value.empty?
     number = value.to_f64?
-    errors << "Weather #{what} must be a number." unless number
+    errors << "#{what} must be a number." unless number
+    number
+  end
+
+  private def self.parse_whole(value : String, what : String, errors : Array(String)) : Int32?
+    return if value.empty?
+    number = value.to_i32?
+    errors << "#{what} must be a whole number." unless number
     number
   end
 

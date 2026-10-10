@@ -307,11 +307,20 @@ homepage view and its endpoint completely.
 
 The gear button in the top bar opens the **settings view**
 (`?view=settings`): basic-auth credentials, the display timezone,
-the AI provider (with API key and model) and the homepage basics
-(title, hostname, weather location). Everything applies live — no
-restarts — and is stored in `settings.json` under the data dir
+the AI provider (with API key and model), the homepage basics
+(title, hostname, weather location), the compose **stacks
+directory**, the app store sources and the Gotify notification
+settings (URL, token, alert thresholds). Everything applies live —
+no restarts — and is stored in `settings.json` under the data dir
 (`0600`, secrets in plaintext exactly like the DNS provider token;
 disable the view with `--settings=false`).
+
+The stacks directory (`--stacks-dir` / `GRAFITO_STACKS_DIR`) makes
+the Compose view list stacks that exist on disk but that docker
+does not know about — never started, or fully removed — as
+*stopped*, with their compose files, so they can be started from
+the view like any other stack. A stack's name is its compose file's
+top-level `name:` when declared, its directory name otherwise.
 
 Configuration precedence is **boot wins**: values set via CLI flags,
 environment variables or `GRAFITO_CONFIG` are never overridden by the

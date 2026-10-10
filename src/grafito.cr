@@ -135,6 +135,17 @@ module Grafito
   # name=tarball-url pairs, parsed by AppStore.parse_stores.
   class_property appstores_spec : String = "official=https://codeload.github.com/runtipi/runtipi-appstore/tar.gz/refs/heads/master"
 
+  # The appstores spec the boot configuration resolved to (flag, env
+  # or the default). The settings view restores it when its own
+  # override is cleared.
+  class_property appstores_boot_spec : String = "official=https://codeload.github.com/runtipi/runtipi-appstore/tar.gz/refs/heads/master"
+
+  # Directory with compose stacks (one subdirectory per stack). When
+  # set, the compose view also lists stacks that exist on disk but
+  # that docker does not know about (never started, or fully removed),
+  # so they show up as stopped and their actions work.
+  class_property stacks_dir : String? = nil
+
   # Process view - when enabled, the /processes routes are served and
   # the Processes toggle appears in the frontend.
   class_property? processes_enabled : Bool = true

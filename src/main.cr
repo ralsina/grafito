@@ -83,6 +83,7 @@ DOC = <<-DOCOPT
     --user                       Enable user systemd mode (use journalctl --user and systemctl --user) [default: false].
     --dashboard=BOOL             Enable the server dashboard and metrics sampler (true/false) [default: true].
     --compose=BOOL               Enable the Docker Compose view (true/false) [default: true].
+    --stacks-dir=PATH            Directory containing compose stacks: stacks on disk that docker doesn't know about are listed as stopped.
     --apps=BOOL                  Enable the app store in the Compose view (true/false) [default: true].
     --appstores=LIST             App stores as comma-separated name=tarball-url pairs [default: official=https://codeload.github.com/runtipi/runtipi-appstore/tar.gz/refs/heads/master].
     --lego-bin=PATH              Path to the lego binary used to obtain/renew the wildcard certificate [default: /usr/bin/lego].
@@ -201,8 +202,21 @@ def main
   Grafito.compose_enabled = args["--compose"].to_s != "false"
   Grafito::Log.info { "Compose view: #{Grafito.compose_enabled? ? "enabled" : "disabled"}" }
 
+  # Stacks directory: when set, the compose view also lists stacks on
+  # disk that docker does not know about (never started, or fully
+  # removed), so they show up as stopped and can be started from the
+  # view. Boot config wins over the settings store.
+  stacks_explicit = !ENV["GRAFITO_STACKS_DIR"]?.nil? ||
+                    ARGV.any?(&.starts_with?("--stacks-dir"))
+  stacks_dir = args["--stacks-dir"].to_s
+  stacks_dir = boot_settings.stacks_dir.to_s if stacks_dir.empty? && !stacks_explicit
+  Grafito.stacks_dir = stacks_dir.empty? ? nil : stacks_dir
+  if directory = Grafito.stacks_dir
+    Grafito::Log.info { "Stacks directory: #{directory} (stacks on disk that docker doesn't know are listed as stopped)" }
+  end
+
   # Parse app store configuration.
-  parse_app_store_config(args)
+  parse_app_store_config(args, boot_settings)
 
   # Parse process view configuration. Its kill actions go through the
   # same --enable-actions + authentication gate as the dashboard's.
@@ -311,9 +325,22 @@ end
 # Parses app store configuration. The app store rides on the compose
 # view (and its actions need the same gate as the other compose
 # actions); its caches and installed apps live under --data-dir.
-def parse_app_store_config(args)
+def parse_app_store_config(args, boot_settings : SettingsStore::Settings)
   Grafito.apps_enabled = args["--apps"].to_s != "false"
   Grafito.appstores_spec = args["--appstores"].to_s
+  Grafito.appstores_boot_spec = Grafito.appstores_spec
+
+  # The settings store may override the store list when the boot
+  # configuration did not set it explicitly (docopt returns the
+  # default otherwise, so explicitness is detected via the env var
+  # or the raw argv).
+  appstores_explicit = !ENV["GRAFITO_APPSTORES"]?.nil? ||
+                       ARGV.any?(&.starts_with?("--appstores"))
+  if !appstores_explicit && (appstores = boot_settings.appstores)
+    Grafito.appstores_spec = appstores
+    Grafito::Log.info { "App stores (from settings): #{appstores}" }
+  end
+
   Grafito.lego_bin = args["--lego-bin"].to_s
 
   # Nothing needs the data dir on a log-only deployment (metrics need

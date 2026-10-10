@@ -74,6 +74,29 @@ module SettingsStore
     end
   end
 
+  # Gotify notification settings. Empty/nil url and token mean
+  # "disabled", matching the environment-only behavior.
+  class GotifySettings
+    include JSON::Serializable
+
+    property url : String? = nil
+    property token : String? = nil
+    property priority : Int32? = nil
+    property disk_pct : Float64? = nil
+    property swap_pct : Float64? = nil
+    property errors_per_min : Float64? = nil
+
+    def initialize(@url : String? = nil, @token : String? = nil,
+                   @priority : Int32? = nil, @disk_pct : Float64? = nil,
+                   @swap_pct : Float64? = nil, @errors_per_min : Float64? = nil)
+    end
+
+    def set? : Bool
+      !url.nil? || !token.nil? || !priority.nil? ||
+        !disk_pct.nil? || !swap_pct.nil? || !errors_per_min.nil?
+    end
+  end
+
   class Settings
     include JSON::Serializable
 
@@ -83,10 +106,15 @@ module SettingsStore
     property? onboarded : Bool = false
     property ai : AISettings? = nil
     property homepage : HomepageSettings? = nil
+    property stacks_dir : String? = nil
+    property appstores : String? = nil
+    property gotify : GotifySettings? = nil
 
     def initialize(@auth_user : String? = nil, @auth_pass : String? = nil,
                    @timezone : String? = nil, @onboarded : Bool = false,
-                   @ai : AISettings? = nil, @homepage : HomepageSettings? = nil)
+                   @ai : AISettings? = nil, @homepage : HomepageSettings? = nil,
+                   @stacks_dir : String? = nil, @appstores : String? = nil,
+                   @gotify : GotifySettings? = nil)
     end
   end
 

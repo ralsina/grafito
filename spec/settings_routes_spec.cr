@@ -197,6 +197,64 @@ describe "Settings routes" do
       end
     end
 
+    it "POST /settings/save persists stacks dir, app stores and gotify, applying them live" do
+      old_stacks_dir : String? = Grafito.stacks_dir
+      old_appstores : String = Grafito.appstores_spec
+      data_dir = File.tempname("grafito-settings-routes", "")
+      Dir.mkdir(data_dir)
+      begin
+        with_settings_env(data_dir, auth: true) do
+          response = dispatch_request("POST", "/settings/save",
+            body: "stacks_dir=/data/stacks&appstores=official%3Dhttps%3A%2F%2Fexample.com%2Fstore.tar.gz%0Aextra%3Dhttps%3A%2F%2Fother.example%2Fs.tar.gz&gotify_url=https%3A%2F%2Fpush.example.com&gotify_token=tk&gotify_priority=7&gotify_disk_pct=80",
+            headers: SETTINGS_FORM_HEADERS)
+          response[:status].should eq(200)
+          response[:body].should contain("Settings saved.")
+
+          settings = SettingsStore.load(data_dir)
+          settings.stacks_dir.should eq("/data/stacks")
+          Grafito.stacks_dir.should eq("/data/stacks")
+          appstores = settings.appstores
+          if appstores
+            appstores.should contain("official=")
+            appstores.should contain("extra=")
+          else
+            fail("app stores should have been saved")
+          end
+          Grafito.appstores_spec.should contain("official=")
+          gotify = settings.gotify
+          if gotify
+            gotify.url.should eq("https://push.example.com")
+            gotify.token.should eq("tk")
+            gotify.priority.should eq(7)
+            gotify.disk_pct.should eq(80.0)
+          else
+            fail("gotify settings should have been saved")
+          end
+        end
+      ensure
+        Grafito.stacks_dir = old_stacks_dir
+        Grafito.appstores_spec = old_appstores
+        FileUtils.rm_rf(data_dir)
+      end
+    end
+
+    it "POST /settings/save rejects a malformed app store line" do
+      data_dir = File.tempname("grafito-settings-routes", "")
+      Dir.mkdir(data_dir)
+      begin
+        with_settings_env(data_dir, auth: true) do
+          response = dispatch_request("POST", "/settings/save",
+            body: "appstores=not-a-pair",
+            headers: SETTINGS_FORM_HEADERS)
+          response[:status].should eq(200)
+          response[:body].should contain("must be name=url")
+          SettingsStore.load(data_dir).appstores.should be_nil
+        end
+      ensure
+        FileUtils.rm_rf(data_dir)
+      end
+    end
+
     it "POST /settings/save rejects cross-site posts" do
       data_dir = File.tempname("grafito-settings-routes", "")
       Dir.mkdir(data_dir)
