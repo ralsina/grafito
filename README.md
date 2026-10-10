@@ -303,6 +303,32 @@ groups:
 Set `GRAFITO_HOMEPAGE=false` (or `--homepage=false`) to disable the
 homepage view and its endpoint completely.
 
+#### Editing the homepage from the browser
+
+With actions enabled (the same `--enable-actions` + authentication
+the compose actions need), the homepage shows an **Edit** button next
+to its title. It opens a YAML editor for `homepage.yml` in the
+inspector panel, following the stack file editor's flow: **Review
+changes** shows a diff, **Apply** (after a confirm) validates the
+draft by parsing it exactly the way the page does and then writes it
+— atomically, with the previous version kept alongside as
+`homepage.yml.grafito-bak`. The page refreshes immediately behind the
+panel. The setup hint shown for a missing config file has the same
+button, prefilling the editor with the example above, so a fresh
+install can build its homepage without touching a shell.
+
+Two details worth knowing:
+
+* The editor starts from the **effective** config: if the settings
+  view's homepage overrides (title, hostname, weather) are active,
+  their values are baked into the draft, and applying retires the
+  overrides — after the first apply, `homepage.yml` is the single
+  source of truth. When no overrides are set, the file's own text is
+  served (comments included), so hand-authored formatting survives.
+* The config path must be writable by the grafito process. A
+  read-only mount (e.g. `:ro` on a docker bind mount) is reported
+  clearly in the editor instead of failing silently.
+
 ### Settings and Onboarding
 
 The gear button in the top bar opens the **settings view**

@@ -65,7 +65,9 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
 - `src/fake_appstore_data.cr` - Fixture app store for demo mode
 - `src/process_dashboard.cr`, `src/process_status.cr` - Process monitor view
 - `src/homepage.cr`, `src/homepage_config.cr`, `src/weather.cr` - Homepage
-  launcher view with weather widget
+  launcher view with weather widget, plus a browser YAML editor for
+  homepage.yml (edit → review diff → apply, atomic write with backup;
+  applying bakes and retires the settings-store homepage overlay)
 - `src/settings_store.cr`, `src/settings_dashboard.cr`,
   `src/auth_handler.cr` - Settings view and onboarding wizard
   (runtime-editable credentials/timezone/AI/homepage basics in

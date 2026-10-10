@@ -191,7 +191,7 @@ module SettingsDashboard
         div(class: "settings-section") do
           div(class: "settings-section-title") { text "Homepage" }
           tag("p", class: "service-panel-hint") do
-            text "These override homepage.yml (which still provides the service groups)."
+            text "These override homepage.yml, which still provides the service groups — edit the whole file from the homepage view's Edit button (applying there folds these overrides into the file)."
           end
           html field("Title", "hp_title", input["hp_title"]? || overlay_or_file(settings, file_config, "title"))
           html field("Hostname for app links", "hp_hostname", input["hp_hostname"]? || overlay_or_file(settings, file_config, "hostname"),

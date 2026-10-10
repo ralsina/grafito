@@ -17,6 +17,13 @@
 .homepage-top h2 {
   margin: 0;
 }
+/* Title and the Edit button share the strip's left side. */
+.homepage-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.8rem;
+}
 /* The weather card: icon, big temperature, condition, then the small
    detail columns. Weather data is always in flux, so the card has a
    fixed minimum height worth of breathing room and never reflows the
