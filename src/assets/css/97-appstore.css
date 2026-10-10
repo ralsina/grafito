@@ -6,7 +6,9 @@
 /* "Add app" toolbar button above the summary cards. */
 .compose-toolbar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
