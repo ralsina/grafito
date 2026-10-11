@@ -47,10 +47,19 @@ module ComposeDashboard
       html compose_toolbar(enable_actions)
 
       div(class: "dashboard-grid") do
-        html card("Stacks", stacks.size.to_s)
-        html card("Services", total_services(stacks).to_s)
-        html card("Running", running_services(stacks).to_s)
-        html card("Unhealthy", unhealthy_services(stacks).to_s, warn: unhealthy_services(stacks) > 0)
+        # The stack lifecycle cards add up: running + stopped + removed
+        # equals the total. Unhealthy counts services, not stacks.
+        html card("Stacks", stacks.size.to_s,
+          title: "All known stacks")
+        html card("Running", running_stacks(stacks).to_s,
+          title: "Stacks with at least one running service")
+        html card("Stopped", stopped_stacks(stacks).to_s,
+          title: "Stacks docker knows whose containers are not running")
+        html card("Removed", removed_stacks(stacks).to_s,
+          title: "Stacks known only from their compose file on disk (never started, or removed)")
+        html card("Unhealthy", unhealthy_services(stacks).to_s,
+          warn: unhealthy_services(stacks) > 0,
+          title: "Services whose healthcheck reports unhealthy")
       end
 
       if stacks.empty?
@@ -129,16 +138,23 @@ module ComposeDashboard
     {% end %}
   end
 
-  private def total_services(stacks : Array(ComposeStatus::Stack)) : Int32
-    stacks.sum(&.services.size)
-  end
-
-  private def running_services(stacks : Array(ComposeStatus::Stack)) : Int32
-    stacks.sum(&.running_count)
-  end
-
   private def unhealthy_services(stacks : Array(ComposeStatus::Stack)) : Int32
     stacks.sum(&.unhealthy_count)
+  end
+
+  # Stack lifecycle counts: running (any service up), stopped (docker
+  # knows the containers, none running) and removed (known only from
+  # the compose file on disk). Together they always equal the total.
+  private def running_stacks(stacks : Array(ComposeStatus::Stack)) : Int32
+    stacks.count(&.running_count.>(0))
+  end
+
+  private def stopped_stacks(stacks : Array(ComposeStatus::Stack)) : Int32
+    stacks.count { |compose_stack| compose_stack.running_count == 0 && !compose_stack.services.empty? }
+  end
+
+  private def removed_stacks(stacks : Array(ComposeStatus::Stack)) : Int32
+    stacks.count(&.services.empty?)
   end
 
   # One stack: header with status (and the store-app badge, when the

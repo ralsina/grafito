@@ -130,6 +130,18 @@ describe ComposeDashboard do
     stopped.should_not contain("Open kavita (")
   end
 
+  it "renders lifecycle cards that add up" do
+    # webapp runs; the stopped fixture has containers but none running
+    # is not representable here (its services list is empty), so it
+    # counts as removed; legacy (no config, no services) also removed.
+    fragment = ComposeDashboard.render_html([STACK, STOPPED_STACK, EMPTY_STACK], false)
+    fragment.should contain(%(title="All known stacks"))
+    fragment.should contain(%(<span class="stat-label">Running</span><span class="stat-value">1</span>))
+    fragment.should contain(%(<span class="stat-label">Stopped</span><span class="stat-value">0</span>))
+    fragment.should contain(%(<span class="stat-label">Removed</span><span class="stat-value">2</span>))
+    fragment.should_not contain(%(<span class="stat-label">Services</span>))
+  end
+
   it "renders N/A for services without a healthcheck" do
     fragment = ComposeDashboard.render_html([STACK], false)
     fragment.should contain(%(>N/A</span>))
