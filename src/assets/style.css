@@ -1134,6 +1134,17 @@ tr.priority-7 {
   box-shadow: none;
   margin-bottom: 0;
 }
+/* Text round-buttons in panels (Edit compose.yaml, Review changes,
+   Sign out, ...) are labels, not icon boxes: let them size to their
+   text. Icon-only buttons keep the square above. */
+.service-panel-actions .round-button:not(:has(> .material-icons)) {
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 0.3rem 0.8rem;
+  white-space: nowrap;
+}
 .hover-action-cell .round-button:hover,
 .dashboard-action-cell .round-button:hover,
 .service-panel-actions .round-button:hover,
