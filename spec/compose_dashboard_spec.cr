@@ -9,11 +9,13 @@ private SERVICES = [
     stack: "webapp", service: "web", container: "webapp-web-1",
     state: "running", health: "healthy", image: "nginx:1.27-alpine",
     ports: "0.0.0.0:8080->80/tcp", status_text: "Up 3 days (healthy)",
+    log_driver: "journald",
   ),
   ComposeStatus::Service.new(
     stack: "webapp", service: "api", container: "webapp-api-1",
     state: "running", health: "unhealthy", image: "api:1",
     ports: "", status_text: "Up 2 hours (unhealthy)",
+    log_driver: "json-file",
   ),
   ComposeStatus::Service.new(
     stack: "webapp", service: "db", container: "webapp-db-1",
@@ -27,6 +29,14 @@ private STACK = ComposeStatus::Stack.new(
   status: "running(2)",
   config_files: ["/opt/stacks/webapp/compose.yaml"],
   services: SERVICES,
+)
+
+# A disk-discovered stack docker does not know about: fully down.
+private STOPPED_STACK = ComposeStatus::Stack.new(
+  name: "kavita",
+  status: "stopped",
+  config_files: ["/data/stacks/kavita/compose.yml"],
+  services: [] of ComposeStatus::Service,
 )
 
 private EMPTY_STACK = ComposeStatus::Stack.new(
@@ -63,6 +73,24 @@ describe ComposeDashboard do
     without_actions.should_not contain("hx-confirm")
     # The YAML view is read-only, so it stays available without actions.
     without_actions.should contain("compose-yaml?stack=webapp")
+    # And it opens the Detail panel (a swap into the hidden panel
+    # alone would look like "spinner, then nothing"). Single quotes
+    # arrive HTML-escaped.
+    with_actions.should match(/hx-get="\/compose-yaml\?stack=webapp"[^>]*hx-on:htmx:after-request="if\(event\.detail\.successful\)\{showLogPanel\(&#39;detail&#39;\)\}/m)
+  end
+
+  it "shows only the stack actions that fit the stack's state" do
+    running = ComposeDashboard.render_html([STACK], true)
+    running.should contain(%(title="Stop stack"))
+    running.should contain(%(title="Restart stack"))
+    running.should contain(%(title="Pull images and up -d"))
+    running.should_not contain(%(title="Start stack (up -d)"))
+
+    stopped = ComposeDashboard.render_html([STOPPED_STACK], true)
+    stopped.should contain(%(title="Start stack (up -d)"))
+    stopped.should_not contain(%(title="Stop stack"))
+    stopped.should_not contain(%(title="Restart stack"))
+    stopped.should_not contain(%(title="Pull images and up -d"))
   end
 
   it "hides stack actions for stacks without config files" do
@@ -75,8 +103,104 @@ describe ComposeDashboard do
     fragment = ComposeDashboard.service_details_fragment(SERVICES[0], true)
     fragment.should contain("webapp / web")
     fragment.should contain("webapp-web-1")
-    fragment.should contain("compose-logs?stack=webapp&amp;service=web")
+    fragment.should contain("setContainerFilterAndTrigger")
     fragment.should contain("/compose-service/webapp/web/stop")
+  end
+
+  it "synthesizes an open link from published ports" do
+    with_hostname = ComposeDashboard.render_html([STACK], true, hostname: "lab")
+    # An open link is rendered either way; in demo builds the fake
+    # store install owns webapp and provides its own URL.
+    with_hostname.should contain("Open webapp (http://lab:")
+    {% unless flag?(:demo_mode) %}
+      with_hostname.should contain(%(href="http://lab:8080"))
+      with_hostname.should contain("Open webapp (http://lab:8080)")
+    {% end %}
+
+    # No hostname (no Host header) → no synthesized link. (Store apps
+    # keep their own URL regardless of hostname, so this only holds
+    # when webapp is a plain stack — non-demo builds.)
+    {% unless flag?(:demo_mode) %}
+      without_hostname = ComposeDashboard.render_html([STACK], true)
+      without_hostname.should_not contain("Open webapp (")
+    {% end %}
+
+    # A fully stopped stack has nothing reachable to open.
+    stopped = ComposeDashboard.render_html([STOPPED_STACK], true, hostname: "lab")
+    stopped.should_not contain("Open kavita (")
+  end
+
+  it "renders lifecycle cards that add up" do
+    # webapp runs; the stopped fixture has containers but none running
+    # is not representable here (its services list is empty), so it
+    # counts as removed; legacy (no config, no services) also removed.
+    fragment = ComposeDashboard.render_html([STACK, STOPPED_STACK, EMPTY_STACK], false)
+    fragment.should contain(%(title="All known stacks"))
+    fragment.should contain(%(<span class="stat-label">Running</span><span class="stat-value">1</span>))
+    fragment.should contain(%(<span class="stat-label">Stopped</span><span class="stat-value">0</span>))
+    fragment.should contain(%(<span class="stat-label">Removed</span><span class="stat-value">2</span>))
+    fragment.should_not contain(%(<span class="stat-label">Services</span>))
+  end
+
+  it "renders N/A for services without a healthcheck" do
+    fragment = ComposeDashboard.render_html([STACK], false)
+    fragment.should contain(%(>N/A</span>))
+    fragment.should_not contain(%(>—</span>))
+  end
+
+  it "tags stack cards and panel fragments with the stack name" do
+    fragment = ComposeDashboard.render_html([STACK], true)
+    fragment.should contain(%(data-stack-name="webapp"))
+    panel = ComposeDashboard.service_details_fragment(SERVICES[0], false)
+    panel.should contain(%(data-stack-name="webapp"))
+  end
+
+  it "renders a stack filter in the toolbar" do
+    fragment = ComposeDashboard.render_html([STACK], false)
+    fragment.should contain("compose-stack-filter")
+    fragment.should contain("compose-filter-empty")
+  end
+
+  it "navigates between the panel views of a stack" do
+    # yaml view: active tab plus editor tabs per availability.
+    yaml = ComposeDashboard.yaml_fragment("webapp", "services: {}", can_edit_yaml: true, can_edit_env: true)
+    yaml.should contain(%(data-stack-name="webapp"))
+    yaml.should contain(%(<span class="panel-nav-tab active">compose.yaml</span>))
+    yaml.should contain(%(hx-get="/compose-file-edit?stack=webapp&amp;file=yaml" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Edit compose.yaml</button>))
+    yaml.should contain(%(hx-get="/compose-file-edit?stack=webapp&amp;file=env" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Edit .env</button>))
+
+    # service details: Details tab active, hops to the yaml view.
+    details = ComposeDashboard.service_details_fragment(SERVICES[0], false)
+    details.should contain(%(<span class="panel-nav-tab active">Details</span>))
+    # The yaml tab carries the service so the file views can link back.
+    details.should contain(%(hx-get="/compose-yaml?stack=webapp&amp;service=web" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">compose.yaml</button>))
+  end
+
+  it "offers a Details tab back when a file view came from a service" do
+    yaml = ComposeDashboard.yaml_fragment("webapp", "services: {}", back_service: "web")
+    yaml.should contain(%(<span class="panel-nav-tab active">compose.yaml</span>))
+    yaml.should contain(%(hx-get="/compose-details?stack=webapp&amp;service=web" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Details</button>))
+
+    editor = ComposeDashboard.file_editor_fragment("webapp", ComposeDashboard::StackFile::ComposeYaml, "/opt/webapp/compose.yaml", "x", back_service: "web")
+    editor.should contain(%(hx-get="/compose-details?stack=webapp&amp;service=web" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Details</button>))
+
+    # Without the context there is no Details tab (nothing to go back to).
+    plain = ComposeDashboard.yaml_fragment("webapp", "services: {}")
+    plain.should_not contain(">Details</button>")
+  end
+
+  it "branches Service logs on the container's log driver" do
+    # journald driver: the full log view, filtered by container.
+    journald = ComposeDashboard.service_details_fragment(SERVICES[0], false)
+    journald.should contain("setContainerFilterAndTrigger")
+    journald.should_not contain("compose-logs")
+
+    # json-file driver: the plain tail plus an explanatory hint.
+    json_file = ComposeDashboard.service_details_fragment(SERVICES[1], false)
+    json_file.should contain("compose-logs?stack=webapp&amp;service=api")
+    json_file.should contain("json-file")
+    json_file.should contain("journald log driver")
+    json_file.should_not contain("setContainerFilterAndTrigger")
   end
 
   it "renders port mappings as chips in the detail fragment" do
@@ -194,46 +318,6 @@ describe ComposeDashboard do
     fragment.should_not contain("port-chip")
   end
 
-  describe "merged_log_tail" do
-    it "interleaves compose and journald lines chronologically" do
-      # Compose --timestamps puts the RFC3339 stamp after the
-      # "container |" prefix, so that's the shape parsed here.
-      compose_output = "web-1  | 2026-09-17T02:00:05Z later\nweb-1  | 2026-09-17T02:00:01Z first"
-      entries = [new_journal_entry(Time.utc(2026, 9, 17, 2, 0, 3), "from journal")]
-      merged = ComposeDashboard.merged_log_tail(compose_output, entries)
-      lines = merged.split("\n")
-      lines.size.should eq(3)
-      lines[0].should contain("web-1 | first")
-      lines[1].should contain("from journal")
-      lines[2].should contain("web-1 | later")
-      # Same timestamp shape the log stream view uses, regardless of
-      # the machine's configured timezone.
-      lines.each { |line| line.should match(/^\d{2}-\d{2} \d{2}:\d{2}:\d{2}  /) }
-    end
-
-    it "also parses timestamps without a container prefix" do
-      compose_output = "2026-09-17T02:00:01Z bare message"
-      merged = ComposeDashboard.merged_log_tail(compose_output, [] of Journalctl::LogEntry)
-      merged.split("\n").size.should eq(1)
-      merged.should contain("bare message")
-      merged.should_not contain("2026-09-17")
-    end
-
-    it "keeps multiline compose messages together" do
-      compose_output = "web-1  | 2026-09-17T02:00:01Z line one\ncontinuation"
-      merged = ComposeDashboard.merged_log_tail(compose_output, [] of Journalctl::LogEntry)
-      merged.split("\n").size.should eq(2)
-      merged.should contain("line one\ncontinuation")
-    end
-
-    it "falls back to journald only when compose logs are empty" do
-      entries = [new_journal_entry(Time.utc(2026, 9, 17, 2, 0, 3), "from journal")]
-      merged = ComposeDashboard.merged_log_tail("", entries)
-      merged.split("\n").size.should eq(1)
-      merged.should contain("from journal")
-    end
-  end
-
   describe "parse_ports" do
     it "dedupes IPv4/IPv6 duplicates into one structured mapping" do
       raw = "0.0.0.0:8887-8888->8887-8888/tcp, [::]:8887-8888->8887-8888/tcp"
@@ -265,15 +349,13 @@ describe ComposeDashboard do
     end
   end
 
-  it "renders the yaml and logs fragments" do
+  it "renders the yaml fragment and the service-logs jump" do
     ComposeDashboard.yaml_fragment("webapp", "services: {}").should contain("services: {}")
-    logs_fragment = ComposeDashboard.logs_fragment("webapp", "web", "log line 1")
-    logs_fragment.should contain("log line 1")
-    logs_fragment.should contain("every 5s")
-  end
-
-  it "renders a placeholder for empty log tails" do
-    ComposeDashboard.logs_fragment("webapp", "web", "").should contain("(no logs)")
+    # The Service logs button opens the log view filtered by the
+    # container's journald entries, not an inline tail.
+    fragment = ComposeDashboard.service_details_fragment(SERVICES[0], false)
+    fragment.should contain(%(onclick="return setContainerFilterAndTrigger(&#39;webapp-web-1&#39;)"))
+    fragment.should_not contain("compose-logs")
   end
 
   describe "output_fragment" do

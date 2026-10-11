@@ -249,9 +249,10 @@ class Journalctl
     query : String? = nil,
     priority : String? = nil,
     hostname : String? = nil,
+    container : String? = nil,
   ) : Array(String)
     command = ["journalctl", "-f", "-m", "-o", "json"] + user_flags
-    command + filter_match_args(since, unit, tag, query, priority, hostname)
+    command + filter_match_args(since, unit, tag, query, priority, hostname, container)
   end
 
   {% if flag?(:demo_mode) %}
@@ -268,6 +269,7 @@ class Journalctl
       query : String? = nil,
       priority : String? = nil,
       hostname : String? = nil,
+      container : String? = nil,
     ) : LogEntry?
       args = ["-S", "-1m"]
       args += ["-u", unit] if unit
@@ -275,13 +277,15 @@ class Journalctl
       args += ["-g", query] if query
       args += ["-p", priority] if priority
       args << "_HOSTNAME=#{hostname}" if hostname
+      args << "CONTAINER_NAME=#{container}" if container
       entries = FakeJournalData.fake_run_journalctl_and_parse(args + ["-n", "1"], "Live tail (fake entry)")
       entries.first?
     end
   {% end %}
 
   # The shared filter arguments (since/units/tags/query/priority/
-  # hostname) used by both the one-shot and follow command builders.
+  # hostname/container) used by both the one-shot and follow command
+  # builders.
   private def self.filter_match_args(
     since : String?,
     unit : String?,
@@ -289,6 +293,7 @@ class Journalctl
     query : String?,
     priority : String?,
     hostname : String?,
+    container : String? = nil,
   ) : Array(String)
     args = [] of String
 
@@ -336,6 +341,13 @@ class Journalctl
       # Add as a match filter for the _HOSTNAME field
       args << "_HOSTNAME=#{hostname.strip}"
     end
+
+    if container && !container.strip.empty?
+      # Docker containers logging through the journald driver carry
+      # their name in CONTAINER_NAME; a plain field match selects one
+      # container's entries.
+      args << "CONTAINER_NAME=#{container.strip}"
+    end
     args
   end
 
@@ -347,13 +359,14 @@ class Journalctl
     query : String? = nil,
     priority : String? = nil,
     hostname : String? = nil,
+    container : String? = nil,
     lines : Int32 = 5000,
   ) : Array(String)
     command = ["journalctl"] + user_flags
 
     command << "-m" << "-o" << "json" << "-n" << lines.to_s << "-r"
 
-    command + filter_match_args(since, unit, tag, query, priority, hostname)
+    command + filter_match_args(since, unit, tag, query, priority, hostname, container)
   end
 
   # Queries the logs based on the provided criteria.
@@ -369,6 +382,8 @@ class Journalctl
   #   will be passed with `-g`.
   # * priority: A string representing the log priority (0-7, e.g., "3" for errors).
   # * hostname: A string to filter logs by a specific hostname.
+  # * container: A docker container name; entries are matched on the
+  #   journald CONTAINER_NAME field (the journald log driver).
   # * sort_by: A string indicating the field to sort by (e.g., "timestamp", "priority", "message", "unit").
   # * sort_order: A string indicating the sort order, either "asc" for ascending or "desc" for descending.
   #
@@ -381,6 +396,7 @@ class Journalctl
     query : String? = nil,
     priority : String? = nil,
     hostname : String? = nil,
+    container : String? = nil,
     lines : Int32 = 5000,
     sort_by : String? = nil,
     sort_order : String? = nil,
@@ -393,7 +409,8 @@ class Journalctl
     query = nil if query.is_a?(String) && query.strip.empty?
     priority = nil if priority.is_a?(String) && priority.strip.empty?
     hostname_param = hostname.is_a?(String) && hostname.strip.empty? ? nil : hostname
-    command = build_query_command(since, unit, tag, query, priority, hostname_param, lines: lines)
+    container_param = container.is_a?(String) && container.strip.empty? ? nil : container
+    command = build_query_command(since, unit, tag, query, priority, hostname_param, container_param, lines: lines)
     Log.debug { "Generated journalctl command: #{command.inspect}" }
 
     # Use the helper to run the command and parse entries

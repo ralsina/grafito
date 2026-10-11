@@ -8,6 +8,7 @@ const SHARED_FILTER_CONFIGS = [
   { id: "unit-filter", param: "unit", type: "value" },
   { id: "tag-filter", param: "tag", type: "value" },
   { id: "hostname-filter", param: "hostname", type: "value" },
+  { id: "container-filter", param: "container", type: "value" },
   { id: "time-range-filter", param: "since", type: "select" },
   { id: "priority-filter", param: "priority", type: "select" },
   {

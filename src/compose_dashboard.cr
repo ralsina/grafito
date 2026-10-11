@@ -47,10 +47,19 @@ module ComposeDashboard
       html compose_toolbar(enable_actions)
 
       div(class: "dashboard-grid") do
-        html card("Stacks", stacks.size.to_s)
-        html card("Services", total_services(stacks).to_s)
-        html card("Running", running_services(stacks).to_s)
-        html card("Unhealthy", unhealthy_services(stacks).to_s, warn: unhealthy_services(stacks) > 0)
+        # The stack lifecycle cards add up: running + stopped + removed
+        # equals the total. Unhealthy counts services, not stacks.
+        html card("Stacks", stacks.size.to_s,
+          title: "All known stacks")
+        html card("Running", running_stacks(stacks).to_s,
+          title: "Stacks with at least one running service")
+        html card("Stopped", stopped_stacks(stacks).to_s,
+          title: "Stacks docker knows whose containers are not running")
+        html card("Removed", removed_stacks(stacks).to_s,
+          title: "Stacks known only from their compose file on disk (never started, or removed)")
+        html card("Unhealthy", unhealthy_services(stacks).to_s,
+          warn: unhealthy_services(stacks) > 0,
+          title: "Services whose healthcheck reports unhealthy")
       end
 
       if stacks.empty?
@@ -65,45 +74,54 @@ module ComposeDashboard
             html stack_section(compose_stack, enable_actions, installed_by_project[compose_stack.name]?, hostname)
           end
         end
+        div(id: "compose-filter-empty", hidden: "hidden") do
+          text "No stacks match the filter."
+        end
       end
     end
   end
 
-  # The view-level toolbar: currently just the app store entry point,
-  # shown when actions are allowed (the store is useless without them).
+  # The view-level toolbar: a client-side stack filter, plus the app
+  # store entry points when actions are allowed (the store is useless
+  # without them).
   private def compose_toolbar(enable_actions : Bool) : String
-    return "" unless enable_actions && Grafito.apps_enabled?
     HTML.build do
       div(class: "compose-toolbar") do
-        button(
-          class: "compose-addapp",
-          title: "Access & domains: wildcard certificate, domain routing",
-          "hx-get": "#{base}/access",
-          "hx-target": "#panel-detail-content",
-          "hx-swap": "innerHTML",
-          "hx-indicator": "#loading-spinner",
-          "hx-on:htmx:before-request": "panelSpinner('panel-detail-content')",
-          "hx-on:htmx:after-request": "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
-        ) do
-          span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
-            text "key"
+        input(type: "search", id: "compose-stack-filter",
+          placeholder: "Filter stacks…",
+          title: "Filter stacks by name, service or image",
+          autocomplete: "off")
+        if enable_actions && Grafito.apps_enabled?
+          button(
+            class: "compose-addapp",
+            title: "Access & domains: wildcard certificate, domain routing",
+            "hx-get": "#{base}/access",
+            "hx-target": "#panel-detail-content",
+            "hx-swap": "innerHTML",
+            "hx-indicator": "#loading-spinner",
+            "hx-on:htmx:before-request": "panelSpinner('panel-detail-content')",
+            "hx-on:htmx:after-request": "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
+          ) do
+            span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+              text "key"
+            end
+            text " Access"
           end
-          text " Access"
-        end
-        button(
-          class: "compose-addapp",
-          title: "Install an app from the app store",
-          "hx-get": "#{base}/compose-appstore",
-          "hx-target": "#panel-detail-content",
-          "hx-swap": "innerHTML",
-          "hx-indicator": "#loading-spinner",
-          "hx-on:htmx:before-request": "panelSpinner('panel-detail-content')",
-          "hx-on:htmx:after-request": "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
-        ) do
-          span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
-            text "add_circle"
+          button(
+            class: "compose-addapp",
+            title: "Install an app from the app store",
+            "hx-get": "#{base}/compose-appstore",
+            "hx-target": "#panel-detail-content",
+            "hx-swap": "innerHTML",
+            "hx-indicator": "#loading-spinner",
+            "hx-on:htmx:before-request": "panelSpinner('panel-detail-content')",
+            "hx-on:htmx:after-request": "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
+          ) do
+            span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+              text "add_circle"
+            end
+            text " Add app"
           end
-          text " Add app"
         end
       end
     end
@@ -120,16 +138,23 @@ module ComposeDashboard
     {% end %}
   end
 
-  private def total_services(stacks : Array(ComposeStatus::Stack)) : Int32
-    stacks.sum(&.services.size)
-  end
-
-  private def running_services(stacks : Array(ComposeStatus::Stack)) : Int32
-    stacks.sum(&.running_count)
-  end
-
   private def unhealthy_services(stacks : Array(ComposeStatus::Stack)) : Int32
     stacks.sum(&.unhealthy_count)
+  end
+
+  # Stack lifecycle counts: running (any service up), stopped (docker
+  # knows the containers, none running) and removed (known only from
+  # the compose file on disk). Together they always equal the total.
+  private def running_stacks(stacks : Array(ComposeStatus::Stack)) : Int32
+    stacks.count(&.running_count.>(0))
+  end
+
+  private def stopped_stacks(stacks : Array(ComposeStatus::Stack)) : Int32
+    stacks.count { |compose_stack| compose_stack.running_count == 0 && !compose_stack.services.empty? }
+  end
+
+  private def removed_stacks(stacks : Array(ComposeStatus::Stack)) : Int32
+    stacks.count(&.services.empty?)
   end
 
   # One stack: header with status (and the store-app badge, when the
@@ -146,10 +171,15 @@ module ComposeDashboard
     badge = installed ? app_badge(installed, update_version) : ""
     store_buttons = (enable_actions && installed) ? store_action_buttons(compose_stack, installed, update_version) : ""
     # Host:port is the baseline way in; the domain form (https://…)
-    # appears instead once the user routed the app by domain.
+    # appears instead once the user routed the app by domain. Stacks
+    # that are not store apps synthesize their URL from published
+    # ports.
     open_url = installed ? Access.urls(installed, hostname).preferred : nil
+    open_url ||= synthesized_open_url(compose_stack, hostname)
     HTML.build do
-      div(class: "compose-stack") do
+      # data-stack-name lets the frontend highlight the stack whose
+      # panel is open and filter cards client-side.
+      div(class: "compose-stack", "data-stack-name": compose_stack.name) do
         div(class: "compose-stack-header") do
           tag("h3") do
             text compose_stack.name
@@ -158,10 +188,7 @@ module ComposeDashboard
           end
           div(class: "compose-stack-actions") do
             if enable_actions && compose_stack.actionable?
-              html stack_action_button(compose_stack, "up", "play_arrow", "Start stack (up -d)")
-              html stack_action_button(compose_stack, "stop", "stop", "Stop stack")
-              html stack_action_button(compose_stack, "restart", "restart_alt", "Restart stack")
-              html stack_action_button(compose_stack, "update", "update", "Pull images and up -d")
+              html stack_actions_fragment(compose_stack)
               button(
                 class: "round-button",
                 title: "Check the registry for newer images",
@@ -197,6 +224,8 @@ module ComposeDashboard
                 "hx-target": "#panel-detail-content",
                 "hx-swap": "innerHTML",
                 "hx-indicator": "#loading-spinner",
+                "hx-on:htmx:before-request": "panelSpinner('panel-detail-content')",
+                "hx-on:htmx:after-request": "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
               ) do
                 span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
                   text "description"
@@ -307,6 +336,31 @@ module ComposeDashboard
       actions << {action: "start", icon: "play_arrow"}
     end
     actions
+  end
+
+  # State-appropriate actions for one stack, like the service detail
+  # pane: running stacks (any service up) get stop/restart/update,
+  # stopped ones get start. A stack that is fully down has nothing to
+  # stop or restart; a running one does not need "start".
+  private def stack_actions(compose_stack : ComposeStatus::Stack) : Array(NamedTuple(action: String, icon: String, description: String))
+    if compose_stack.running_count > 0
+      [
+        {action: "stop", icon: "stop", description: "Stop stack"},
+        {action: "restart", icon: "restart_alt", description: "Restart stack"},
+        {action: "update", icon: "update", description: "Pull images and up -d"},
+      ]
+    else
+      [{action: "up", icon: "play_arrow", description: "Start stack (up -d)"}]
+    end
+  end
+
+  # The stack card's lifecycle buttons, filtered by stack state.
+  private def stack_actions_fragment(compose_stack : ComposeStatus::Stack) : String
+    HTML.build do
+      stack_actions(compose_stack).each do |action|
+        html stack_action_button(compose_stack, action[:action], action[:icon], action[:description])
+      end
+    end
   end
 
   # Icon-only button for a service action. `from_panel` refreshes the
@@ -532,7 +586,11 @@ module ComposeDashboard
     member_processes : Array(ProcessStatus::ProcessInfo) = [] of ProcessStatus::ProcessInfo,
   ) : String
     HTML.build do
-      div(class: "service-panel") do
+      div(class: "service-panel", "data-stack-name": compose_service.stack) do
+        div(class: "panel-nav") do
+          html panel_nav_tab("Details", nil, true)
+          html panel_nav_tab("compose.yaml", yaml_url(compose_service.stack, compose_service.service), false)
+        end
         tag("h4") do
           text "#{compose_service.stack} / #{compose_service.service}"
         end
@@ -600,20 +658,44 @@ module ComposeDashboard
         end
 
         div(class: "service-panel-ai") do
-          button(
-            {
-              "class":        "service-panel-explain",
-              "title":        "Show the recent log tail for this service",
-              "hx-get":       logs_url(compose_service.stack, compose_service.service),
-              "hx-target":    "#panel-detail-content",
-              "hx-swap":      "innerHTML",
-              "hx-indicator": "#loading-spinner",
-            }
-          ) do
-            span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
-              text "article"
+          if compose_service.journald?
+            # The good path: the container logs to the journal, so open
+            # the real log view (table, timeline, live tail) filtered
+            # to its CONTAINER_NAME entries.
+            button(
+              {
+                "class":   "service-panel-explain",
+                "title":   "Open the log view filtered to this container",
+                "onclick": "return setContainerFilterAndTrigger('#{HTML.escape(compose_service.container)}')",
+              }
+            ) do
+              span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+                text "article"
+              end
+              text " Service logs"
             end
-            text " Service logs"
+          else
+            # Fallback: this container logs elsewhere (json-file, a
+            # syslog driver, ...), so the journal view has nothing for
+            # it — keep the plain merged tail and say why.
+            button(
+              {
+                "class":        "service-panel-explain",
+                "title":        "Show the recent log tail for this service",
+                "hx-get":       logs_url(compose_service.stack, compose_service.service),
+                "hx-target":    "#panel-detail-content",
+                "hx-swap":      "innerHTML",
+                "hx-indicator": "#loading-spinner",
+              }
+            ) do
+              span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+                text "article"
+              end
+              text " Service logs"
+            end
+            span(class: "service-panel-hint") do
+              text "Logs go to docker's #{compose_service.log_driver.empty? ? "default" : compose_service.log_driver} driver, not the journal — showing a plain tail. Recreate the stack with the journald log driver to follow it in the full log view."
+            end
           end
         end
       end
@@ -621,17 +703,85 @@ module ComposeDashboard
   end
 
   # A read-only compose.yaml for one stack, shown in the Detail tab.
-  # A read-only compose.yaml for one stack, shown in the Detail tab.
   # With actions enabled it doubles as the entry point for the stack
   # file editors (compose.yaml and .env).
+  # A best-effort URL to open a plain compose stack in the browser:
+  # its lowest published TCP host port on the hostname the user is
+  # browsing from (so LAN names, Tailscale names and IPs all work).
+  # A guess by nature — store apps with real Access URLs always win —
+  # and nil when there is nothing sensible to open (no hostname, no
+  # running services, no published ports).
+  private def synthesized_open_url(compose_stack : ComposeStatus::Stack, hostname : String?) : String?
+    return unless hostname
+    return if compose_stack.running_count == 0
+
+    host_ports = compose_stack.services.flat_map do |compose_service|
+      parse_ports(compose_service.ports).compact_map do |mapping|
+        next unless mapping.protocol == "tcp"
+        mapping.host.try(&.to_i?)
+      end
+    end.uniq!
+    return if host_ports.empty?
+
+    "http://#{hostname}:#{host_ports.min}"
+  end
+
+  # In-panel navigation: the panel shows several views of one stack
+  # (read-only compose.yaml, the file editors, service details) and
+  # these tabs switch between them without leaving the panel. The
+  # active view renders as a highlighted span, the others as buttons
+  # swapping #panel-detail-content.
+  private def panel_nav_tab(label : String, url : String?, active : Bool) : String
+    HTML.build do
+      if active || url.nil?
+        span(class: "panel-nav-tab active") { text label }
+      else
+        button(
+          class: "panel-nav-tab",
+          "hx-get": url,
+          "hx-target": "#panel-detail-content",
+          "hx-swap": "innerHTML",
+          "hx-indicator": "#loading-spinner",
+        ) do
+          text label
+        end
+      end
+    end
+  end
+
+  # The tab strip for the stack file views. `active` is "yaml",
+  # "edit-yaml" or "edit-env". `back_service` (the service whose
+  # details led here, when any) adds a Details tab so the file views
+  # are a round trip, not a one-way door.
+  private def stack_panel_nav(stack_name : String, active : String,
+                              can_edit_yaml : Bool = false, can_edit_env : Bool = false,
+                              back_service : String? = nil) : String
+    HTML.build do
+      div(class: "panel-nav") do
+        if back_service
+          html panel_nav_tab("Details", details_url(stack_name, back_service), active == "details")
+        end
+        html panel_nav_tab("compose.yaml", yaml_url(stack_name, back_service), active == "yaml")
+        if can_edit_yaml || active == "edit-yaml"
+          html panel_nav_tab("Edit compose.yaml", active == "edit-yaml" ? nil : file_edit_url(stack_name, StackFile::ComposeYaml, back_service), active == "edit-yaml")
+        end
+        if can_edit_env || active == "edit-env"
+          html panel_nav_tab("Edit .env", active == "edit-env" ? nil : file_edit_url(stack_name, StackFile::Env, back_service), active == "edit-env")
+        end
+      end
+    end
+  end
+
   def yaml_fragment(
     stack_name : String,
     content : String,
     can_edit_yaml : Bool = false,
     can_edit_env : Bool = false,
+    back_service : String? = nil,
   ) : String
     HTML.build do
-      div(class: "service-panel") do
+      div(class: "service-panel", "data-stack-name": stack_name) do
+        html stack_panel_nav(stack_name, "yaml", can_edit_yaml, can_edit_env, back_service)
         tag("h4") do
           text stack_name
         end
@@ -704,9 +854,12 @@ module ComposeDashboard
     file : StackFile,
     path : String,
     content : String,
+    back_service : String? = nil,
   ) : String
     HTML.build do
-      div(class: "service-panel") do
+      div(class: "service-panel", "data-stack-name": stack_name) do
+        html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "edit-yaml" : "edit-env",
+          file == StackFile::ComposeYaml, file == StackFile::Env, back_service)
         tag("h4") do
           text "Edit #{file.label} — #{stack_name}"
         end
@@ -722,10 +875,13 @@ module ComposeDashboard
           end
           input(type: "hidden", name: "stack", value: stack_name)
           input(type: "hidden", name: "file", value: file.param)
+          if back_service
+            input(type: "hidden", name: "service", value: back_service)
+          end
           div(class: "service-panel-actions") do
             button(
               class: "round-button",
-              "hx-post": file_diff_url(stack_name, file),
+              "hx-post": file_diff_url(stack_name, file, back_service),
               "hx-include": "closest form",
               "hx-target": "#panel-detail-content",
               "hx-swap": "innerHTML",
@@ -735,7 +891,7 @@ module ComposeDashboard
             end
             button(
               class: "round-button",
-              "hx-get": compose_yaml_url(stack_name),
+              "hx-get": yaml_url(stack_name, back_service),
               "hx-target": "#panel-detail-content",
               "hx-swap": "innerHTML",
               "hx-indicator": "#loading-spinner",
@@ -757,9 +913,12 @@ module ComposeDashboard
     path : String,
     content : String,
     diff : String,
+    back_service : String? = nil,
   ) : String
     HTML.build do
-      div(class: "service-panel") do
+      div(class: "service-panel", "data-stack-name": stack_name) do
+        html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "edit-yaml" : "edit-env",
+          file == StackFile::ComposeYaml, file == StackFile::Env, back_service)
         tag("h4") do
           text "Review changes — #{file.label} (#{stack_name})"
         end
@@ -781,11 +940,14 @@ module ComposeDashboard
           end
           input(type: "hidden", name: "stack", value: stack_name)
           input(type: "hidden", name: "file", value: file.param)
+          if back_service
+            input(type: "hidden", name: "service", value: back_service)
+          end
           div(class: "service-panel-actions") do
             unless diff.empty?
               button(
                 class: "round-button",
-                "hx-post": file_apply_url(stack_name, file),
+                "hx-post": file_apply_url(stack_name, file, back_service),
                 "hx-include": "closest form",
                 "hx-target": "#panel-detail-content",
                 "hx-swap": "innerHTML",
@@ -797,7 +959,7 @@ module ComposeDashboard
             end
             button(
               class: "round-button",
-              "hx-get": file_edit_url(stack_name, file),
+              "hx-get": file_edit_url(stack_name, file, back_service),
               "hx-target": "#panel-detail-content",
               "hx-swap": "innerHTML",
               "hx-indicator": "#loading-spinner",
@@ -818,9 +980,12 @@ module ComposeDashboard
     path : String,
     diff : String,
     enable_actions : Bool,
+    back_service : String? = nil,
   ) : String
     HTML.build do
-      div(class: "service-panel") do
+      div(class: "service-panel", "data-stack-name": stack_name) do
+        html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "edit-yaml" : "edit-env",
+          file == StackFile::ComposeYaml, file == StackFile::Env, back_service)
         tag("h4") do
           text "#{file.label} written — #{stack_name}"
         end
@@ -951,7 +1116,8 @@ module ComposeDashboard
 
   # Healthcheck verdict pill; an empty verdict means no healthcheck.
   private def health_pill(value : String) : String
-    return HTML.build { span(class: "tag tag-muted") { text "—" } } if value.empty?
+    # No healthcheck configured: there is no health to report.
+    return HTML.build { span(class: "tag tag-muted") { text "N/A" } } if value.empty?
     color = case value
             when "healthy"  then "ok"
             when "starting" then "warn"
@@ -983,24 +1149,30 @@ module ComposeDashboard
     "#{base}/compose-logs?stack=#{URI.encode_path(stack_name)}&service=#{URI.encode_path(service_name)}"
   end
 
-  private def yaml_url(stack_name : String) : String
-    "#{base}/compose-yaml?stack=#{URI.encode_path(stack_name)}"
+  private def yaml_url(stack_name : String, back_service : String? = nil) : String
+    service = back_service ? "&service=#{URI.encode_path(back_service)}" : ""
+    "#{base}/compose-yaml?stack=#{URI.encode_path(stack_name)}#{service}"
   end
 
   private def compose_yaml_url(stack_name : String) : String
     yaml_url(stack_name)
   end
 
-  private def file_edit_url(stack_name : String, file : StackFile) : String
-    "#{base}/compose-file-edit?stack=#{URI.encode_path(stack_name)}&file=#{file.param}"
+  # The file view URLs carry the service context (when the user came
+  # from a service's details) so the panels can offer a way back.
+  private def file_edit_url(stack_name : String, file : StackFile, back_service : String? = nil) : String
+    service = back_service ? "&service=#{URI.encode_path(back_service)}" : ""
+    "#{base}/compose-file-edit?stack=#{URI.encode_path(stack_name)}&file=#{file.param}#{service}"
   end
 
-  private def file_diff_url(stack_name : String, file : StackFile) : String
-    "#{base}/compose-file-diff?stack=#{URI.encode_path(stack_name)}&file=#{file.param}"
+  private def file_diff_url(stack_name : String, file : StackFile, back_service : String? = nil) : String
+    service = back_service ? "&service=#{URI.encode_path(back_service)}" : ""
+    "#{base}/compose-file-diff?stack=#{URI.encode_path(stack_name)}&file=#{file.param}#{service}"
   end
 
-  private def file_apply_url(stack_name : String, file : StackFile) : String
-    "#{base}/compose-file-apply?stack=#{URI.encode_path(stack_name)}&file=#{file.param}"
+  private def file_apply_url(stack_name : String, file : StackFile, back_service : String? = nil) : String
+    service = back_service ? "&service=#{URI.encode_path(back_service)}" : ""
+    "#{base}/compose-file-apply?stack=#{URI.encode_path(stack_name)}&file=#{file.param}#{service}"
   end
 
   private def updates_area_id(stack_name : String) : String
@@ -1139,6 +1311,14 @@ module ComposeDashboard
     # Read-only compose.yaml view for one stack, shown in the Detail
     # tab. The path comes from the `docker compose ls` whitelist, so
     # the endpoint can only read files docker itself reported.
+    # The optional `service` query param carries the details context:
+    # when the user hopped here from a service's details, the file
+    # views offer a Details tab back. Invalid names resolve to nil.
+    back_service_param = ->(env : HTTP::Server::Context, stack : ComposeStatus::Stack) do
+      name = optional_query_param(env, "service")
+      stack.services.find(&.service.==(name)).try(&.service)
+    end
+
     get route_path("compose-yaml") do |env|
       unless Grafito.compose_enabled?
         env.response.status_code = 404
@@ -1167,6 +1347,7 @@ module ComposeDashboard
         content,
         can_edit_yaml: can_edit,
         can_edit_env: can_edit && !ComposeDashboard.stack_file_path(compose_stack, StackFile::Env).nil?,
+        back_service: back_service_param.call(env, compose_stack),
       )
     end
 
@@ -1204,7 +1385,8 @@ module ComposeDashboard
       {% end %}
 
       env.response.content_type = "text/html"
-      ComposeDashboard.file_editor_fragment(compose_stack.name, file, path, content)
+      ComposeDashboard.file_editor_fragment(compose_stack.name, file, path, content,
+        back_service: back_service_param.call(env, compose_stack))
     end
 
     post route_path("compose-file-diff") do |env|
@@ -1235,7 +1417,8 @@ module ComposeDashboard
       {% end %}
       diff = unified_diff(old_content, content)
       env.response.content_type = "text/html"
-      ComposeDashboard.file_diff_fragment(compose_stack.name, file, path, content, diff)
+      ComposeDashboard.file_diff_fragment(compose_stack.name, file, path, content, diff,
+        back_service: back_service_param.call(env, compose_stack))
     end
 
     post route_path("compose-file-apply") do |env|
@@ -1276,7 +1459,8 @@ module ComposeDashboard
       {% end %}
 
       env.response.content_type = "text/html"
-      ComposeDashboard.file_applied_fragment(compose_stack.name, file, path, diff, Grafito.enable_actions?)
+      ComposeDashboard.file_applied_fragment(compose_stack.name, file, path, diff, Grafito.enable_actions?,
+        back_service: back_service_param.call(env, compose_stack))
     end
 
     # ## Image update checks for non-store stacks

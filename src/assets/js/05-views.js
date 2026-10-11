@@ -251,3 +251,20 @@ function setTagFilterAndTrigger(tag) {
   }
   return false; // Prevent default anchor link behavior
 }
+
+// Client-side stack filter for the compose view: hide stack cards
+// whose text (name, services, images) does not match the query.
+document.addEventListener("input", function (event) {
+  if (event.target.id !== "compose-stack-filter") return;
+  const query = event.target.value.trim().toLowerCase();
+  let visible = 0;
+  document
+    .querySelectorAll(".compose-stacks .compose-stack")
+    .forEach(function (card) {
+      const match = !query || card.textContent.toLowerCase().includes(query);
+      card.hidden = !match;
+      if (match) visible += 1;
+    });
+  const empty = document.getElementById("compose-filter-empty");
+  if (empty) empty.hidden = visible !== 0;
+});

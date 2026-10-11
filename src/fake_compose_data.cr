@@ -229,11 +229,16 @@ module FakeComposeData
 
   # A service record with the overlay applied: anything inside a down
   # stack, or individually stopped, reads as exited with no health.
+  # The demo's journald-logged containers; matched to the fake journal
+  # data's CONTAINER_NAME samples so the container filter finds entries.
+  JOURNALD_CONTAINERS = {"webapp-web-1", "webapp-api-1", "webapp-db-1"}
+
   private def self.service(
     stack_name : String, service_name : String, container : String,
     default_state : String, default_health : String, image : String,
     ports : String, default_status : String,
   ) : ComposeStatus::Service
+    log_driver = JOURNALD_CONTAINERS.includes?(container) ? "journald" : "json-file"
     stopped = @@down_stacks.includes?(stack_name) ||
               @@stopped_services.includes?("#{stack_name}/#{service_name}")
     if stopped
@@ -246,6 +251,7 @@ module FakeComposeData
         image: image,
         ports: ports,
         status_text: "Exited (0) a few seconds ago",
+        log_driver: log_driver,
       )
     else
       ComposeStatus::Service.new(
@@ -257,6 +263,7 @@ module FakeComposeData
         image: image,
         ports: ports,
         status_text: default_status,
+        log_driver: log_driver,
       )
     end
   end

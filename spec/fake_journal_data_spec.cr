@@ -131,6 +131,17 @@ describe FakeJournalData do
       end
     end
 
+    context "with a CONTAINER_NAME field match" do
+      it "generates entries that all carry the requested container" do
+        args = ["CONTAINER_NAME=webapp-web-1", "-n", "20"]
+        entries = FakeJournalData.fake_run_journalctl_and_parse(args, dummy_context_message)
+        entries.should_not be_empty
+        entries.each do |entry|
+          entry.data["CONTAINER_NAME"]?.should eq("webapp-web-1")
+        end
+      end
+    end
+
     context "with -n (number of entries) argument" do
       it "generates up to N entries if N is small and positive" do
         n_val = 10

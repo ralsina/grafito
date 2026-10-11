@@ -245,3 +245,9 @@
 .compose-yaml {
   max-height: 32rem;
 }
+
+/* The stack whose side panel is open. */
+.compose-stack.panel-open {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}

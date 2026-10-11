@@ -69,11 +69,13 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
   homepage.yml (edit → review diff → apply, atomic write with backup;
   applying bakes and retires the settings-store homepage overlay)
 - `src/settings_store.cr`, `src/settings_dashboard.cr`,
-  `src/auth_handler.cr` - Settings view and onboarding wizard
-  (runtime-editable credentials/timezone/AI/homepage basics in
-  `settings.json` under the data dir, boot config always wins; the
-  auth handler resolves basic-auth credentials per request so changes
-  apply without a restart)
+  `src/auth_handler.cr`, `src/login_dashboard.cr` - Settings view and
+  onboarding wizard, plus the login-page/session authentication
+  (kemal-session cookie sessions, bcrypt-hashed passwords with legacy
+  migration; runtime-editable credentials/timezone/AI/homepage basics
+  in `settings.json` under the data dir, boot config always wins; the
+  auth handler resolves credentials per request so changes apply
+  without a restart)
 - `src/fake_settings_data.cr` - In-memory settings store for demo mode
 - `src/gotify/` - Gotify push notification client and alert rules
 - Embedded assets are served with the `baked_file_handler` shard
@@ -99,7 +101,8 @@ The project intentionally minimizes dependencies:
 - `docopt` - CLI parsing (as preferred by the maintainer)
 - `baked_file_system` - Asset embedding for single-binary deployment
 - `html_builder` - Clean HTML generation without string concatenation
-- `kemal-basic-auth` - Optional authentication
+- `kemal-session` - Cookie sessions for the login page (server-side
+  store, signed session-id cookie)
 - `anthropic` - Anthropic/Claude API client for AI features
 - `crystar` - Tar archive reader for unpacking app store tarballs (the
   stdlib only ships gzip/zip, not tar)
@@ -334,4 +337,5 @@ AI log analysis is optional and provider-agnostic:
 - Follow pico.css conventions for styling
 - Consider base path configuration via `Grafito.base_path`
 - Test both with and without authentication enabled
-- Supports basic authentication via environment variables
+- Login credentials come from environment variables or the settings
+  store; browsers authenticate via the `/login` session page

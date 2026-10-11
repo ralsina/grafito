@@ -166,7 +166,7 @@ module SettingsDashboard
           div(class: "settings-section-title") { text "Access" }
           if auth_env
             div(class: "service-panel-hint") do
-              text "Credentials come from GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS and are managed by the environment."
+              text "Login credentials come from GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS and are managed by the environment."
             end
           else
             html field("Username", "auth_user", input["auth_user"]? || settings.auth_user.to_s,
@@ -174,6 +174,16 @@ module SettingsDashboard
             html field("New password", "auth_pass", "", type: "password",
               hint: "Leave blank to keep the current one", autocomplete: "new-password")
             html field("Repeat new password", "auth_pass2", "", type: "password", autocomplete: "new-password")
+          end
+          div(class: "service-panel-actions") do
+            button(
+              class: "round-button",
+              title: "End this login session",
+              "hx-post": "#{ViewHelpers.base_prefix}/logout",
+              "hx-indicator": "#loading-spinner",
+            ) do
+              text "Sign out"
+            end
           end
         end
         div(class: "settings-section") do
@@ -487,7 +497,7 @@ module SettingsDashboard
       errors << "Passwords do not match." if auth_pass != auth_pass_confirm
       if errors.empty?
         settings.auth_user = auth_user
-        settings.auth_pass = auth_pass
+        settings.auth_pass = SettingsStore.hash_password(auth_pass)
       end
     elsif !SettingsStore.auth_from_env?
       if auth_pass.empty?
@@ -497,7 +507,7 @@ module SettingsDashboard
         errors << "Password must be at least 4 characters." if auth_pass.size < 4
         unless errors.any? { |error| error.starts_with?("Password") || error.starts_with?("New passwords") }
           settings.auth_user = auth_user unless auth_user.empty?
-          settings.auth_pass = auth_pass
+          settings.auth_pass = SettingsStore.hash_password(auth_pass)
         end
       end
     end
@@ -618,14 +628,16 @@ module SettingsDashboard
   end
 
   # What the browser sees right after onboarding: the next request
-  # will ask for the new credentials, so say so instead of leaving a
+  # lands on the login page, so link it instead of leaving a
   # silently-401ing page behind.
   private def self.onboarding_complete_fragment(settings : SettingsStore::Settings) : String
     HTML.build do
       div(class: "settings-hint") do
         tag("h2") { text "Onboarding complete" }
         tag("p") do
-          text "Login created for '#{HTML.escape(settings.auth_user.to_s)}'. Reload the page and sign in with your new credentials — actions are unlocked from now on."
+          text "Login created for '#{HTML.escape(settings.auth_user.to_s)}'. "
+          a(href: "#{ViewHelpers.base_prefix}/login") { text "Sign in" }
+          text " with your new credentials — actions are unlocked from now on."
         end
       end
     end

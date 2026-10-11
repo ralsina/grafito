@@ -111,7 +111,9 @@ describe "Settings routes" do
 
           settings = SettingsStore.load(data_dir)
           settings.auth_user.should eq("admin")
-          settings.auth_pass.should eq("secret")
+          # The password is stored as a bcrypt hash that verifies.
+          SettingsStore.bcrypt_hash?(settings.auth_pass).should be_true
+          Crypto::Bcrypt::Password.new(settings.auth_pass.to_s).verify("secret").should be_true
           settings.timezone.should eq("UTC")
           settings.onboarded?.should be_true
           Grafito.timezone.should eq("UTC")

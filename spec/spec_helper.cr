@@ -8,6 +8,18 @@ require "../src/grafito"
 # route path is added twice.
 Grafito.register_routes
 
+# The session endpoints read `env.session`, which signs the session-id
+# cookie with the configured secret — materializing any session without
+# this would raise. The app configures this in main.cr at boot; specs
+# never run main, so it lives here instead. In-memory engine, fixed
+# secret: hermetic and shared by every example.
+Kemal::Session.config do |config|
+  config.cookie_name = "grafito_session"
+  config.secret = "spec-session-secret"
+  config.timeout = 1.hour
+  config.engine = Kemal::Session::MemoryEngine.new
+end
+
 # Many specs flip module-level switches (auth override, view enables,
 # actions, the AI provider, the data dir...) and environment variables.
 # `crystal spec` runs files in filesystem readdir order, which differs
@@ -124,6 +136,20 @@ def dispatch_request(method : String, path : String, body : String? = nil, heade
                                 end
 
   {status: response.status_code, body: body_text, headers: response_headers}
+end
+
+# A terminal handler that records whether a request reached it —
+# used by handler specs (auth, login) to test middleware directly
+# instead of through routes.
+class PassMarker
+  include HTTP::Handler
+
+  property? passed = false
+
+  def call(context : HTTP::Server::Context) : Nil
+    @passed = true
+    context.response.status_code = 200
+  end
 end
 
 # Minimal AI provider used to enable AI-dependent UI in specs.

@@ -29,6 +29,7 @@ require "./homepage"
 require "./settings_store"
 require "./auth_handler"
 require "./settings_dashboard"
+require "./login_dashboard"
 
 {% if flag?(:demo_mode) %}
   require "./fake_compose_data"
@@ -267,6 +268,8 @@ module Grafito
       priority = optional_query_param(env, "priority")
       # Filter logs by hostname (you can concentrate logs from multiple hosts!)
       hostname = optional_query_param(env, "hostname")
+      # Filter logs by docker container (journald CONTAINER_NAME field)
+      container = optional_query_param(env, "container")
       # The UI allows for sorting by different fields
       current_sort_by = optional_query_param(env, "sort_by")
       current_sort_order = optional_query_param(env, "sort_order")
@@ -295,6 +298,7 @@ module Grafito
         query: search_query,
         priority: priority,
         hostname: hostname,
+        container: container,
         sort_by: current_sort_by,
         sort_order: current_sort_order
       )
@@ -348,6 +352,7 @@ module Grafito
       search_query = optional_query_param(env, "q")
       priority = optional_query_param(env, "priority")
       hostname = optional_query_param(env, "hostname")
+      container = optional_query_param(env, "container")
 
       # Column visibility matches the /logs table so streamed rows are
       # shaped exactly like the ones already on screen.
@@ -371,7 +376,7 @@ module Grafito
           env.response.puts ": connected"
           env.response.flush
           loop do
-            if entry = Journalctl.fake_follow_entry(unit: unit, tag: tag, query: search_query, priority: priority, hostname: hostname)
+            if entry = Journalctl.fake_follow_entry(unit: unit, tag: tag, query: search_query, priority: priority, hostname: hostname, container: container)
               row = log_row(
                 entry,
                 search_query,
@@ -394,7 +399,7 @@ module Grafito
       {% else %}
         command = Journalctl.build_follow_command(
           since: since, unit: unit, tag: tag, query: search_query,
-          priority: priority, hostname: hostname,
+          priority: priority, hostname: hostname, container: container,
         )
         Log.info { "Live tail starting: #{command.inspect}" }
 
@@ -516,10 +521,11 @@ module Grafito
       search_query = optional_query_param(env, "q")
       priority = optional_query_param(env, "priority")
       hostname = optional_query_param(env, "hostname") # Also add to /command endpoint for consistency
-      Log.debug { "Building command with: since=#{since.inspect}, unit=#{unit.inspect}, tag=#{tag.inspect}, q=#{search_query.inspect}, priority=#{priority.inspect}, hostname=#{hostname.inspect}" }
+      container = optional_query_param(env, "container")
+      Log.debug { "Building command with: since=#{since.inspect}, unit: #{unit.inspect}, tag: #{tag.inspect}, q: #{search_query.inspect}, priority: #{priority.inspect}, hostname: #{hostname.inspect}, container: #{container.inspect}" }
       # Here `build_query_command` is the same function used by `Journalctl.query` so the command line
       # should always be correct.
-      command_array = Journalctl.build_query_command(since: since, unit: unit, tag: tag, query: search_query, priority: priority, hostname: hostname)
+      command_array = Journalctl.build_query_command(since: since, unit: unit, tag: tag, query: search_query, priority: priority, hostname: hostname, container: container)
       env.response.content_type = "text/plain"
       env.response.print "\"#{command_array.join(" ")}\""
     end
@@ -914,5 +920,6 @@ module Grafito
     ProcessDashboard.register_routes
     HomepageDashboard.register_routes
     SettingsDashboard.register_routes
+    LoginDashboard.register_routes
   end # register_routes
 end

@@ -1,21 +1,28 @@
 # # Authentication handler
 #
-# Basic-auth enforcement with credentials resolved per request, so the
-# settings view can change them (and the onboarding wizard can create
-# them) without a restart. Replaces the boot-time `basic_auth` call:
-# when no credentials exist anywhere (neither the boot environment nor
-# the settings store) every request passes through, exactly like an
-# unconfigured grafito always did.
+# Login-session enforcement. Browsers authenticate by signing in at
+# `/login` and carrying the (signed, HttpOnly) session cookie; the
+# credentials themselves are resolved per request from the boot
+# environment or the settings store, so the settings view can change
+# them (and the onboarding wizard can create them) without a restart.
+# When no credentials exist anywhere every request passes through,
+# exactly like an unconfigured grafito always did.
 #
-# Requests are answered with the same 401 + `WWW-Authenticate` shape
-# kemal-basic-auth used, so browsers and scripts see no difference.
-# Both the username and the password are compared through SHA-256
-# digests: digest comparison leaks at most digest-equality timing,
-# never a plaintext prefix match.
+# Sessions come from kemal-session (see `configure_sessions` in
+# main.cr): the cookie only carries a signed session id, the session
+# data lives server-side. A session counts only while its `user`
+# matches the *current* effective username — changing the username
+# invalidates every outstanding session.
+#
+# There is no `WWW-Authenticate` handshake and `Authorization` headers
+# are ignored: the basic-auth era is over. Unauthenticated requests
+# are answered according to what issued them — htmx gets a 401 with
+# `HX-Redirect` (a full-page redirect to the login page, which also
+# handles a session expiring mid-view), browser navigations get a
+# plain 302, and anything else (curl, API clients) a plain 401.
 
-require "crypto/subtle"
-require "digest/sha256"
 require "http/server/handler"
+require "kemal-session"
 
 require "./settings_store"
 
@@ -26,43 +33,45 @@ class AuthHandler
     credentials = SettingsStore.effective_auth
     if credentials.nil?
       call_next(context)
-    elsif authorized?(context.request.headers["Authorization"]?, credentials)
+    elsif session_user?(context, credentials[0])
+      call_next(context)
+    elsif public_path?(context.request.path)
       call_next(context)
     else
       unauthorized(context)
     end
   end
 
-  # Decodes and checks a Basic Authorization header against the
-  # credentials. The username is split from the password on the first
-  # colon only (passwords may contain colons).
-  private def authorized?(header : String?, credentials : {String, String}) : Bool
-    return false unless header && header.starts_with?("Basic ")
-    decoded = decode(header)
-    return false unless colon = decoded.index(':')
-    user = decoded[0...colon]
-    password = decoded[(colon + 1)..]
-    secure_equal?(user, credentials[0]) && secure_equal?(password, credentials[1])
+  # A valid session: present, and belonging to the current username.
+  # Reading `context.session` materializes a fresh (empty) session for
+  # visitors without a cookie — harmless, nothing is stored until data
+  # is written.
+  private def session_user?(context : HTTP::Server::Context, username : String) : Bool
+    context.session.string?("user") == username
   end
 
-  private def decode(header : String) : String
-    Base64.decode_string(header[6..].strip)
-  rescue Base64::Error | ArgumentError
-    ""
-  end
-
-  # Constant-time comparison of the SHA-256 digests.
-  private def secure_equal?(presented : String, expected : String) : Bool
-    Crypto::Subtle.constant_time_compare(
-      Digest::SHA256.digest(presented),
-      Digest::SHA256.digest(expected),
-    )
+  # Everything the login page itself needs: the session endpoints and
+  # the pico stylesheet the page links (all other baked assets stay
+  # behind auth). Base-path aware, like the routes themselves.
+  private def public_path?(path : String) : Bool
+    {Grafito.route_path("login"), Grafito.route_path("logout"),
+     "#{Grafito.route_path("pico.min.css")}"}.includes?(path)
   end
 
   private def unauthorized(context : HTTP::Server::Context) : Nil
-    context.response.status_code = 401
-    context.response.headers["WWW-Authenticate"] = %(Basic realm="grafito", charset="UTF-8")
-    context.response.print "Could not verify your access level for that URL.\nYou have to login with proper credentials"
+    login = Grafito.route_path("login")
+    request = context.request
+    if request.headers["HX-Request"]?
+      context.response.status_code = 401
+      context.response.headers["HX-Redirect"] = login
+      context.response.print "Session expired."
+    elsif request.headers["Accept"]?.to_s.includes?("text/html")
+      context.response.status_code = 302
+      context.response.headers["Location"] = login
+    else
+      context.response.status_code = 401
+      context.response.print "Login required.\n"
+    end
     context.response.close
   end
 end

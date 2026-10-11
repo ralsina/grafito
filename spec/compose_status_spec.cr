@@ -52,6 +52,13 @@ describe ComposeStatus do
     ComposeStatus.parse_containers("").should be_empty
   end
 
+  it "parses the batched log-driver inspect output" do
+    drivers = ComposeStatus.parse_log_drivers("/kavita journald\n/grafito json-file\n\n/broken\n")
+    drivers.size.should eq(2)
+    drivers["kavita"].should eq("journald")
+    drivers["grafito"].should eq("json-file")
+  end
+
   it "accepts null Ports and Labels, which docker emits for some containers" do
     containers = ComposeStatus.parse_containers(
       %({"Names":"bare","Image":"alpine","State":"running","Status":"Up 1 minute","Ports":null,"Labels":null}\n)
@@ -179,6 +186,25 @@ describe ComposeStatus do
           # The declared top-level name wins over the directory name,
           # and skips stacks docker already knows under it.
           ComposeStatus.disk_stacks(["already-running", "declared"]).map(&.name).should eq(["fresh", "kavita"])
+        ensure
+          Grafito.stacks_dir = old_stacks_dir
+        end
+      ensure
+        FileUtils.rm_rf(root)
+      end
+    end
+
+    it "matches known names case-insensitively (docker lowercases projects)" do
+      root = make_stacks_dir
+      begin
+        Dir.mkdir(File.join(root, "tasks.md"))
+        File.write(File.join(root, "tasks.md", "compose.yaml"), "name: Tasks\nservices: {}\n")
+        old_stacks_dir = Grafito.stacks_dir
+        Grafito.stacks_dir = root
+        begin
+          # Docker knows the project as "tasks"; the declared "Tasks"
+          # is the same stack and must not appear as a phantom.
+          ComposeStatus.disk_stacks(["tasks"]).map(&.name).should_not contain("Tasks")
         ensure
           Grafito.stacks_dir = old_stacks_dir
         end

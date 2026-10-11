@@ -208,3 +208,19 @@ function setUnitFilterAndTrigger(unitName) {
   }
   return false; // Prevent default anchor link behavior
 }
+
+function setContainerFilterAndTrigger(containerName) {
+  // Coming from the compose view's "Service logs" button: show the
+  // log stream filtered to that docker container's journald entries.
+  closeAllViews({ skipUrlUpdate: true });
+  if (window.closeLogPanel) {
+    closeLogPanel();
+  }
+  const containerFilterInput = document.getElementById("container-filter");
+  if (containerFilterInput) {
+    containerFilterInput.value = containerName;
+    // Trigger a custom event that is configured for immediate HTMX requests
+    htmx.trigger(containerFilterInput, "immediateContainerFilterUpdate");
+  }
+  return false; // Prevent default anchor link behavior
+}

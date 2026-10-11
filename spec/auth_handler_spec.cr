@@ -1,38 +1,10 @@
 require "./spec_helper"
-require "base64"
 
 # AuthHandler specs: the handler is exercised directly (chained to a
-# terminal handler that records the pass-through), because route specs
-# dispatch through the route handler only.
-# A terminal handler that flips a flag instead of routing.
-class PassMarker
-  include HTTP::Handler
-
-  property? passed = false
-
-  def call(context : HTTP::Server::Context) : Nil
-    @passed = true
-    context.response.status_code = 200
-  end
-end
-
-def basic_header(user : String, password : String) : HTTP::Headers
-  HTTP::Headers{"Authorization" => "Basic #{Base64.strict_encode("#{user}:#{password}")}"}
-end
-
-# Sends a GET through handler -> marker and reports the response
-# status and whether the request passed through.
-def through(handler : AuthHandler, headers : HTTP::Headers = HTTP::Headers.new) : {Int32, Bool, HTTP::Headers}
-  marker = PassMarker.new
-  handler.next = marker
-  request = HTTP::Request.new("GET", "/server-info", headers)
-  response_io = IO::Memory.new
-  response = HTTP::Server::Response.new(response_io)
-  context = HTTP::Server::Context.new(request, response)
-  handler.call(context)
-  response.close
-  {response.status_code, marker.passed?, response.headers}
-end
+# terminal PassMarker, see spec_helper), because route specs dispatch
+# through the route handler only. Sessions are exercised by planting a
+# real kemal-session on a first context and replaying its cookie,
+# mirroring what a browser keeps between requests.
 
 def with_env(pairs : Hash(String, String?), &)
   saved = {} of String => String?
@@ -57,6 +29,43 @@ ensure
   end
 end
 
+# Points the settings store at a throwaway data dir (or back).
+def with_auth_data_dir(data_dir : String, &)
+  old_data_dir = Grafito.data_dir
+  Grafito.data_dir = data_dir
+  yield
+ensure
+  Grafito.data_dir = old_data_dir if old_data_dir
+end
+
+# Sends a request through handler -> marker and reports the response
+# status, whether the request passed through, and the headers.
+def through(handler : AuthHandler, headers : HTTP::Headers = HTTP::Headers.new,
+            method : String = "GET", path : String = "/server-info")
+  marker = PassMarker.new
+  handler.next = marker
+  request = HTTP::Request.new(method, path, headers)
+  response_io = IO::Memory.new
+  response = HTTP::Server::Response.new(response_io)
+  context = HTTP::Server::Context.new(request, response)
+  handler.call(context)
+  response.close
+  {response.status_code, marker.passed?, response.headers}
+end
+
+# Signs in on a throwaway context (against the given username) and
+# returns the Cookie header a browser would replay afterwards.
+def plant_session(user : String) : HTTP::Headers
+  request = HTTP::Request.new("GET", "/login")
+  response_io = IO::Memory.new
+  response = HTTP::Server::Response.new(response_io)
+  context = HTTP::Server::Context.new(request, response)
+  context.session.string("user", user)
+  response.close
+  cookie = response.cookies[Kemal::Session.config.cookie_name]
+  HTTP::Headers{"Cookie" => "#{cookie.name}=#{cookie.value}"}
+end
+
 {% unless flag?(:demo_mode) %}
   # The handler resolves credentials through the real settings store;
   # demo builds keep it in memory.
@@ -66,14 +75,10 @@ end
       Dir.mkdir(data_dir)
       begin
         with_env({"GRAFITO_AUTH_USER" => nil, "GRAFITO_AUTH_PASS" => nil}) do
-          old_data_dir = Grafito.data_dir
-          Grafito.data_dir = data_dir
-          begin
+          with_auth_data_dir(data_dir) do
             status, passed, _ = through(AuthHandler.new)
             passed.should be_true
             status.should eq(200)
-          ensure
-            Grafito.data_dir = old_data_dir
           end
         end
       ensure
@@ -81,32 +86,111 @@ end
       end
     end
 
-    it "challenges and admits against settings credentials" do
+    it "redirects browsers to the login page without a session" do
       data_dir = File.tempname("grafito-auth", "")
       Dir.mkdir(data_dir)
       begin
-        SettingsStore.save(data_dir, SettingsStore::Settings.new(auth_user: "admin", auth_pass: "se:cret"))
+        SettingsStore.save(data_dir, SettingsStore::Settings.new(
+          auth_user: "admin", auth_pass: SettingsStore.hash_password("secret")))
         with_env({"GRAFITO_AUTH_USER" => nil, "GRAFITO_AUTH_PASS" => nil}) do
-          old_data_dir = Grafito.data_dir
-          Grafito.data_dir = data_dir
-          begin
+          with_auth_data_dir(data_dir) do
             handler = AuthHandler.new
 
-            status, passed, headers = through(handler)
+            # Browser navigation.
+            status, passed, headers = through(handler,
+              HTTP::Headers{"Accept" => "text/html,application/xhtml+xml"})
+            passed.should be_false
+            status.should eq(302)
+            headers["Location"].should eq("/login")
+
+            # htmx: a 401 that the frontend turns into a full redirect.
+            status, passed, headers = through(handler,
+              HTTP::Headers{"HX-Request" => "true", "Accept" => "text/html"})
             passed.should be_false
             status.should eq(401)
-            headers["WWW-Authenticate"].should contain("Basic realm=")
+            headers["HX-Redirect"].should eq("/login")
 
-            status, passed, _ = through(handler, basic_header("admin", "wrong"))
+            # Anything else (curl, API clients).
+            status, passed, _ = through(handler)
             passed.should be_false
             status.should eq(401)
+          end
+        end
+      ensure
+        FileUtils.rm_rf(data_dir)
+      end
+    end
 
-            # Passwords containing colons survive the first-colon split.
-            status, passed, _ = through(handler, basic_header("admin", "se:cret"))
+    it "admits a valid session cookie" do
+      data_dir = File.tempname("grafito-auth", "")
+      Dir.mkdir(data_dir)
+      begin
+        SettingsStore.save(data_dir, SettingsStore::Settings.new(
+          auth_user: "admin", auth_pass: SettingsStore.hash_password("secret")))
+        with_env({"GRAFITO_AUTH_USER" => nil, "GRAFITO_AUTH_PASS" => nil}) do
+          with_auth_data_dir(data_dir) do
+            handler = AuthHandler.new
+            cookie = plant_session("admin")
+
+            status, passed, _ = through(handler, cookie)
             passed.should be_true
             status.should eq(200)
-          ensure
-            Grafito.data_dir = old_data_dir
+
+            # A session for a different (stale) username is not valid:
+            # renaming the user invalidates outstanding sessions.
+            other = plant_session("former-user")
+            status, passed, _ = through(handler, other)
+            passed.should be_false
+            status.should eq(401)
+          end
+        end
+      ensure
+        FileUtils.rm_rf(data_dir)
+      end
+    end
+
+    it "ignores Authorization headers entirely (basic auth is gone)" do
+      data_dir = File.tempname("grafito-auth", "")
+      Dir.mkdir(data_dir)
+      begin
+        SettingsStore.save(data_dir, SettingsStore::Settings.new(
+          auth_user: "admin", auth_pass: SettingsStore.hash_password("secret")))
+        with_env({"GRAFITO_AUTH_USER" => nil, "GRAFITO_AUTH_PASS" => nil}) do
+          with_auth_data_dir(data_dir) do
+            handler = AuthHandler.new
+            basic = "Basic #{Base64.strict_encode("admin:secret")}"
+
+            status, passed, headers = through(handler,
+              HTTP::Headers{"Authorization" => basic, "Accept" => "text/html"})
+            passed.should be_false
+            status.should eq(302)
+            headers["WWW-Authenticate"]?.should be_nil
+          end
+        end
+      ensure
+        FileUtils.rm_rf(data_dir)
+      end
+    end
+
+    it "lets the login page and its stylesheet through without a session" do
+      data_dir = File.tempname("grafito-auth", "")
+      Dir.mkdir(data_dir)
+      begin
+        SettingsStore.save(data_dir, SettingsStore::Settings.new(
+          auth_user: "admin", auth_pass: SettingsStore.hash_password("secret")))
+        with_env({"GRAFITO_AUTH_USER" => nil, "GRAFITO_AUTH_PASS" => nil}) do
+          with_auth_data_dir(data_dir) do
+            handler = AuthHandler.new
+
+            {"/login", "/logout", "/pico.min.css"}.each do |path|
+              status, passed, _ = through(handler, HTTP::Headers.new, path: path)
+              passed.should be_true
+              status.should eq(200)
+            end
+
+            # Everything else stays closed.
+            status, passed, _ = through(handler, HTTP::Headers.new, path: "/style.css")
+            passed.should be_false
           end
         end
       ensure
@@ -118,47 +202,17 @@ end
       data_dir = File.tempname("grafito-auth", "")
       Dir.mkdir(data_dir)
       begin
-        SettingsStore.save(data_dir, SettingsStore::Settings.new(auth_user: "file-user", auth_pass: "file-pass"))
+        SettingsStore.save(data_dir, SettingsStore::Settings.new(
+          auth_user: "file-user", auth_pass: SettingsStore.hash_password("file-pass")))
         with_env({"GRAFITO_AUTH_USER" => "env-user", "GRAFITO_AUTH_PASS" => "env-pass"}) do
-          old_data_dir = Grafito.data_dir
-          Grafito.data_dir = data_dir
-          begin
+          with_auth_data_dir(data_dir) do
             handler = AuthHandler.new
-            _, passed, _ = through(handler, basic_header("file-user", "file-pass"))
+
+            _, passed, _ = through(handler, plant_session("file-user"))
             passed.should be_false
 
-            _, passed, _ = through(handler, basic_header("env-user", "env-pass"))
+            _, passed, _ = through(handler, plant_session("env-user"))
             passed.should be_true
-          ensure
-            Grafito.data_dir = old_data_dir
-          end
-        end
-      ensure
-        FileUtils.rm_rf(data_dir)
-      end
-    end
-
-    it "rejects malformed Authorization headers" do
-      data_dir = File.tempname("grafito-auth", "")
-      Dir.mkdir(data_dir)
-      begin
-        SettingsStore.save(data_dir, SettingsStore::Settings.new(auth_user: "admin", auth_pass: "secret"))
-        with_env({"GRAFITO_AUTH_USER" => nil, "GRAFITO_AUTH_PASS" => nil}) do
-          old_data_dir = Grafito.data_dir
-          Grafito.data_dir = data_dir
-          begin
-            handler = AuthHandler.new
-            _, passed, _ = through(handler, HTTP::Headers{"Authorization" => "Bearer nope"})
-            passed.should be_false
-
-            _, passed, _ = through(handler, HTTP::Headers{"Authorization" => "Basic %%%%"})
-            passed.should be_false
-
-            # A header without any colon in the decoded payload.
-            _, passed, _ = through(handler, HTTP::Headers{"Authorization" => "Basic #{Base64.strict_encode("nocolon")}"})
-            passed.should be_false
-          ensure
-            Grafito.data_dir = old_data_dir
           end
         end
       ensure

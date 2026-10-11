@@ -23,7 +23,8 @@
 # - ./data — persistent state: metrics history, app store caches and
 #   installed apps survive container recreation.
 #
-# One-time setup on the server:
+# One-time setup on the server (these define the /login page's
+# credentials):
 #   echo "GRAFITO_AUTH_USER=you"  > .env
 #   echo "GRAFITO_AUTH_PASS=..." >> .env   # openssl rand -hex 12
 services:

@@ -11,14 +11,27 @@ require "html_builder"
 module ViewHelpers
   extend self
 
-  # One summary card, using the log view's `.stat` styling.
-  def card(label : String, value : String, warn : Bool = false) : String
+  # One summary card, using the log view's `.stat` styling. `title`
+  # explains what the number counts.
+  def card(label : String, value : String, warn : Bool = false, title : String = "") : String
     HTML.build do
-      div(class: "stat") do
-        span(class: "stat-label") { text label }
-        span(class: warn ? "stat-value stat-error" : "stat-value") do
-          text value
+      if title.empty?
+        div(class: "stat") do
+          html card_body(label, value, warn)
         end
+      else
+        div(class: "stat", title: title) do
+          html card_body(label, value, warn)
+        end
+      end
+    end
+  end
+
+  private def card_body(label : String, value : String, warn : Bool) : String
+    HTML.build do
+      span(class: "stat-label") { text label }
+      span(class: warn ? "stat-value stat-error" : "stat-value") do
+        text value
       end
     end
   end
