@@ -2,6 +2,64 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2026-10-11
+
+### 🚀 Features
+
+- *(metrics)* Sample and chart per-interface network I/O
+- *(metrics)* Swap gauge, OOM tracking and swap recovery alerts
+- *(metrics)* Downsampled history rendering and CSV export
+- *(homepage)* Machine stats strip fed by the metrics sampler (#99)
+- *(compose)* In-browser editors for compose.yaml and .env (#94, #95)
+- *(compose)* Registry update detection for non-store stacks (#96)
+- *(appstore)* App-data backups before updates, per-app auto-update toggle (#97, #98)
+- *(access)* Host:port baseline URLs, open links and homepage discovery (#138 PR 1)
+- *(access)* Proxy settings panel and lego wildcard certificate management (#138 PR 2)
+- *(access)* Managed caddy stack and domain routing (#138 PR 3)
+- *(homepage)* Hostname setting and port-only services
+- *(settings)* Settings view and onboarding wizard
+- *(settings)* Stacks dir, app stores and gotify settings
+- *(homepage)* Edit homepage.yml from the browser
+- *(auth)* Login sessions replace basic auth
+- *(compose)* Service logs opens the journal view filtered by container
+- *(compose)* Service logs picks the journal view or the tail per container
+- *(compose)* Panel navigation, stack highlight, filter and N/A health
+- *(compose)* The file views link back to the service details
+- *(compose)* Open plain stacks from their published ports
+- *(compose)* Stack lifecycle summary cards that add up
+
+### 🐛 Bug Fixes
+
+- *(frontend)* Strict mode, dedup clipboard/render helpers, drop dead view wrappers (#64)
+- *(lint)* Use sort! after reject in the id contract spec
+- *(a11y)* Contrast, keyboard row activation, focus management, reduced motion (#65)
+- *(appstore)* Render app descriptions as markdown (#65 follow-up)
+- *(appstore)* Replace broken description screenshots with a muted note
+- *(appstore)* Publish the config.json UI port for single-service apps (#96 follow-up)
+- *(compose)* Separate toolbar buttons with a gap
+- *(spec)* Hermetic examples and deterministic disk_stacks order
+- *(compose)* Open the Detail panel from the stack card's yaml button
+- *(compose)* Only show stack actions that fit the stack's state
+- *(css)* Text buttons in service panels size to their label
+- *(compose)* Don't list a phantom stack for case-differing names
+
+### 🚜 Refactor
+
+- *(views)* Shared ViewHelpers for card, pill and action-error markup (#62)
+
+### 📚 Documentation
+
+- App access — domains, DNS-01 certificates and routing (#138 PR 4, feeds #68)
+- Park krikri server-bootstrap idea in TODO
+
+### ⚡ Performance
+
+- *(dashboard)* Compute the snapshot once per poll, serve history from memory (#67)
+
+### 🧪 Testing
+
+- *(access)* Specs for caddyfile/compose rendering and route derivation
+
 ## [1.6.0] - 2026-09-17
 
 ### 🚀 Features
