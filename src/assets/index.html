@@ -315,6 +315,19 @@
                 hx-indicator="#loading-spinner"
                 hx-include=".log-filter"
               />
+              <input
+                type="text"
+                id="container-filter"
+                name="container"
+                placeholder="Docker container (e.g., webapp-web-1)"
+                title="Filter logs by docker container (CONTAINER_NAME, journald log driver)"
+                hx-get="logs"
+                hx-trigger="input changed delay:600ms, immediateContainerFilterUpdate"
+                hx-target="#results"
+                class="log-filter"
+                hx-indicator="#loading-spinner"
+                hx-include=".log-filter"
+              />
             </div>
 
             <div class="filter-panel-section">

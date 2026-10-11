@@ -73,12 +73,6 @@ require "./spec_helper"
       response[:body].should contain("services:")
     end
 
-    it "GET /compose-logs serves a pollable log tail" do
-      response = dispatch_request("GET", "/compose-logs?stack=webapp&service=web")
-      response[:status].should eq(200)
-      response[:body].should contain("every 5s")
-    end
-
     it "GET /compose-details rejects invalid names" do
       dispatch_request("GET", "/compose-details?stack=-evil&service=web")[:status].should eq(400)
       dispatch_request("GET", "/compose-details?stack=webapp&service=nope")[:status].should eq(404)

@@ -624,14 +624,14 @@ module ComposeDashboard
         end
 
         div(class: "service-panel-ai") do
+          # Opens the real log view (table, timeline, live tail)
+          # filtered to this container's journald entries — docker
+          # containers log there through the journald log driver.
           button(
             {
-              "class":        "service-panel-explain",
-              "title":        "Show the recent log tail for this service",
-              "hx-get":       logs_url(compose_service.stack, compose_service.service),
-              "hx-target":    "#panel-detail-content",
-              "hx-swap":      "innerHTML",
-              "hx-indicator": "#loading-spinner",
+              "class":   "service-panel-explain",
+              "title":   "Open the log view filtered to this container",
+              "onclick": "return setContainerFilterAndTrigger('#{HTML.escape(compose_service.container)}')",
             }
           ) do
             span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
@@ -885,77 +885,6 @@ module ComposeDashboard
     end
   end
 
-  # Merges `docker compose logs --timestamps` output with journald
-  # entries (matched by the service's syslog tag, e.g. the "freshrss"
-  # tag a shipper like vector attaches) into one chronological tail.
-  # Compose lines carry an RFC3339 timestamp after the optional
-  # "container |" prefix; lines without one are continuations of the
-  # previous (multiline) message. Each merged line is prefixed with a
-  # timestamp in the configured timezone, in the same format the log
-  # stream view uses.
-  def self.merged_log_tail(
-    compose_output : String,
-    journal_entries : Array(Journalctl::LogEntry),
-    tail : Int32 = 200,
-  ) : String
-    merged = [] of Tuple(Time, String)
-
-    compose_output.each_line do |line|
-      stamped = false
-      if match = line.match(/^(.*?)(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2}))\s+(.*)$/)
-        time = begin
-          Time.parse_rfc3339(match[2])
-        rescue Time::Format::Error
-          nil
-        end
-        if time
-          prefix = match[1].rstrip.chomp("|").rstrip
-          merged << {time, prefix.empty? ? match[3] : "#{prefix} | #{match[3]}"}
-          stamped = true
-        end
-      end
-      next if stamped
-      # Continuation of the previous multiline message; an undated
-      # leading line is parked at the epoch so it sorts first.
-      if merged.empty?
-        merged << {Time.unix(0), line}
-      else
-        last_time, last_text = merged.last
-        merged[-1] = {last_time, "#{last_text}\n#{line}"}
-      end
-    end
-
-    journal_entries.each do |journal_entry|
-      merged << {journal_entry.timestamp, journal_entry.message}
-    end
-
-    merged.sort_by!(&.first)
-    merged = merged.last(tail) if merged.size > tail
-    merged.map do |entry_time, entry_text|
-      "#{Journalctl::LogEntry.convert_to_timezone(entry_time).to_s("%m-%d %H:%M:%S")}  #{entry_text}"
-    end.join("\n")
-  end
-
-  # The service log tail fragment. Polls itself every 5 seconds so the
-  # tail keeps moving while the panel is open; the swap replaces the
-  # inner content of #compose-logs-content, and the poll trigger lives
-  # on the fragment root so it stops once the panel content changes.
-  def logs_fragment(stack_name : String, service_name : String, content : String) : String
-    HTML.build do
-      tag("div", {
-        "class":      "compose-logs",
-        "hx-get":     logs_url(stack_name, service_name),
-        "hx-trigger": "every 5s",
-        "hx-target":  "this",
-        "hx-swap":    "innerHTML",
-      }) do
-        tag("pre", class: "compose-output-lines") do
-          text content.empty? ? "(no logs)" : content
-        end
-      end
-    end
-  end
-
   # Renders a failed action as an error block for the service panel,
   # like the dashboard does.
 
@@ -1001,10 +930,6 @@ module ComposeDashboard
 
   private def details_url(stack_name : String, service_name : String) : String
     "#{base}/compose-details?stack=#{URI.encode_path(stack_name)}&service=#{URI.encode_path(service_name)}"
-  end
-
-  private def logs_url(stack_name : String, service_name : String) : String
-    "#{base}/compose-logs?stack=#{URI.encode_path(stack_name)}&service=#{URI.encode_path(service_name)}"
   end
 
   private def yaml_url(stack_name : String) : String
@@ -1346,45 +1271,6 @@ module ComposeDashboard
       end
       env.response.content_type = "text/html"
       ComposeDashboard.updates_status_fragment(stack_name.to_s)
-    end
-
-    # Recent log tail for one service, merging `docker compose logs`
-    # with journald: services that ship their logs to the journal (a
-    # syslog logging driver or a shipper like vector) have an empty
-    # `docker compose logs`, with the entries living in the journal
-    # under the service's syslog tag instead.
-    # Pollable: the fragment re-requests itself every few seconds
-    # while the panel is open.
-    get route_path("compose-logs") do |env|
-      unless Grafito.compose_enabled?
-        env.response.status_code = 404
-        next "Compose view is disabled."
-      end
-      stack_name = optional_query_param(env, "stack")
-      service_name = optional_query_param(env, "service")
-      tail = optional_query_param(env, "tail").try(&.to_i?) || 200
-      tail = tail.clamp(1, 5000)
-      unless valid_compose_name?(stack_name) && valid_compose_name?(service_name)
-        halt env, status_code: 400, response: "Missing or invalid stack/service name."
-      end
-
-      compose_stack = ComposeStatus.find_stack(stack_name.to_s)
-      unless compose_stack
-        env.response.status_code = 404
-        next "Stack '#{HTML.escape(stack_name.to_s)}' not found."
-      end
-      compose_service = compose_stack.services.find(&.service.==(service_name))
-      unless compose_service
-        env.response.status_code = 404
-        next "Service '#{HTML.escape(service_name.to_s)}' of stack '#{HTML.escape(stack_name.to_s)}' not found."
-      end
-
-      args = compose_args(compose_stack) + ["logs", "--no-color", "--timestamps", "--tail", tail.to_s, compose_service.service]
-      compose_output = ComposeStatus.run_docker(args)
-      journal_entries = Journalctl.query(tag: compose_service.service, lines: tail) || [] of Journalctl::LogEntry
-      content = ComposeDashboard.merged_log_tail(compose_output, journal_entries, tail: tail)
-      env.response.content_type = "text/html"
-      ComposeDashboard.logs_fragment(compose_service.stack, compose_service.service, content)
     end
 
     # Stack-level actions (up, stop, restart, image update). These run

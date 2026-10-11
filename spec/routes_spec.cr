@@ -12,6 +12,13 @@ describe "Kemal routes" do
     response[:body].should contain("-g error")
   end
 
+  it "GET /command includes the container field match" do
+    response = dispatch_request("GET", "/command?container=webapp-web-1")
+
+    response[:status].should eq(200)
+    response[:body].should contain("CONTAINER_NAME=webapp-web-1")
+  end
+
   it "GET /details returns 400 when the cursor parameter is missing" do
     response = dispatch_request("GET", "/details")
 

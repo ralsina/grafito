@@ -309,6 +309,7 @@ const SHARED_FILTER_CONFIGS = [
   { id: "unit-filter", param: "unit", type: "value" },
   { id: "tag-filter", param: "tag", type: "value" },
   { id: "hostname-filter", param: "hostname", type: "value" },
+  { id: "container-filter", param: "container", type: "value" },
   { id: "time-range-filter", param: "since", type: "select" },
   { id: "priority-filter", param: "priority", type: "select" },
   {
@@ -1251,6 +1252,22 @@ function setUnitFilterAndTrigger(unitName) {
     unitFilterInput.value = unitName;
     // Trigger a custom event that is configured for immediate HTMX requests
     htmx.trigger(unitFilterInput, "immediateUnitFilterUpdate");
+  }
+  return false; // Prevent default anchor link behavior
+}
+
+function setContainerFilterAndTrigger(containerName) {
+  // Coming from the compose view's "Service logs" button: show the
+  // log stream filtered to that docker container's journald entries.
+  closeAllViews({ skipUrlUpdate: true });
+  if (window.closeLogPanel) {
+    closeLogPanel();
+  }
+  const containerFilterInput = document.getElementById("container-filter");
+  if (containerFilterInput) {
+    containerFilterInput.value = containerName;
+    // Trigger a custom event that is configured for immediate HTMX requests
+    htmx.trigger(containerFilterInput, "immediateContainerFilterUpdate");
   }
   return false; // Prevent default anchor link behavior
 }

@@ -41,7 +41,10 @@ module FakeJournalData
 
   # A list of sample container names.
   SAMPLE_CONTAINER_NAMES = [
-    "webapp_prod_1", "api_gateway_alpha", "worker_beta_3", nil, # nil for non-containerized logs
+    # Matched to FakeComposeData's containers so the demo's container
+    # filter has entries to find; nil for non-containerized logs.
+    "webapp-web-1", "webapp-api-1", "webapp-db-1",
+    "monitoring-gotify-1", "monitoring-vector-1", nil,
   ]
 
   # A list of sample hostnames.
@@ -102,8 +105,9 @@ module FakeJournalData
     cursor : String? = nil      # For --cursor
     since_time : String? = nil
     until_time : String? = nil
-    query : String? = nil           # For -g
-    target_hostname : String? = nil # For --host
+    query : String? = nil            # For -g
+    target_hostname : String? = nil  # For --host
+    target_container : String? = nil # For CONTAINER_NAME= matches
 
     i = 0
     while i < journalctl_args.size
@@ -143,11 +147,16 @@ module FakeJournalData
       when "-r", "--reverse"
         reverse = true
       else
-        # This argument was not a recognized flag. Check if it's a _HOSTNAME filter.
-        if arg.starts_with?("_HOSTNAME=")
+        # This argument was not a recognized flag. Check if it's a
+        # _HOSTNAME or CONTAINER_NAME field match filter.
+        if arg.starts_with?("_HOSTNAME=") || arg.starts_with?("CONTAINER_NAME=")
           parts = arg.split('=', 2)
           if parts.size == 2 && !parts[1].empty?
-            target_hostname = parts[1]
+            if parts[0] == "_HOSTNAME"
+              target_hostname = parts[1]
+            else
+              target_container = parts[1]
+            end
           end
         end
       end
@@ -196,7 +205,9 @@ module FakeJournalData
       current_internal_unit_name = target_unit || SAMPLE_UNIT_NAMES.sample                                                                                                # Corrected: Use SAMPLE_UNIT_NAMES
       syslog_identifier = current_internal_unit_name.nil? ? (current_hostname == "kernel_host" ? "kernel" : "system") : current_internal_unit_name.gsub(/\.service$/, "") # A bit more variety
       message_raw = Faker::Hacker.say_something_smart
-      container_name = SAMPLE_CONTAINER_NAMES.sample
+      # If a target_container is specified, all generated entries must
+      # match it. Otherwise, pick a random one from the sample list.
+      container_name = target_container || SAMPLE_CONTAINER_NAMES.sample
 
       # Filter by tags
       next if !include_tags.empty? && !include_tags.includes?(syslog_identifier) # Corrected: Filter on syslog_identifier

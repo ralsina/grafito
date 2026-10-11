@@ -58,6 +58,24 @@ describe Journalctl do
       command.should eq(base_command + ["-p", "3"])
     end
 
+    it "adds a CONTAINER_NAME match when 'container' is provided" do
+      command = Journalctl.build_query_command(since: nil, unit: nil, tag: nil, query: nil, priority: nil, hostname: nil, container: "webapp-web-1")
+      command.should eq(base_command + ["CONTAINER_NAME=webapp-web-1"])
+    end
+
+    it "ignores blank container values" do
+      command = Journalctl.build_query_command(since: nil, unit: nil, tag: nil, query: nil, priority: nil, hostname: nil, container: "   ")
+      command.should eq(base_command)
+    end
+
+    {% unless flag?(:demo_mode) %}
+      it "includes the container match in follow commands too" do
+        command = Journalctl.build_follow_command(container: "kavita")
+        command.should contain("CONTAINER_NAME=kavita")
+        command.should contain("-f")
+      end
+    {% end %}
+
     it "builds a command with all parameters provided" do
       command = Journalctl.build_query_command(
         since: "-2d",

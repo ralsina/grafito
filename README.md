@@ -163,8 +163,16 @@ Docker Compose stacks, the services inside each one, and their health.
   and their output streams into the view live, like Dockge.
 * **Service actions** (opt-in, auth required): start/stop/restart a
   single service via `docker compose`.
-* **Service logs**: a pollable log tail per service, right in the
-  sidebar's Detail tab, via `docker compose logs`.
+* **Service logs**: the sidebar's *Service logs* button opens the full
+  log view filtered to that service's container — the whole journal
+  toolkit (table, timeline, search, priorities, live tail) instead of a
+  bare tail. The filter matches journald's `CONTAINER_NAME` field, so
+  containers must log through the **journald driver**: set
+  `"log-driver": "journald"` in `/etc/docker/daemon.json` (new
+  containers pick it up when recreated), or add
+  `logging: {driver: journald}` to a stack's compose file. There is
+  also a *Docker container* filter input in the filter panel for
+  ad-hoc use.
 * **compose.yaml view**: a read-only view of the stack's compose file.
 
 Set `GRAFITO_COMPOSE=false` (or `--compose=false`) to disable the
