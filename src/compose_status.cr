@@ -47,16 +47,27 @@ module ComposeStatus
     getter image : String
     getter ports : String
     getter status_text : String
+    # The container's docker log driver ("journald", "json-file", ...),
+    # from a batched `docker inspect`. Decides whether the service's
+    # logs can be followed through the journal view.
+    getter log_driver : String = ""
 
     def initialize(
       @stack : String, @service : String, @container : String,
       @state : String, @health : String, @image : String,
       @ports : String, @status_text : String,
+      @log_driver : String = "",
     )
     end
 
     def running? : Bool
       state == "running"
+    end
+
+    # True when the container's logs reach the journal under
+    # CONTAINER_NAME, so the full log view can follow them.
+    def journald? : Bool
+      log_driver == "journald"
     end
 
     # Docker reports an empty health for containers without a
@@ -254,6 +265,7 @@ module ComposeStatus
     containers = parse_containers(ps_output)
 
     # Group containers by their compose project label.
+    log_drivers = container_log_drivers(containers.map(&.names))
     by_project = Hash(String, Array(Service)).new
     containers.each do |container|
       labels = container.labels_or_empty
@@ -270,6 +282,7 @@ module ComposeStatus
         image: container.image,
         ports: container.ports_or_empty,
         status_text: container.status,
+        log_driver: log_drivers[container.names]? || "",
       )
     end
 
@@ -386,6 +399,33 @@ module ComposeStatus
   rescue ex
     Log.warn(exception: ex) { "Failed to parse docker ps output" }
     [] of RawContainer
+  end
+
+  # One batched `docker inspect` over all listed containers, returning
+  # container name → log driver. The driver decides whether a service's
+  # logs reach the journal (journald driver → CONTAINER_NAME entries),
+  # which is what picks between the full log view and the inline tail.
+  # Containers that vanished between the ps and the inspect (or a
+  # missing docker) simply map to nothing.
+  def self.container_log_drivers(container_names : Array(String)) : Hash(String, String)
+    return {} of String => String if container_names.empty?
+    output = run_docker(["inspect", "--format", "{{.Name}} {{.HostConfig.LogConfig.Type}}"] + container_names)
+    parse_log_drivers(output)
+  rescue ex
+    Log.warn(exception: ex) { "Failed to inspect container log drivers" }
+    {} of String => String
+  end
+
+  # Parses `docker inspect --format '{{.Name}} {{.HostConfig.LogConfig.Type}}'`
+  # output: one "/name driver" line per container.
+  def self.parse_log_drivers(output : String) : Hash(String, String)
+    drivers = {} of String => String
+    output.each_line do |line|
+      name, _, driver = line.strip.partition(" ")
+      next if name.empty? || driver.empty?
+      drivers[name.lchop('/')] = driver
+    end
+    drivers
   end
 
   # Extracts the healthcheck verdict from the `docker ps` Status string

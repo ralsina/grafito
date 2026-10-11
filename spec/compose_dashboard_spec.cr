@@ -9,11 +9,13 @@ private SERVICES = [
     stack: "webapp", service: "web", container: "webapp-web-1",
     state: "running", health: "healthy", image: "nginx:1.27-alpine",
     ports: "0.0.0.0:8080->80/tcp", status_text: "Up 3 days (healthy)",
+    log_driver: "journald",
   ),
   ComposeStatus::Service.new(
     stack: "webapp", service: "api", container: "webapp-api-1",
     state: "running", health: "unhealthy", image: "api:1",
     ports: "", status_text: "Up 2 hours (unhealthy)",
+    log_driver: "json-file",
   ),
   ComposeStatus::Service.new(
     stack: "webapp", service: "db", container: "webapp-db-1",
@@ -103,6 +105,20 @@ describe ComposeDashboard do
     fragment.should contain("webapp-web-1")
     fragment.should contain("setContainerFilterAndTrigger")
     fragment.should contain("/compose-service/webapp/web/stop")
+  end
+
+  it "branches Service logs on the container's log driver" do
+    # journald driver: the full log view, filtered by container.
+    journald = ComposeDashboard.service_details_fragment(SERVICES[0], false)
+    journald.should contain("setContainerFilterAndTrigger")
+    journald.should_not contain("compose-logs")
+
+    # json-file driver: the plain tail plus an explanatory hint.
+    json_file = ComposeDashboard.service_details_fragment(SERVICES[1], false)
+    json_file.should contain("compose-logs?stack=webapp&amp;service=api")
+    json_file.should contain("json-file")
+    json_file.should contain("journald log driver")
+    json_file.should_not contain("setContainerFilterAndTrigger")
   end
 
   it "renders port mappings as chips in the detail fragment" do

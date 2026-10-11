@@ -52,6 +52,13 @@ describe ComposeStatus do
     ComposeStatus.parse_containers("").should be_empty
   end
 
+  it "parses the batched log-driver inspect output" do
+    drivers = ComposeStatus.parse_log_drivers("/kavita journald\n/grafito json-file\n\n/broken\n")
+    drivers.size.should eq(2)
+    drivers["kavita"].should eq("journald")
+    drivers["grafito"].should eq("json-file")
+  end
+
   it "accepts null Ports and Labels, which docker emits for some containers" do
     containers = ComposeStatus.parse_containers(
       %({"Names":"bare","Image":"alpine","State":"running","Status":"Up 1 minute","Ports":null,"Labels":null}\n)
