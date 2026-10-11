@@ -107,6 +107,39 @@ describe ComposeDashboard do
     fragment.should contain("/compose-service/webapp/web/stop")
   end
 
+  it "renders N/A for services without a healthcheck" do
+    fragment = ComposeDashboard.render_html([STACK], false)
+    fragment.should contain(%(>N/A</span>))
+    fragment.should_not contain(%(>—</span>))
+  end
+
+  it "tags stack cards and panel fragments with the stack name" do
+    fragment = ComposeDashboard.render_html([STACK], true)
+    fragment.should contain(%(data-stack-name="webapp"))
+    panel = ComposeDashboard.service_details_fragment(SERVICES[0], false)
+    panel.should contain(%(data-stack-name="webapp"))
+  end
+
+  it "renders a stack filter in the toolbar" do
+    fragment = ComposeDashboard.render_html([STACK], false)
+    fragment.should contain("compose-stack-filter")
+    fragment.should contain("compose-filter-empty")
+  end
+
+  it "navigates between the panel views of a stack" do
+    # yaml view: active tab plus editor tabs per availability.
+    yaml = ComposeDashboard.yaml_fragment("webapp", "services: {}", can_edit_yaml: true, can_edit_env: true)
+    yaml.should contain(%(data-stack-name="webapp"))
+    yaml.should contain(%(<span class="panel-nav-tab active">compose.yaml</span>))
+    yaml.should contain(%(hx-get="/compose-file-edit?stack=webapp&amp;file=yaml" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Edit compose.yaml</button>))
+    yaml.should contain(%(hx-get="/compose-file-edit?stack=webapp&amp;file=env" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Edit .env</button>))
+
+    # service details: Details tab active, hops to the yaml view.
+    details = ComposeDashboard.service_details_fragment(SERVICES[0], false)
+    details.should contain(%(<span class="panel-nav-tab active">Details</span>))
+    details.should contain(%(hx-get="/compose-yaml?stack=webapp" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">compose.yaml</button>))
+  end
+
   it "branches Service logs on the container's log driver" do
     # journald driver: the full log view, filtered by container.
     journald = ComposeDashboard.service_details_fragment(SERVICES[0], false)

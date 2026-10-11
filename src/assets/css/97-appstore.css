@@ -232,3 +232,44 @@
   font-style: italic;
   margin: 0.3rem 0;
 }
+
+/* Stack filter (client-side) shares the toolbar row with the store
+   buttons; the filter hugs the left, the buttons the right. */
+#compose-stack-filter {
+  max-width: 16rem;
+  margin: 0 0 0;
+  margin-right: auto;
+}
+
+#compose-filter-empty {
+  opacity: 0.7;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+/* In-panel navigation between the views of one stack (read-only
+   compose.yaml, the file editors, service details). */
+.panel-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.6rem;
+}
+
+.panel-nav-tab {
+  font-size: 0.78rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
+.panel-nav-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-inverse, #fff);
+  cursor: default;
+}

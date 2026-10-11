@@ -65,45 +65,54 @@ module ComposeDashboard
             html stack_section(compose_stack, enable_actions, installed_by_project[compose_stack.name]?, hostname)
           end
         end
+        div(id: "compose-filter-empty", hidden: "hidden") do
+          text "No stacks match the filter."
+        end
       end
     end
   end
 
-  # The view-level toolbar: currently just the app store entry point,
-  # shown when actions are allowed (the store is useless without them).
+  # The view-level toolbar: a client-side stack filter, plus the app
+  # store entry points when actions are allowed (the store is useless
+  # without them).
   private def compose_toolbar(enable_actions : Bool) : String
-    return "" unless enable_actions && Grafito.apps_enabled?
     HTML.build do
       div(class: "compose-toolbar") do
-        button(
-          class: "compose-addapp",
-          title: "Access & domains: wildcard certificate, domain routing",
-          "hx-get": "#{base}/access",
-          "hx-target": "#panel-detail-content",
-          "hx-swap": "innerHTML",
-          "hx-indicator": "#loading-spinner",
-          "hx-on:htmx:before-request": "panelSpinner('panel-detail-content')",
-          "hx-on:htmx:after-request": "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
-        ) do
-          span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
-            text "key"
+        input(type: "search", id: "compose-stack-filter",
+          placeholder: "Filter stacks…",
+          title: "Filter stacks by name, service or image",
+          autocomplete: "off")
+        if enable_actions && Grafito.apps_enabled?
+          button(
+            class: "compose-addapp",
+            title: "Access & domains: wildcard certificate, domain routing",
+            "hx-get": "#{base}/access",
+            "hx-target": "#panel-detail-content",
+            "hx-swap": "innerHTML",
+            "hx-indicator": "#loading-spinner",
+            "hx-on:htmx:before-request": "panelSpinner('panel-detail-content')",
+            "hx-on:htmx:after-request": "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
+          ) do
+            span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+              text "key"
+            end
+            text " Access"
           end
-          text " Access"
-        end
-        button(
-          class: "compose-addapp",
-          title: "Install an app from the app store",
-          "hx-get": "#{base}/compose-appstore",
-          "hx-target": "#panel-detail-content",
-          "hx-swap": "innerHTML",
-          "hx-indicator": "#loading-spinner",
-          "hx-on:htmx:before-request": "panelSpinner('panel-detail-content')",
-          "hx-on:htmx:after-request": "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
-        ) do
-          span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
-            text "add_circle"
+          button(
+            class: "compose-addapp",
+            title: "Install an app from the app store",
+            "hx-get": "#{base}/compose-appstore",
+            "hx-target": "#panel-detail-content",
+            "hx-swap": "innerHTML",
+            "hx-indicator": "#loading-spinner",
+            "hx-on:htmx:before-request": "panelSpinner('panel-detail-content')",
+            "hx-on:htmx:after-request": "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
+          ) do
+            span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
+              text "add_circle"
+            end
+            text " Add app"
           end
-          text " Add app"
         end
       end
     end
@@ -149,7 +158,9 @@ module ComposeDashboard
     # appears instead once the user routed the app by domain.
     open_url = installed ? Access.urls(installed, hostname).preferred : nil
     HTML.build do
-      div(class: "compose-stack") do
+      # data-stack-name lets the frontend highlight the stack whose
+      # panel is open and filter cards client-side.
+      div(class: "compose-stack", "data-stack-name": compose_stack.name) do
         div(class: "compose-stack-header") do
           tag("h3") do
             text compose_stack.name
@@ -556,7 +567,11 @@ module ComposeDashboard
     member_processes : Array(ProcessStatus::ProcessInfo) = [] of ProcessStatus::ProcessInfo,
   ) : String
     HTML.build do
-      div(class: "service-panel") do
+      div(class: "service-panel", "data-stack-name": compose_service.stack) do
+        div(class: "panel-nav") do
+          html panel_nav_tab("Details", nil, true)
+          html panel_nav_tab("compose.yaml", yaml_url(compose_service.stack), false)
+        end
         tag("h4") do
           text "#{compose_service.stack} / #{compose_service.service}"
         end
@@ -669,9 +684,48 @@ module ComposeDashboard
   end
 
   # A read-only compose.yaml for one stack, shown in the Detail tab.
-  # A read-only compose.yaml for one stack, shown in the Detail tab.
   # With actions enabled it doubles as the entry point for the stack
   # file editors (compose.yaml and .env).
+  # In-panel navigation: the panel shows several views of one stack
+  # (read-only compose.yaml, the file editors, service details) and
+  # these tabs switch between them without leaving the panel. The
+  # active view renders as a highlighted span, the others as buttons
+  # swapping #panel-detail-content.
+  private def panel_nav_tab(label : String, url : String?, active : Bool) : String
+    HTML.build do
+      if active || url.nil?
+        span(class: "panel-nav-tab active") { text label }
+      else
+        button(
+          class: "panel-nav-tab",
+          "hx-get": url,
+          "hx-target": "#panel-detail-content",
+          "hx-swap": "innerHTML",
+          "hx-indicator": "#loading-spinner",
+        ) do
+          text label
+        end
+      end
+    end
+  end
+
+  # The tab strip for the stack file views. `active` is "yaml",
+  # "edit-yaml" or "edit-env".
+  private def stack_panel_nav(stack_name : String, active : String,
+                              can_edit_yaml : Bool = false, can_edit_env : Bool = false) : String
+    HTML.build do
+      div(class: "panel-nav") do
+        html panel_nav_tab("compose.yaml", yaml_url(stack_name), active == "yaml")
+        if can_edit_yaml || active == "edit-yaml"
+          html panel_nav_tab("Edit compose.yaml", active == "edit-yaml" ? nil : file_edit_url(stack_name, StackFile::ComposeYaml), active == "edit-yaml")
+        end
+        if can_edit_env || active == "edit-env"
+          html panel_nav_tab("Edit .env", active == "edit-env" ? nil : file_edit_url(stack_name, StackFile::Env), active == "edit-env")
+        end
+      end
+    end
+  end
+
   def yaml_fragment(
     stack_name : String,
     content : String,
@@ -679,7 +733,8 @@ module ComposeDashboard
     can_edit_env : Bool = false,
   ) : String
     HTML.build do
-      div(class: "service-panel") do
+      div(class: "service-panel", "data-stack-name": stack_name) do
+        html stack_panel_nav(stack_name, "yaml", can_edit_yaml, can_edit_env)
         tag("h4") do
           text stack_name
         end
@@ -754,7 +809,9 @@ module ComposeDashboard
     content : String,
   ) : String
     HTML.build do
-      div(class: "service-panel") do
+      div(class: "service-panel", "data-stack-name": stack_name) do
+        html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "edit-yaml" : "edit-env",
+          file == StackFile::ComposeYaml, file == StackFile::Env)
         tag("h4") do
           text "Edit #{file.label} — #{stack_name}"
         end
@@ -807,7 +864,9 @@ module ComposeDashboard
     diff : String,
   ) : String
     HTML.build do
-      div(class: "service-panel") do
+      div(class: "service-panel", "data-stack-name": stack_name) do
+        html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "edit-yaml" : "edit-env",
+          file == StackFile::ComposeYaml, file == StackFile::Env)
         tag("h4") do
           text "Review changes — #{file.label} (#{stack_name})"
         end
@@ -868,7 +927,9 @@ module ComposeDashboard
     enable_actions : Bool,
   ) : String
     HTML.build do
-      div(class: "service-panel") do
+      div(class: "service-panel", "data-stack-name": stack_name) do
+        html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "edit-yaml" : "edit-env",
+          file == StackFile::ComposeYaml, file == StackFile::Env)
         tag("h4") do
           text "#{file.label} written — #{stack_name}"
         end
@@ -999,7 +1060,8 @@ module ComposeDashboard
 
   # Healthcheck verdict pill; an empty verdict means no healthcheck.
   private def health_pill(value : String) : String
-    return HTML.build { span(class: "tag tag-muted") { text "—" } } if value.empty?
+    # No healthcheck configured: there is no health to report.
+    return HTML.build { span(class: "tag tag-muted") { text "N/A" } } if value.empty?
     color = case value
             when "healthy"  then "ok"
             when "starting" then "warn"

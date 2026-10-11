@@ -1524,6 +1524,23 @@ function setTagFilterAndTrigger(tag) {
   }
   return false; // Prevent default anchor link behavior
 }
+
+// Client-side stack filter for the compose view: hide stack cards
+// whose text (name, services, images) does not match the query.
+document.addEventListener("input", function (event) {
+  if (event.target.id !== "compose-stack-filter") return;
+  const query = event.target.value.trim().toLowerCase();
+  let visible = 0;
+  document
+    .querySelectorAll(".compose-stacks .compose-stack")
+    .forEach(function (card) {
+      const match = !query || card.textContent.toLowerCase().includes(query);
+      card.hidden = !match;
+      if (match) visible += 1;
+    });
+  const empty = document.getElementById("compose-filter-empty");
+  if (empty) empty.hidden = visible !== 0;
+});
 // grafito frontend — entry inspector
 // Detail/context tabs, hover previews and keyboard handling.
 
@@ -1781,6 +1798,48 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
+// Highlight the stack whose panel is open: panel fragments carry
+// data-stack-name, stack cards carry the matching attribute. Cleared
+// when the panel closes or shows non-compose content.
+window.updateStackPanelHighlight = function () {
+  document
+    .querySelectorAll(".compose-stack.panel-open")
+    .forEach(function (card) {
+      card.classList.remove("panel-open");
+    });
+  const panel = document.getElementById("side-panel");
+  const context = document.querySelector(
+    "#panel-detail-content [data-stack-name]",
+  );
+  if (!panel || !panel.classList.contains("open") || !context) return;
+  const name = context.dataset.stackName;
+  if (!name) return;
+  const card = document.querySelector(
+    '.compose-stack[data-stack-name="' + window.CSS.escape(name) + '"]',
+  );
+  if (card) card.classList.add("panel-open");
+};
+
+document.body.addEventListener("htmx:afterSwap", function (event) {
+  // The compose view polls itself every 30s and replaces the stack
+  // cards, wiping the highlight — re-apply on its swaps too. Deferred
+  // one tick because the button handlers that open the panel run
+  // after this event.
+  if (
+    event.target &&
+    (event.target.id === "panel-detail-content" ||
+      event.target.id === "compose-view")
+  ) {
+    window.setTimeout(window.updateStackPanelHighlight, 0);
+  }
+});
+
+const previousCloseLogPanel = window.closeLogPanel;
+window.closeLogPanel = function () {
+  previousCloseLogPanel();
+  window.updateStackPanelHighlight();
+};
 // grafito frontend — AI explanations
 // Ask/follow-up flows, safe rendering, clipboard export and
 // // the provider badge.
