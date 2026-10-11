@@ -197,6 +197,8 @@ module ComposeDashboard
                 "hx-target": "#panel-detail-content",
                 "hx-swap": "innerHTML",
                 "hx-indicator": "#loading-spinner",
+                "hx-on:htmx:before-request": "panelSpinner('panel-detail-content')",
+                "hx-on:htmx:after-request": "if(event.detail.successful){showLogPanel('detail')}else{panelError('panel-detail-content',event.detail.xhr.status);showLogPanel('detail')}",
               ) do
                 span(class: "material-icons", style: "vertical-align: middle; font-size: 1rem;") do
                   text "description"

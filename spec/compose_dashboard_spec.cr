@@ -63,6 +63,10 @@ describe ComposeDashboard do
     without_actions.should_not contain("hx-confirm")
     # The YAML view is read-only, so it stays available without actions.
     without_actions.should contain("compose-yaml?stack=webapp")
+    # And it opens the Detail panel (a swap into the hidden panel
+    # alone would look like "spinner, then nothing"). Single quotes
+    # arrive HTML-escaped.
+    with_actions.should match(/hx-get="\/compose-yaml\?stack=webapp"[^>]*hx-on:htmx:after-request="if\(event\.detail\.successful\)\{showLogPanel\(&#39;detail&#39;\)\}/m)
   end
 
   it "hides stack actions for stacks without config files" do
