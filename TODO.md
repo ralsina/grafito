@@ -1,5 +1,10 @@
 # Things To Do
 
+* Point-a-script-at-a-server bootstrap via krikri (docker + compose +
+  vector + stacks). POC playbook ran green in `--check` against rocky.
+  Gotchas: rocky is Debian 12 on arm64 (controller needs the arm64
+  `plugins/` dir from the arm64 krikri tarball), Arch targets are not
+  supported (no pacman module)
 * Formalize API
 * Write MCP
 * ✅ Maybe add z.ai integration (the `z_ai` provider)
