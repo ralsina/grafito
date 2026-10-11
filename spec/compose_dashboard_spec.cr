@@ -29,6 +29,14 @@ private STACK = ComposeStatus::Stack.new(
   services: SERVICES,
 )
 
+# A disk-discovered stack docker does not know about: fully down.
+private STOPPED_STACK = ComposeStatus::Stack.new(
+  name: "kavita",
+  status: "stopped",
+  config_files: ["/data/stacks/kavita/compose.yml"],
+  services: [] of ComposeStatus::Service,
+)
+
 private EMPTY_STACK = ComposeStatus::Stack.new(
   name: "legacy",
   status: "",
@@ -67,6 +75,20 @@ describe ComposeDashboard do
     # alone would look like "spinner, then nothing"). Single quotes
     # arrive HTML-escaped.
     with_actions.should match(/hx-get="\/compose-yaml\?stack=webapp"[^>]*hx-on:htmx:after-request="if\(event\.detail\.successful\)\{showLogPanel\(&#39;detail&#39;\)\}/m)
+  end
+
+  it "shows only the stack actions that fit the stack's state" do
+    running = ComposeDashboard.render_html([STACK], true)
+    running.should contain(%(title="Stop stack"))
+    running.should contain(%(title="Restart stack"))
+    running.should contain(%(title="Pull images and up -d"))
+    running.should_not contain(%(title="Start stack (up -d)"))
+
+    stopped = ComposeDashboard.render_html([STOPPED_STACK], true)
+    stopped.should contain(%(title="Start stack (up -d)"))
+    stopped.should_not contain(%(title="Stop stack"))
+    stopped.should_not contain(%(title="Restart stack"))
+    stopped.should_not contain(%(title="Pull images and up -d"))
   end
 
   it "hides stack actions for stacks without config files" do

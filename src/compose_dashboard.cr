@@ -158,10 +158,7 @@ module ComposeDashboard
           end
           div(class: "compose-stack-actions") do
             if enable_actions && compose_stack.actionable?
-              html stack_action_button(compose_stack, "up", "play_arrow", "Start stack (up -d)")
-              html stack_action_button(compose_stack, "stop", "stop", "Stop stack")
-              html stack_action_button(compose_stack, "restart", "restart_alt", "Restart stack")
-              html stack_action_button(compose_stack, "update", "update", "Pull images and up -d")
+              html stack_actions_fragment(compose_stack)
               button(
                 class: "round-button",
                 title: "Check the registry for newer images",
@@ -309,6 +306,31 @@ module ComposeDashboard
       actions << {action: "start", icon: "play_arrow"}
     end
     actions
+  end
+
+  # State-appropriate actions for one stack, like the service detail
+  # pane: running stacks (any service up) get stop/restart/update,
+  # stopped ones get start. A stack that is fully down has nothing to
+  # stop or restart; a running one does not need "start".
+  private def stack_actions(compose_stack : ComposeStatus::Stack) : Array(NamedTuple(action: String, icon: String, description: String))
+    if compose_stack.running_count > 0
+      [
+        {action: "stop", icon: "stop", description: "Stop stack"},
+        {action: "restart", icon: "restart_alt", description: "Restart stack"},
+        {action: "update", icon: "update", description: "Pull images and up -d"},
+      ]
+    else
+      [{action: "up", icon: "play_arrow", description: "Start stack (up -d)"}]
+    end
+  end
+
+  # The stack card's lifecycle buttons, filtered by stack state.
+  private def stack_actions_fragment(compose_stack : ComposeStatus::Stack) : String
+    HTML.build do
+      stack_actions(compose_stack).each do |action|
+        html stack_action_button(compose_stack, action[:action], action[:icon], action[:description])
+      end
+    end
   end
 
   # Icon-only button for a service action. `from_panel` refreshes the
