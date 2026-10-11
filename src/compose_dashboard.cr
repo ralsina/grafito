@@ -570,7 +570,7 @@ module ComposeDashboard
       div(class: "service-panel", "data-stack-name": compose_service.stack) do
         div(class: "panel-nav") do
           html panel_nav_tab("Details", nil, true)
-          html panel_nav_tab("compose.yaml", yaml_url(compose_service.stack), false)
+          html panel_nav_tab("compose.yaml", yaml_url(compose_service.stack, compose_service.service), false)
         end
         tag("h4") do
           text "#{compose_service.stack} / #{compose_service.service}"
@@ -710,17 +710,23 @@ module ComposeDashboard
   end
 
   # The tab strip for the stack file views. `active` is "yaml",
-  # "edit-yaml" or "edit-env".
+  # "edit-yaml" or "edit-env". `back_service` (the service whose
+  # details led here, when any) adds a Details tab so the file views
+  # are a round trip, not a one-way door.
   private def stack_panel_nav(stack_name : String, active : String,
-                              can_edit_yaml : Bool = false, can_edit_env : Bool = false) : String
+                              can_edit_yaml : Bool = false, can_edit_env : Bool = false,
+                              back_service : String? = nil) : String
     HTML.build do
       div(class: "panel-nav") do
-        html panel_nav_tab("compose.yaml", yaml_url(stack_name), active == "yaml")
+        if back_service
+          html panel_nav_tab("Details", details_url(stack_name, back_service), active == "details")
+        end
+        html panel_nav_tab("compose.yaml", yaml_url(stack_name, back_service), active == "yaml")
         if can_edit_yaml || active == "edit-yaml"
-          html panel_nav_tab("Edit compose.yaml", active == "edit-yaml" ? nil : file_edit_url(stack_name, StackFile::ComposeYaml), active == "edit-yaml")
+          html panel_nav_tab("Edit compose.yaml", active == "edit-yaml" ? nil : file_edit_url(stack_name, StackFile::ComposeYaml, back_service), active == "edit-yaml")
         end
         if can_edit_env || active == "edit-env"
-          html panel_nav_tab("Edit .env", active == "edit-env" ? nil : file_edit_url(stack_name, StackFile::Env), active == "edit-env")
+          html panel_nav_tab("Edit .env", active == "edit-env" ? nil : file_edit_url(stack_name, StackFile::Env, back_service), active == "edit-env")
         end
       end
     end
@@ -731,10 +737,11 @@ module ComposeDashboard
     content : String,
     can_edit_yaml : Bool = false,
     can_edit_env : Bool = false,
+    back_service : String? = nil,
   ) : String
     HTML.build do
       div(class: "service-panel", "data-stack-name": stack_name) do
-        html stack_panel_nav(stack_name, "yaml", can_edit_yaml, can_edit_env)
+        html stack_panel_nav(stack_name, "yaml", can_edit_yaml, can_edit_env, back_service)
         tag("h4") do
           text stack_name
         end
@@ -807,11 +814,12 @@ module ComposeDashboard
     file : StackFile,
     path : String,
     content : String,
+    back_service : String? = nil,
   ) : String
     HTML.build do
       div(class: "service-panel", "data-stack-name": stack_name) do
         html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "edit-yaml" : "edit-env",
-          file == StackFile::ComposeYaml, file == StackFile::Env)
+          file == StackFile::ComposeYaml, file == StackFile::Env, back_service)
         tag("h4") do
           text "Edit #{file.label} — #{stack_name}"
         end
@@ -827,10 +835,13 @@ module ComposeDashboard
           end
           input(type: "hidden", name: "stack", value: stack_name)
           input(type: "hidden", name: "file", value: file.param)
+          if back_service
+            input(type: "hidden", name: "service", value: back_service)
+          end
           div(class: "service-panel-actions") do
             button(
               class: "round-button",
-              "hx-post": file_diff_url(stack_name, file),
+              "hx-post": file_diff_url(stack_name, file, back_service),
               "hx-include": "closest form",
               "hx-target": "#panel-detail-content",
               "hx-swap": "innerHTML",
@@ -840,7 +851,7 @@ module ComposeDashboard
             end
             button(
               class: "round-button",
-              "hx-get": compose_yaml_url(stack_name),
+              "hx-get": yaml_url(stack_name, back_service),
               "hx-target": "#panel-detail-content",
               "hx-swap": "innerHTML",
               "hx-indicator": "#loading-spinner",
@@ -862,11 +873,12 @@ module ComposeDashboard
     path : String,
     content : String,
     diff : String,
+    back_service : String? = nil,
   ) : String
     HTML.build do
       div(class: "service-panel", "data-stack-name": stack_name) do
         html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "edit-yaml" : "edit-env",
-          file == StackFile::ComposeYaml, file == StackFile::Env)
+          file == StackFile::ComposeYaml, file == StackFile::Env, back_service)
         tag("h4") do
           text "Review changes — #{file.label} (#{stack_name})"
         end
@@ -888,11 +900,14 @@ module ComposeDashboard
           end
           input(type: "hidden", name: "stack", value: stack_name)
           input(type: "hidden", name: "file", value: file.param)
+          if back_service
+            input(type: "hidden", name: "service", value: back_service)
+          end
           div(class: "service-panel-actions") do
             unless diff.empty?
               button(
                 class: "round-button",
-                "hx-post": file_apply_url(stack_name, file),
+                "hx-post": file_apply_url(stack_name, file, back_service),
                 "hx-include": "closest form",
                 "hx-target": "#panel-detail-content",
                 "hx-swap": "innerHTML",
@@ -904,7 +919,7 @@ module ComposeDashboard
             end
             button(
               class: "round-button",
-              "hx-get": file_edit_url(stack_name, file),
+              "hx-get": file_edit_url(stack_name, file, back_service),
               "hx-target": "#panel-detail-content",
               "hx-swap": "innerHTML",
               "hx-indicator": "#loading-spinner",
@@ -925,11 +940,12 @@ module ComposeDashboard
     path : String,
     diff : String,
     enable_actions : Bool,
+    back_service : String? = nil,
   ) : String
     HTML.build do
       div(class: "service-panel", "data-stack-name": stack_name) do
         html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "edit-yaml" : "edit-env",
-          file == StackFile::ComposeYaml, file == StackFile::Env)
+          file == StackFile::ComposeYaml, file == StackFile::Env, back_service)
         tag("h4") do
           text "#{file.label} written — #{stack_name}"
         end
@@ -1093,24 +1109,30 @@ module ComposeDashboard
     "#{base}/compose-logs?stack=#{URI.encode_path(stack_name)}&service=#{URI.encode_path(service_name)}"
   end
 
-  private def yaml_url(stack_name : String) : String
-    "#{base}/compose-yaml?stack=#{URI.encode_path(stack_name)}"
+  private def yaml_url(stack_name : String, back_service : String? = nil) : String
+    service = back_service ? "&service=#{URI.encode_path(back_service)}" : ""
+    "#{base}/compose-yaml?stack=#{URI.encode_path(stack_name)}#{service}"
   end
 
   private def compose_yaml_url(stack_name : String) : String
     yaml_url(stack_name)
   end
 
-  private def file_edit_url(stack_name : String, file : StackFile) : String
-    "#{base}/compose-file-edit?stack=#{URI.encode_path(stack_name)}&file=#{file.param}"
+  # The file view URLs carry the service context (when the user came
+  # from a service's details) so the panels can offer a way back.
+  private def file_edit_url(stack_name : String, file : StackFile, back_service : String? = nil) : String
+    service = back_service ? "&service=#{URI.encode_path(back_service)}" : ""
+    "#{base}/compose-file-edit?stack=#{URI.encode_path(stack_name)}&file=#{file.param}#{service}"
   end
 
-  private def file_diff_url(stack_name : String, file : StackFile) : String
-    "#{base}/compose-file-diff?stack=#{URI.encode_path(stack_name)}&file=#{file.param}"
+  private def file_diff_url(stack_name : String, file : StackFile, back_service : String? = nil) : String
+    service = back_service ? "&service=#{URI.encode_path(back_service)}" : ""
+    "#{base}/compose-file-diff?stack=#{URI.encode_path(stack_name)}&file=#{file.param}#{service}"
   end
 
-  private def file_apply_url(stack_name : String, file : StackFile) : String
-    "#{base}/compose-file-apply?stack=#{URI.encode_path(stack_name)}&file=#{file.param}"
+  private def file_apply_url(stack_name : String, file : StackFile, back_service : String? = nil) : String
+    service = back_service ? "&service=#{URI.encode_path(back_service)}" : ""
+    "#{base}/compose-file-apply?stack=#{URI.encode_path(stack_name)}&file=#{file.param}#{service}"
   end
 
   private def updates_area_id(stack_name : String) : String
@@ -1249,6 +1271,14 @@ module ComposeDashboard
     # Read-only compose.yaml view for one stack, shown in the Detail
     # tab. The path comes from the `docker compose ls` whitelist, so
     # the endpoint can only read files docker itself reported.
+    # The optional `service` query param carries the details context:
+    # when the user hopped here from a service's details, the file
+    # views offer a Details tab back. Invalid names resolve to nil.
+    back_service_param = ->(env : HTTP::Server::Context, stack : ComposeStatus::Stack) do
+      name = optional_query_param(env, "service")
+      stack.services.find(&.service.==(name)).try(&.service)
+    end
+
     get route_path("compose-yaml") do |env|
       unless Grafito.compose_enabled?
         env.response.status_code = 404
@@ -1277,6 +1307,7 @@ module ComposeDashboard
         content,
         can_edit_yaml: can_edit,
         can_edit_env: can_edit && !ComposeDashboard.stack_file_path(compose_stack, StackFile::Env).nil?,
+        back_service: back_service_param.call(env, compose_stack),
       )
     end
 
@@ -1314,7 +1345,8 @@ module ComposeDashboard
       {% end %}
 
       env.response.content_type = "text/html"
-      ComposeDashboard.file_editor_fragment(compose_stack.name, file, path, content)
+      ComposeDashboard.file_editor_fragment(compose_stack.name, file, path, content,
+        back_service: back_service_param.call(env, compose_stack))
     end
 
     post route_path("compose-file-diff") do |env|
@@ -1345,7 +1377,8 @@ module ComposeDashboard
       {% end %}
       diff = unified_diff(old_content, content)
       env.response.content_type = "text/html"
-      ComposeDashboard.file_diff_fragment(compose_stack.name, file, path, content, diff)
+      ComposeDashboard.file_diff_fragment(compose_stack.name, file, path, content, diff,
+        back_service: back_service_param.call(env, compose_stack))
     end
 
     post route_path("compose-file-apply") do |env|
@@ -1386,7 +1419,8 @@ module ComposeDashboard
       {% end %}
 
       env.response.content_type = "text/html"
-      ComposeDashboard.file_applied_fragment(compose_stack.name, file, path, diff, Grafito.enable_actions?)
+      ComposeDashboard.file_applied_fragment(compose_stack.name, file, path, diff, Grafito.enable_actions?,
+        back_service: back_service_param.call(env, compose_stack))
     end
 
     # ## Image update checks for non-store stacks

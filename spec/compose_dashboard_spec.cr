@@ -137,7 +137,21 @@ describe ComposeDashboard do
     # service details: Details tab active, hops to the yaml view.
     details = ComposeDashboard.service_details_fragment(SERVICES[0], false)
     details.should contain(%(<span class="panel-nav-tab active">Details</span>))
-    details.should contain(%(hx-get="/compose-yaml?stack=webapp" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">compose.yaml</button>))
+    # The yaml tab carries the service so the file views can link back.
+    details.should contain(%(hx-get="/compose-yaml?stack=webapp&amp;service=web" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">compose.yaml</button>))
+  end
+
+  it "offers a Details tab back when a file view came from a service" do
+    yaml = ComposeDashboard.yaml_fragment("webapp", "services: {}", back_service: "web")
+    yaml.should contain(%(<span class="panel-nav-tab active">compose.yaml</span>))
+    yaml.should contain(%(hx-get="/compose-details?stack=webapp&amp;service=web" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Details</button>))
+
+    editor = ComposeDashboard.file_editor_fragment("webapp", ComposeDashboard::StackFile::ComposeYaml, "/opt/webapp/compose.yaml", "x", back_service: "web")
+    editor.should contain(%(hx-get="/compose-details?stack=webapp&amp;service=web" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Details</button>))
+
+    # Without the context there is no Details tab (nothing to go back to).
+    plain = ComposeDashboard.yaml_fragment("webapp", "services: {}")
+    plain.should_not contain(">Details</button>")
   end
 
   it "branches Service logs on the container's log driver" do
