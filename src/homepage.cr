@@ -126,7 +126,7 @@ module HomepageDashboard
         name: installed.name,
         url: urls.preferred,
         description: "v#{installed.version} · store app",
-        icon: "/compose-appstore-logo?store=#{URI.encode_path(installed.store)}&app=#{URI.encode_path(installed.id)}",
+        icon: "#{ViewHelpers.base_prefix}/compose-appstore-logo?store=#{URI.encode_path(installed.store)}&app=#{URI.encode_path(installed.id)}",
         check: true,
       )
     end

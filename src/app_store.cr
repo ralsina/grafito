@@ -588,7 +588,9 @@ module AppStore
     return unless File.exists?(path)
     app = AppInfo.from_json(File.read(path))
     app.id = app_id
-    app
+    # Same visibility rule as the catalog: apps retired upstream are
+    # not installable (or updatable) by guessing the URL either.
+    app.available? ? app : nil
   rescue ex : JSON::ParseException
     Log.warn { "Malformed app config for #{app_id}: #{ex.message}" }
     nil
@@ -622,6 +624,7 @@ module AppStore
     domain_param : String?,
     field_values : Hash(String, String),
     root : String,
+    store : String,
   ) : InputResult
     errors = [] of String
 
@@ -642,7 +645,10 @@ module AppStore
       "APP_DOMAIN"       => domain,
       "APP_EXPOSED"      => domain_param.presence ? "true" : "false",
       "ROOT_FOLDER_HOST" => root,
-      "TZ"               => ENV["TZ"]?.presence || "UTC",
+      # Host-side per-app data directory, for store compose files that
+      # mount `${APP_DATA_DIR}/...`.
+      "APP_DATA_DIR" => app_data_dir(root, store, app.id),
+      "TZ"           => ENV["TZ"]?.presence || "UTC",
     } of String => String
 
     app.form_fields.each do |field|
@@ -773,8 +779,18 @@ module AppStore
     File.chmod(dir, 0o700)
     File.write(File.join(dir, "docker-compose.yml"), rendered)
     File.write(File.join(dir, ".env"), env_file_content(input.env), perm: 0o600)
-    File.write(File.join(dir, "app.json"), "#{installed.to_pretty_json}\n")
+    # app.json is deliberately NOT written here: the install only
+    # counts once its containers are up (record_install, called by the
+    # install job), so a failed pull/up leaves the app retryable.
     installed
+  end
+
+  # Persists the install record once the install job has pulled and
+  # started the app. Until this runs, the app is not considered
+  # installed and the install form can be retried.
+  def self.record_install(root : String, installed : InstalledApp) : Nil
+    Dir.mkdir_p(installed.install_dir(root))
+    File.write(File.join(installed.install_dir(root), "app.json"), "#{installed.to_pretty_json}\n")
   end
 
   # The `docker compose` prefix for an installed app: explicit file
@@ -791,6 +807,17 @@ module AppStore
   # carries a newer package version. User-answered env values are
   # carried over from the existing `.env`. Returns human-readable
   # status lines for the job output.
+  # The user-routed domain carried over from the previous `.env`, or
+  # nil. The `localhost:<port>` value every install writes as a
+  # default is not a routed domain and must not come back as one (it
+  # would flip APP_EXPOSED on and poison open links with
+  # https://localhost:<port>).
+  private def self.carried_domain(previous_env : Hash(String, String)) : String?
+    domain = previous_env["APP_DOMAIN"]?
+    return if domain.nil? || domain.empty? || domain.starts_with?("localhost:")
+    domain
+  end
+
   def self.prepare_update(root : String, installed : InstalledApp) : Array(String)
     app = store_app_for(root, installed)
     unless app
@@ -807,8 +834,8 @@ module AppStore
       {} of String => String
     end
     port = previous_env["APP_PORT"]? || installed.port.to_s
-    domain = previous_env["APP_DOMAIN"]?
-    input = validate_input(app, port, domain, previous_env, root)
+    domain = carried_domain(previous_env)
+    input = validate_input(app, port, domain, previous_env, root, installed.store)
 
     merged = input.env
     previous_env.each do |key, value|

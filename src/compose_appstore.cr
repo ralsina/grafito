@@ -245,7 +245,7 @@ module ComposeAppStore
           end
         end
 
-        input = AppStore.validate_input(app, body_param(env, "port"), body_param(env, "domain"), form_field_values(env), Grafito.data_dir)
+        input = AppStore.validate_input(app, body_param(env, "port"), body_param(env, "domain"), form_field_values(env), Grafito.data_dir, store.slug)
         if input.errors.any?
           env.response.content_type = "text/html"
           next app_form_html(store, app, input: input, description: app_description_markdown(store, app))
@@ -257,11 +257,21 @@ module ComposeAppStore
           env.response.status_code = 500
           next "Failed to render app: #{HTML.escape(ex.message.to_s)}"
         end
-        commands = [
-          AppStore.compose_command(Grafito.data_dir, installed, "pull"),
-          AppStore.compose_command(Grafito.data_dir, installed, "up", "-d"),
-        ]
-        job_id = ComposeJobs.start("install #{installed.project_name}", commands)
+        # The record (app.json) is written only after pull and up
+        # succeed: a failed install stays uninstalled and retryable.
+        job_id = ComposeJobs.start_custom("install #{installed.project_name}") do |job|
+          code = ComposeJobs.run_command(job, AppStore.compose_command(Grafito.data_dir, installed, "pull"))
+          code = ComposeJobs.run_command(job, AppStore.compose_command(Grafito.data_dir, installed, "up", "-d")) if code == 0
+          if code == 0
+            AppStore.record_install(Grafito.data_dir, installed)
+            job.append("Installed #{installed.project_name}.")
+            AccessPanel.refresh unless installed.domain.empty?
+          else
+            job.append("Install failed (exit #{code}); not recorded as installed — fix the problem and install again.")
+          end
+          job.finish(code)
+          nil
+        end
         env.response.content_type = "text/html"
         job_fragment(job_id, "appstore-install-#{installed.project_name}")
       {% end %}
@@ -293,7 +303,9 @@ module ComposeAppStore
       {% else %}
         job_id = ComposeJobs.start_custom("update #{installed.project_name}") do |job|
           job.append("Refreshing the app store cache …")
-          count = AppStore.sync(update_store(installed), Grafito.data_dir)
+          # Forced: the user asked for THIS update, so a bump younger
+          # than the cache TTL must still be fetched.
+          count = AppStore.sync(update_store(installed), Grafito.data_dir, force: true)
           job.append("Store cache holds #{count} apps.")
           # #97: snapshot the app's data before anything is re-rendered
           # or pulled, so an update can always be rolled back.
@@ -305,6 +317,10 @@ module ComposeAppStore
           end
           code = ComposeJobs.run_command(job, AppStore.compose_command(Grafito.data_dir, installed, "pull"))
           code = ComposeJobs.run_command(job, AppStore.compose_command(Grafito.data_dir, installed, "up", "-d")) if code == 0
+          if code == 0
+            # prepare_update may have changed the routed domain.
+            AccessPanel.refresh
+          end
           job.finish(code)
           nil
         end
@@ -345,6 +361,7 @@ module ComposeAppStore
           if code == 0
             AppStore.remove_install(Grafito.data_dir, installed, delete_data: false)
             job.append("Uninstalled #{installed.project_name}. Data kept in #{installed.data_dir(Grafito.data_dir)}")
+            AccessPanel.refresh unless installed.domain.empty?
           else
             job.append("docker compose down failed (exit #{code}); app files kept.")
           end
@@ -599,8 +616,11 @@ module ComposeAppStore
     # After the nil check above, selected is a plain Store.
     store = selected
     synced = store_synced?(store)
-    apps = synced ? store_catalog(store) : [] of AppStore::AppInfo
-    apps = filter_apps(apps, query, category)
+    all_apps = synced ? store_catalog(store) : [] of AppStore::AppInfo
+    # Chips are computed from the full catalog: deriving them from the
+    # filtered list would make every other category disappear as soon
+    # as one is selected.
+    apps = filter_apps(all_apps, query, category)
     HTML.build do
       div(class: "service-panel appstore-panel") do
         tag("h4") { text "App store" }
@@ -635,7 +655,7 @@ module ComposeAppStore
 
         div(class: "appstore-categories") do
           html category_chip(store.slug, nil, category, query)
-          categories_in(apps).each do |name|
+          categories_in(all_apps).each do |name|
             html category_chip(store.slug, name, category, query)
           end
         end
