@@ -107,6 +107,29 @@ describe ComposeDashboard do
     fragment.should contain("/compose-service/webapp/web/stop")
   end
 
+  it "synthesizes an open link from published ports" do
+    with_hostname = ComposeDashboard.render_html([STACK], true, hostname: "lab")
+    # An open link is rendered either way; in demo builds the fake
+    # store install owns webapp and provides its own URL.
+    with_hostname.should contain("Open webapp (http://lab:")
+    {% unless flag?(:demo_mode) %}
+      with_hostname.should contain(%(href="http://lab:8080"))
+      with_hostname.should contain("Open webapp (http://lab:8080)")
+    {% end %}
+
+    # No hostname (no Host header) → no synthesized link. (Store apps
+    # keep their own URL regardless of hostname, so this only holds
+    # when webapp is a plain stack — non-demo builds.)
+    {% unless flag?(:demo_mode) %}
+      without_hostname = ComposeDashboard.render_html([STACK], true)
+      without_hostname.should_not contain("Open webapp (")
+    {% end %}
+
+    # A fully stopped stack has nothing reachable to open.
+    stopped = ComposeDashboard.render_html([STOPPED_STACK], true, hostname: "lab")
+    stopped.should_not contain("Open kavita (")
+  end
+
   it "renders N/A for services without a healthcheck" do
     fragment = ComposeDashboard.render_html([STACK], false)
     fragment.should contain(%(>N/A</span>))

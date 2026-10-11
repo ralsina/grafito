@@ -155,8 +155,11 @@ module ComposeDashboard
     badge = installed ? app_badge(installed, update_version) : ""
     store_buttons = (enable_actions && installed) ? store_action_buttons(compose_stack, installed, update_version) : ""
     # Host:port is the baseline way in; the domain form (https://…)
-    # appears instead once the user routed the app by domain.
+    # appears instead once the user routed the app by domain. Stacks
+    # that are not store apps synthesize their URL from published
+    # ports.
     open_url = installed ? Access.urls(installed, hostname).preferred : nil
+    open_url ||= synthesized_open_url(compose_stack, hostname)
     HTML.build do
       # data-stack-name lets the frontend highlight the stack whose
       # panel is open and filter cards client-side.
@@ -686,6 +689,27 @@ module ComposeDashboard
   # A read-only compose.yaml for one stack, shown in the Detail tab.
   # With actions enabled it doubles as the entry point for the stack
   # file editors (compose.yaml and .env).
+  # A best-effort URL to open a plain compose stack in the browser:
+  # its lowest published TCP host port on the hostname the user is
+  # browsing from (so LAN names, Tailscale names and IPs all work).
+  # A guess by nature — store apps with real Access URLs always win —
+  # and nil when there is nothing sensible to open (no hostname, no
+  # running services, no published ports).
+  private def synthesized_open_url(compose_stack : ComposeStatus::Stack, hostname : String?) : String?
+    return unless hostname
+    return if compose_stack.running_count == 0
+
+    host_ports = compose_stack.services.flat_map do |compose_service|
+      parse_ports(compose_service.ports).compact_map do |mapping|
+        next unless mapping.protocol == "tcp"
+        mapping.host.try(&.to_i?)
+      end
+    end.uniq!
+    return if host_ports.empty?
+
+    "http://#{hostname}:#{host_ports.min}"
+  end
+
   # In-panel navigation: the panel shows several views of one stack
   # (read-only compose.yaml, the file editors, service details) and
   # these tabs switch between them without leaving the panel. The
