@@ -47,7 +47,6 @@ require "./metrics_store"
 require "baked_file_handler"
 require "baked_file_system"
 require "docopt-config"
-require "kemal-basic-auth"
 require "kemal"
 require "log"
 require "socket"
@@ -84,12 +83,14 @@ DOC = <<-DOCOPT
     --user                       Enable user systemd mode (use journalctl --user and systemctl --user) [default: false].
     --dashboard=BOOL             Enable the server dashboard and metrics sampler (true/false) [default: true].
     --compose=BOOL               Enable the Docker Compose view (true/false) [default: true].
+    --stacks-dir=PATH            Directory containing compose stacks: stacks on disk that docker doesn't know about are listed as stopped.
     --apps=BOOL                  Enable the app store in the Compose view (true/false) [default: true].
     --appstores=LIST             App stores as comma-separated name=tarball-url pairs [default: official=https://codeload.github.com/runtipi/runtipi-appstore/tar.gz/refs/heads/master].
     --lego-bin=PATH              Path to the lego binary used to obtain/renew the wildcard certificate [default: /usr/bin/lego].
     --processes=BOOL             Enable the process monitor view (true/false) [default: true].
     --homepage=BOOL              Enable the homepage view (true/false) [default: true].
     --homepage-config=PATH       Homepage view config file (YAML) [default: /etc/grafito/homepage.yml].
+    --settings=BOOL              Enable the settings view and onboarding (true/false) [default: true].
     --data-dir=PATH              Directory for metrics history, app store caches and installed apps [default: /var/lib/grafito].
     --sample-interval-sec=N      Dashboard metrics sampling interval in seconds [default: 30].
     --retention-days=N           Days of dashboard metrics history to keep [default: 7].
@@ -154,9 +155,22 @@ def main
 
   parse_idle_timeout(args)
 
+  # Resolve the data dir early: the settings store lives there, and
+  # both authentication and the timezone may come from it.
+  Grafito.data_dir = Grafito::MetricsStore.resolve_data_dir(args["--data-dir"].to_s)
+  boot_settings = SettingsStore.load(Grafito.data_dir)
+
   # Parse timezone configuration
   # docopt-config handles the fallback automatically: CLI > env var > config > default
+  # The boot value wins over settings.json only when it was set
+  # explicitly; docopt returns the merged default otherwise, so
+  # explicitness is detected via the env var or the raw argv.
   timezone = args["--timezone"].to_s
+  boot_timezone_explicit = !ENV["GRAFITO_TIMEZONE"]?.nil? ||
+                           ARGV.any? { |arg| arg.starts_with?("--timezone") || arg.starts_with?("-t") }
+  if !boot_timezone_explicit && (settings_timezone = boot_settings.timezone)
+    timezone = settings_timezone
+  end
   Grafito.timezone = timezone
   Grafito::Log.info { "Using timezone: #{timezone}" }
 
@@ -172,11 +186,11 @@ def main
   Grafito.user_mode = (user_mode_str == "true")
   Grafito::Log.info { "User mode: #{Grafito.user_mode? ? "enabled" : "disabled"}" }
 
-  # Read credentials and configure authentication first: the dashboard
-  # setup needs to know whether actions may be enabled.
-  auth_user = ENV["GRAFITO_AUTH_USER"]?
-  auth_pass = ENV["GRAFITO_AUTH_PASS"]?
-  setup_basic_auth(auth_user, auth_pass)
+  # Configure authentication first: the dashboard setup needs to know
+  # whether actions may be enabled. Credentials resolve per request
+  # (boot environment first, then the settings store), so the handler
+  # picks up wizard-created or settings-changed credentials live.
+  setup_basic_auth
 
   # Parse dashboard configuration. The dashboard itself, the metrics
   # sampler and (optionally) Gotify alerts all hang off this switch.
@@ -188,8 +202,21 @@ def main
   Grafito.compose_enabled = args["--compose"].to_s != "false"
   Grafito::Log.info { "Compose view: #{Grafito.compose_enabled? ? "enabled" : "disabled"}" }
 
+  # Stacks directory: when set, the compose view also lists stacks on
+  # disk that docker does not know about (never started, or fully
+  # removed), so they show up as stopped and can be started from the
+  # view. Boot config wins over the settings store.
+  stacks_explicit = !ENV["GRAFITO_STACKS_DIR"]?.nil? ||
+                    ARGV.any?(&.starts_with?("--stacks-dir"))
+  stacks_dir = args["--stacks-dir"].to_s
+  stacks_dir = boot_settings.stacks_dir.to_s if stacks_dir.empty? && !stacks_explicit
+  Grafito.stacks_dir = stacks_dir.empty? ? nil : stacks_dir
+  if directory = Grafito.stacks_dir
+    Grafito::Log.info { "Stacks directory: #{directory} (stacks on disk that docker doesn't know are listed as stopped)" }
+  end
+
   # Parse app store configuration.
-  parse_app_store_config(args)
+  parse_app_store_config(args, boot_settings)
 
   # Parse process view configuration. Its kill actions go through the
   # same --enable-actions + authentication gate as the dashboard's.
@@ -228,8 +255,18 @@ def main
   Grafito.homepage_config_path = args["--homepage-config"].to_s
   Grafito::Log.info { "Homepage view: #{Grafito.homepage_enabled? ? "enabled" : "disabled"} (config: #{Grafito.homepage_config_path})" }
 
+  # Parse settings view configuration (the settings page and the
+  # onboarding wizard).
+  Grafito.settings_enabled = args["--settings"].to_s != "false"
+  Grafito::Log.info { "Settings view: #{Grafito.settings_enabled? ? "enabled" : "disabled"}" }
+
   # Register all Kemal routes (must be done after base_path is set)
   Grafito.register_routes
+
+  # The settings store may configure the AI provider; bridge it into
+  # the environment before the provider is built. Values the operator
+  # set at boot are never overwritten.
+  SettingsStore.apply_ai_to_env(boot_settings)
 
   # Initialize AI provider using the abstraction layer
   setup_ai_provider
@@ -288,9 +325,22 @@ end
 # Parses app store configuration. The app store rides on the compose
 # view (and its actions need the same gate as the other compose
 # actions); its caches and installed apps live under --data-dir.
-def parse_app_store_config(args)
+def parse_app_store_config(args, boot_settings : SettingsStore::Settings)
   Grafito.apps_enabled = args["--apps"].to_s != "false"
   Grafito.appstores_spec = args["--appstores"].to_s
+  Grafito.appstores_boot_spec = Grafito.appstores_spec
+
+  # The settings store may override the store list when the boot
+  # configuration did not set it explicitly (docopt returns the
+  # default otherwise, so explicitness is detected via the env var
+  # or the raw argv).
+  appstores_explicit = !ENV["GRAFITO_APPSTORES"]?.nil? ||
+                       ARGV.any?(&.starts_with?("--appstores"))
+  if !appstores_explicit && (appstores = boot_settings.appstores)
+    Grafito.appstores_spec = appstores
+    Grafito::Log.info { "App stores (from settings): #{appstores}" }
+  end
+
   Grafito.lego_bin = args["--lego-bin"].to_s
 
   # Nothing needs the data dir on a log-only deployment (metrics need
@@ -365,22 +415,33 @@ def setup_ai_provider
   end
 end
 
-# Enables basic authentication when both credentials are configured,
-# refuses to run half-configured, and warns when running unprotected.
-def setup_basic_auth(auth_user : String?, auth_pass : String?)
+# Installs the authentication handler. Credentials are resolved per
+# request: the boot environment's when both are set, otherwise the
+# settings store's (live: the onboarding wizard and the settings view
+# can create or change them without a restart). Refuses to run
+# half-configured and warns when running unprotected, as ever.
+def setup_basic_auth
+  auth_user = ENV["GRAFITO_AUTH_USER"]?
+  auth_pass = ENV["GRAFITO_AUTH_PASS"]?
   if auth_user && auth_pass
-    Grafito::Log.info { "Basic Authentication enabled. User: #{auth_user}" }
-    basic_auth auth_user, auth_pass
-    Grafito.auth_configured = true
+    Grafito::Log.info { "Basic Authentication enabled (from environment). User: #{auth_user}" }
   elsif auth_user || auth_pass
     # Only one of the credentials was set - this is a misconfiguration.
     # Exit with an error code to prevent running in an insecure state.
     Grafito::Log.fatal { "Basic Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended." }
     exit 1
+  elsif credentials = SettingsStore.effective_auth
+    Grafito::Log.info { "Basic Authentication enabled (from settings). User: #{credentials[0]}" }
   else
-    # Neither username nor password are set, run without authentication.
-    Grafito::Log.warn { "Basic Authentication is DISABLED. To enable, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS environment variables." }
+    # Neither source has credentials, run without authentication.
+    Grafito::Log.warn { "Basic Authentication is DISABLED. To enable it, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS, or open the settings view (?view=settings) to run the onboarding wizard." }
+    {% unless flag?(:demo_mode) %}
+      unless SettingsStore.load(Grafito.data_dir).onboarded?
+        Grafito::Log.info { "First run detected: the onboarding wizard is available at the settings view." }
+      end
+    {% end %}
   end
+  use AuthHandler.new
 end
 
 # Applies the dashboard options and starts the metrics sampler (with

@@ -25,6 +25,7 @@
 # without Docker.
 
 require "json"
+require "yaml"
 require "log"
 
 {% if flag?(:demo_mode) %}
@@ -291,7 +292,60 @@ module ComposeStatus
         services: by_project[orphan].sort_by(&.service),
       )
     end
+    disk_stacks(result.map(&.name)).each { |stack| result << stack }
     result.sort_by(&.name)
+  end
+
+  # Compose file names a stack directory may use, in lookup order.
+  COMPOSE_FILE_NAMES = {"docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"}
+
+  # Stacks that exist on disk but docker does not know about — never
+  # started, or fully removed (`docker compose ls --all` only lists
+  # projects with containers or state). Each becomes a Stack marked
+  # stopped, carrying its compose file so the view's actions (start,
+  # file editing, ...) work on it. The stack's name is its compose
+  # file's top-level `name:` when declared (the directory name is only
+  # the default), and stacks docker already knows are skipped — by
+  # declared or directory name — so a running stack whose directory is
+  # named differently (tasks.md vs the "tasks" project) is not listed
+  # twice.
+  def self.disk_stacks(known_names : Array(String)) : Array(Stack)
+    stacks_dir = Grafito.stacks_dir
+    return [] of Stack if stacks_dir.nil? || stacks_dir.empty? || !Dir.exists?(stacks_dir)
+
+    known = known_names.to_set
+    found = [] of Stack
+    Dir.each_child(stacks_dir) do |entry|
+      directory = File.join(stacks_dir, entry)
+      next unless File.directory?(directory)
+      compose_file = COMPOSE_FILE_NAMES.find { |candidate| File.exists?(File.join(directory, candidate)) }
+      next unless compose_file
+      next if known.includes?(entry)
+
+      name = declared_name(File.join(directory, compose_file)) || entry
+      next if known.includes?(name)
+      known << name
+      found << Stack.new(
+        name: name,
+        status: "stopped",
+        config_files: [File.join(directory, compose_file)],
+        services: [] of Service,
+      )
+    end
+    # Directory iteration order is filesystem-dependent; sort so the
+    # result (and anything derived from it) is deterministic.
+    found.sort_by(&.name)
+  end
+
+  # The top-level `name:` of a compose file, or nil when absent or
+  # unreadable (the stack then falls back to its directory name).
+  private def self.declared_name(compose_file : String) : String?
+    parsed = YAML.parse(File.read(compose_file))
+    name = parsed["name"]?.try(&.as_s?)
+    name.try(&.strip)
+  rescue ex
+    Log.debug { "No usable name: in #{compose_file}: #{ex.message}" }
+    nil
   end
 
   # Parses `docker compose ls --format json` output into a metadata map

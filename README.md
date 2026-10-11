@@ -261,6 +261,11 @@ setup instructions with an example, so enabling it costs nothing:
 ```yaml
 title: Homelab
 
+# Services declared with only a port are reached at
+# http://<hostname>:<port> — the name keeps working from wherever
+# you browse (Tailscale MagicDNS, for example), unlike an IP.
+hostname: rocky
+
 # Optional weather widget, powered by Open-Meteo (no API key).
 weather:
   latitude: -34.9
@@ -272,7 +277,7 @@ groups:
   - name: Media
     services:
       - name: Jellyfin
-        url: https://jellyfin.example.com
+        port: 8096 # same as url: http://rocky:8096
         description: Movies and series
         icon: play_circle # Material icon, emoji or image URL
         check: true # show an up/down dot for this service
@@ -284,6 +289,9 @@ groups:
 
 * **Icons**: a Material Icons name (`play_circle`), an emoji, or an
   image URL; unset icons get a generic glyph.
+* **Locations**: each service needs a `url` or a `port`; a port is
+  combined with the top-level `hostname` into `http://<hostname>:<port>`
+  when the file is parsed. An explicit `url` always wins.
 * **Reachability dots**: services with `check: true` get a colored
   dot — anything answering below HTTP 500 (redirects and login pages
   included) counts as up. Checks run concurrently with a 2.5s timeout
@@ -294,6 +302,69 @@ groups:
 
 Set `GRAFITO_HOMEPAGE=false` (or `--homepage=false`) to disable the
 homepage view and its endpoint completely.
+
+#### Editing the homepage from the browser
+
+With actions enabled (the same `--enable-actions` + authentication
+the compose actions need), the homepage shows an **Edit** button next
+to its title. It opens a YAML editor for `homepage.yml` in the
+inspector panel, following the stack file editor's flow: **Review
+changes** shows a diff, **Apply** (after a confirm) validates the
+draft by parsing it exactly the way the page does and then writes it
+— atomically, with the previous version kept alongside as
+`homepage.yml.grafito-bak`. The page refreshes immediately behind the
+panel. The setup hint shown for a missing config file has the same
+button, prefilling the editor with the example above, so a fresh
+install can build its homepage without touching a shell.
+
+Two details worth knowing:
+
+* The editor starts from the **effective** config: if the settings
+  view's homepage overrides (title, hostname, weather) are active,
+  their values are baked into the draft, and applying retires the
+  overrides — after the first apply, `homepage.yml` is the single
+  source of truth. When no overrides are set, the file's own text is
+  served (comments included), so hand-authored formatting survives.
+* The config path must be writable by the grafito process. A
+  read-only mount (e.g. `:ro` on a docker bind mount) is reported
+  clearly in the editor instead of failing silently.
+
+### Settings and Onboarding
+
+The gear button in the top bar opens the **settings view**
+(`?view=settings`): basic-auth credentials, the display timezone,
+the AI provider (with API key and model), the homepage basics
+(title, hostname, weather location), the compose **stacks
+directory**, the app store sources and the Gotify notification
+settings (URL, token, alert thresholds). Everything applies live —
+no restarts — and is stored in `settings.json` under the data dir
+(`0600`, secrets in plaintext exactly like the DNS provider token;
+disable the view with `--settings=false`).
+
+The stacks directory (`--stacks-dir` / `GRAFITO_STACKS_DIR`) makes
+the Compose view list stacks that exist on disk but that docker
+does not know about — never started, or fully removed — as
+*stopped*, with their compose files, so they can be started from
+the view like any other stack. A stack's name is its compose file's
+top-level `name:` when declared, its directory name otherwise.
+
+Configuration precedence is **boot wins**: values set via CLI flags,
+environment variables or `GRAFITO_CONFIG` are never overridden by the
+settings view, and fields owned by the environment render as notices
+instead of inputs. So a deployment like
+`GRAFITO_AUTH_USER=... GRAFITO_AUTH_PASS=...` keeps managing
+authentication itself, while everything else becomes editable at
+runtime.
+
+On a fresh instance — no credentials anywhere — the settings view
+renders as the **onboarding wizard**: create a login (required),
+pick a timezone and homepage basics (optional), optionally paste an
+AI key. The browser lands on it automatically, and the wizard's
+save endpoint is the one state-changing endpoint that works while
+unauthenticated. The moment credentials exist it closes forever and
+everything else requires login, with credentials checked on every
+request (so changing your password in the view takes effect
+immediately).
 
 ### Adding a View
 

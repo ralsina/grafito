@@ -282,7 +282,7 @@ describe "Kemal routes" do
 
   it "POST unit actions returns 404 for a nonexistent unit" do
     Grafito.enable_actions = true
-    Grafito.auth_configured = true
+    Grafito.auth_configured_override = true
     begin
       response = dispatch_request("POST", "/unit/grafito-no-such-unit-xyz/restart")
       response[:status].should eq(404)
@@ -294,7 +294,7 @@ describe "Kemal routes" do
 
   it "POST unit actions rejects an invalid action name" do
     Grafito.enable_actions = true
-    Grafito.auth_configured = true
+    Grafito.auth_configured_override = true
     begin
       response = dispatch_request("POST", "/unit/sshd/format")
       response[:status].should eq(400)
@@ -306,7 +306,7 @@ describe "Kemal routes" do
 
   it "POST unit actions rejects unit names that look like flags" do
     Grafito.enable_actions = true
-    Grafito.auth_configured = true
+    Grafito.auth_configured_override = true
     begin
       response = dispatch_request("POST", "/unit/%2D%2Ddangerous/restart")
       response[:status].should eq(400)

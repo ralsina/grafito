@@ -1,0 +1,41 @@
+/* Settings view: section cards over the shared appstore form styles
+   (fields, buttons, error blocks). The wizard reuses the same
+   sections with numbered titles. */
+
+#settings-view {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 3rem;
+}
+
+.settings-form .settings-section {
+  background: var(--panel);
+  border: 1px solid var(--line, rgba(128, 128, 128, 0.25));
+  border-radius: 0.6rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.settings-section-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+  color: var(--accent, inherit);
+}
+
+.settings-field-hint {
+  display: block;
+  opacity: 0.7;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.settings-hint {
+  opacity: 0.8;
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+}
+
+.settings-hint p {
+  margin-bottom: 0.5rem;
+}

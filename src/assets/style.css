@@ -2196,6 +2196,13 @@ dialog article dd {
 .homepage-top h2 {
   margin: 0;
 }
+/* Title and the Edit button share the strip's left side. */
+.homepage-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.8rem;
+}
 /* The weather card: icon, big temperature, condition, then the small
    detail columns. Weather data is always in flux, so the card has a
    fixed minimum height worth of breathing room and never reflows the
@@ -2419,6 +2426,47 @@ dialog article dd {
   font-family: var(--font-mono, monospace);
   font-size: 0.85rem;
 }
+/* Settings view: section cards over the shared appstore form styles
+   (fields, buttons, error blocks). The wizard reuses the same
+   sections with numbered titles. */
+
+#settings-view {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 3rem;
+}
+
+.settings-form .settings-section {
+  background: var(--panel);
+  border: 1px solid var(--line, rgba(128, 128, 128, 0.25));
+  border-radius: 0.6rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.settings-section-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+  color: var(--accent, inherit);
+}
+
+.settings-field-hint {
+  display: block;
+  opacity: 0.7;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.settings-hint {
+  opacity: 0.8;
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+}
+
+.settings-hint p {
+  margin-bottom: 0.5rem;
+}
 /* App store (compose view): toolbar entry point, catalog cards,
    install form and the stack badge for store-installed apps. The
    catalog renders inside the inspector's Detail panel, so widths are
@@ -2427,7 +2475,9 @@ dialog article dd {
 /* "Add app" toolbar button above the summary cards. */
 .compose-toolbar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
 

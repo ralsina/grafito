@@ -47,9 +47,16 @@ services:
       - /run/dbus:/run/dbus
       - /run/systemd/private:/run/systemd/private
       - /var/run/docker.sock:/var/run/docker.sock
+      # The stacks root (the stacks-dir setting): the compose view
+      # reads stack files docker doesn't know about from here, and
+      # stack actions run docker compose against these paths.
+      - /data/stacks:/data/stacks
       - ./:/var/lib/grafito
-      # The homepage launcher's config (kept next to the compose file).
-      - ./homepage.yml:/etc/grafito/homepage.yml:ro
+      # The homepage launcher's config, in the ./homepage directory
+      # (mounted as a directory, not the single file, so editing the
+      # YAML — even with an editor that renames — is visible without
+      # recreating the container).
+      - ./homepage:/etc/grafito:ro
     env_file:
       - .env
     environment:

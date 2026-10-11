@@ -60,6 +60,38 @@ describe HomepageConfig::Config do
       end
     end
 
+    it "builds urls for port-only services from the hostname" do
+      path = File.tempname("grafito-homepage", ".yml")
+      begin
+        File.write(path, <<-YAML)
+          hostname: rocky
+          groups:
+            - name: Development
+              services:
+                - name: Gitea
+                  port: 3000
+                  check: true
+                - name: Snips
+                  port: 8091
+                - name: Chat
+                  url: https://chat.example.com
+                  port: 9999
+          YAML
+
+        config = HomepageConfig::Config.load(path)
+
+        config.hostname.should eq("rocky")
+        services = config.groups[0].services
+        services[0].url.should eq("http://rocky:3000")
+        services[0].check?.should be_true
+        services[1].url.should eq("http://rocky:8091")
+        # An explicit url is never rewritten, even when a port is present.
+        services[2].url.should eq("https://chat.example.com")
+      ensure
+        File.delete(path) if File.exists?(path)
+      end
+    end
+
     it "applies defaults for a minimal config" do
       path = File.tempname("grafito-homepage", ".yml")
       begin
@@ -94,7 +126,7 @@ describe HomepageConfig::Config do
       end
     end
 
-    it "raises on a service without a URL" do
+    it "raises on a service with neither url nor port" do
       path = File.tempname("grafito-homepage", ".yml")
       begin
         File.write(path, <<-YAML)
@@ -104,9 +136,99 @@ describe HomepageConfig::Config do
                 - name: No URL
           YAML
 
-        expect_raises(YAML::ParseException) do
+        error = expect_raises(ArgumentError, "needs a url or a port") do
           HomepageConfig::Config.load(path)
         end
+        message = error.message
+        fail("error should have had a message") unless message
+        message.should contain("No URL")
+      ensure
+        File.delete(path) if File.exists?(path)
+      end
+    end
+
+    it "applies the settings overlay over the file's values" do
+      config = HomepageConfig::Config.from_yaml(<<-YAML)
+        title: From File
+        hostname: file-host
+        weather:
+          latitude: 1.0
+          longitude: 2.0
+          location: FileCity
+          units: imperial
+        groups:
+          - name: Development
+            services:
+              - name: Gitea
+                port: 3000
+              - name: Chat
+                url: https://chat.example.com
+        YAML
+
+      config.apply_overlay(SettingsStore::HomepageSettings.new(
+        title: "From Settings",
+        hostname: "rocky",
+        weather: SettingsStore::WeatherSettings.new(latitude: -34.6, longitude: -58.38),
+      ))
+
+      config.title.should eq("From Settings")
+      config.hostname.should eq("rocky")
+      # Port-form urls are rebuilt against the overlay hostname...
+      config.groups[0].services[0].url.should eq("http://rocky:3000")
+      # ...while explicit urls are never touched.
+      config.groups[0].services[1].url.should eq("https://chat.example.com")
+      # Weather coordinates come from the overlay; cosmetics the
+      # overlay leaves unset fall back to the file's.
+      weather = config.weather
+      if weather
+        weather.latitude.should eq(-34.6)
+        weather.longitude.should eq(-58.38)
+        weather.location.should eq("FileCity")
+        weather.imperial?.should be_true
+      else
+        fail("weather should have been configured")
+      end
+    end
+
+    it "leaves the file's weather alone when the overlay has no coordinates" do
+      config = HomepageConfig::Config.from_yaml(<<-YAML)
+        weather:
+          latitude: 1.0
+          longitude: 2.0
+          location: FileCity
+        YAML
+
+      config.apply_overlay(SettingsStore::HomepageSettings.new(
+        title: "Only Title",
+        weather: SettingsStore::WeatherSettings.new(location: "OverlayCity")))
+
+      config.title.should eq("Only Title")
+      weather = config.weather
+      if weather
+        weather.latitude.should eq(1.0)
+        weather.location.should eq("FileCity")
+      else
+        fail("weather should have stayed configured")
+      end
+    end
+
+    it "raises on a port with no hostname" do
+      path = File.tempname("grafito-homepage", ".yml")
+      begin
+        File.write(path, <<-YAML)
+          groups:
+            - name: Broken
+              services:
+                - name: Gitea
+                  port: 3000
+          YAML
+
+        error = expect_raises(ArgumentError, "sets no hostname") do
+          HomepageConfig::Config.load(path)
+        end
+        message = error.message
+        fail("error should have had a message") unless message
+        message.should contain("Gitea")
       ensure
         File.delete(path) if File.exists?(path)
       end

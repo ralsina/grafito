@@ -139,3 +139,62 @@ private def stack_with(config_files : Array(String)) : ComposeStatus::Stack
     ],
   )
 end
+
+# Builds a stacks directory fixture and returns its path.
+def make_stacks_dir
+  root = File.tempname("grafito-stacks", "")
+  Dir.mkdir(root)
+  Dir.mkdir(File.join(root, "kavita"))
+  File.write(File.join(root, "kavita", "docker-compose.yml"), "services: {}\n")
+  Dir.mkdir(File.join(root, "fresh"))
+  File.write(File.join(root, "fresh", "compose.yaml"), "services: {}\n")
+  Dir.mkdir(File.join(root, "renamed"))
+  File.write(File.join(root, "renamed", "docker-compose.yml"), "name: declared\nservices: {}\n")
+  Dir.mkdir(File.join(root, "no-compose-file"))
+  Dir.mkdir(File.join(root, "already-running"))
+  File.write(File.join(root, "already-running", "docker-compose.yml"), "services: {}\n")
+  root
+end
+
+describe ComposeStatus do
+  describe ".disk_stacks" do
+    it "lists on-disk stacks docker does not know about, as stopped and actionable" do
+      root = make_stacks_dir
+      begin
+        old_stacks_dir = Grafito.stacks_dir
+        Grafito.stacks_dir = root
+        begin
+          stacks = ComposeStatus.disk_stacks(["already-running"])
+          stacks.map(&.name).sort!.should eq(["declared", "fresh", "kavita"])
+
+          kavita = stacks.find(&.name.==("kavita"))
+          if kavita
+            kavita.status.should eq("stopped")
+            kavita.config_files.should eq([File.join(root, "kavita", "docker-compose.yml")])
+            kavita.actionable?.should be_true
+          else
+            fail("kavita should have been found on disk")
+          end
+
+          # The declared top-level name wins over the directory name,
+          # and skips stacks docker already knows under it.
+          ComposeStatus.disk_stacks(["already-running", "declared"]).map(&.name).should eq(["fresh", "kavita"])
+        ensure
+          Grafito.stacks_dir = old_stacks_dir
+        end
+      ensure
+        FileUtils.rm_rf(root)
+      end
+    end
+
+    it "is empty without a configured directory" do
+      old_stacks_dir = Grafito.stacks_dir
+      Grafito.stacks_dir = nil
+      begin
+        ComposeStatus.disk_stacks([] of String).should be_empty
+      ensure
+        Grafito.stacks_dir = old_stacks_dir
+      end
+    end
+  end
+end

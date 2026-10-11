@@ -65,7 +65,16 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
 - `src/fake_appstore_data.cr` - Fixture app store for demo mode
 - `src/process_dashboard.cr`, `src/process_status.cr` - Process monitor view
 - `src/homepage.cr`, `src/homepage_config.cr`, `src/weather.cr` - Homepage
-  launcher view with weather widget
+  launcher view with weather widget, plus a browser YAML editor for
+  homepage.yml (edit → review diff → apply, atomic write with backup;
+  applying bakes and retires the settings-store homepage overlay)
+- `src/settings_store.cr`, `src/settings_dashboard.cr`,
+  `src/auth_handler.cr` - Settings view and onboarding wizard
+  (runtime-editable credentials/timezone/AI/homepage basics in
+  `settings.json` under the data dir, boot config always wins; the
+  auth handler resolves basic-auth credentials per request so changes
+  apply without a restart)
+- `src/fake_settings_data.cr` - In-memory settings store for demo mode
 - `src/gotify/` - Gotify push notification client and alert rules
 - Embedded assets are served with the `baked_file_handler` shard
   (assets under `src/assets/` are compiled into the binary)
@@ -80,7 +89,8 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
 - `src/fake_journal_data.cr` - Fake journal generation for demo mode
   (compile with `-Ddemo_mode`), with a cursor cache so detail/context
   lookups stay coherent; `src/fake_compose_data.cr`,
-  `src/fake_homepage_data.cr` and `src/fake_appstore_data.cr` fake the
+  `src/fake_homepage_data.cr`, `src/fake_appstore_data.cr` and
+  `src/fake_settings_data.cr` fake the
   other views the same way
 
 ### Dependencies Philosophy
