@@ -332,13 +332,15 @@ Two details worth knowing:
 ### Settings and Onboarding
 
 The gear button in the top bar opens the **settings view**
-(`?view=settings`): basic-auth credentials, the display timezone,
-the AI provider (with API key and model), the homepage basics
+(`?view=settings`): login credentials (with a Sign out button), the
+display timezone, the AI provider (with API key and model), the
+homepage basics
 (title, hostname, weather location), the compose **stacks
 directory**, the app store sources and the Gotify notification
 settings (URL, token, alert thresholds). Everything applies live —
 no restarts — and is stored in `settings.json` under the data dir
-(`0600`, secrets in plaintext exactly like the DNS provider token;
+(`0600`; passwords bcrypt-hashed, other secrets in plaintext exactly
+like the DNS provider token;
 disable the view with `--settings=false`).
 
 The stacks directory (`--stacks-dir` / `GRAFITO_STACKS_DIR`) makes
@@ -362,9 +364,10 @@ pick a timezone and homepage basics (optional), optionally paste an
 AI key. The browser lands on it automatically, and the wizard's
 save endpoint is the one state-changing endpoint that works while
 unauthenticated. The moment credentials exist it closes forever and
-everything else requires login, with credentials checked on every
-request (so changing your password in the view takes effect
-immediately).
+everything else requires signing in at `/login` (credentials are
+resolved on every request, so changing your password in the view
+takes effect immediately — and ends your other sessions when the
+username changes).
 
 ### Adding a View
 
@@ -390,12 +393,45 @@ pluggable. Adding another touches exactly five small places:
 Mutual exclusion between views, the switcher highlight, URL
 persistence and restore are all handled generically.
 
+### Authentication: login sessions
+
+Grafito authenticates browsers with a **login page and cookie
+sessions** (powered by [kemal-session](https://github.com/kemalcr/kemal-session)):
+visit any URL while signed out and you land on `/login`, a small
+standalone page with no JavaScript. Signing in creates a server-side
+session — the cookie only carries a signed, HttpOnly session id —
+valid for **7 sliding days**, stored under `<data-dir>/sessions/` so
+restarts and container recreations keep you logged in. The settings
+view's Access section has a **Sign out** button, and renaming the
+username invalidates every outstanding session.
+
+Where the credentials come from is unchanged: the `GRAFITO_AUTH_USER`
+/ `GRAFITO_AUTH_PASS` environment variables (or the onboarding
+wizard's choices, stored in `settings.json`). Passwords in
+`settings.json` are stored as **bcrypt hashes**; a pre-session
+plaintext value is upgraded automatically on the first successful
+login.
+
+Basic auth is gone: there is no `WWW-Authenticate` handshake and
+`Authorization` headers are ignored. Scripts that used to send them
+should keep a cookie jar instead:
+
+```console
+$ curl -c /tmp/grafito.jar -d 'username=you' -d 'password=your-password' \
+    http://127.0.0.1:3000/login
+$ curl -b /tmp/grafito.jar http://127.0.0.1:3000/server-info
+```
+
+Without a session, htmx requests from the app get a `401` with an
+`HX-Redirect` (the page redirects to `/login`, which is also what a
+session expiring mid-view looks like), browser navigations get a
+`302`, and anything else a plain `401`.
+
 ### Securing a Remote Deployment
 
 `--enable-actions` unlocks privileged operations (systemd unit
-start/stop/restart, process signals), and basic auth sends credentials
-on every request. Over plain HTTP, anyone on the network can read
-both.
+start/stop/restart, process signals), and over plain HTTP anyone on the
+network can read the session cookie that authorizes them.
 
 For anything beyond `localhost`, put grafito behind a TLS-terminating
 reverse proxy and keep it bound to `127.0.0.1` (the default). Any
@@ -423,9 +459,10 @@ server {
 }
 ```
 
-Then set `GRAFITO_AUTH_USER` / `GRAFITO_AUTH_PASS` and add
-`--enable-actions`: the proxy encrypts both the basic-auth credentials
-and the privileged commands they authorize. Grafito logs a warning at
+Then set `GRAFITO_AUTH_USER` / `GRAFITO_AUTH_PASS` (or create the
+login through the onboarding wizard) and add `--enable-actions`: the
+proxy encrypts both the session cookie and the privileged commands it
+authorizes. Grafito logs a warning at
 startup if actions are enabled on a non-loopback bind address.
 
 As a second layer of defense, all state-changing POST endpoints reject
@@ -668,8 +705,8 @@ To run Grafito as a systemd service, you can create a service file.
     Group=systemd-journal
 
     # --- Authentication Configuration ---
-    # Set these environment variables to enable Basic Authentication.
-    # If GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS are not set, Grafito will run without authentication.
+    # Set these environment variables to define the login credentials.
+    # If GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS are not set, Grafito will run without a login.
     Environment="GRAFITO_AUTH_USER=your_grafito_username"
     Environment="GRAFITO_AUTH_PASS=your_strong_grafito_password"
 
@@ -732,8 +769,8 @@ any new requests.
     Group=systemd-journal
 
     # --- Authentication Configuration ---
-    # Set these environment variables to enable Basic Authentication.
-    # If GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS are not set, Grafito will run without authentication.
+    # Set these environment variables to define the login credentials.
+    # If GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS are not set, Grafito will run without a login.
     Environment="GRAFITO_AUTH_USER=your_grafito_username"
     Environment="GRAFITO_AUTH_PASS=your_strong_grafito_password"
 

@@ -29,6 +29,7 @@ require "./homepage"
 require "./settings_store"
 require "./auth_handler"
 require "./settings_dashboard"
+require "./login_dashboard"
 
 {% if flag?(:demo_mode) %}
   require "./fake_compose_data"
@@ -914,5 +915,6 @@ module Grafito
     ProcessDashboard.register_routes
     HomepageDashboard.register_routes
     SettingsDashboard.register_routes
+    LoginDashboard.register_routes
   end # register_routes
 end

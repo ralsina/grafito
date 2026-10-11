@@ -190,7 +190,7 @@ def main
   # whether actions may be enabled. Credentials resolve per request
   # (boot environment first, then the settings store), so the handler
   # picks up wizard-created or settings-changed credentials live.
-  setup_basic_auth
+  setup_auth
 
   # Parse dashboard configuration. The dashboard itself, the metrics
   # sampler and (optionally) Gotify alerts all hang off this switch.
@@ -420,28 +420,63 @@ end
 # settings store's (live: the onboarding wizard and the settings view
 # can create or change them without a restart). Refuses to run
 # half-configured and warns when running unprotected, as ever.
-def setup_basic_auth
+def setup_auth
   auth_user = ENV["GRAFITO_AUTH_USER"]?
   auth_pass = ENV["GRAFITO_AUTH_PASS"]?
   if auth_user && auth_pass
-    Grafito::Log.info { "Basic Authentication enabled (from environment). User: #{auth_user}" }
+    Grafito::Log.info { "Login sessions enabled (credentials from environment). User: #{auth_user}" }
   elsif auth_user || auth_pass
     # Only one of the credentials was set - this is a misconfiguration.
     # Exit with an error code to prevent running in an insecure state.
-    Grafito::Log.fatal { "Basic Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended." }
+    Grafito::Log.fatal { "Authentication misconfigured: Both GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS must be set if authentication is intended." }
     exit 1
   elsif credentials = SettingsStore.effective_auth
-    Grafito::Log.info { "Basic Authentication enabled (from settings). User: #{credentials[0]}" }
+    Grafito::Log.info { "Login sessions enabled (credentials from settings). User: #{credentials[0]}" }
   else
     # Neither source has credentials, run without authentication.
-    Grafito::Log.warn { "Basic Authentication is DISABLED. To enable it, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS, or open the settings view (?view=settings) to run the onboarding wizard." }
+    Grafito::Log.warn { "Login is DISABLED. To enable it, set GRAFITO_AUTH_USER and GRAFITO_AUTH_PASS, or open the settings view (?view=settings) to run the onboarding wizard." }
     {% unless flag?(:demo_mode) %}
       unless SettingsStore.load(Grafito.data_dir).onboarded?
         Grafito::Log.info { "First run detected: the onboarding wizard is available at the settings view." }
       end
     {% end %}
   end
+  configure_sessions
   use AuthHandler.new
+end
+
+# Wires kemal-session: a signed HttpOnly cookie, seven sliding days,
+# and a file-backed store under the data dir so restarts and container
+# recreations keep browsers logged in. When the data dir cannot host
+# the store (read-only mount), sessions fall back to memory — logins
+# then last until the next restart, which is still correct, just less
+# comfortable.
+def configure_sessions
+  secret =
+    begin
+      SettingsStore.ensure_session_secret
+    rescue ex
+      Log.warn { "Could not persist the session secret (#{ex.message}); sessions will not survive restarts" }
+      Random::Secure.hex(64)
+    end
+
+  sessions_dir = File.join(Grafito.data_dir, "sessions")
+  engine : Kemal::Session::Engine = Kemal::Session::MemoryEngine.new
+  begin
+    Dir.mkdir_p(sessions_dir)
+    engine = Kemal::Session::FileEngine.new({:sessions_dir => sessions_dir})
+  rescue ex
+    Log.warn { "File session store unavailable (#{ex.message}); using in-memory sessions" }
+  end
+
+  Kemal::Session.config do |config|
+    config.cookie_name = "grafito_session"
+    config.secret = secret
+    config.timeout = 7.days
+    config.gc_interval = 1.hour
+    config.engine = engine
+  end
+  Kemal::Session::GC.new
 end
 
 # Applies the dashboard options and starts the metrics sampler (with

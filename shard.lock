@@ -56,6 +56,10 @@ shards:
     git: https://github.com/kemalcr/kemal.git
     version: 1.13.0
 
+  kemal-session:
+    git: https://github.com/kemalcr/kemal-session.git
+    version: 1.6.0
+
   radix:
     git: https://github.com/luislavena/radix.git
     version: 0.4.1

@@ -28,6 +28,10 @@ dependencies:
     github: crystal-lang/html_builder
   kemal:
     github: kemalcr/kemal
+  # Cookie sessions for the login page (server-side store, signed
+  # session-id cookie)
+  kemal-session:
+    github: kemalcr/kemal-session
   baked_file_handler:
     github: ralsina/baked_file_handler
   # Anthropic/Claude AI provider
