@@ -326,18 +326,22 @@ module ComposeStatus
     stacks_dir = Grafito.stacks_dir
     return [] of Stack if stacks_dir.nil? || stacks_dir.empty? || !Dir.exists?(stacks_dir)
 
-    known = known_names.to_set
+    # Docker lowercases project names, so a compose file declaring
+    # `name: Tasks` runs as project "tasks"; compare case-insensitively
+    # or the same stack shows up twice (once running, once as a
+    # phantom "stopped").
+    known = known_names.map(&.downcase).to_set
     found = [] of Stack
     Dir.each_child(stacks_dir) do |entry|
       directory = File.join(stacks_dir, entry)
       next unless File.directory?(directory)
       compose_file = COMPOSE_FILE_NAMES.find { |candidate| File.exists?(File.join(directory, candidate)) }
       next unless compose_file
-      next if known.includes?(entry)
+      next if known.includes?(entry.downcase)
 
       name = declared_name(File.join(directory, compose_file)) || entry
-      next if known.includes?(name)
-      known << name
+      next if known.includes?(name.downcase)
+      known << name.downcase
       found << Stack.new(
         name: name,
         status: "stopped",

@@ -194,6 +194,25 @@ describe ComposeStatus do
       end
     end
 
+    it "matches known names case-insensitively (docker lowercases projects)" do
+      root = make_stacks_dir
+      begin
+        Dir.mkdir(File.join(root, "tasks.md"))
+        File.write(File.join(root, "tasks.md", "compose.yaml"), "name: Tasks\nservices: {}\n")
+        old_stacks_dir = Grafito.stacks_dir
+        Grafito.stacks_dir = root
+        begin
+          # Docker knows the project as "tasks"; the declared "Tasks"
+          # is the same stack and must not appear as a phantom.
+          ComposeStatus.disk_stacks(["tasks"]).map(&.name).should_not contain("Tasks")
+        ensure
+          Grafito.stacks_dir = old_stacks_dir
+        end
+      ensure
+        FileUtils.rm_rf(root)
+      end
+    end
+
     it "is empty without a configured directory" do
       old_stacks_dir = Grafito.stacks_dir
       Grafito.stacks_dir = nil
