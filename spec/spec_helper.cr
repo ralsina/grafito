@@ -8,6 +8,95 @@ require "../src/grafito"
 # route path is added twice.
 Grafito.register_routes
 
+# Many specs flip module-level switches (auth override, view enables,
+# actions, the AI provider, the data dir...) and environment variables.
+# `crystal spec` runs files in filesystem readdir order, which differs
+# between machines, so a leaked value from one file can break another
+# on some runners and not others. Snapshot the mutable global state
+# (and the environment) around every example instead of trusting each
+# spec file to clean up after itself.
+
+# The mutable module-level state, as one value.
+def snapshot_grafito_state
+  {
+    allowed_units:        Grafito.allowed_units,
+    ai_provider:          Grafito.ai_provider,
+    timezone:             Grafito.timezone,
+    base_path:            Grafito.base_path,
+    user_mode:            Grafito.user_mode?,
+    auth_configured:      Grafito.auth_configured_override,
+    dashboard_enabled:    Grafito.dashboard_enabled?,
+    compose_enabled:      Grafito.compose_enabled?,
+    apps_enabled:         Grafito.apps_enabled?,
+    appstores_spec:       Grafito.appstores_spec,
+    appstores_boot_spec:  Grafito.appstores_boot_spec,
+    stacks_dir:           Grafito.stacks_dir,
+    processes_enabled:    Grafito.processes_enabled?,
+    homepage_enabled:     Grafito.homepage_enabled?,
+    homepage_config_path: Grafito.homepage_config_path,
+    settings_enabled:     Grafito.settings_enabled?,
+    data_dir:             Grafito.data_dir,
+    lego_bin:             Grafito.lego_bin,
+    enable_actions:       Grafito.enable_actions?,
+  }
+end
+
+def restore_grafito_state(previous) : Nil
+  Grafito.allowed_units = previous[:allowed_units]
+  Grafito.ai_provider = previous[:ai_provider]
+  Grafito.timezone = previous[:timezone]
+  Grafito.base_path = previous[:base_path]
+  Grafito.user_mode = previous[:user_mode]
+  Grafito.auth_configured_override = previous[:auth_configured]
+  Grafito.dashboard_enabled = previous[:dashboard_enabled]
+  Grafito.compose_enabled = previous[:compose_enabled]
+  Grafito.apps_enabled = previous[:apps_enabled]
+  Grafito.appstores_spec = previous[:appstores_spec]
+  Grafito.appstores_boot_spec = previous[:appstores_boot_spec]
+  Grafito.stacks_dir = previous[:stacks_dir]
+  Grafito.processes_enabled = previous[:processes_enabled]
+  Grafito.homepage_enabled = previous[:homepage_enabled]
+  Grafito.homepage_config_path = previous[:homepage_config_path]
+  Grafito.settings_enabled = previous[:settings_enabled]
+  Grafito.data_dir = previous[:data_dir]
+  Grafito.lego_bin = previous[:lego_bin]
+  Grafito.enable_actions = previous[:enable_actions]
+end
+
+# Holds the snapshot between the global before/after hooks.
+class SpecStatePocket
+  class_property state : Hash(String, String)?
+
+  alias Snapshot = NamedTuple(
+    allowed_units: Array(String)?,
+    ai_provider: Grafito::AI::Provider?,
+    timezone: String, base_path: String, user_mode: Bool,
+    auth_configured: Bool?,
+    dashboard_enabled: Bool, compose_enabled: Bool, apps_enabled: Bool,
+    appstores_spec: String, appstores_boot_spec: String,
+    stacks_dir: String?,
+    processes_enabled: Bool, homepage_enabled: Bool,
+    homepage_config_path: String, settings_enabled: Bool,
+    data_dir: String, lego_bin: String, enable_actions: Bool)
+
+  class_property grafito : Snapshot?
+end
+
+Spec.before_each do
+  SpecStatePocket.state = ENV.to_h
+  SpecStatePocket.grafito = snapshot_grafito_state
+end
+
+Spec.after_each do
+  if grafito_state = SpecStatePocket.grafito
+    restore_grafito_state(grafito_state)
+  end
+  if env_state = SpecStatePocket.state
+    ENV.clear
+    env_state.each { |key, value| ENV[key] = value }
+  end
+end
+
 def dispatch_request(method : String, path : String, body : String? = nil, headers : HTTP::Headers = HTTP::Headers.new)
   io = IO::Memory.new(body.to_s)
   request = HTTP::Request.new(method, path, headers, io)

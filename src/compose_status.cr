@@ -332,7 +332,9 @@ module ComposeStatus
         services: [] of Service,
       )
     end
-    found
+    # Directory iteration order is filesystem-dependent; sort so the
+    # result (and anything derived from it) is deterministic.
+    found.sort_by(&.name)
   end
 
   # The top-level `name:` of a compose file, or nil when absent or
