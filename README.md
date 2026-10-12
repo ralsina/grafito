@@ -209,6 +209,12 @@ compose stacks without writing a YAML file.
   files; app data under `<data-dir>/app-data/` is kept. Apps given a
   domain are (un)routed by the managed reverse proxy automatically on
   install, update and uninstall.
+* **Explain tab**: every stack's panel has an *Explain* tab — prose
+  describing the compose file location, its services and images, which
+  host ports reach which containers, and what's mounted where (with
+  the data-persistence implication spelled out) — followed by the
+  `docker compose` commands behind every button, so working in the UI
+  teaches you the CLI.
 * **Compatibility notes**: store apps are rendered for standalone
   operation — Runtipi's `x-runtipi` metadata and shared Traefik
   network are translated (host port mapping, project-local networks),
@@ -251,6 +257,11 @@ any column (click the headers) and filters by user, pid or command.
 * **AI explanations** (opt-in): with an AI provider configured, the
   detail panel can explain what a process is doing using its /proc
   details and recent journal lines mentioning it.
+* **Teach the commands**: an expandable "How this works, in shell
+  commands" block shows the equivalents of what you're looking at —
+  `top`/`htop`, `ps aux --sort=-%cpu`, and the exact `kill` signals
+  behind the action buttons — so using grafito teaches you the host's
+  own tools.
 
 Set `GRAFITO_PROCESSES=false` (or `--processes=false`) to disable the
 process view and its endpoints completely.

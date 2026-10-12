@@ -554,10 +554,11 @@ module HomepageDashboard
         end
         tag("form", {"class" => "compose-editor-form", "onsubmit" => "return false"}) do
           tag("textarea", {
-            "name":       "content",
-            "class":      "compose-editor-textarea",
-            "spellcheck": "false",
-            "rows":       "24",
+            "name":        "content",
+            "class":       "compose-editor-textarea",
+            "spellcheck":  "false",
+            "rows":        "24",
+            "data-editor": "yaml",
           }) do
             text content
           end

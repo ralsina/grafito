@@ -219,8 +219,8 @@ module ComposeDashboard
             if compose_stack.actionable?
               button(
                 class: "round-button",
-                title: "View compose.yaml for #{compose_stack.name}",
-                "hx-get": yaml_url(compose_stack.name),
+                title: "Edit compose.yaml for #{compose_stack.name}",
+                "hx-get": file_edit_url(compose_stack.name, StackFile::ComposeYaml),
                 "hx-target": "#panel-detail-content",
                 "hx-swap": "innerHTML",
                 "hx-indicator": "#loading-spinner",
@@ -589,7 +589,7 @@ module ComposeDashboard
       div(class: "service-panel", "data-stack-name": compose_service.stack) do
         div(class: "panel-nav") do
           html panel_nav_tab("Details", nil, true)
-          html panel_nav_tab("compose.yaml", yaml_url(compose_service.stack, compose_service.service), false)
+          html panel_nav_tab("compose.yaml", file_edit_url(compose_service.stack, StackFile::ComposeYaml, compose_service.service), false)
         end
         tag("h4") do
           text "#{compose_service.stack} / #{compose_service.service}"
@@ -754,69 +754,110 @@ module ComposeDashboard
   # details led here, when any) adds a Details tab so the file views
   # are a round trip, not a one-way door.
   private def stack_panel_nav(stack_name : String, active : String,
-                              can_edit_yaml : Bool = false, can_edit_env : Bool = false,
                               back_service : String? = nil) : String
     HTML.build do
       div(class: "panel-nav") do
         if back_service
           html panel_nav_tab("Details", details_url(stack_name, back_service), active == "details")
         end
-        html panel_nav_tab("compose.yaml", yaml_url(stack_name, back_service), active == "yaml")
-        if can_edit_yaml || active == "edit-yaml"
-          html panel_nav_tab("Edit compose.yaml", active == "edit-yaml" ? nil : file_edit_url(stack_name, StackFile::ComposeYaml, back_service), active == "edit-yaml")
-        end
-        if can_edit_env || active == "edit-env"
-          html panel_nav_tab("Edit .env", active == "edit-env" ? nil : file_edit_url(stack_name, StackFile::Env, back_service), active == "edit-env")
-        end
+        html panel_nav_tab("Explain", explain_url(stack_name), active == "explain")
+        html panel_nav_tab("compose.yaml", file_edit_url(stack_name, StackFile::ComposeYaml, back_service), active == "compose-yaml")
+        html panel_nav_tab(".env", file_edit_url(stack_name, StackFile::Env, back_service), active == "env")
       end
     end
   end
 
-  def yaml_fragment(
-    stack_name : String,
-    content : String,
-    can_edit_yaml : Bool = false,
-    can_edit_env : Bool = false,
-    back_service : String? = nil,
+  # The "teach me" panel for one stack: prose describing the compose
+  # file, services, published ports and mounts, plus the docker
+  # compose commands behind every button — so the UI teaches the CLI,
+  # like /command does for the log view.
+  def compose_explain_fragment(
+    compose_stack : ComposeStatus::Stack,
+    mounts : Hash(String, Array(Tuple(String, String))),
+    hostname : String? = nil,
   ) : String
     HTML.build do
-      div(class: "service-panel", "data-stack-name": stack_name) do
-        html stack_panel_nav(stack_name, "yaml", can_edit_yaml, can_edit_env, back_service)
-        tag("h4") do
-          text stack_name
-        end
+      div(class: "service-panel", "data-stack-name": compose_stack.name) do
+        html stack_panel_nav(compose_stack.name, "explain")
+        tag("h4") { text compose_stack.name }
         div(class: "service-panel-pills") do
-          span(class: "tag tag-info") { text "compose.yaml" }
+          span(class: "tag tag-info") { text "explainer" }
         end
-        tag("pre", class: "compose-yaml") do
-          text content
+
+        if file = compose_stack.config_files.first?
+          tag("p") do
+            text "This stack is defined in "
+            tag("code") { text file }
+            text " — a Docker Compose file. The "
+            a(href: "https://docs.docker.com/reference/compose-file/") do
+              text "Compose file reference"
+            end
+            text " explains the format."
+          end
         end
-        if can_edit_yaml || can_edit_env
-          div(class: "service-panel-actions") do
-            if can_edit_yaml
-              button(
-                class: "round-button",
-                title: "Edit compose.yaml",
-                "hx-get": "#{file_edit_url(stack_name, StackFile::ComposeYaml)}",
-                "hx-target": "#panel-detail-content",
-                "hx-swap": "innerHTML",
-                "hx-indicator": "#loading-spinner",
-              ) do
-                text "Edit compose.yaml"
+
+        compose_stack.services.each do |compose_service|
+          tag("p") do
+            text "#{compose_service.service} runs the "
+            tag("code") { text compose_service.image }
+            text " image (#{compose_service.state})."
+          end
+          mappings = parse_ports(compose_service.ports).select(&.host)
+
+          mappings.each do |mapping|
+            url = hostname ? "http://#{hostname}:#{mapping.host}" : nil
+            tag("p") do
+              text "It maps port "
+              tag("code") { text mapping.host.to_s }
+              text " on this machine to port "
+              tag("code") { text mapping.container }
+              text " inside the container"
+              if url
+                text " — that's how you reach it, at "
+                a(href: url) { text url }
+              end
+              text "."
+            end
+          end
+          mounts[compose_service.container]?.try do |pairs|
+            pairs.each do |source, destination|
+              tag("p") do
+                text "#{compose_service.service} mounts "
+                tag("code") { text source }
+                text " on this machine at "
+                tag("code") { text destination }
+                text " inside the container, so whatever it writes there survives restarts and updates."
               end
             end
-            if can_edit_env
-              button(
-                class: "round-button",
-                title: "Edit the stack's .env file",
-                "hx-get": "#{file_edit_url(stack_name, StackFile::Env)}",
-                "hx-target": "#panel-detail-content",
-                "hx-swap": "innerHTML",
-                "hx-indicator": "#loading-spinner",
-              ) do
-                text "Edit .env"
-              end
-            end
+          end
+        end
+
+        if compose_stack.actionable?
+          tag("p") do
+            text "Everything the buttons do, you can do from a shell — this is just "
+            tag("code") { text "docker compose" }
+            text " with this stack's file:"
+          end
+          prefix = "docker compose" + compose_stack.config_files.map { |f| " -f #{f}" }.join
+          tag("pre", class: "explain-commands") do
+            text <<-COMMANDS
+              # what's running right now (the table above)
+              #{prefix} ps
+
+              # follow a service's logs
+              #{prefix} logs -f #{compose_stack.services.first?.try(&.service) || "SERVICE"}
+
+              # the start/stop/restart buttons
+              #{prefix} stop
+              #{prefix} start
+              #{prefix} restart
+
+              # the update button: refresh images, then recreate
+              #{prefix} pull && #{prefix} up -d
+
+              # remove the stack (volumes and your data are kept)
+              #{prefix} down
+              COMMANDS
           end
         end
       end
@@ -855,22 +896,27 @@ module ComposeDashboard
     path : String,
     content : String,
     back_service : String? = nil,
+    editable : Bool = true,
   ) : String
     HTML.build do
       div(class: "service-panel", "data-stack-name": stack_name) do
-        html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "edit-yaml" : "edit-env",
-          file == StackFile::ComposeYaml, file == StackFile::Env, back_service)
+        html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "compose-yaml" : "env", back_service)
         tag("h4") do
           text "Edit #{file.label} — #{stack_name}"
         end
         span(class: "stat-label") { text path }
         tag("form", {"class" => "compose-editor-form", "onsubmit" => "return false"}) do
-          tag("textarea", {
-            "name":       "content",
-            "class":      "compose-editor-textarea",
-            "spellcheck": "false",
-            "rows":       "20",
-          }) do
+          # data-editor upgrades this textarea to CodeMirror after the
+          # swap; without actions it stays a read-only editor.
+          editor_attrs = {
+            "name"        => "content",
+            "class"       => "compose-editor-textarea",
+            "spellcheck"  => "false",
+            "rows"        => "20",
+            "data-editor" => file == StackFile::ComposeYaml ? "yaml" : "env",
+          } of String => String
+          editor_attrs["readonly"] = "readonly" unless editable
+          tag("textarea", editor_attrs) do
             text content
           end
           input(type: "hidden", name: "stack", value: stack_name)
@@ -879,26 +925,30 @@ module ComposeDashboard
             input(type: "hidden", name: "service", value: back_service)
           end
           div(class: "service-panel-actions") do
+            if editable
+              button(
+                class: "round-button",
+                "hx-post": file_diff_url(stack_name, file, back_service),
+                "hx-include": "closest form",
+                "hx-target": "#panel-detail-content",
+                "hx-swap": "innerHTML",
+                "hx-indicator": "#loading-spinner",
+              ) do
+                text "Review changes"
+              end
+            end
             button(
               class: "round-button",
-              "hx-post": file_diff_url(stack_name, file, back_service),
-              "hx-include": "closest form",
+              "hx-get": file_edit_url(stack_name, file, back_service),
               "hx-target": "#panel-detail-content",
               "hx-swap": "innerHTML",
               "hx-indicator": "#loading-spinner",
             ) do
-              text "Review changes"
+              text "Discard changes"
             end
-            button(
-              class: "round-button",
-              "hx-get": yaml_url(stack_name, back_service),
-              "hx-target": "#panel-detail-content",
-              "hx-swap": "innerHTML",
-              "hx-indicator": "#loading-spinner",
-            ) do
-              text "Cancel"
+            span(class: "service-panel-hint") do
+              text editable ? "Nothing is written until you apply the reviewed diff." : "Read-only: start grafito with --enable-actions (and sign in) to edit."
             end
-            span(class: "service-panel-hint") { text "Nothing is written until you apply the reviewed diff." }
           end
         end
       end
@@ -917,8 +967,7 @@ module ComposeDashboard
   ) : String
     HTML.build do
       div(class: "service-panel", "data-stack-name": stack_name) do
-        html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "edit-yaml" : "edit-env",
-          file == StackFile::ComposeYaml, file == StackFile::Env, back_service)
+        html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "compose-yaml" : "env", back_service)
         tag("h4") do
           text "Review changes — #{file.label} (#{stack_name})"
         end
@@ -984,8 +1033,7 @@ module ComposeDashboard
   ) : String
     HTML.build do
       div(class: "service-panel", "data-stack-name": stack_name) do
-        html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "edit-yaml" : "edit-env",
-          file == StackFile::ComposeYaml, file == StackFile::Env, back_service)
+        html stack_panel_nav(stack_name, file == StackFile::ComposeYaml ? "compose-yaml" : "env", back_service)
         tag("h4") do
           text "#{file.label} written — #{stack_name}"
         end
@@ -1149,17 +1197,10 @@ module ComposeDashboard
     "#{base}/compose-logs?stack=#{URI.encode_path(stack_name)}&service=#{URI.encode_path(service_name)}"
   end
 
-  private def yaml_url(stack_name : String, back_service : String? = nil) : String
-    service = back_service ? "&service=#{URI.encode_path(back_service)}" : ""
-    "#{base}/compose-yaml?stack=#{URI.encode_path(stack_name)}#{service}"
+  private def explain_url(stack_name : String) : String
+    "#{base}/compose-explain?stack=#{URI.encode_path(stack_name)}"
   end
 
-  private def compose_yaml_url(stack_name : String) : String
-    yaml_url(stack_name)
-  end
-
-  # The file view URLs carry the service context (when the user came
-  # from a service's details) so the panels can offer a way back.
   private def file_edit_url(stack_name : String, file : StackFile, back_service : String? = nil) : String
     service = back_service ? "&service=#{URI.encode_path(back_service)}" : ""
     "#{base}/compose-file-edit?stack=#{URI.encode_path(stack_name)}&file=#{file.param}#{service}"
@@ -1319,7 +1360,9 @@ module ComposeDashboard
       stack.services.find(&.service.==(name)).try(&.service)
     end
 
-    get route_path("compose-yaml") do |env|
+    # The stack explainer: prose + the docker compose commands behind
+    # the buttons. Read-only, so it needs no actions gate.
+    get route_path("compose-explain") do |env|
       unless Grafito.compose_enabled?
         env.response.status_code = 404
         next "Compose view is disabled."
@@ -1334,20 +1377,13 @@ module ComposeDashboard
         env.response.status_code = 404
         next "Stack '#{HTML.escape(stack_name.to_s)}' not found."
       end
-      unless compose_stack.actionable?
-        env.response.content_type = "text/html"
-        next ComposeDashboard.action_error_fragment("View", compose_stack.name, "The compose file for this stack is not known (config files missing).")
-      end
 
-      content = compose_yaml_content(compose_stack)
+      mounts = ComposeStatus.container_mounts(compose_stack.services.map(&.container))
       env.response.content_type = "text/html"
-      can_edit = compose_actions_allowed? && compose_stack.actionable?
-      ComposeDashboard.yaml_fragment(
-        compose_stack.name,
-        content,
-        can_edit_yaml: can_edit,
-        can_edit_env: can_edit && !ComposeDashboard.stack_file_path(compose_stack, StackFile::Env).nil?,
-        back_service: back_service_param.call(env, compose_stack),
+      ComposeDashboard.compose_explain_fragment(
+        compose_stack,
+        mounts,
+        hostname: hostname_from(env),
       )
     end
 
@@ -1361,11 +1397,14 @@ module ComposeDashboard
     # rolling backup next to the file.
 
     get route_path("compose-file-edit") do |env|
-      gated = file_edit_gate(env)
+      # Viewing is always allowed (the editor renders read-only
+      # without actions); saving is what the POST routes gate.
+      gated = file_edit_gate(env, require_actions: false)
       if gated.is_a?(GateError)
         halt env, status_code: gated.status, response: gated.message
       end
       compose_stack, file = gated
+      editable = compose_actions_allowed?
       path = stack_file_path(compose_stack, file)
       unless path
         env.response.content_type = "text/html"
@@ -1386,7 +1425,7 @@ module ComposeDashboard
 
       env.response.content_type = "text/html"
       ComposeDashboard.file_editor_fragment(compose_stack.name, file, path, content,
-        back_service: back_service_param.call(env, compose_stack))
+        back_service: back_service_param.call(env, compose_stack), editable: editable)
     end
 
     post route_path("compose-file-diff") do |env|
@@ -1775,11 +1814,11 @@ module ComposeDashboard
   # error-carrying return.
   record GateError, status : Int32, message : String
 
-  def self.file_edit_gate(env) : {ComposeStatus::Stack, StackFile} | GateError
+  def self.file_edit_gate(env, require_actions : Bool = true) : {ComposeStatus::Stack, StackFile} | GateError
     unless Grafito.compose_enabled?
       return GateError.new(404, "Compose view is disabled.")
     end
-    unless compose_actions_allowed?
+    if require_actions && !compose_actions_allowed?
       return GateError.new(403, "Editing stack files requires compose actions: start grafito with --enable-actions and authentication configured (GRAFITO_AUTH_USER/GRAFITO_AUTH_PASS).")
     end
 

@@ -13,6 +13,22 @@ require "./spec_helper"
       response[:body].should contain("webapp")
     end
 
+    it "GET /compose-explain teaches the stack's commands" do
+      Grafito.compose_enabled = true
+      response = dispatch_request("GET", "/compose-explain?stack=webapp")
+
+      response[:status].should eq(200)
+      response[:body].should contain("defined in")
+      response[:body].should contain("/opt/stacks/webapp/compose.yaml")
+      response[:body].should contain("docker compose -f /opt/stacks/webapp/compose.yaml ps")
+
+      dispatch_request("GET", "/compose-explain?stack=nope")[:status].should eq(404)
+      dispatch_request("GET", "/compose-explain?stack=-evil")[:status].should eq(400)
+      Grafito.compose_enabled = false
+      dispatch_request("GET", "/compose-explain?stack=webapp")[:status].should eq(404)
+      Grafito.compose_enabled = true
+    end
+
     it "compose endpoints return 404 when the view is disabled" do
       Grafito.compose_enabled = false
       response = dispatch_request("GET", "/compose")
@@ -73,8 +89,8 @@ require "./spec_helper"
       response[:body].should contain("every 5s")
     end
 
-    it "GET /compose-yaml serves the fake stack's compose file" do
-      response = dispatch_request("GET", "/compose-yaml?stack=webapp")
+    it "GET /compose-file-edit serves the fake stack's compose file" do
+      response = dispatch_request("GET", "/compose-file-edit?stack=webapp&file=yaml")
       response[:status].should eq(200)
       response[:body].should contain("services:")
     end

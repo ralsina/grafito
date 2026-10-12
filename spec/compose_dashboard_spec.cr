@@ -71,12 +71,13 @@ describe ComposeDashboard do
     without_actions = ComposeDashboard.render_html([STACK], false)
     with_actions.should contain("hx-confirm")
     without_actions.should_not contain("hx-confirm")
-    # The YAML view is read-only, so it stays available without actions.
-    without_actions.should contain("compose-yaml?stack=webapp")
+    # The card's compose.yaml button opens the editor for everyone
+    # (read-only rendering without actions).
+    without_actions.should contain("compose-file-edit?stack=webapp&amp;file=yaml")
     # And it opens the Detail panel (a swap into the hidden panel
     # alone would look like "spinner, then nothing"). Single quotes
     # arrive HTML-escaped.
-    with_actions.should match(/hx-get="\/compose-yaml\?stack=webapp"[^>]*hx-on:htmx:after-request="if\(event\.detail\.successful\)\{showLogPanel\(&#39;detail&#39;\)\}/m)
+    with_actions.should match(/hx-get="\/compose-file-edit\?stack=webapp&amp;file=yaml"[^>]*hx-on:htmx:after-request="if\(event\.detail\.successful\)\{showLogPanel\(&#39;detail&#39;\)\}/m)
   end
 
   it "shows only the stack actions that fit the stack's state" do
@@ -142,6 +143,35 @@ describe ComposeDashboard do
     fragment.should_not contain(%(<span class="stat-label">Services</span>))
   end
 
+  it "explains a stack in prose and commands" do
+    fragment = ComposeDashboard.compose_explain_fragment(
+      STACK,
+      {"webapp-web-1" => [{"/data/stacks/webapp/data", "/config"}]},
+      hostname: "lab",
+    )
+    fragment.should contain(%(data-stack-name="webapp"))
+    fragment.should contain(%(<span class="panel-nav-tab active">Explain</span>))
+    fragment.should contain(%(<code>/opt/stacks/webapp/compose.yaml</code>))
+    fragment.should contain("Compose file reference")
+    fragment.should contain("nginx:1.27-alpine")
+    fragment.should contain(%(<code>8080</code>))
+    fragment.should contain(%(href="http://lab:8080"))
+    fragment.should contain(%(<code>/data/stacks/webapp/data</code>))
+    fragment.should contain("survives restarts and updates")
+    fragment.should contain("docker compose -f /opt/stacks/webapp/compose.yaml ps")
+    fragment.should contain("logs -f web")
+  end
+
+  it "degrades the explainer without mounts or a hostname" do
+    fragment = ComposeDashboard.compose_explain_fragment(STACK, {} of String => Array(Tuple(String, String)))
+    fragment.should contain("maps port")
+    fragment.should_not contain("http://")
+    fragment.should contain("docker compose -f /opt/stacks/webapp/compose.yaml restart")
+
+    orphan = ComposeDashboard.render_html([EMPTY_STACK], false)
+    orphan.should contain("legacy") # still listed; explainer degrades via no config sentence
+  end
+
   it "renders N/A for services without a healthcheck" do
     fragment = ComposeDashboard.render_html([STACK], false)
     fragment.should contain(%(>N/A</span>))
@@ -162,30 +192,51 @@ describe ComposeDashboard do
   end
 
   it "navigates between the panel views of a stack" do
-    # yaml view: active tab plus editor tabs per availability.
-    yaml = ComposeDashboard.yaml_fragment("webapp", "services: {}", can_edit_yaml: true, can_edit_env: true)
-    yaml.should contain(%(data-stack-name="webapp"))
-    yaml.should contain(%(<span class="panel-nav-tab active">compose.yaml</span>))
-    yaml.should contain(%(hx-get="/compose-file-edit?stack=webapp&amp;file=yaml" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Edit compose.yaml</button>))
-    yaml.should contain(%(hx-get="/compose-file-edit?stack=webapp&amp;file=env" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Edit .env</button>))
+    # The editor: active tab, plus tabs for Explain and the sibling file.
+    editor = ComposeDashboard.file_editor_fragment(
+      "webapp", ComposeDashboard::StackFile::ComposeYaml, "/opt/stacks/webapp/compose.yaml",
+      "services: {}", editable: true)
+    editor.should contain(%(data-stack-name="webapp"))
+    editor.should contain(%(<span class="panel-nav-tab active">compose.yaml</span>))
+    editor.should contain(%(hx-get="/compose-explain?stack=webapp" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Explain</button>))
+    editor.should contain(%(hx-get="/compose-file-edit?stack=webapp&amp;file=env" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">.env</button>))
+    editor.should contain(%(data-editor="yaml"))
+    editor.should contain("Review changes")
 
-    # service details: Details tab active, hops to the yaml view.
+    # service details: Details tab active, hops to the compose editor.
     details = ComposeDashboard.service_details_fragment(SERVICES[0], false)
     details.should contain(%(<span class="panel-nav-tab active">Details</span>))
-    # The yaml tab carries the service so the file views can link back.
-    details.should contain(%(hx-get="/compose-yaml?stack=webapp&amp;service=web" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">compose.yaml</button>))
+    # The tab carries the service so the editor can link back.
+    details.should contain(%(hx-get="/compose-file-edit?stack=webapp&amp;file=yaml&amp;service=web" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">compose.yaml</button>))
+  end
+
+  it "renders the editor read-only without actions" do
+    editor = ComposeDashboard.file_editor_fragment(
+      "webapp", ComposeDashboard::StackFile::ComposeYaml, "/opt/stacks/webapp/compose.yaml",
+      "services: {}", editable: false)
+    editor.should contain(%(readonly="readonly"))
+    editor.should_not contain("Review changes")
+    editor.should contain("Read-only")
+
+    # With actions: editable.
+    editable = ComposeDashboard.file_editor_fragment(
+      "webapp", ComposeDashboard::StackFile::ComposeYaml, "/opt/stacks/webapp/compose.yaml",
+      "services: {}", editable: true)
+    editable.should contain("Review changes")
+    editable.should_not contain("Read-only:")
   end
 
   it "offers a Details tab back when a file view came from a service" do
-    yaml = ComposeDashboard.yaml_fragment("webapp", "services: {}", back_service: "web")
-    yaml.should contain(%(<span class="panel-nav-tab active">compose.yaml</span>))
-    yaml.should contain(%(hx-get="/compose-details?stack=webapp&amp;service=web" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Details</button>))
-
-    editor = ComposeDashboard.file_editor_fragment("webapp", ComposeDashboard::StackFile::ComposeYaml, "/opt/webapp/compose.yaml", "x", back_service: "web")
+    editor = ComposeDashboard.file_editor_fragment(
+      "webapp", ComposeDashboard::StackFile::ComposeYaml, "/opt/webapp/compose.yaml",
+      "x", back_service: "web")
+    editor.should contain(%(<span class="panel-nav-tab active">compose.yaml</span>))
     editor.should contain(%(hx-get="/compose-details?stack=webapp&amp;service=web" hx-target="#panel-detail-content" hx-swap="innerHTML" hx-indicator="#loading-spinner">Details</button>))
 
     # Without the context there is no Details tab (nothing to go back to).
-    plain = ComposeDashboard.yaml_fragment("webapp", "services: {}")
+    plain = ComposeDashboard.file_editor_fragment(
+      "webapp", ComposeDashboard::StackFile::ComposeYaml, "/opt/webapp/compose.yaml", "x",
+    )
     plain.should_not contain(">Details</button>")
   end
 
@@ -285,7 +336,7 @@ describe ComposeDashboard do
     )
     fragment.should contain("compose-editor-textarea")
     fragment.should contain("Review changes")
-    fragment.should contain("Cancel")
+    fragment.should contain("Discard changes")
     # text() escapes, so the raw <image> never reaches the HTML.
     fragment.should contain("&lt;image&gt;")
     fragment.should_not contain("<image>")
@@ -349,8 +400,7 @@ describe ComposeDashboard do
     end
   end
 
-  it "renders the yaml fragment and the service-logs jump" do
-    ComposeDashboard.yaml_fragment("webapp", "services: {}").should contain("services: {}")
+  it "renders the service-logs jump" do
     # The Service logs button opens the log view filtered by the
     # container's journald entries, not an inline tail.
     fragment = ComposeDashboard.service_details_fragment(SERVICES[0], false)
