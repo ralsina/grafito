@@ -58,9 +58,9 @@ describe Journalctl do
       command.should eq(base_command + ["-p", "3"])
     end
 
-    it "adds a CONTAINER_NAME match when 'container' is provided" do
+    it "adds an OR match for container name via driver or shipper tag" do
       command = Journalctl.build_query_command(since: nil, unit: nil, tag: nil, query: nil, priority: nil, hostname: nil, container: "webapp-web-1")
-      command.should eq(base_command + ["CONTAINER_NAME=webapp-web-1"])
+      command.should eq(base_command + ["CONTAINER_NAME=webapp-web-1", "+", "SYSLOG_IDENTIFIER=webapp-web-1"])
     end
 
     it "ignores blank container values" do
