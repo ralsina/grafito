@@ -313,6 +313,24 @@ module AccessPanel
     false
   end
 
+  # Best-effort refresh after install/update/uninstall changes the
+  # set of domain-routed apps: rewrite the Caddyfile when its content
+  # changed and reload the running caddy. No-op when the managed
+  # proxy is not running (host:port keeps working regardless).
+  def self.refresh : Bool
+    settings = ProxySettings.load(Grafito.data_dir)
+    return false if settings.nil? || settings.base_domain.empty?
+    return false unless proxy_running?
+
+    changed = sync_proxy_files(Grafito.data_dir, settings)
+    reload_proxy
+    Log.info { "Proxy refresh after app store change: #{changed ? "Caddyfile rewritten" : "no changes"}" }
+    changed
+  rescue ex
+    Log.warn(exception: ex) { "Proxy refresh failed (apps remain reachable on host:port)" }
+    false
+  end
+
   # Reloads the running proxy without dropping connections (caddy
   # re-reads its config in-place). Best-effort: if it fails, the
   # caller's restart path still applies.

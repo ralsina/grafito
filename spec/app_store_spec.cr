@@ -123,35 +123,37 @@ describe AppStore do
     app = AppStore::AppInfo.from_json(WHOAMI_CONFIG)
 
     it "builds the base env and applies defaults" do
-      result = AppStore.validate_input(app, "8080", nil, {} of String => String, "/data")
+      result = AppStore.validate_input(app, "8080", nil, {} of String => String, "/data", "demo")
       result.errors.should be_empty
       result.port.should eq(8080)
       result.env["APP_PORT"].should eq("8080")
       result.env["APP_DOMAIN"].should eq("localhost:8080")
       result.env["APP_ID"].should eq("whoami")
       result.env["WHOAMI_MESSAGE"].should eq("hello")
+      # Host-side per-app data dir, mountable as ${APP_DATA_DIR}.
+      result.env["APP_DATA_DIR"].should eq("/data/app-data/demo/whoami")
     end
 
     it "generates a persistent random value with the field's length" do
-      result = AppStore.validate_input(app, "8080", nil, {} of String => String, "/data")
+      result = AppStore.validate_input(app, "8080", nil, {} of String => String, "/data", "demo")
       token = result.env["WHOAMI_TOKEN"]?
       fail "WHOAMI_TOKEN missing" if token.nil?
       token.size.should eq(16)
     end
 
     it "keeps user answers over defaults" do
-      result = AppStore.validate_input(app, "8080", nil, {"WHOAMI_MESSAGE" => "custom"}, "/data")
+      result = AppStore.validate_input(app, "8080", nil, {"WHOAMI_MESSAGE" => "custom"}, "/data", "demo")
       result.env["WHOAMI_MESSAGE"].should eq("custom")
     end
 
     it "rejects invalid ports" do
-      result = AppStore.validate_input(app, "70000", nil, {} of String => String, "/data")
+      result = AppStore.validate_input(app, "70000", nil, {} of String => String, "/data", "demo")
       result.errors.size.should eq(1)
       result.port.should eq(0)
     end
 
     it "uses the config port when the form sends none" do
-      result = AppStore.validate_input(app, "", nil, {} of String => String, "/data")
+      result = AppStore.validate_input(app, "", nil, {} of String => String, "/data", "demo")
       result.port.should eq(8380)
     end
   end
@@ -175,12 +177,12 @@ describe AppStore do
     strict = AppStore::AppInfo.from_json(field_config)
 
     it "flags missing required fields" do
-      result = AppStore.validate_input(strict, "8000", nil, {} of String => String, "/data")
+      result = AppStore.validate_input(strict, "8000", nil, {} of String => String, "/data", "demo")
       result.errors.any?(&.includes?("Count")).should be_true
     end
 
     it "accepts valid values" do
-      result = AppStore.validate_input(strict, "8000", nil, {"COUNT" => "3", "CODE" => "abc", "MODE" => "fast"}, "/data")
+      result = AppStore.validate_input(strict, "8000", nil, {"COUNT" => "3", "CODE" => "abc", "MODE" => "fast"}, "/data", "demo")
       result.errors.should be_empty
       result.env["COUNT"].should eq("3")
       result.env["CODE"].should eq("abc")
@@ -188,7 +190,7 @@ describe AppStore do
     end
 
     it "rejects values failing regex, length or option checks" do
-      result = AppStore.validate_input(strict, "8000", nil, {"COUNT" => "x", "CODE" => "ab", "MODE" => "medium"}, "/data")
+      result = AppStore.validate_input(strict, "8000", nil, {"COUNT" => "x", "CODE" => "ab", "MODE" => "medium"}, "/data", "demo")
       result.errors.size.should eq(3)
     end
   end
@@ -291,12 +293,17 @@ describe AppStore do
     it "renders an install and discovers it back" do
       app = AppStore.find_app(TEST_STORE, root, "whoami")
       fail "whoami app missing" if app.nil?
-      input = AppStore.validate_input(app, "8381", nil, {} of String => String, root)
+      input = AppStore.validate_input(app, "8381", nil, {} of String => String, root, TEST_STORE.slug)
       installed = AppStore.render_install(TEST_STORE, app, input, root)
 
       installed.project_name.should eq("whoami")
       File.exists?(installed.compose_file(root)).should be_true
       File.exists?(installed.env_file(root)).should be_true
+
+      # The record only exists once the install job succeeds and calls
+      # record_install — until then the app is retryable, not installed.
+      AppStore.find_installed(root, "whoami").should be_nil
+      AppStore.record_install(root, installed)
 
       discovered = AppStore.find_installed(root, "whoami")
       fail "install record missing" if discovered.nil?
@@ -331,6 +338,40 @@ describe AppStore do
       updated = AppStore.find_installed(root, "whoami")
       fail "install record missing" if updated.nil?
       updated.tipi_version.should eq(4)
+    end
+
+    it "does not resurrect the localhost domain default on update" do
+      installed = AppStore.find_installed(root, "whoami")
+      fail "install record missing" if installed.nil?
+
+      # What installs actually write: the localhost default, plus a
+      # bump in the store to force the re-render.
+      File.write(installed.env_file(root), "APP_DOMAIN=localhost:8381\nAPP_PORT=8381\n")
+      newer = WHOAMI_CONFIG.sub(%("tipi_version": 3), %("tipi_version": 5))
+      File.write(File.join(AppStore.store_dir(root, "test-store"), "apps", "whoami", "config.json"), newer)
+
+      AppStore.prepare_update(root, installed)
+      env = AppStore.parse_env_file(File.read(installed.env_file(root)))
+      env["APP_EXPOSED"].should eq("false")
+      record = AppStore.find_installed(root, "whoami")
+      fail "install record missing" if record.nil?
+      record.domain.should eq("")
+    end
+
+    it "carries a real routed domain across updates" do
+      installed = AppStore.find_installed(root, "whoami")
+      fail "install record missing" if installed.nil?
+      File.write(installed.env_file(root), "APP_DOMAIN=whoami.example.com\nAPP_PORT=8381\n")
+      newer = WHOAMI_CONFIG.sub(%("tipi_version": 3), %("tipi_version": 6))
+      File.write(File.join(AppStore.store_dir(root, "test-store"), "apps", "whoami", "config.json"), newer)
+
+      AppStore.prepare_update(root, installed)
+      env = AppStore.parse_env_file(File.read(installed.env_file(root)))
+      env["APP_DOMAIN"].should eq("whoami.example.com")
+      env["APP_EXPOSED"].should eq("true")
+      record = AppStore.find_installed(root, "whoami")
+      fail "install record missing" if record.nil?
+      record.domain.should eq("whoami.example.com")
     end
 
     it "persists the per-app auto-update toggle" do

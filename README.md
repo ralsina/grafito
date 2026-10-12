@@ -193,15 +193,22 @@ compose stacks without writing a YAML file.
   generated-secrets fields, validated server-side).
 * **Install**: Grafito renders the app's compose file and a `.env`
   (Runtipi's `APP_*` variables plus your answers; secrets are
-  generated once and persisted) under its data dir, then runs
-  `docker compose pull && up -d` as a streaming job. The app shows up
+  generated once and persisted; `${APP_DATA_DIR}` points at a
+  per-app data directory under `<data-dir>/app-data/`) under its data
+  dir, then runs `docker compose pull && up -d` as a streaming job.
+  The install is only recorded once the containers are actually up —
+  if the pull or start fails (port conflict, wrong architecture, …)
+  the form can simply be retried. The app shows up
   as a normal stack, badged with its name and version, and is reachable
   on the host port you chose.
 * **Update and uninstall**: stacks installed from a store get update
   and uninstall buttons. Update re-renders the app when the store
-  ships a newer package (your answers and secrets are kept) and pulls
-  the new images. Uninstall runs `down` and removes the rendered
-  files; app data under `<data-dir>/app-data/` is kept.
+  ships a newer package (your answers and secrets are kept; the store
+  cache is refreshed first, so brand-new releases are picked up) and
+  pulls the new images. Uninstall runs `down` and removes the rendered
+  files; app data under `<data-dir>/app-data/` is kept. Apps given a
+  domain are (un)routed by the managed reverse proxy automatically on
+  install, update and uninstall.
 * **Compatibility notes**: store apps are rendered for standalone
   operation — Runtipi's `x-runtipi` metadata and shared Traefik
   network are translated (host port mapping, project-local networks),
