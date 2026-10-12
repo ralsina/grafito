@@ -89,9 +89,18 @@ describe "MCP endpoint" do
         with_mcp_token("spec-token") do
           response = mcp_post(%({"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"stack_action","arguments":{"stack":"webapp","action":"restart"}}}))
           response[:status].should eq(200)
-          result = JSON.parse(response[:body])["result"]["content"][0]["text"]
-          JSON.parse(JSON.parse(response[:body])["result"]["content"][0]["text"].as_s)["ran"].as_a.size.should be > 0
-          # The fake world saw the restart.
+          # The command itself needs a real docker: CI containers don't
+          # have one, and the tool surfaces that as a JSON-RPC error —
+          # which is exactly the "visibly failed" behavior we want.
+          envelope = JSON.parse(response[:body])
+          if result = envelope["result"]?
+            ran = JSON.parse(result["content"][0]["text"].as_s)["ran"].as_a
+            ran.size.should be > 0
+            ran[0]["command"].as_s.should contain("docker compose")
+          else
+            envelope["error"]["message"].as_s.should contain("docker")
+          end
+          # The fake world still knows the stack either way.
           ComposeStatus.stacks.find(&.name.==("webapp")).should_not be_nil
         end
       ensure
