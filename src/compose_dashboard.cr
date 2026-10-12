@@ -761,12 +761,110 @@ module ComposeDashboard
         if back_service
           html panel_nav_tab("Details", details_url(stack_name, back_service), active == "details")
         end
+        html panel_nav_tab("Explain", explain_url(stack_name), active == "explain")
         html panel_nav_tab("compose.yaml", yaml_url(stack_name, back_service), active == "yaml")
         if can_edit_yaml || active == "edit-yaml"
           html panel_nav_tab("Edit compose.yaml", active == "edit-yaml" ? nil : file_edit_url(stack_name, StackFile::ComposeYaml, back_service), active == "edit-yaml")
         end
         if can_edit_env || active == "edit-env"
           html panel_nav_tab("Edit .env", active == "edit-env" ? nil : file_edit_url(stack_name, StackFile::Env, back_service), active == "edit-env")
+        end
+      end
+    end
+  end
+
+  # The "teach me" panel for one stack: prose describing the compose
+  # file, services, published ports and mounts, plus the docker
+  # compose commands behind every button — so the UI teaches the CLI,
+  # like /command does for the log view.
+  def compose_explain_fragment(
+    compose_stack : ComposeStatus::Stack,
+    mounts : Hash(String, Array(Tuple(String, String))),
+    hostname : String? = nil,
+  ) : String
+    HTML.build do
+      div(class: "service-panel", "data-stack-name": compose_stack.name) do
+        html stack_panel_nav(compose_stack.name, "explain")
+        tag("h4") { text compose_stack.name }
+        div(class: "service-panel-pills") do
+          span(class: "tag tag-info") { text "explainer" }
+        end
+
+        if file = compose_stack.config_files.first?
+          tag("p") do
+            text "This stack is defined in "
+            tag("code") { text file }
+            text " — a Docker Compose file. The "
+            a(href: "https://docs.docker.com/reference/compose-file/") do
+              text "Compose file reference"
+            end
+            text " explains the format."
+          end
+        end
+
+        compose_stack.services.each do |compose_service|
+          tag("p") do
+            text "#{compose_service.service} runs the "
+            tag("code") { text compose_service.image }
+            text " image (#{compose_service.state})."
+          end
+          mappings = parse_ports(compose_service.ports).select(&.host)
+
+          mappings.each do |mapping|
+            url = hostname ? "http://#{hostname}:#{mapping.host}" : nil
+            tag("p") do
+              text "It maps port "
+              tag("code") { text mapping.host.to_s }
+              text " on this machine to port "
+              tag("code") { text mapping.container }
+              text " inside the container"
+              if url
+                text " — that's how you reach it, at "
+                a(href: url) { text url }
+              end
+              text "."
+            end
+          end
+          mounts[compose_service.container]?.try do |pairs|
+            pairs.each do |source, destination|
+              tag("p") do
+                text "#{compose_service.service} mounts "
+                tag("code") { text source }
+                text " on this machine at "
+                tag("code") { text destination }
+                text " inside the container, so whatever it writes there survives restarts and updates."
+              end
+            end
+          end
+        end
+
+        if compose_stack.actionable?
+          tag("p") do
+            text "Everything the buttons do, you can do from a shell — this is just "
+            tag("code") { text "docker compose" }
+            text " with this stack's file:"
+          end
+          prefix = "docker compose" + compose_stack.config_files.map { |f| " -f #{f}" }.join
+          tag("pre", class: "explain-commands") do
+            text <<-COMMANDS
+              # what's running right now (the table above)
+              #{prefix} ps
+
+              # follow a service's logs
+              #{prefix} logs -f #{compose_stack.services.first?.try(&.service) || "SERVICE"}
+
+              # the start/stop/restart buttons
+              #{prefix} stop
+              #{prefix} start
+              #{prefix} restart
+
+              # the update button: refresh images, then recreate
+              #{prefix} pull && #{prefix} up -d
+
+              # remove the stack (volumes and your data are kept)
+              #{prefix} down
+              COMMANDS
+          end
         end
       end
     end
@@ -1149,6 +1247,10 @@ module ComposeDashboard
     "#{base}/compose-logs?stack=#{URI.encode_path(stack_name)}&service=#{URI.encode_path(service_name)}"
   end
 
+  private def explain_url(stack_name : String) : String
+    "#{base}/compose-explain?stack=#{URI.encode_path(stack_name)}"
+  end
+
   private def yaml_url(stack_name : String, back_service : String? = nil) : String
     service = back_service ? "&service=#{URI.encode_path(back_service)}" : ""
     "#{base}/compose-yaml?stack=#{URI.encode_path(stack_name)}#{service}"
@@ -1317,6 +1419,33 @@ module ComposeDashboard
     back_service_param = ->(env : HTTP::Server::Context, stack : ComposeStatus::Stack) do
       name = optional_query_param(env, "service")
       stack.services.find(&.service.==(name)).try(&.service)
+    end
+
+    # The stack explainer: prose + the docker compose commands behind
+    # the buttons. Read-only, so it needs no actions gate.
+    get route_path("compose-explain") do |env|
+      unless Grafito.compose_enabled?
+        env.response.status_code = 404
+        next "Compose view is disabled."
+      end
+      stack_name = optional_query_param(env, "stack")
+      unless valid_compose_name?(stack_name)
+        halt env, status_code: 400, response: "Missing or invalid stack name."
+      end
+
+      compose_stack = ComposeStatus.find_stack(stack_name.to_s)
+      unless compose_stack
+        env.response.status_code = 404
+        next "Stack '#{HTML.escape(stack_name.to_s)}' not found."
+      end
+
+      mounts = ComposeStatus.container_mounts(compose_stack.services.map(&.container))
+      env.response.content_type = "text/html"
+      ComposeDashboard.compose_explain_fragment(
+        compose_stack,
+        mounts,
+        hostname: hostname_from(env),
+      )
     end
 
     get route_path("compose-yaml") do |env|

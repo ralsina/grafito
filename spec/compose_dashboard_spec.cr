@@ -142,6 +142,35 @@ describe ComposeDashboard do
     fragment.should_not contain(%(<span class="stat-label">Services</span>))
   end
 
+  it "explains a stack in prose and commands" do
+    fragment = ComposeDashboard.compose_explain_fragment(
+      STACK,
+      {"webapp-web-1" => [{"/data/stacks/webapp/data", "/config"}]},
+      hostname: "lab",
+    )
+    fragment.should contain(%(data-stack-name="webapp"))
+    fragment.should contain(%(<span class="panel-nav-tab active">Explain</span>))
+    fragment.should contain(%(<code>/opt/stacks/webapp/compose.yaml</code>))
+    fragment.should contain("Compose file reference")
+    fragment.should contain("nginx:1.27-alpine")
+    fragment.should contain(%(<code>8080</code>))
+    fragment.should contain(%(href="http://lab:8080"))
+    fragment.should contain(%(<code>/data/stacks/webapp/data</code>))
+    fragment.should contain("survives restarts and updates")
+    fragment.should contain("docker compose -f /opt/stacks/webapp/compose.yaml ps")
+    fragment.should contain("logs -f web")
+  end
+
+  it "degrades the explainer without mounts or a hostname" do
+    fragment = ComposeDashboard.compose_explain_fragment(STACK, {} of String => Array(Tuple(String, String)))
+    fragment.should contain("maps port")
+    fragment.should_not contain("http://")
+    fragment.should contain("docker compose -f /opt/stacks/webapp/compose.yaml restart")
+
+    orphan = ComposeDashboard.render_html([EMPTY_STACK], false)
+    orphan.should contain("legacy") # still listed; explainer degrades via no config sentence
+  end
+
   it "renders N/A for services without a healthcheck" do
     fragment = ComposeDashboard.render_html([STACK], false)
     fragment.should contain(%(>N/A</span>))

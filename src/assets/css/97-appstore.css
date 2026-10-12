@@ -273,3 +273,39 @@
   color: var(--accent-inverse, #fff);
   cursor: default;
 }
+
+/* The panel navigation's Explain tab content and the processes
+   view's shell-commands expander. */
+.explain-commands {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  overflow-x: auto;
+  white-space: pre;
+  margin: 0.5rem 0;
+}
+
+details.proc-explain {
+  margin: 0 0 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 0.4rem 0.8rem;
+}
+
+details.proc-explain summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+details.proc-explain .proc-explain-body {
+  margin-top: 0.6rem;
+}
+
+details.proc-explain p {
+  margin: 0.4rem 0;
+}

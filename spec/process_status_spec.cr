@@ -8,6 +8,10 @@ describe ProcessDashboard do
     html = ProcessDashboard.render_html(snapshot, limit: "all")
     html.should contain("proc-table")
     html.should contain("CPU")
+    # The teach-the-commands explainer.
+    html.should contain("proc-explain")
+    html.should contain("htop")
+    html.should contain("kill -TERM 1234")
     snapshot.processes.each do |process_info|
       html.should contain(process_info.pid.to_s)
     end

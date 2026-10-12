@@ -420,6 +420,43 @@ module ComposeStatus
     {} of String => String
   end
 
+  # One batched `docker inspect` over the given containers, returning
+  # container name → its bind mounts and named volumes as
+  # {source, destination} pairs. Computed on demand (the stack
+  # explainer), not on every view refresh. Containers that vanished
+  # between listing and inspecting simply map to nothing.
+  def self.container_mounts(container_names : Array(String)) : Hash(String, Array(Tuple(String, String)))
+    return {} of String => Array(Tuple(String, String)) if container_names.empty?
+    output = run_docker(["inspect", "--format",
+                         "{{.Name}}|{{range .Mounts}}{{.Source}}=>{{.Destination}};{{end}}"] + container_names)
+    parse_mounts(output)
+  rescue ex
+    Log.warn(exception: ex) { "Failed to inspect container mounts" }
+    {} of String => Array(Tuple(String, String))
+  end
+
+  # Parses the container_mounts inspect output: one line per container
+  # of "/name|src=>dst;src=>dst;".
+  def self.parse_mounts(output : String) : Hash(String, Array(Tuple(String, String)))
+    mounts = {} of String => Array(Tuple(String, String))
+    output.each_line do |line|
+      line = line.strip
+      next if line.empty?
+      name, _, rest = line.partition("|")
+      next if name.empty?
+      pairs = [] of Tuple(String, String)
+      rest.split(";").each do |entry|
+        entry = entry.strip
+        next if entry.empty?
+        source, sep, destination = entry.partition("=>")
+        next unless sep
+        pairs << {source, destination} unless source.empty? || destination.empty?
+      end
+      mounts[name.lchop('/')] = pairs
+    end
+    mounts
+  end
+
   # Parses `docker inspect --format '{{.Name}} {{.HostConfig.LogConfig.Type}}'`
   # output: one "/name driver" line per container.
   def self.parse_log_drivers(output : String) : Hash(String, String)

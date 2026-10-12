@@ -86,6 +86,8 @@ module ProcessDashboard
         end
       end
 
+      html proc_explain_fragment
+
       html proc_toolbar(snapshot, visible, matched, show_all, sort_by, sort_order, filter)
 
       table(class: "striped dashboard-units proc-table") do
@@ -120,6 +122,48 @@ module ProcessDashboard
   # all/top-only toggle, and the hidden form carrying the current
   # sort/filter/limit so kill buttons (which post the refreshed
   # fragment) keep the table's state.
+  # The "teach me the commands" block: what this view is under the
+  # hood and the shell commands behind its buttons. `details` keeps it
+  # out of the way until asked for.
+  def proc_explain_fragment : String
+    HTML.build do
+      tag("details", class: "proc-explain") do
+        tag("summary") do
+          span(class: "material-icons", style: "font-size: 1rem; vertical-align: middle;") do
+            text "school"
+          end
+          text " How this works, in shell commands"
+        end
+        div(class: "proc-explain-body") do
+          tag("p") do
+            text "Grafito reads "
+            tag("code") { text "/proc" }
+            text " directly — no ps subprocess — so this table shows the same information as "
+            tag("code") { text "top" }
+            text " or "
+            tag("code") { text "htop" }
+            text " on the host. To explore it yourself:"
+          end
+          tag("pre", class: "explain-commands") do
+            text <<-COMMANDS
+              # the top CPU consumers
+              ps aux --sort=-%cpu | head -15
+
+              # the interactive versions of this table
+              top          # or: htop
+
+              # what the action buttons run (pid from the table)
+              kill -TERM 1234   # SIGTERM: ask the process to stop (the power icon)
+              kill -KILL 1234   # SIGKILL: force-kill it (the skull icon)
+              kill -STOP 1234   # freeze the process
+              kill -CONT 1234   # resume a frozen process
+              COMMANDS
+          end
+        end
+      end
+    end
+  end
+
   private def proc_toolbar(
     snapshot : ProcessStatus::Snapshot,
     visible : Array(ProcessStatus::ProcessInfo),
