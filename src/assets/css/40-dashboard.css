@@ -34,7 +34,7 @@ body[data-view] #stats-strip {
 }
 /* The network chart stacks below the combined one inside the same
    container; give it breathing room from the chart above. */
-.dashboard-history svg + .dashboard-legend {
+.dashboard-history .dashboard-chart + .dashboard-legend {
   margin-top: 0.9rem;
 }
 .dashboard-legend {
@@ -95,6 +95,38 @@ body[data-view] #stats-strip {
   border: 1px solid var(--line);
   background: var(--bg);
   display: block;
+}
+/* The charts fill the window width from a fixed 800-unit viewBox
+   (preserveAspectRatio="none"), so on wide screens the geometry
+   stretches horizontally. That is the intended time mapping, but the
+   polylines opt out via vector-effect (baked in the markup) so line
+   weights and dashes keep their pixel size. The time labels are HTML
+   overlays for the same reason: SVG text would smear across the
+   stretch. They anchor to this generator-emitted wrapper. */
+.dashboard-chart {
+  position: relative;
+}
+.dashboard-chart .chart-note {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 1px 3px;
+  pointer-events: none;
+}
+.chart-note.chart-start {
+  left: 5px;
+  bottom: 3px;
+}
+.chart-note.chart-end {
+  right: 5px;
+  bottom: 3px;
+}
+.chart-note.chart-max {
+  left: 5px;
+  top: 3px;
 }
 /* Time axis labels sit on top of the bars, so they need a readable
    fill plus a background-colored outline to stand out from whatever
