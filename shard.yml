@@ -35,6 +35,7 @@ dependencies:
   # MCP server protocol/tools layer (stdio + Kemal HTTP)
   mcp:
     github: ralsina/mcp
+    commit: 9af17b60b53867080362bad5d6d57caf6e77c824
   baked_file_handler:
     github: ralsina/baked_file_handler
   # Anthropic/Claude AI provider

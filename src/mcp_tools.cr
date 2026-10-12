@@ -316,23 +316,4 @@ module Grafito::Mcp
       ok ? Mcp.text_result({"ok" => true, "signal" => action, "pid" => pid}) : Mcp.error_result("Failed to signal pid #{pid}.")
     end
   end
-
-  # The shard's `inherited` hook fires before subclass bodies run, so
-  # every tool above was auto-registered under the default name
-  # ("tool"). Re-register explicitly under their real names.
-  {
-    "query_logs"         => QueryLogsTool,
-    "journalctl_command" => JournalctlCommandTool,
-    "list_stacks"        => ListStacksTool,
-    "inspect_stack"      => InspectStackTool,
-    "list_processes"     => ListProcessesTool,
-    "system_status"      => SystemStatusTool,
-    "stack_action"       => StackActionTool,
-    "service_action"     => ServiceActionTool,
-    "unit_action"        => UnitActionTool,
-    "process_action"     => ProcessActionTool,
-  }.each do |name, tool_class|
-    MCP.registered_tools.delete("tool")
-    MCP.register_tool(name, tool_class.new)
-  end
 end
