@@ -95,6 +95,7 @@ DOC = <<-DOCOPT
     --sample-interval-sec=N      Dashboard metrics sampling interval in seconds [default: 30].
     --retention-days=N           Days of dashboard metrics history to keep [default: 7].
     --enable-actions             Allow start/stop/restart/enable/disable of units from the dashboard (requires authentication) [default: false].
+    --mcp-token=TOKEN            Bearer token enabling the MCP endpoint (POST /mcp) for LLM clients. Unset: MCP is disabled.
     --idle-timeout-sec=TIMEOUT    Idle timeout in seconds after which to shut down. Primarily useful with systemd socket activation.
     -h --help                     Show this screen.
     --version                     Show version.
@@ -117,6 +118,7 @@ DOC = <<-DOCOPT
     GRAFITO_SAMPLE_INTERVAL_SEC  Dashboard metrics sampling interval in seconds [default: 30].
     GRAFITO_RETENTION_DAYS       Days of dashboard metrics history to keep [default: 7].
     GRAFITO_ENABLE_ACTIONS       Allow unit start/stop/restart from the dashboard (true/false) [default: false].
+    GRAFITO_MCP_TOKEN            Bearer token enabling the MCP endpoint (POST /mcp) for LLM clients. Unset: MCP is disabled.
     GRAFITO_GOTIFY_URL           Base URL of a Gotify server to enable push alerts.
     GRAFITO_GOTIFY_TOKEN         Gotify application token (required with GRAFITO_GOTIFY_URL).
     GRAFITO_GOTIFY_PRIORITY      Gotify message priority [default: 5].
@@ -484,6 +486,9 @@ end
 def setup_dashboard(args) : Nil
   Grafito.dashboard_enabled = args["--dashboard"].to_s != "false"
   Grafito.enable_actions = args["--enable-actions"].to_s == "true"
+  mcp_token = args["--mcp-token"].to_s.presence
+  Grafito.mcp_token = mcp_token
+  Grafito::Log.info { "MCP endpoint: #{mcp_token ? "enabled (POST /mcp, bearer auth)" : "disabled (set GRAFITO_MCP_TOKEN to enable)"}" }
   Grafito::Log.info { "Dashboard: #{Grafito.dashboard_enabled? ? "enabled" : "disabled"}" }
 
   if Grafito.enable_actions?

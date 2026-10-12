@@ -1624,19 +1624,7 @@ module ComposeDashboard
         # job replays plausible output. No docker runs anywhere.
         FakeComposeData.apply_stack_action(stack_name, action)
       {% end %}
-      commands = case action
-                 when "up"
-                   [compose_command_prefix(compose_stack) + ["up", "-d"]]
-                 when "stop"
-                   [compose_command_prefix(compose_stack) + ["stop"]]
-                 when "restart"
-                   [compose_command_prefix(compose_stack) + ["restart"]]
-                 else # update: pull images, then bring the stack back up
-                   [
-                     compose_command_prefix(compose_stack) + ["pull"],
-                     compose_command_prefix(compose_stack) + ["up", "-d"],
-                   ]
-                 end
+      commands = ComposeStatus.action_commands(compose_stack, action)
       job_id = ComposeJobs.start("#{action} #{compose_stack.name}", commands)
       env.response.content_type = "text/html"
       job = ComposeJobs.find(job_id)

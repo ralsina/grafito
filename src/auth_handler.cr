@@ -52,9 +52,11 @@ class AuthHandler
 
   # Everything the login page itself needs: the session endpoints and
   # the pico stylesheet the page links (all other baked assets stay
-  # behind auth). Base-path aware, like the routes themselves.
+  # behind auth) — plus the MCP endpoint, which performs its own
+  # bearer-token authentication. Base-path aware, like the routes.
   private def public_path?(path : String) : Bool
     {Grafito.route_path("login"), Grafito.route_path("logout"),
+     Grafito.route_path("mcp"),
      "#{Grafito.route_path("pico.min.css")}"}.includes?(path)
   end
 
