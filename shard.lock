@@ -62,7 +62,7 @@ shards:
 
   mcp:
     git: https://github.com/ralsina/mcp.git
-    version: 0.1.1+git.commit.9af17b60b53867080362bad5d6d57caf6e77c824
+    version: 0.1.1+git.commit.469d99f9f6e88963e4437141ee9c72309715e66a
 
   radix:
     git: https://github.com/luislavena/radix.git
