@@ -266,6 +266,45 @@ any column (click the headers) and filters by user, pid or command.
 Set `GRAFITO_PROCESSES=false` (or `--processes=false`) to disable the
 process view and its endpoints completely.
 
+### MCP Server (for LLM clients)
+
+Grafito can expose its views as [Model Context Protocol](https://modelcontextprotocol.io)
+tools, so LLM clients (Claude Desktop, and anything speaking MCP) can
+query the journal, browse stacks and — with actions enabled — operate
+the host, all through the same domain code and guards the UI uses.
+
+Enable it with a bearer token:
+
+```sh
+GRAFITO_MCP_TOKEN=$(openssl rand -hex 24) grafito --enable-actions
+```
+
+The endpoint is `POST <base-url>/mcp` (JSON-RPC; `GET` upgrades to
+SSE). Without a token the endpoint is disabled entirely (404); with
+one, requests must send `Authorization: Bearer <token>`. Configure
+your MCP client with something like:
+
+```json
+{
+  "mcpServers": {
+    "grafito": {
+      "type": "http",
+      "url": "https://grafito.example.com/mcp",
+      "headers": { "Authorization": "Bearer <your token>" }
+    }
+  }
+}
+```
+
+Tools: `query_logs` (all the journalctl filters), `journalctl_command`
+(the exact command behind a query), `list_stacks`, `inspect_stack`
+(compose files, ports, mounts and the docker compose commands behind
+each button), `list_processes`, `system_status`, plus — only while
+`--enable-actions` is on — `stack_action`, `service_action`,
+`unit_action` and `process_action`. Every mutation tool description
+names its shell equivalent, keeping with the teach-the-commands
+tradition.
+
 ### Homepage View
 
 A small launcher for your self-hosted apps, in the spirit of

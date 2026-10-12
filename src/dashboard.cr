@@ -907,22 +907,14 @@ module Dashboard
         env.response.status_code = 500
         next "Failed to simulate the action."
       {% else %}
-        stdout = IO::Memory.new
-        stderr = IO::Memory.new
-        result = Process.run(
-          "systemctl",
-          args: Journalctl.user_flags + [action, full_unit],
-          output: stdout,
-          error: stderr,
-        )
-        unless result.success?
+        exit_code, output = SystemStatus.run_unit_action(full_unit, action)
+        unless exit_code == 0
           # Authorization and other failures come from systemd itself;
           # surface them instead of a generic message. Panel requests get
           # an error fragment swapped into the sidebar (htmx ignores error
           # statuses, so a success status is needed to show it).
           from_panel = optional_query_param(env, "from") == "panel"
-          message = stderr.to_s.strip
-          message = "systemctl #{action} #{full_unit} failed." if message.empty?
+          message = output
           Log.error { "systemctl #{action} #{full_unit} failed: #{message[0..200]}" }
           if from_panel
             env.response.status_code = 200

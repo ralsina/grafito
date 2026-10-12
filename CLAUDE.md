@@ -77,6 +77,11 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
   auth handler resolves credentials per request so changes apply
   without a restart)
 - `src/fake_settings_data.cr` - In-memory settings store for demo mode
+- `src/mcp_tools.cr`, `src/mcp_endpoint.cr` - MCP server (Model
+  Context Protocol) at POST /mcp: bearer-token auth via
+  GRAFITO_MCP_TOKEN (fail-closed), tools wrapping the domain modules
+  (logs/stacks/processes/status) plus action tools gated by
+  --enable-actions; built on the ralsina/mcp shard
 - `src/gotify/` - Gotify push notification client and alert rules
 - Embedded assets are served with the `baked_file_handler` shard
   (assets under `src/assets/` are compiled into the binary)
