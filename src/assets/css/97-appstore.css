@@ -309,3 +309,34 @@ details.proc-explain .proc-explain-body {
 details.proc-explain p {
   margin: 0.4rem 0;
 }
+
+/* CodeMirror editors (compose.yaml, .env, homepage.yml): match the
+   app's dark panel look; pico's light defaults would clash. */
+.CodeMirror {
+  height: 28rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  background: var(--panel-2);
+  color: var(--muted-color, var(--muted));
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.CodeMirror-gutters {
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+}
+.CodeMirror-linenumber {
+  color: var(--muted);
+  opacity: 0.6;
+}
+.CodeMirror-cursor {
+  border-left: 2px solid var(--accent);
+}
+textarea[data-editor] {
+  /* Pre-upgrade fallback: same box the editor will occupy. */
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  background: var(--panel-2);
+  color: var(--muted-color, var(--muted));
+}

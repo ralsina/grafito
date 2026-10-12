@@ -89,8 +89,8 @@ require "./spec_helper"
       response[:body].should contain("every 5s")
     end
 
-    it "GET /compose-yaml serves the fake stack's compose file" do
-      response = dispatch_request("GET", "/compose-yaml?stack=webapp")
+    it "GET /compose-file-edit serves the fake stack's compose file" do
+      response = dispatch_request("GET", "/compose-file-edit?stack=webapp&file=yaml")
       response[:status].should eq(200)
       response[:body].should contain("services:")
     end
