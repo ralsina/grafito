@@ -1,5 +1,6 @@
 require "spec"
 require "webmock"
+require "file_utils"
 require "../src/grafito"
 
 # Dispatches an HTTP request through Kemal's route handler without binding
@@ -150,6 +151,37 @@ class PassMarker
     @passed = true
     context.response.status_code = 200
   end
+end
+
+# Shared tunnel fixtures: used by both tunnel_settings_spec.cr and
+# tunnel_panel_spec.cr, so they live here (per-file helpers must not
+# be referenced from other spec files — a single-file `crystal spec`
+# run would not see them).
+
+def tunnel_settings : TunnelSettings::Settings
+  TunnelSettings::Settings.new(
+    enabled: true,
+    tunnel_id: "f0f0f0f0-1111-2222-3333-444444444444",
+    tunnel_name: "grafito",
+    credentials: %q({"AccountTag":"acct","TunnelSecret":"sekrit"}),
+  )
+end
+
+# Renders one installed app record on disk (app.json), the way the
+# app store writes it, so route derivation has something to read.
+# (Named differently from access_panel_spec's helper: top-level
+# names must not collide across spec files.)
+def with_tunnel_installed_app(root : String, store : String, id : String, name : String, port : Int32, domain : String = "", &)
+  dir = File.join(root, "apps", store, id)
+  Dir.mkdir_p(dir)
+  record = AppStore::InstalledApp.new(
+    store: store, id: id, name: name, version: "1.0",
+    tipi_version: 1, port: port, project_name: id,
+    installed_at: Time.utc.to_rfc3339, domain: domain,
+  )
+  File.write(File.join(dir, "app.json"), record.to_pretty_json)
+  yield record
+  FileUtils.rm_rf(dir)
 end
 
 # Minimal AI provider used to enable AI-dependent UI in specs.

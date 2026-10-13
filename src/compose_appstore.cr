@@ -266,6 +266,7 @@ module ComposeAppStore
             AppStore.record_install(Grafito.data_dir, installed)
             job.append("Installed #{installed.project_name}.")
             AccessPanel.refresh unless installed.domain.empty?
+            TunnelSettings.refresh
           else
             job.append("Install failed (exit #{code}); not recorded as installed — fix the problem and install again.")
           end
@@ -320,6 +321,7 @@ module ComposeAppStore
           if code == 0
             # prepare_update may have changed the routed domain.
             AccessPanel.refresh
+            TunnelSettings.refresh
           end
           job.finish(code)
           nil
@@ -362,6 +364,7 @@ module ComposeAppStore
             AppStore.remove_install(Grafito.data_dir, installed, delete_data: false)
             job.append("Uninstalled #{installed.project_name}. Data kept in #{installed.data_dir(Grafito.data_dir)}")
             AccessPanel.refresh unless installed.domain.empty?
+            TunnelSettings.refresh
           else
             job.append("docker compose down failed (exit #{code}); app files kept.")
           end
