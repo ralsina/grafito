@@ -168,6 +168,10 @@ module AccessPanel
       env.response.content_type = "text/html"
       job_fragment(job_id, "access-cert-renew")
     end
+
+    # The Cloudflare Tunnel lives in the same panel: its routes are
+    # registered here so /access stays the one entry point.
+    TunnelPanel.register_routes
   end
 
   # ## Route helpers
@@ -369,6 +373,10 @@ module AccessPanel
         html settings_form(settings)
         html certificate_section(settings)
         html proxy_section(settings)
+        html TunnelPanel.tunnel_section(
+          TunnelSettings.load(Grafito.data_dir) || TunnelSettings::Settings.new,
+          settings.base_domain,
+        )
       end
     end
   end

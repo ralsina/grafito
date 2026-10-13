@@ -63,6 +63,14 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
   as compose stacks; fetching, parsing and rendering in app_store.cr,
   HTTP endpoints and HTMX fragments in compose_appstore.cr)
 - `src/fake_appstore_data.cr` - Fixture app store for demo mode
+- `src/access_panel.cr`, `src/proxy_settings.cr` - Access panel (the
+  `/access` fragment): domain routing for installed apps through a
+  managed caddy stack with lego wildcard certificates (DNS-01)
+- `src/tunnel_settings.cr`, `src/tunnel_panel.cr` - Cloudflare Tunnel
+  section of the access panel: a managed cloudflared container
+  (`<data-dir>/tunnel/`, settings in `tunnel-settings.json`) whose
+  ingress rules are generated from the same routed apps — domains
+  without open ports or a public IP
 - `src/process_dashboard.cr`, `src/process_status.cr` - Process monitor view
 - `src/homepage.cr`, `src/homepage_config.cr`, `src/weather.cr` - Homepage
   launcher view with weather widget, plus a browser YAML editor for

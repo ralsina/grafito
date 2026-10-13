@@ -563,6 +563,28 @@ on the server and your devices: every app is reachable on its
 `host:port` or domain over your tailnet, with no port forwarding at
 all.
 
+#### The Cloudflare Tunnel: domains without open ports or a public IP
+
+The Access panel's **Cloudflare Tunnel** section is a second way to
+route the same app domains. A managed
+[cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)
+container dials **out** to Cloudflare's edge — nothing listens on
+your server — and Cloudflare terminates TLS and forwards each
+hostname to the app's local port. Setup is one-time:
+
+1. Create a named tunnel in the Cloudflare Zero Trust dashboard
+   (Networks → Tunnels) and paste its **tunnel ID** and
+   **credentials JSON** into the panel.
+2. Point one proxied CNAME at it —
+   `*.home.example.com → <tunnel-id>.cfargotunnel.com` — and every
+   app domain under the base domain flows through the tunnel.
+
+Ingress rules are generated from the same routed apps as the caddy
+path (the panel shows the table) and re-applied automatically when
+apps are installed, updated or uninstalled. The caddy proxy and the
+tunnel can run at once; each hostname goes wherever its DNS record
+points it.
+
 #### Degrading
 
 Everything here is additive. Stop the proxy, disable it in settings,
