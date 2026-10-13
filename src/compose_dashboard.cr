@@ -694,7 +694,7 @@ module ComposeDashboard
               text " Service logs"
             end
             span(class: "service-panel-hint") do
-              text "Logs go to docker's #{compose_service.log_driver.empty? ? "default" : compose_service.log_driver} driver, not the journal — showing a plain tail. Recreate the stack with the journald log driver to follow it in the full log view."
+              text "Logs go to docker's #{compose_service.log_driver.empty? ? "default" : compose_service.log_driver} driver and no shipper is running — showing a plain tail. Run the vector shipper (see the README's logging setup) or switch the stack to the journald log driver to follow it in the full log view."
             end
           end
         end
