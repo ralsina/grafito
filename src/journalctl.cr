@@ -343,10 +343,12 @@ class Journalctl
     end
 
     if container && !container.strip.empty?
-      # Docker containers logging through the journald driver carry
-      # their name in CONTAINER_NAME; a plain field match selects one
-      # container's entries.
-      args << "CONTAINER_NAME=#{container.strip}"
+      # Container entries reach the journal two ways: docker's journald
+      # driver writes CONTAINER_NAME, and shippers like vector tag them
+      # with SYSLOG_IDENTIFIER. "+" ORs the two matches so either
+      # source answers.
+      name = container.strip
+      args << "CONTAINER_NAME=#{name}" << "+" << "SYSLOG_IDENTIFIER=#{name}"
     end
     args
   end

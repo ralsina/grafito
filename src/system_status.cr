@@ -415,6 +415,39 @@ module SystemStatus
   # Simulates one systemctl action against the demo unit table and
   # returns the refreshed state, or nil for an unknown unit. Demo
   # builds only: no systemctl runs anywhere.
+  # The real systemctl action behind the dashboard's unit buttons and
+  # the MCP unit_action tool: validates the action and unit name
+  # (flag-proof), resolves the .service suffix, honors the --units
+  # whitelist and runs systemctl synchronously. Returns the exit code
+  # and combined output (systemd's own errors when it fails).
+  def self.run_unit_action(unit_name : String, action : String) : {Int32, String}
+    unless {"start", "stop", "restart", "enable", "disable"}.includes?(action)
+      return {400, "Invalid action '#{action}'."}
+    end
+    if unit_name.empty? || unit_name.starts_with?('-') || !unit_name.matches?(/^[\w.@-]+$/)
+      return {400, "Invalid unit name."}
+    end
+
+    known_units = unit_states.map(&.unit)
+    full_unit = known_units.includes?(unit_name) ? unit_name : "#{unit_name}.service"
+    return {404, "Unit '#{unit_name}' not found."} unless known_units.includes?(full_unit)
+    return {403, "Unit '#{unit_name}' is outside this deployment's --units whitelist."} unless Grafito.unit_allowed?(full_unit)
+
+    stdout = IO::Memory.new
+    stderr = IO::Memory.new
+    result = Process.run(
+      "systemctl",
+      args: Journalctl.user_flags + [action, full_unit],
+      output: stdout,
+      error: stderr,
+    )
+    output = (stdout.to_s + stderr.to_s).strip
+    if output.empty?
+      output = "systemctl #{action} #{full_unit}: ok"
+    end
+    {result.exit_code || 0, output}
+  end
+
   def self.apply_unit_action(unit_name : String, action : String) : UnitState?
     @@demo_units_mutex.synchronize do
       units = @@demo_units ||= demo_units_seed

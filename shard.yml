@@ -32,6 +32,10 @@ dependencies:
   # session-id cookie)
   kemal-session:
     github: kemalcr/kemal-session
+  # MCP server protocol/tools layer (stdio + Kemal HTTP)
+  mcp:
+    github: ralsina/mcp
+    commit: 469d99f
   baked_file_handler:
     github: ralsina/baked_file_handler
   # Anthropic/Claude AI provider

@@ -35,20 +35,18 @@
 }
 
 /* Server-generated timeline chart, re-skinned: severity-stacked bars
-   (tl-err / tl-warn / tl-info classes come from the SVG) plus labels */
-#results > div > svg {
+   (tl-err / tl-warn / tl-info classes come from the SVG) plus labels.
+   The combined chart's svg sits inside a .dashboard-chart wrapper
+   emitted by the generator, so the selectors are descendant ones. */
+#results > div > svg,
+#results > div .dashboard-chart > svg {
   height: 64px;
   margin-top: 0.75rem;
   display: block;
 }
-#results > div > svg.dashboard-history-svg {
+#results > div > svg.dashboard-history-svg,
+#results > div .dashboard-chart > svg.dashboard-history-svg {
   height: 130px;
-}
-#results > div > svg.dashboard-history-svg .tl-label {
-  fill: var(--muted);
-  stroke: var(--bg);
-  stroke-width: 3px;
-  paint-order: stroke;
 }
 #results svg .tl-err {
   fill: var(--err);

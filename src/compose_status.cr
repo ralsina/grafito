@@ -354,6 +354,25 @@ module ComposeStatus
     found.sort_by(&.name)
   end
 
+  # The docker compose commands behind a stack action (up/start,
+  # stop, restart, update) — shared by the web view's background jobs
+  # and the MCP stack_action tool.
+  def self.action_commands(stack : Stack, action : String) : Array(Array(String))
+    prefix = ["docker", "compose"] + stack.config_files.flat_map { |file| ["-f", file] }
+    case action
+    when "up", "start"
+      [prefix + ["up", "-d"]]
+    when "stop"
+      [prefix + ["stop"]]
+    when "restart"
+      [prefix + ["restart"]]
+    when "update"
+      [prefix + ["pull"], prefix + ["up", "-d"]]
+    else
+      [] of Array(String)
+    end
+  end
+
   # The top-level `name:` of a compose file, or nil when absent or
   # unreadable (the stack then falls back to its directory name).
   private def self.declared_name(compose_file : String) : String?

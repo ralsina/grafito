@@ -32,6 +32,7 @@ require "./settings_store"
 require "./auth_handler"
 require "./settings_dashboard"
 require "./login_dashboard"
+require "./mcp_endpoint"
 
 {% if flag?(:demo_mode) %}
   require "./fake_compose_data"
@@ -159,6 +160,10 @@ module Grafito
 
   # Where the homepage view reads its service list from.
   class_property homepage_config_path : String = "/etc/grafito/homepage.yml"
+
+  # Bearer token for the MCP endpoint (POST /mcp). Unset: the endpoint
+  # is disabled entirely (fail-closed).
+  class_property mcp_token : String? = nil
 
   # Settings view - when enabled, the /settings routes are served and
   # the settings toggle appears in the frontend.
@@ -658,6 +663,34 @@ module Grafito
     # the UI can show its "this is demo mode" disclaimer and the like.
     # `views` reports which views the deployment enables, so the bare
     # URL can land on the homepage when it is available.
+    # ## The MCP endpoint
+    #
+    # Machine-facing JSON-RPC (Model Context Protocol). Its own bearer
+    # token gates it (see --mcp-token); disabled entirely without one.
+    post route_path("mcp") do |env|
+      unless Grafito::McpEndpoint.enabled?
+        env.response.status_code = 404
+        next "MCP is disabled (set GRAFITO_MCP_TOKEN to enable it)."
+      end
+      unless Grafito::McpEndpoint.authorized?(env)
+        env.response.status_code = 401
+        next "Unauthorized: send 'Authorization: Bearer <GRAFITO_MCP_TOKEN>'."
+      end
+      Grafito::McpEndpoint.handler.handle_post(env)
+    end
+
+    get route_path("mcp") do |env|
+      unless Grafito::McpEndpoint.enabled?
+        env.response.status_code = 404
+        next "MCP is disabled (set GRAFITO_MCP_TOKEN to enable it)."
+      end
+      unless Grafito::McpEndpoint.authorized?(env)
+        env.response.status_code = 401
+        next "Unauthorized: send 'Authorization: Bearer <GRAFITO_MCP_TOKEN>'."
+      end
+      Grafito::McpEndpoint.handler.handle_get(env)
+    end
+
     get route_path("server-info") do |env|
       env.response.content_type = "application/json"
       {
@@ -669,6 +702,7 @@ module Grafito
           processes: Grafito.processes_enabled?,
         },
         settings:          Grafito.settings_enabled?,
+        mcp:               Grafito::McpEndpoint.enabled?,
         onboarding_needed: Grafito.settings_enabled? &&
           !Grafito.auth_configured? &&
           !SettingsStore.load(Grafito.data_dir).onboarded?,

@@ -17,6 +17,7 @@ describe "Kemal routes" do
 
     response[:status].should eq(200)
     response[:body].should contain("CONTAINER_NAME=webapp-web-1")
+    response[:body].should contain("SYSLOG_IDENTIFIER=webapp-web-1")
   end
 
   it "GET /details returns 400 when the cursor parameter is missing" do

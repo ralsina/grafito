@@ -266,6 +266,68 @@ any column (click the headers) and filters by user, pid or command.
 Set `GRAFITO_PROCESSES=false` (or `--processes=false`) to disable the
 process view and its endpoints completely.
 
+### Logging Architecture: how container logs reach grafito
+
+Container logs can arrive at the journal two ways, and the log view
+answers queries against both (the `container` filter matches either):
+
+* **Vector shipper (recommended)**: containers log to docker's plain
+  `json-file` driver (bounded and rotated), and a [vector](https://vector.dev)
+  agent tails the raw logs, assigns **honest severities** (docker marks
+  *all* stderr as error — vector fixes that), and writes them into the
+  journal tagged with the container name. As long as the vector stack
+  is running, every stack gets the full journal view regardless of its
+  driver. A known-good pipeline (compose + config, including the
+  severity heuristics) ships in
+  [`examples/logging/`](examples/logging/).
+* **Journald log driver (legacy)**: docker writes container entries
+  into the journal directly, tagged `CONTAINER_NAME`. Honest but
+  inflexible: docker hardcodes stderr to error severity, and the
+  journal is the only copy of the logs (rotation then depends on
+  journald's own vacuum).
+
+When a stack has neither path — no journald driver and no shipper
+running — the Service-logs button falls back to a plain merged tail
+(`docker compose logs` plus journal entries tagged with the service
+name).
+
+Grafito can expose its views as [Model Context Protocol](https://modelcontextprotocol.io)
+tools, so LLM clients (Claude Desktop, and anything speaking MCP) can
+query the journal, browse stacks and — with actions enabled — operate
+the host, all through the same domain code and guards the UI uses.
+
+Enable it with a bearer token:
+
+```sh
+GRAFITO_MCP_TOKEN=$(openssl rand -hex 24) grafito --enable-actions
+```
+
+The endpoint is `POST <base-url>/mcp` (JSON-RPC; `GET` upgrades to
+SSE). Without a token the endpoint is disabled entirely (404); with
+one, requests must send `Authorization: Bearer <token>`. Configure
+your MCP client with something like:
+
+```json
+{
+  "mcpServers": {
+    "grafito": {
+      "type": "http",
+      "url": "https://grafito.example.com/mcp",
+      "headers": { "Authorization": "Bearer <your token>" }
+    }
+  }
+}
+```
+
+Tools: `query_logs` (all the journalctl filters), `journalctl_command`
+(the exact command behind a query), `list_stacks`, `inspect_stack`
+(compose files, ports, mounts and the docker compose commands behind
+each button), `list_processes`, `system_status`, plus — only while
+`--enable-actions` is on — `stack_action`, `service_action`,
+`unit_action` and `process_action`. Every mutation tool description
+names its shell equivalent, keeping with the teach-the-commands
+tradition.
+
 ### Homepage View
 
 A small launcher for your self-hosted apps, in the spirit of

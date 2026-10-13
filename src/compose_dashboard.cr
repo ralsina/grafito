@@ -658,7 +658,7 @@ module ComposeDashboard
         end
 
         div(class: "service-panel-ai") do
-          if compose_service.journald?
+          if compose_service.journald? || vector_shipping?
             # The good path: the container logs to the journal, so open
             # the real log view (table, timeline, live tail) filtered
             # to its CONTAINER_NAME entries.
@@ -694,7 +694,7 @@ module ComposeDashboard
               text " Service logs"
             end
             span(class: "service-panel-hint") do
-              text "Logs go to docker's #{compose_service.log_driver.empty? ? "default" : compose_service.log_driver} driver, not the journal — showing a plain tail. Recreate the stack with the journald log driver to follow it in the full log view."
+              text "Logs go to docker's #{compose_service.log_driver.empty? ? "default" : compose_service.log_driver} driver and no shipper is running — showing a plain tail. Run the vector shipper (see the README's logging setup) or switch the stack to the journald log driver to follow it in the full log view."
             end
           end
         end
@@ -1197,6 +1197,14 @@ module ComposeDashboard
     "#{base}/compose-logs?stack=#{URI.encode_path(stack_name)}&service=#{URI.encode_path(service_name)}"
   end
 
+  # True when the vector log shipper is running: it forwards every
+  # container's logs into the journal (tagged with the container name),
+  # so even json-file-driver stacks have journal entries to filter.
+  private def vector_shipping? : Bool
+    vector = ComposeStatus.find_stack("vector")
+    vector ? vector.running_count > 0 : false
+  end
+
   private def explain_url(stack_name : String) : String
     "#{base}/compose-explain?stack=#{URI.encode_path(stack_name)}"
   end
@@ -1624,19 +1632,7 @@ module ComposeDashboard
         # job replays plausible output. No docker runs anywhere.
         FakeComposeData.apply_stack_action(stack_name, action)
       {% end %}
-      commands = case action
-                 when "up"
-                   [compose_command_prefix(compose_stack) + ["up", "-d"]]
-                 when "stop"
-                   [compose_command_prefix(compose_stack) + ["stop"]]
-                 when "restart"
-                   [compose_command_prefix(compose_stack) + ["restart"]]
-                 else # update: pull images, then bring the stack back up
-                   [
-                     compose_command_prefix(compose_stack) + ["pull"],
-                     compose_command_prefix(compose_stack) + ["up", "-d"],
-                   ]
-                 end
+      commands = ComposeStatus.action_commands(compose_stack, action)
       job_id = ComposeJobs.start("#{action} #{compose_stack.name}", commands)
       env.response.content_type = "text/html"
       job = ComposeJobs.find(job_id)

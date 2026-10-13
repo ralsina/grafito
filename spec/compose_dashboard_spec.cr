@@ -250,7 +250,7 @@ describe ComposeDashboard do
     json_file = ComposeDashboard.service_details_fragment(SERVICES[1], false)
     json_file.should contain("compose-logs?stack=webapp&amp;service=api")
     json_file.should contain("json-file")
-    json_file.should contain("journald log driver")
+    json_file.should contain("vector shipper")
     json_file.should_not contain("setContainerFilterAndTrigger")
   end
 
