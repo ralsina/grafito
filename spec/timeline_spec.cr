@@ -18,6 +18,38 @@ def new_log_entry(
   )
 end
 
+def metric_point(ts : Time) : Grafito::MetricsStore::MetricPoint
+  Grafito::MetricsStore::MetricPoint.new(
+    ts: ts,
+    load1: 0.5,
+    mem_used_pct: 42.0,
+    disk_used_pct: 61.0,
+    units_total: 10,
+    units_failed: 0,
+    swap_used_pct: 5.0,
+  )
+end
+
+def net_point(ts : Time, rx : Float64, tx : Float64) : Grafito::MetricsStore::MetricPoint
+  Grafito::MetricsStore::MetricPoint.new(
+    ts: ts,
+    load1: 0.5,
+    mem_used_pct: 42.0,
+    disk_used_pct: 61.0,
+    units_total: 10,
+    units_failed: 0,
+    net_rx_bps: rx,
+    net_tx_bps: tx,
+  )
+end
+
+def sample_buckets : Array(Timeline::TimelinePoint)
+  [
+    {start_time: Time.utc(2023, 1, 1, 10), count: 3_i32, err: 1_i32, warn: 1_i32, info: 1_i32},
+    {start_time: Time.utc(2023, 1, 1, 11), count: 2_i32, err: 0_i32, warn: 0_i32, info: 2_i32},
+  ]
+end
+
 describe Timeline do
   describe ".generate_frequency_timeline" do
     it "returns an empty array for empty logs" do
@@ -143,6 +175,45 @@ describe Timeline do
       svg.scan(/class="tl-err"/).size.should eq(1)
       svg.scan(/class="tl-warn"/).size.should eq(1)
       svg.scan(/class="tl-info"/).size.should eq(1)
+    end
+  end
+
+  describe ".generate_combined_svg" do
+    it "returns empty output without data" do
+      Timeline.generate_combined_svg([] of Grafito::MetricsStore::MetricPoint, [] of Timeline::TimelinePoint).should be_empty
+    end
+
+    it "renders native-size strokes and HTML labels instead of SVG text" do
+      svg = Timeline.generate_combined_svg([metric_point(Time.utc(2023, 1, 1, 10)), metric_point(Time.utc(2023, 1, 1, 11))], sample_buckets)
+
+      svg.should contain("<div class=\"dashboard-chart\">")
+      svg.should contain("class=\"dashboard-history-svg\"")
+      # The SVG stretches horizontally, so strokes must opt out to keep
+      # their pixel width and the labels must live outside the SVG.
+      svg.should contain("vector-effect=\"non-scaling-stroke\"")
+      svg.should contain("<span class=\"chart-note chart-start\">01-01 10:00</span>")
+      svg.should contain("<span class=\"chart-note chart-end\">01-01 11:00</span>")
+      svg.should_not contain("<text")
+    end
+  end
+
+  describe ".generate_network_svg" do
+    it "returns empty output with fewer than two network samples" do
+      Timeline.generate_network_svg([net_point(Time.utc(2023, 1, 1, 10), 100.0, 50.0)]).should be_empty
+    end
+
+    it "renders native-size strokes and HTML labels instead of SVG text" do
+      svg = Timeline.generate_network_svg([
+        net_point(Time.utc(2023, 1, 1, 10), 100.0, 50.0),
+        net_point(Time.utc(2023, 1, 1, 11), 200.0, 60.0),
+      ])
+
+      svg.should contain("<div class=\"dashboard-chart\">")
+      svg.should contain("vector-effect=\"non-scaling-stroke\"")
+      svg.should contain("<span class=\"chart-note chart-max\">max ")
+      svg.should contain("<span class=\"chart-note chart-start\">01-01 10:00</span>")
+      svg.should contain("<span class=\"chart-note chart-end\">01-01 11:00</span>")
+      svg.should_not contain("<text")
     end
   end
 end

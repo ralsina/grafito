@@ -264,16 +264,22 @@ module Timeline
     span_sec = [(newest - oldest).total_seconds, 1.0].max
     scale_max = samples.max_of { |point| {point.net_rx_bps || 0.0, point.net_tx_bps || 0.0}.max } * 1.1
 
+    # The SVG fills the container width while drawn on a fixed-width
+    # viewBox (preserveAspectRatio="none"), so geometry stretches
+    # horizontally on wide screens. Strokes opt out via vector-effect
+    # and the labels are HTML overlays: SVG text would smear.
     svg = IO::Memory.new
+    svg << %(<div class="dashboard-chart">)
     svg << %(<svg width="100%" height="#{height.to_i}" viewBox="0 0 #{width.to_i} #{height.to_i}" )
     svg << %(preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" role="img" class="dashboard-history-svg" )
     svg << %(aria-label="Network receive and transmit rates over the selected time window">)
-    svg << %(  <polyline fill="none" stroke="var(--accent, teal)" stroke-width="2" points="#{polyline_points(samples, oldest, span_sec, width, height, scale_max, &.net_rx_bps)}" />)
-    svg << %(  <polyline fill="none" stroke="var(--warn, darkorange)" stroke-width="2" points="#{polyline_points(samples, oldest, span_sec, width, height, scale_max, &.net_tx_bps)}" />)
-    svg << %(  <text x="8" y="#{(height - 8).to_i}" class="tl-label">#{oldest.to_s("%m-%d %H:%M")}</text>)
-    svg << %(  <text x="#{(width - 8).to_i}" y="#{(height - 8).to_i}" text-anchor="end" class="tl-label">#{newest.to_s("%m-%d %H:%M")}</text>)
-    svg << %(  <text x="8" y="14" class="tl-label">max #{Timeline.humanize_bytes(scale_max)}/s</text>)
+    svg << %(  <polyline fill="none" stroke="var(--accent, teal)" stroke-width="2" vector-effect="non-scaling-stroke" points="#{polyline_points(samples, oldest, span_sec, width, height, scale_max, &.net_rx_bps)}" />)
+    svg << %(  <polyline fill="none" stroke="var(--warn, darkorange)" stroke-width="2" vector-effect="non-scaling-stroke" points="#{polyline_points(samples, oldest, span_sec, width, height, scale_max, &.net_tx_bps)}" />)
     svg << %(</svg>)
+    svg << %(  <span class="chart-note chart-max">max #{Timeline.humanize_bytes(scale_max)}/s</span>)
+    svg << %(  <span class="chart-note chart-start">#{oldest.to_s("%m-%d %H:%M")}</span>)
+    svg << %(  <span class="chart-note chart-end">#{newest.to_s("%m-%d %H:%M")}</span>)
+    svg << %(</div>)
     svg.to_s
   end
 
@@ -339,6 +345,9 @@ module Timeline
     newest = markers.max
     span_sec = [(newest - oldest).total_seconds, 1.0].max
 
+    # Same treatment as the network chart: geometry stretches to the
+    # container width, strokes and labels render at native pixel size.
+    svg << %(<div class="dashboard-chart">)
     svg << %(<svg width="100%" height="#{height.to_i}" viewBox="0 0 #{width.to_i} #{height.to_i}" )
     svg << %(preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" role="img" class="dashboard-history-svg" )
     svg << %(aria-label="Journal severity and memory, swap and disk usage over the selected time window">)
@@ -346,12 +355,13 @@ module Timeline
     if has_bars
       svg << severity_bars(buckets, oldest, span_sec, width, height)
     end
-    svg << %(  <polyline fill="none" stroke="var(--info, steelblue)" stroke-width="2" points="#{polyline_points(points, oldest, span_sec, width, height, &.mem_used_pct)}" />)
-    svg << %(  <polyline fill="none" stroke="var(--ok, limegreen)" stroke-width="2" points="#{polyline_points(points, oldest, span_sec, width, height, &.swap_used_pct)}" />)
-    svg << %(  <polyline fill="none" stroke="var(--err, darkorange)" stroke-width="2" stroke-dasharray="4 3" points="#{polyline_points(points, oldest, span_sec, width, height, &.disk_used_pct)}" />)
-    svg << %(  <text x="8" y="#{(height - 8).to_i}" class="tl-label">#{oldest.to_s("%m-%d %H:%M")}</text>)
-    svg << %(  <text x="#{(width - 8).to_i}" y="#{(height - 8).to_i}" text-anchor="end" class="tl-label">#{newest.to_s("%m-%d %H:%M")}</text>)
+    svg << %(  <polyline fill="none" stroke="var(--info, steelblue)" stroke-width="2" vector-effect="non-scaling-stroke" points="#{polyline_points(points, oldest, span_sec, width, height, &.mem_used_pct)}" />)
+    svg << %(  <polyline fill="none" stroke="var(--ok, limegreen)" stroke-width="2" vector-effect="non-scaling-stroke" points="#{polyline_points(points, oldest, span_sec, width, height, &.swap_used_pct)}" />)
+    svg << %(  <polyline fill="none" stroke="var(--err, darkorange)" stroke-width="2" stroke-dasharray="4 3" vector-effect="non-scaling-stroke" points="#{polyline_points(points, oldest, span_sec, width, height, &.disk_used_pct)}" />)
     svg << %(</svg>)
+    svg << %(  <span class="chart-note chart-start">#{oldest.to_s("%m-%d %H:%M")}</span>)
+    svg << %(  <span class="chart-note chart-end">#{newest.to_s("%m-%d %H:%M")}</span>)
+    svg << %(</div>)
     svg.to_s
   end
 

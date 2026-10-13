@@ -658,7 +658,7 @@ module ComposeDashboard
         end
 
         div(class: "service-panel-ai") do
-          if compose_service.journald?
+          if compose_service.journald? || vector_shipping?
             # The good path: the container logs to the journal, so open
             # the real log view (table, timeline, live tail) filtered
             # to its CONTAINER_NAME entries.
@@ -1195,6 +1195,14 @@ module ComposeDashboard
 
   private def logs_url(stack_name : String, service_name : String) : String
     "#{base}/compose-logs?stack=#{URI.encode_path(stack_name)}&service=#{URI.encode_path(service_name)}"
+  end
+
+  # True when the vector log shipper is running: it forwards every
+  # container's logs into the journal (tagged with the container name),
+  # so even json-file-driver stacks have journal entries to filter.
+  private def vector_shipping? : Bool
+    vector = ComposeStatus.find_stack("vector")
+    vector ? vector.running_count > 0 : false
   end
 
   private def explain_url(stack_name : String) : String
