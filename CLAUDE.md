@@ -77,6 +77,11 @@ Grafito is a Crystal-based web application for viewing systemd journal logs thro
   auth handler resolves credentials per request so changes apply
   without a restart)
 - `src/fake_settings_data.cr` - In-memory settings store for demo mode
+- Logging architecture: container entries reach the journal two ways
+  (docker journald driver → CONTAINER_NAME; vector shipper →
+  SYSLOG_IDENTIFIER, recommended, see examples/logging/) — the
+  container filter ORs both matches; canonical pipeline in
+  examples/logging/
 - `src/mcp_tools.cr`, `src/mcp_endpoint.cr` - MCP server (Model
   Context Protocol) at POST /mcp: bearer-token auth via
   GRAFITO_MCP_TOKEN (fail-closed), tools wrapping the domain modules

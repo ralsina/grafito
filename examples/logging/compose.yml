@@ -1,0 +1,17 @@
+# Deploy next to vector.yml: `docker compose -f compose.yml up -d`
+# (or keep this directory under your stacks dir and let grafito's
+# compose view manage it like any other stack).
+services:
+  vector:
+    image: timberio/vector:0.44.0-debian
+    container_name: vector
+    restart: unless-stopped
+    command: ["--config", "/etc/vector/vector.yml"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Adjust the host path to your daemon's data-root (docker info
+      # → Docker Root Dir). Alpine images lack the syslog socket
+      # support this config needs via /dev/log; use the debian image.
+      - /data/docker/containers:/var/lib/docker/containers:ro
+      - /run/systemd/journal/dev-log:/dev/log
+      - ./vector.yml:/etc/vector/vector.yml:ro

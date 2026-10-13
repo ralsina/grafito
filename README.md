@@ -266,7 +266,30 @@ any column (click the headers) and filters by user, pid or command.
 Set `GRAFITO_PROCESSES=false` (or `--processes=false`) to disable the
 process view and its endpoints completely.
 
-### MCP Server (for LLM clients)
+### Logging Architecture: how container logs reach grafito
+
+Container logs can arrive at the journal two ways, and the log view
+answers queries against both (the `container` filter matches either):
+
+* **Vector shipper (recommended)**: containers log to docker's plain
+  `json-file` driver (bounded and rotated), and a [vector](https://vector.dev)
+  agent tails the raw logs, assigns **honest severities** (docker marks
+  *all* stderr as error — vector fixes that), and writes them into the
+  journal tagged with the container name. As long as the vector stack
+  is running, every stack gets the full journal view regardless of its
+  driver. A known-good pipeline (compose + config, including the
+  severity heuristics) ships in
+  [`examples/logging/`](examples/logging/).
+* **Journald log driver (legacy)**: docker writes container entries
+  into the journal directly, tagged `CONTAINER_NAME`. Honest but
+  inflexible: docker hardcodes stderr to error severity, and the
+  journal is the only copy of the logs (rotation then depends on
+  journald's own vacuum).
+
+When a stack has neither path — no journald driver and no shipper
+running — the Service-logs button falls back to a plain merged tail
+(`docker compose logs` plus journal entries tagged with the service
+name).
 
 Grafito can expose its views as [Model Context Protocol](https://modelcontextprotocol.io)
 tools, so LLM clients (Claude Desktop, and anything speaking MCP) can

@@ -1,0 +1,70 @@
+# Canonical vector pipeline for grafito: reads every container's log
+# straight from docker's storage, assigns honest severities, and
+# writes the entries into the host journal with the container name as
+# the syslog tag — which is exactly what grafito's container filter
+# and Service-logs view query for.
+#
+# Requires on the host:
+#   * containers on any log driver that writes to files (the default
+#     `json-file`, ideally with rotation), so vector is the ONLY
+#     writer of container entries into the journal — no duplicates;
+#   * /data/docker/containers (adjust to your daemon data-root) and
+#     /var/run/docker.sock mounted read-only;
+#   * /run/systemd/journal/dev-log mounted for the syslog sink.
+#
+# Severity: stderr starts at warning, stdout at info; lines containing
+# error/fatal/panic upgrade to error, warn upgrades to warning.
+sources:
+  docker_logs:
+    type: docker_logs
+    retry_backoff_secs: 1
+
+transforms:
+  decorate:
+    type: remap
+    inputs: ["docker_logs"]
+    drop_on_error: false
+    source: |
+      # Do not ship vector's own logs (loop risk).
+      if .container_name == "vector" {
+        abort
+      }
+      # Some docker events carry no stream or image; skip those.
+      if !exists(.message) || !exists(.stream) || !exists(.container_name) {
+        abort
+      }
+      raw_stream = downcase(to_string(.stream) ?? "stdout")
+      msg = downcase(to_string(.message) ?? "")
+      # stderr without error keywords is a warning, not an error:
+      # plenty of apps write banners and status lines to stderr.
+      severity = if raw_stream == "stderr" { "warning" } else { "info" }
+      if contains(msg, "error") || contains(msg, "fatal") || contains(msg, "panic") {
+        severity = "error"
+      }
+      if contains(msg, "warn") && severity == "info" {
+        severity = "warning"
+      }
+      priority = "6"
+      if severity == "error" {
+        priority = "3"
+      }
+      if severity == "warning" {
+        priority = "4"
+      }
+      # Docker events are single lines; flatten just in case.
+      clean = replace(to_string(.message) ?? "", "\n", " ")
+      # One RFC3164 line to /dev/log: journald derives PRIORITY from
+      # <PRI> and SYSLOG_IDENTIFIER from the tag (= container name).
+      container = to_string(.container_name) ?? "unknown"
+      . = {
+        "message": "<" + priority + ">" + container + ": " + clean
+      }
+
+sinks:
+  journal:
+    type: socket
+    inputs: ["decorate"]
+    mode: unix_datagram
+    path: "/dev/log"
+    encoding:
+      codec: text
