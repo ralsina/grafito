@@ -734,6 +734,56 @@ curl -sSL https://grafito.ralsina.me/install.sh | sudo bash
 
 After installation, Grafito should be running and accessible at `http://<your_server_ip>:1111` (or the port configured in the service). You can check its status with `systemctl status grafito.service`.
 
+### Onboarding a Fresh Machine (onboard.sh)
+
+`onboard.sh` is the install script expanded into an **interactive
+onboarding wizard** for a fresh (or willing) host. It assumes the
+machine is open to modification, but shows a concrete plan of every
+user, folder, file and service it will create and asks for consent
+before touching anything. Grafito is installed **natively** (a systemd
+service with a dedicated system user, not a container), and beyond
+what `install.sh` does, the wizard:
+
+* asks for the port, bind address and the compose **stacks directory**
+  (created for you, wired into the Compose view via `--stacks-dir`);
+* gives the `grafito` user journal access (the `systemd-journal`
+  group) and, when docker is present, docker socket access (the
+  `docker` group) for the Compose view and app store;
+* installs [vector](https://vector.dev) from its release tarball and
+  writes `/etc/vector/vector.yml` — the log pipeline from
+  [`docs/vector-on-rocky.md`](docs/vector-on-rocky.md), which recovers
+  **honest severities** for container logs and re-emits them into
+  journald — when docker is in use;
+* offers to set docker's default log driver to `json-file` with
+  rotation in `/etc/docker/daemon.json` (docker itself is never
+  restarted by the script);
+* makes the journal persistent on distributions where it is volatile
+  by default;
+* optionally enables `--enable-actions` — installing a polkit rule so
+  the unit buttons actually work — and can generate an MCP bearer
+  token for LLM clients.
+
+Login credentials, timezone, AI keys and the homepage are left to the
+browser's first-visit wizard; the script only does host-level setup.
+Re-runs are safe (existing configs are kept or backed up as
+`*.grafito-bak-*`), so the wizard doubles as an upgrader.
+
+```bash
+curl -sSL https://grafito.ralsina.me/onboard.sh | sudo bash
+```
+
+Prompts read from the terminal (not the curl pipe), so the one-liner
+above stays interactive. A fully scripted install is possible too:
+
+```bash
+curl -sSL https://grafito.ralsina.me/onboard.sh | sudo bash -s -- --yes --port=1111
+```
+
+See `--help` for all flags (`--no-vector`, `--enable-actions`,
+`--with-mcp-token`, `--stacks-dir=PATH`, `--bind=ADDR`, `--dry-run`,
+`--port=N`). Nothing is a better preview than `--dry-run`: it prints
+every file and command the wizard would run.
+
 ### Prebuilt Binaries
 
 To install from prebuilt binaries, download the latest release from the

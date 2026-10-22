@@ -177,6 +177,9 @@ echo "   After editing, run: sudo systemctl daemon-reload && sudo systemctl rest
 echo "3. Access Grafito at http://localhost:1111 (binds to loopback by"
 echo "   default; to expose it to your network set authentication and"
 echo "   adjust ExecStart — see README: Securing a Remote Deployment)"
+echo "4. For a guided full-machine setup (vector log pipeline, docker"
+echo "   integration, stacks folder, actions), use the onboarding wizard:"
+echo "   curl -sSL https://grafito.ralsina.me/onboard.sh | sudo bash"
 
 # Clean up temporary directory
 # Cleanup is now handled by the trap
