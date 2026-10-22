@@ -12,7 +12,6 @@ bin/ameba src spec
 crystal spec
 crystal spec -Ddemo_mode
 
-PKGNAME=$(basename "$PWD")
 VERSION=$(git cliff --bumped-version --unreleased |cut -dv -f2)
 
 sed "s/^version:.*$/version: $VERSION/g" -i shard.yml
@@ -49,6 +48,22 @@ git push --tags
 # Push main too: the bump commit is what the tag points at; a tag on
 # a commit absent from origin is a footgun.
 git push origin main
-gh release create "v$VERSION" "bin/$PKGNAME-static-linux-amd64" "bin/$PKGNAME-static-linux-arm64" --title "Release v$VERSION" --notes "$(git cliff -l -s all)"
+# Create the release without binaries: the Release workflow (triggered
+# by the tag push above) builds them in CI and attaches them. v1.7.0
+# shipped with no binaries because this manual upload went missing
+# (#153), so wait here until CI has attached both — a red CI run now
+# fails the release instead of silently shipping an empty release.
+gh release create "v$VERSION" --title "Release v$VERSION" --notes "$(git cliff -l -s all)"
+echo "Waiting for the Release workflow to attach binaries to v$VERSION..."
+assets=0
+for _ in $(seq 1 60); do
+    assets=$(gh release view "v$VERSION" --json assets --jq 'length' 2>/dev/null || echo 0)
+    [ "$assets" -ge 2 ] && break
+    sleep 30
+done
+if [ "${assets:-0}" -lt 2 ]; then
+    echo "Binaries were not attached within 30 minutes; check the Release workflow run." >&2
+    exit 1
+fi
 bash -x upload_docker.sh
 bash -x do_aur.sh

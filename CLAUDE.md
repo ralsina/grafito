@@ -292,11 +292,17 @@ AI log analysis is optional and provider-agnostic:
 - `do_release.sh` - Automated release script that:
   - Uses `git cliff` for version bumping and changelog generation
   - Updates version in shard.yml and install.sh
-  - Builds static binaries for both architectures
+  - Builds static binaries for both architectures (local pre-tag gate + smoke test)
   - Creates git tag and commit
-  - Generates GitHub release with changelog
+  - Generates GitHub release with changelog (no binaries — see below)
+  - Waits for CI to attach the binaries to the release
   - Uploads Docker images
   - Updates AUR package
+- `.github/workflows/release.yml` - Tag-triggered CI that builds the
+  static binaries (native amd64 + arm64 runners), smoke-tests the amd64
+  binary, and attaches both to the release. v1.7.0 shipped with no
+  binaries because the manual upload went missing (#153); the binaries
+  now come from CI so a release cannot be published empty.
 - `upload_docker.sh` - Handles Docker image uploads
 - `do_aur.sh` - Updates Arch User Repository package
 
