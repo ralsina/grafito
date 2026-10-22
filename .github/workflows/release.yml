@@ -1,0 +1,115 @@
+name: Release
+
+# Builds the static linux binaries for a pushed tag and attaches them
+# to the GitHub release. The release itself (title + notes) is created
+# by do_release.sh right after it pushes the tag; this workflow only
+# waits for it to exist and uploads the assets — v1.7.0 shipped with
+# no binaries because the manual upload step was skipped (#153).
+#
+# workflow_dispatch allows testing the build+smoke legs on a branch
+# (the release steps are skipped when the ref is not a tag).
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build static linux ${{ matrix.arch }}
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+            platform: linux/amd64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            platform: linux/arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install minify
+        run: |
+          go install github.com/tdewolff/minify/v2/cmd/minify@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Regenerate embedded assets (mirrors build_static.sh)
+        run: |
+          cat src/assets/css/*.css > src/assets/style.css
+          cat src/assets/js/*.js > src/assets/app.js
+          make minify
+
+      - name: Build static binary
+        run: |
+          docker build . -f Dockerfile.static --platform ${{ matrix.platform }} -t grafito-builder
+          docker run -i --rm --platform ${{ matrix.platform }} \
+            -v "$PWD":/app --user="$(id -u)" grafito-builder \
+            /bin/sh -c "cd /app && shards build --static --release && strip bin/grafito"
+          mv bin/grafito "bin/grafito-static-linux-${{ matrix.arch }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: grafito-static-linux-${{ matrix.arch }}
+          path: bin/grafito-static-linux-${{ matrix.arch }}
+          if-no-files-found: error
+
+  release:
+    name: Smoke test and attach binaries
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: bin
+          merge-multiple: true
+
+      # Same gate as do_release.sh: the freshly built amd64 binary must
+      # return real journal rows — guards against the empty-results
+      # regression that shipped in v1.2.0/v1.3.0 (#61).
+      - name: Smoke test the amd64 binary
+        run: |
+          chmod +x bin/grafito-static-linux-amd64
+          smoke_port=$(( (RANDOM % 2000) + 4000 ))
+          ./bin/grafito-static-linux-amd64 -p "$smoke_port" > /tmp/grafito-smoke.log 2>&1 &
+          smoke_pid=$!
+          smoke_rows=0
+          for _ in 1 2 3 4 5 6 7 8 9 10; do
+            sleep 1
+            smoke_rows=$(curl -s "http://127.0.0.1:$smoke_port/logs?since=-24h" | grep -c 'class="log-row') || smoke_rows=0
+            [ "$smoke_rows" -gt 0 ] && break
+          done
+          kill "$smoke_pid" 2>/dev/null || true
+          if [ "${smoke_rows:-0}" -eq 0 ]; then
+            echo "Smoke test failed: /logs returned no rows on a host with a journal (see /tmp/grafito-smoke.log)." >&2
+            exit 1
+          fi
+          echo "Smoke test: /logs returned $smoke_rows rows."
+
+      - name: Wait for the release to be published
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          for _ in $(seq 1 20); do
+            if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+              echo "Release $GITHUB_REF_NAME exists."
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "Release $GITHUB_REF_NAME was not created within 10 minutes of the tag push; create it so the binaries can be attached." >&2
+          exit 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Attach binaries to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: gh release upload "$GITHUB_REF_NAME" bin/grafito-static-linux-amd64 bin/grafito-static-linux-arm64 --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
